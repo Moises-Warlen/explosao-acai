@@ -455,15 +455,31 @@ function createOrderCardHtml(order) {
 
   let nextAction = '';
   if (order.status === 'received') {
+    // 1. Novos Pedidos: apenas envia para a cozinha
     nextAction = `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'preparing')">Mandar p/ Cozinha</button>`;
   } else if (order.status === 'preparing') {
+    // 2. Em Preparo: move para a coluna de Pronto / Saiu para Entrega
     nextAction = isDelivery 
-      ? `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'out_for_delivery')">Despachar Entrega</button>`
-      : `<button class="btn-sm btn-next" style="background:#10b981;color:#fff;font-weight:700" onclick="confirmPickupOrder('${order.id}')">✓ Entregar no Balcão & Confirmar</button>`;
+      ? `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'out_for_delivery')">Despachar p/ Entrega</button>`
+      : `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'ready')">Pronto no Balcão</button>`;
   } else if (order.status === 'out_for_delivery' || order.status === 'ready') {
-    nextAction = isDelivery
-      ? `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'delivered')">Concluir Pedido</button>`
-      : `<button class="btn-sm btn-next" style="background:#10b981;color:#fff;font-weight:700" onclick="confirmPickupOrder('${order.id}')">✓ Entregar no Balcão & Confirmar</button>`;
+    // 3. Pronto / Saiu para Entrega: confirma entrega/retirada e move para Concluídos
+    if (isDelivery) {
+      nextAction = `
+        <button class="btn-sm" style="background:#10b981;color:#fff;font-weight:700;font-size:11px;padding:4px 8px" onclick="confirmOrderDeliveryAndPayment('${order.id}')" title="Confirmar que o cliente recebeu e o pagamento foi concluído">
+          ✓ Entregue & Recebido
+        </button>
+        <button class="btn-sm btn-secondary" style="font-size:10px;padding:4px 6px" onclick="copyMotoboyLink('${order.id}')" title="Copiar link para o celular do entregador">
+          📱 Link Motoboy
+        </button>
+      `;
+    } else {
+      nextAction = `
+        <button class="btn-sm btn-next" style="background:#10b981;color:#fff;font-weight:700" onclick="confirmPickupOrder('${order.id}')" title="Marcar como Pago e Retirado pelo Cliente no Balcão">
+          ✓ Entregar no Balcão & Confirmar
+        </button>
+      `;
+    }
   }
 
   // Identificação clara da forma e timing do pagamento
@@ -566,22 +582,6 @@ function createOrderCardHtml(order) {
           ${order.status === 'delivered' ? 'Reimprimir Comanda' : 'Imprimir Balcão'}
         </button>
         ${nextAction}
-        ${(order.status !== 'delivered' && order.status !== 'cancelled') ? (
-          isDelivery ? `
-            <button class="btn-sm" style="background:#10b981;color:#fff;font-weight:700;font-size:11px;padding:4px 8px" onclick="confirmOrderDeliveryAndPayment('${order.id}')" title="Confirmar que o cliente recebeu e o pagamento foi concluído">
-              ✓ Entregue & Recebido
-            </button>
-            <button class="btn-sm btn-secondary" style="font-size:10px;padding:4px 6px" onclick="copyMotoboyLink('${order.id}')" title="Copiar link para o celular do entregador">
-              📱 Link Motoboy
-            </button>
-          ` : `
-            ${order.status === 'received' ? `
-              <button class="btn-sm" style="background:#10b981;color:#fff;font-weight:700;font-size:11px;padding:4px 8px" onclick="confirmPickupOrder('${order.id}')" title="Marcar como Pago e Retirado pelo Cliente no Balcão">
-                ✓ Entregar no Balcão & Confirmar
-              </button>
-            ` : ''}
-          `
-        ) : ''}
         ${(order.status !== 'delivered' && order.status !== 'cancelled') ? `
           <button class="btn-sm btn-danger" style="margin-left:auto;font-size:11px;padding:4px 8px" onclick="openCancelOrderModal('${order.id}', '${order.orderNo}')" title="Cancelar este pedido">
             Cancelar
@@ -2528,26 +2528,41 @@ window.editCurrentCustomerName = async function() {
 
 window.closeCurrentChat = function() {
   if (!ACTIVE_CHAT_PHONE) return;
+  const phoneToClose = ACTIVE_CHAT_PHONE;
   const name = $('#active-chat-name')?.textContent || 'Cliente';
 
   showConfirmModal({
     icon: '🏁',
     title: 'Finalizar Atendimento',
-    message: `Deseja realmente encerrar a conversa com <b>${esc(name)}</b>? Uma mensagem de agradecimento será enviada ao cliente.`,
-    btnText: 'Finalizar Chat',
+    message: `Deseja realmente encerrar e limpar a conversa com <b>${esc(name)}</b>?`,
+    btnText: 'Finalizar e Limpar Chat',
     btnClass: 'btn-danger',
     onConfirm: async () => {
       try {
         const res = await fetch(`${API_URL}/chat/close`, {
           method: 'POST',
           headers: authHeaders(),
-          body: JSON.stringify({ customerPhone: ACTIVE_CHAT_PHONE })
+          body: JSON.stringify({ customerPhone: phoneToClose })
         });
         const d = await res.json();
         if (d.ok) {
           adminToast('Atendimento finalizado com sucesso!', 'info');
-          loadChatMessages(ACTIVE_CHAT_PHONE);
-          loadChatConversations();
+          // Limpa a tela do chat e redefine o atendente
+          ACTIVE_CHAT_PHONE = null;
+          if ($('#active-chat-name')) $('#active-chat-name').textContent = 'Selecione uma conversa';
+          if ($('#active-chat-phone')) $('#active-chat-phone').textContent = '';
+          if ($('#btn-edit-chat-name')) $('#btn-edit-chat-name').style.display = 'none';
+          if ($('#btn-close-chat')) $('#btn-close-chat').style.display = 'none';
+          if ($('#admin-chat-input')) {
+            $('#admin-chat-input').placeholder = 'Digite sua resposta...';
+            $('#admin-chat-input').value = '';
+          }
+          if ($('#admin-chat-messages')) {
+            $('#admin-chat-messages').innerHTML = '<p style="text-align:center;color:var(--mut);margin:auto">Atendimento finalizado com sucesso. Nenhuma conversa selecionada no momento.</p>';
+          }
+          await loadChatConversations();
+        } else {
+          adminToast(d.error || 'Erro ao finalizar atendimento.', 'danger');
         }
       } catch (e) {
         adminToast('Erro ao finalizar atendimento.', 'danger');

@@ -57,12 +57,14 @@ export class ChatService {
           customerName: resolvedName,
           lastMessage: msg.message,
           lastTimestamp: msg.timestamp,
+          isSystemClose: !!msg.isSystemClose,
           unreadCount: 0
         });
       }
       const conv = map.get(p);
       conv.lastMessage = msg.message;
       conv.lastTimestamp = msg.timestamp;
+      conv.isSystemClose = !!msg.isSystemClose;
       if (msg.customerName && msg.customerName !== 'Cliente') {
         conv.customerName = msg.customerName;
       }
@@ -71,7 +73,10 @@ export class ChatService {
       }
     }
 
-    return Array.from(map.values()).sort((a, b) => new Date(b.lastTimestamp) - new Date(a.lastTimestamp));
+    // Exclui conversas já finalizadas pelo operador (onde a última mensagem é isSystemClose)
+    return Array.from(map.values())
+      .filter(c => !c.isSystemClose)
+      .sort((a, b) => new Date(b.lastTimestamp) - new Date(a.lastTimestamp));
   }
 
   sendMessage({ sender, customerPhone, customerName, message }) {
@@ -98,6 +103,27 @@ export class ChatService {
 
     const storeSenderName = data.settings?.chatSenderName || 'Delivery';
     const finalSender = sender || 'customer';
+
+    // Se a conversa anterior deste cliente já havia sido finalizada pelo operador, limpa as mensagens antigas para começar limpo
+    if (finalSender === 'customer') {
+      const hasPreviousClosed = (data.chats || []).some(m => {
+        const mDigits = String(m.customerPhone || '').replace(/\D/g, '');
+        const match = (cleanDigits && mDigits && cleanDigits.length >= 8 && mDigits.length >= 8)
+          ? cleanDigits === mDigits
+          : String(m.customerPhone || '').toLowerCase() === raw.toLowerCase();
+        return match && m.isSystemClose;
+      });
+
+      if (hasPreviousClosed) {
+        data.chats = (data.chats || []).filter(m => {
+          const mDigits = String(m.customerPhone || '').replace(/\D/g, '');
+          const match = (cleanDigits && mDigits && cleanDigits.length >= 8 && mDigits.length >= 8)
+            ? cleanDigits === mDigits
+            : String(m.customerPhone || '').toLowerCase() === raw.toLowerCase();
+          return !match;
+        });
+      }
+    }
 
     const newMsg = {
       id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
@@ -143,17 +169,22 @@ export class ChatService {
     if (!data.chats) data.chats = [];
     data.chats.push(closeMsg);
 
-    // Marca todas as mensagens anteriores como lidas
+    // Marca todas as mensagens anteriores como lidas e fechadas
     const cleanDigits = raw.replace(/\D/g, '');
     data.chats.forEach(m => {
       const mDigits = String(m.customerPhone || '').replace(/\D/g, '');
       if ((cleanDigits && mDigits && cleanDigits === mDigits) || m.customerPhone === raw) {
         m.read = true;
+        m.closed = true;
       }
     });
 
     this.db.save();
     wsHub.notifyChatMessage(closeMsg);
+    wsHub.broadcast({
+      event: 'CHAT_CLOSED',
+      payload: { customerPhone: raw }
+    });
 
     return { ok: true, message: closeMsg };
   }

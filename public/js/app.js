@@ -79,6 +79,9 @@ function initWebSocket() {
         if (data.event === 'CHAT_MESSAGE') {
           handleIncomingChatMessage(data.payload);
         }
+        if (data.event === 'CHAT_CLOSED') {
+          handleChatClosed(data.payload);
+        }
       } catch (e) {}
     };
     WS_SOCKET.onclose = () => {
@@ -1147,6 +1150,7 @@ function renderChatModal(phone, name) {
         <b>Explosão Açaí</b>
         <span>Atendimento Oficial da Loja</span>
       </div>
+      <button class="btn-sm" style="margin-left:auto;margin-right:24px;background:rgba(255,255,255,0.18);border:none;color:#fff;border-radius:8px;padding:4px 8px;font-size:11px;cursor:pointer" onclick="clearAndStartNewChat()" title="Iniciar atendimento limpo do zero">🧹 Novo Chat</button>
     </div>
 
     ${isTemp ? `
@@ -1177,9 +1181,59 @@ async function loadChatMessages(phone) {
     const res = await fetch(`${API_URL}/chat?phone=${encodeURIComponent(phone)}`);
     const data = await res.json();
     if (data.ok) {
+      if (data.messages && data.messages.length > 0 && data.messages[data.messages.length - 1].isSystemClose) {
+        renderChatClosedState();
+        return;
+      }
       renderChatMessagesList(data.messages);
     }
   } catch (e) {}
+}
+
+function renderChatClosedState() {
+  const box = $('#chat-messages-box');
+  if (!box) return;
+  box.innerHTML = `
+    <div style="text-align:center;padding:28px 14px;color:var(--mut);margin:auto">
+      <div style="font-size:32px;margin-bottom:8px">🏁</div>
+      <b style="color:var(--tx);font-size:15px">Atendimento Concluído</b>
+      <p style="font-size:13px;line-height:1.45;margin:8px 0 16px">O atendimento anterior foi finalizado pelo operador.<br>Digite sua mensagem abaixo para iniciar uma nova conversa limpa!</p>
+    </div>
+  `;
+}
+
+window.clearAndStartNewChat = async function() {
+  const client = getClientChatData();
+  try {
+    await fetch(`${API_URL}/chat/close`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customerPhone: client.phone })
+    });
+  } catch (e) {}
+  localStorage.removeItem('explosao_chat_client_id');
+  const freshClient = getClientChatData();
+  renderChatModal(freshClient.phone, freshClient.name);
+  renderChatMessagesList([]);
+  toast('Novo atendimento iniciado do zero!');
+};
+
+function handleChatClosed(payload) {
+  const client = getClientChatData();
+  const myPhone = client.phone;
+  const cleanMy = String(myPhone || '').replace(/\D/g, '');
+  const cleanPayload = String(payload.customerPhone || '').replace(/\D/g, '');
+  const isForMe = (payload.customerPhone === myPhone) || (cleanMy && cleanPayload && cleanMy === cleanPayload);
+  if (!isForMe) return;
+
+  if (String(myPhone).startsWith('cli_')) {
+    localStorage.removeItem('explosao_chat_client_id');
+  }
+
+  const box = $('#chat-messages-box');
+  if (box) {
+    renderChatClosedState();
+  }
 }
 
 function renderChatMessagesList(messages) {
