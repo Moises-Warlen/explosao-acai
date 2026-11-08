@@ -362,6 +362,9 @@ function renderItemModal() {
 
   let h = `
     <button class="x" onclick="closeSheet()">×</button>
+    <div class="sheet-photo-wrap">
+      <img src="${prod.image || 'imagens/do seu jeitinho.png'}" alt="${esc(prod.name)}" onerror="this.src='imagens/do seu jeitinho.png'">
+    </div>
     <h3>${esc(prod.name)}</h3>
     <p class="mut" style="margin-top:2px;font-size:13px">${esc(prod.description)}</p>
 
@@ -767,7 +770,7 @@ function renderCheckoutModal() {
       </label>
 
       <div style="margin-top:10px;font-size:13px;color:var(--mut)" id="freight-info">
-        ${CHECKOUT_DATA.freight ? `Distância estimada: ${CHECKOUT_DATA.km?.toFixed(1) || '3.5'} km · Frete: ${R(CHECKOUT_DATA.freight)}` : 'Frete mínimo: R$ 4,50'}
+        ${CHECKOUT_DATA.freight === 0 ? `<b style="color:var(--green)">Distância estimada: ${(CHECKOUT_DATA.km || 1.8).toFixed(1)} km · Entrega GRÁTIS (Até 2 km)!</b>` : (CHECKOUT_DATA.freight ? `Distância estimada: ${CHECKOUT_DATA.km?.toFixed(1) || '3.5'} km · Frete: ${R(CHECKOUT_DATA.freight)}` : 'Entrega GRÁTIS até 2 km · Acima: R$ 4,50 mínimo')}
       </div>
     `;
   }
@@ -804,7 +807,7 @@ function renderCheckoutModal() {
   h += `
     <div class="tot" style="margin-top:16px"><span>Subtotal</span><span>${R(subtotal)}</span></div>
     ${discount > 0 ? `<div class="tot" style="color:var(--success)"><span>Desconto</span><span>-${R(discount)}</span></div>` : ''}
-    ${isDelivery ? `<div class="tot"><span>Frete</span><span>${R(freight)}</span></div>` : ''}
+    ${isDelivery ? `<div class="tot"><span>Frete</span><span style="${freight === 0 ? 'color:var(--green);font-weight:700' : ''}">${freight === 0 ? 'GRÁTIS (Até 2 km)' : R(freight)}</span></div>` : ''}
     <div class="tot g"><span>Total a Pagar</span><b>${R(total)}</b></div>
 
     <button class="btn g" id="btn-submit-order" onclick="submitOrder()">Enviar Pedido · ${R(total)}</button>
@@ -816,6 +819,9 @@ function renderCheckoutModal() {
 
 window.setDeliveryType = function(type) {
   CHECKOUT_DATA.ent = type;
+  if (type === 'd' && CHECKOUT_DATA.freight === undefined) {
+    calcFrete();
+  }
   renderCheckoutModal();
 };
 
@@ -847,17 +853,31 @@ window.buscaCep = async function(cep) {
       CHECKOUT_DATA.cid = data.localidade || 'Franca';
       CHECKOUT_DATA.uf = data.uf || 'SP';
       CHECKOUT_DATA.cep = digits;
-      renderCheckoutModal();
       calcFrete();
+      renderCheckoutModal();
     }
   } catch (e) {}
 };
 
 window.calcFrete = function() {
-  CHECKOUT_DATA.km = 3.5;
-  CHECKOUT_DATA.freight = Math.max(SETTINGS.minFreight || 4.5, Math.ceil(3.5 * (SETTINGS.perKmRate || 1.0) * 2) / 2);
+  const km = CHECKOUT_DATA.km !== undefined ? CHECKOUT_DATA.km : 1.8;
+  CHECKOUT_DATA.km = km;
+  const freeKm = SETTINGS.freeKmThreshold !== undefined ? Number(SETTINGS.freeKmThreshold) : 2.0;
+
+  if (km <= freeKm) {
+    CHECKOUT_DATA.freight = 0;
+  } else {
+    CHECKOUT_DATA.freight = Math.max(SETTINGS.minFreight || 4.5, Math.ceil(km * (SETTINGS.perKmRate || 1.0) * 2) / 2);
+  }
+
   const info = $('#freight-info');
-  if (info) info.textContent = `Distância estimada: ${CHECKOUT_DATA.km.toFixed(1)} km · Frete: ${R(CHECKOUT_DATA.freight)}`;
+  if (info) {
+    if (CHECKOUT_DATA.freight === 0) {
+      info.innerHTML = `<b style="color:var(--green)">Distância estimada: ${km.toFixed(1)} km · Entrega GRÁTIS (Até ${freeKm} km)!</b>`;
+    } else {
+      info.textContent = `Distância estimada: ${km.toFixed(1)} km · Frete: ${R(CHECKOUT_DATA.freight)}`;
+    }
+  }
 };
 
 // Enviar Pedido
@@ -902,8 +922,8 @@ window.submitOrder = async function() {
       state: CHECKOUT_DATA.uf || 'SP',
       cep: CHECKOUT_DATA.cep || '',
       reference: CHECKOUT_DATA.ref || '',
-      freight: CHECKOUT_DATA.freight || 4.5,
-      km: CHECKOUT_DATA.km || 3.5
+      freight: CHECKOUT_DATA.freight !== undefined ? CHECKOUT_DATA.freight : 0,
+      km: CHECKOUT_DATA.km !== undefined ? CHECKOUT_DATA.km : 1.8
     } : { type: 'pickup' },
     items: CART.map(it => ({
       name: it.name,
@@ -1102,7 +1122,7 @@ function renderChatMessagesList(messages) {
       <div class="chat-bubble ${isStore ? 'store' : 'customer'}">
         ${isStore ? `
           <div class="chat-bubble-author">
-            <img src="imagens/Logo.png" alt="Logo"> Explosão Açaí
+            <img src="imagens/Logo.png" alt="Logo"> ${esc(SETTINGS.chatSenderName || 'Delivery')}
           </div>
         ` : ''}
         ${esc(m.message)}

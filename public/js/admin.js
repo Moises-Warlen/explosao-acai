@@ -231,8 +231,10 @@ window.toggleStoreStatus = async function() {
 };
 
 function renderStoreSettingsForm() {
-  if ($('#st-perkm')) $('#st-perkm').value = SETTINGS.perKmRate || 1.0;
-  if ($('#st-minfreight')) $('#st-minfreight').value = SETTINGS.minFreight || 4.5;
+  if ($('#st-perkm')) $('#st-perkm').value = SETTINGS.perKmRate !== undefined ? SETTINGS.perKmRate : 1.0;
+  if ($('#st-minfreight')) $('#st-minfreight').value = SETTINGS.minFreight !== undefined ? SETTINGS.minFreight : 4.5;
+  if ($('#st-freekm')) $('#st-freekm').value = SETTINGS.freeKmThreshold !== undefined ? SETTINGS.freeKmThreshold : 2.0;
+  if ($('#st-chatsender')) $('#st-chatsender').value = SETTINGS.chatSenderName || 'Delivery';
   if ($('#st-banner')) $('#st-banner').value = SETTINGS.bannerPromo || '';
   if ($('#st-wpp')) $('#st-wpp').value = SETTINGS.wpp || '';
   if ($('#st-address')) $('#st-address').value = SETTINGS.address || '';
@@ -243,6 +245,8 @@ window.saveStoreSettings = async function(e) {
   const updates = {
     perKmRate: parseFloat($('#st-perkm').value) || 1.0,
     minFreight: parseFloat($('#st-minfreight').value) || 4.5,
+    freeKmThreshold: parseFloat($('#st-freekm').value) >= 0 ? parseFloat($('#st-freekm').value) : 2.0,
+    chatSenderName: $('#st-chatsender') ? $('#st-chatsender').value.trim() || 'Delivery' : 'Delivery',
     bannerPromo: $('#st-banner').value.trim(),
     wpp: $('#st-wpp').value.trim(),
     address: $('#st-address').value.trim()
@@ -256,10 +260,53 @@ window.saveStoreSettings = async function(e) {
     });
     const data = await res.json();
     if (data.ok) {
+      SETTINGS = data.settings;
+      renderStoreSettingsForm();
       adminToast('Configurações da loja salvas com sucesso!', 'success');
     }
   } catch (e) {
     adminToast('Falha ao salvar configurações.', 'danger');
+  }
+};
+
+window.saveNewAdminPassword = async function(e) {
+  if (e) e.preventDefault();
+  const curPass = $('#adm-cur-pass')?.value;
+  const newPass = $('#adm-new-pass')?.value;
+  const confPass = $('#adm-conf-pass')?.value;
+
+  if (!curPass || !newPass) {
+    adminToast('Preencha a senha atual e a nova senha.', 'danger');
+    return;
+  }
+  if (newPass.length < 4) {
+    adminToast('A nova senha deve ter pelo menos 4 caracteres.', 'danger');
+    return;
+  }
+  if (newPass !== confPass) {
+    adminToast('A confirmação da nova senha não confere.', 'danger');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/admin/change-password`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ currentPassword: curPass, newPassword: newPass })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      ADMIN_TOKEN = newPass;
+      sessionStorage.setItem('explosao_admin_token', newPass);
+      if ($('#adm-cur-pass')) $('#adm-cur-pass').value = '';
+      if ($('#adm-new-pass')) $('#adm-new-pass').value = '';
+      if ($('#adm-conf-pass')) $('#adm-conf-pass').value = '';
+      adminToast('Senha do painel administrativo alterada com sucesso!', 'success');
+    } else {
+      adminToast(data.error || 'Erro ao alterar senha.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Erro de conexão ao alterar senha.', 'danger');
   }
 };
 
@@ -400,10 +447,60 @@ function createOrderCardHtml(order) {
           Imprimir Balcão
         </button>
         ${nextAction}
+        ${order.status !== 'cancelled' ? `
+          <button class="btn-sm btn-danger" style="margin-left:auto;font-size:11px;padding:4px 8px" onclick="openCancelOrderModal('${order.id}', '${order.orderNo}')" title="Cancelar este pedido">
+            Cancelar
+          </button>
+        ` : ''}
       </div>
     </div>
   `;
 }
+
+window.openCancelOrderModal = function(orderId, orderNo) {
+  if ($('#cancel-order-id')) $('#cancel-order-id').value = orderId;
+  if ($('#cancel-modal-title')) $('#cancel-modal-title').textContent = `Cancelar Pedido #${orderNo}`;
+  if ($('#cancel-order-reason')) $('#cancel-order-reason').selectedIndex = 0;
+  if ($('#cancel-order-obs')) $('#cancel-order-obs').value = '';
+  const modal = $('#cancel-order-modal');
+  if (modal) modal.style.display = 'flex';
+};
+
+window.closeCancelOrderModal = function() {
+  const modal = $('#cancel-order-modal');
+  if (modal) modal.style.display = 'none';
+};
+
+window.confirmCancelOrder = async function(e) {
+  if (e) e.preventDefault();
+  const orderId = $('#cancel-order-id')?.value;
+  const reasonVal = $('#cancel-order-reason')?.value || 'Cancelado pelo administrador';
+  const obs = $('#cancel-order-obs')?.value.trim();
+  const fullReason = obs ? `${reasonVal} - ${obs}` : reasonVal;
+
+  try {
+    const res = await fetch(`${API_URL}/orders/${orderId}/status`, {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify({ status: 'cancelled', reason: fullReason })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      closeCancelOrderModal();
+      const idx = ORDERS.findIndex(o => o.id === orderId);
+      if (idx !== -1) ORDERS[idx] = data.order;
+      renderKanban();
+      updateOrdersBadge();
+      const periodSelect = $('#report-period-select');
+      loadSalesReport({ period: periodSelect ? periodSelect.value : 'today' });
+      adminToast(`Pedido #${data.order.orderNo} cancelado com sucesso.`, 'info');
+    } else {
+      adminToast(data.error || 'Erro ao cancelar pedido.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Erro de conexão ao cancelar pedido.', 'danger');
+  }
+};
 
 window.advanceOrderStatus = async function(orderId, newStatus) {
   try {
@@ -515,6 +612,8 @@ function renderReportDashboard(rep) {
   if ($('#kpi-total-sales')) $('#kpi-total-sales').textContent = R(sum.totalNetSales);
   if ($('#kpi-freight')) $('#kpi-freight').textContent = R(sum.totalFreight);
   if ($('#kpi-discount')) $('#kpi-discount').textContent = R(sum.totalDiscount);
+  if ($('#kpi-cancelled')) $('#kpi-cancelled').textContent = `${sum.cancelledOrdersCount || 0}`;
+  if ($('#kpi-cancelled-sub')) $('#kpi-cancelled-sub').textContent = `${R(sum.cancelledTotal || 0)} cancelado`;
   if ($('#kpi-costs')) $('#kpi-costs').textContent = R(sum.totalCost);
   if ($('#kpi-profit')) {
     $('#kpi-profit').textContent = R(sum.grossProfit);
@@ -545,8 +644,14 @@ function renderReportDashboard(rep) {
   const tbody = $('#report-orders-table-body');
   if (tbody) {
     tbody.innerHTML = rep.orders.map(o => `
-      <tr>
+      <tr style="${o.isCancelled ? 'opacity:0.8;background:rgba(239,68,68,0.06)' : ''}">
         <td><b>#${o.orderNo}</b></td>
+        <td>
+          ${o.isCancelled 
+            ? `<span class="order-badge danger" style="font-size:10px">Cancelado</span>${o.cancellationReason ? `<div style="font-size:10px;color:var(--danger);max-width:140px;line-height:1.2;margin-top:2px">${esc(o.cancellationReason)}</div>` : ''}` 
+            : `<span class="order-badge success" style="font-size:10px">Concluído</span>`
+          }
+        </td>
         <td>${esc(o.customerName)}</td>
         <td>
           <span class="order-badge ${o.paymentMethod === 'Pix' ? 'pix' : (o.paymentMethod === 'Dinheiro' ? 'money' : 'card')}">
@@ -659,22 +764,26 @@ window.exportReportToPdf = function() {
     </div>
 
     <!-- Indicadores Principais -->
-    <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;margin-bottom:20px">
+    <div style="display:grid;grid-template-columns:repeat(5, 1fr);gap:10px;margin-bottom:20px">
       <div style="border:1.5px solid #e2d3f0;padding:10px;border-radius:8px;background:#fbf8fd">
         <div style="font-size:11px;color:#6b5280;font-weight:bold">FATURAMENTO LÍQUIDO</div>
-        <div style="font-size:18px;font-weight:bold;color:#4b0f6b">${R(sum.totalNetSales)}</div>
+        <div style="font-size:17px;font-weight:bold;color:#4b0f6b">${R(sum.totalNetSales)}</div>
       </div>
       <div style="border:1.5px solid #e2d3f0;padding:10px;border-radius:8px;background:#fbf8fd">
         <div style="font-size:11px;color:#6b5280;font-weight:bold">TAXAS DE ENTREGA</div>
-        <div style="font-size:18px;font-weight:bold;color:#4b0f6b">${R(sum.totalFreight)}</div>
+        <div style="font-size:17px;font-weight:bold;color:#4b0f6b">${R(sum.totalFreight)}</div>
       </div>
       <div style="border:1.5px solid #e2d3f0;padding:10px;border-radius:8px;background:#fbf8fd">
         <div style="font-size:11px;color:#6b5280;font-weight:bold">CUSTO DE INSUMOS</div>
-        <div style="font-size:18px;font-weight:bold;color:#666">${R(sum.totalCost)}</div>
+        <div style="font-size:17px;font-weight:bold;color:#666">${R(sum.totalCost)}</div>
       </div>
       <div style="border:1.5px solid #e2d3f0;padding:10px;border-radius:8px;background:#fbf8fd">
-        <div style="font-size:11px;color:#6b5280;font-weight:bold">LUCRO BRUTO ESTIMADO</div>
-        <div style="font-size:18px;font-weight:bold;color:#166534">${R(sum.grossProfit)} (${sum.profitMargin}%)</div>
+        <div style="font-size:11px;color:#6b5280;font-weight:bold">LUCRO BRUTO</div>
+        <div style="font-size:17px;font-weight:bold;color:#166534">${R(sum.grossProfit)} (${sum.profitMargin}%)</div>
+      </div>
+      <div style="border:1.5px solid #fecaca;padding:10px;border-radius:8px;background:#fff5f5">
+        <div style="font-size:11px;color:#991b1b;font-weight:bold">CANCELADOS</div>
+        <div style="font-size:17px;font-weight:bold;color:#991b1b">${sum.cancelledOrdersCount || 0} (${R(sum.cancelledTotal || 0)})</div>
       </div>
     </div>
 
@@ -705,6 +814,7 @@ window.exportReportToPdf = function() {
       <thead>
         <tr style="background:#f4f0fa;text-align:left">
           <th style="padding:6px;border:1px solid #ddd">Pedido</th>
+          <th style="padding:6px;border:1px solid #ddd">Status</th>
           <th style="padding:6px;border:1px solid #ddd">Cliente</th>
           <th style="padding:6px;border:1px solid #ddd">Tipo</th>
           <th style="padding:6px;border:1px solid #ddd">Pagamento</th>
@@ -717,8 +827,11 @@ window.exportReportToPdf = function() {
       </thead>
       <tbody>
         ${rep.orders.map(o => `
-          <tr>
+          <tr style="${o.isCancelled ? 'background:#fff5f5;color:#666' : ''}">
             <td style="padding:6px;border:1px solid #ddd">#${o.orderNo}</td>
+            <td style="padding:6px;border:1px solid #ddd">
+              ${o.isCancelled ? '<b style="color:#b91c1c">Cancelado</b>' : '<b style="color:#15803d">Concluído</b>'}
+            </td>
             <td style="padding:6px;border:1px solid #ddd">${esc(o.customerName)}</td>
             <td style="padding:6px;border:1px solid #ddd">${o.deliveryType}</td>
             <td style="padding:6px;border:1px solid #ddd">${o.paymentMethod} (${o.paymentTiming === 'delivery' ? 'Entrega' : 'Online'})</td>
@@ -838,26 +951,28 @@ window.openRecipeModal = function(productId) {
             </div>
           </div>
 
-          <table style="font-size:12px;width:100%">
-            <thead>
-              <tr style="color:var(--mut);border-bottom:1px solid rgba(255,255,255,0.08)">
-                <th style="padding:4px 6px">Insumo / Ingrediente</th>
-                <th style="padding:4px 6px;text-align:center">Quantidade</th>
-                <th style="padding:4px 6px;text-align:right">Custo Unitário</th>
-                <th style="padding:4px 6px;text-align:right">Custo Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${(rc.ingredients || []).map(ig => `
-                <tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
-                  <td style="padding:6px">${esc(ig.name)}</td>
-                  <td style="padding:6px;text-align:center"><b>${ig.quantity} ${ig.unit}</b></td>
-                  <td style="padding:6px;text-align:right">${R(ig.unitCost)}</td>
-                  <td style="padding:6px;text-align:right;color:var(--y)">${R(ig.totalCost)}</td>
+          <div class="table-responsive">
+            <table style="font-size:12px;width:100%;min-width:320px">
+              <thead>
+                <tr style="color:var(--mut);border-bottom:1px solid rgba(255,255,255,0.08)">
+                  <th style="padding:4px 6px">Insumo / Ingrediente</th>
+                  <th style="padding:4px 6px;text-align:center">Quantidade</th>
+                  <th style="padding:4px 6px;text-align:right">Custo Unitário</th>
+                  <th style="padding:4px 6px;text-align:right">Custo Total</th>
                 </tr>
-              `).join('')}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                ${(rc.ingredients || []).map(ig => `
+                  <tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
+                    <td style="padding:6px">${esc(ig.name)}</td>
+                    <td style="padding:6px;text-align:center"><b>${ig.quantity} ${ig.unit}</b></td>
+                    <td style="padding:6px;text-align:right">${R(ig.unitCost)}</td>
+                    <td style="padding:6px;text-align:right;color:var(--y)">${R(ig.totalCost)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
         </div>
       `;
     }).join('');
@@ -1509,42 +1624,91 @@ function renderExtrasTable() {
       </td>
       <td>${e.active ? '<span style="color:var(--green)">Ativo</span>' : '<span style="color:var(--danger)">Pausado</span>'}</td>
       <td>
+        <button class="btn-sm btn-print" onclick="openEditExtraModal('${e.id}')">Editar</button>
         <button class="btn-sm btn-danger" onclick="deleteExtra('${e.id}')">Excluir</button>
       </td>
     </tr>
   `).join('');
 }
 
-window.createExtraPrompt = async function() {
-  const name = prompt('Nome do adicional (Ex: Granola Especial, Kit Kat picado):');
-  if (!name) return;
-  const price = parseFloat(prompt('Preço de venda cobrado do cliente (R$):', '4.90'));
-  if (isNaN(price)) return;
-  const costPrice = parseFloat(prompt('Custo estimado do insumo (R$):', '1.50')) || 0;
-  const allowInCombos = confirm('Permitir adicionar este item em Combos também?');
+window.openNewExtraModal = function() {
+  if ($('#extra-modal-title')) $('#extra-modal-title').textContent = 'Novo Adicional Extra';
+  if ($('#extra-id')) $('#extra-id').value = '';
+  if ($('#extra-name')) $('#extra-name').value = '';
+  if ($('#extra-price')) $('#extra-price').value = '4.90';
+  if ($('#extra-cost')) $('#extra-cost').value = '1.50';
+  if ($('#extra-allow-acai')) $('#extra-allow-acai').checked = true;
+  if ($('#extra-allow-combos')) $('#extra-allow-combos').checked = true;
+  if ($('#extra-active')) $('#extra-active').checked = true;
+  const modal = $('#extra-edit-modal');
+  if (modal) modal.style.display = 'flex';
+};
+
+window.openEditExtraModal = function(id) {
+  const ex = EXTRAS.find(e => e.id === id);
+  if (!ex) return;
+  if ($('#extra-modal-title')) $('#extra-modal-title').textContent = `Editar Adicional: ${ex.name}`;
+  if ($('#extra-id')) $('#extra-id').value = ex.id;
+  if ($('#extra-name')) $('#extra-name').value = ex.name;
+  if ($('#extra-price')) $('#extra-price').value = ex.price;
+  if ($('#extra-cost')) $('#extra-cost').value = ex.costPrice !== undefined ? ex.costPrice : 1.50;
+  if ($('#extra-allow-acai')) $('#extra-allow-acai').checked = ex.allowInAcai !== false;
+  if ($('#extra-allow-combos')) $('#extra-allow-combos').checked = ex.allowInCombos !== false;
+  if ($('#extra-active')) $('#extra-active').checked = ex.active !== false;
+  const modal = $('#extra-edit-modal');
+  if (modal) modal.style.display = 'flex';
+};
+
+window.closeExtraModal = function() {
+  const modal = $('#extra-edit-modal');
+  if (modal) modal.style.display = 'none';
+};
+
+window.saveExtraForm = async function(e) {
+  if (e) e.preventDefault();
+  const id = $('#extra-id')?.value;
+  const name = $('#extra-name')?.value.trim();
+  const price = parseFloat($('#extra-price')?.value);
+  const costPrice = parseFloat($('#extra-cost')?.value) || 0;
+  const allowInAcai = $('#extra-allow-acai')?.checked ?? true;
+  const allowInCombos = $('#extra-allow-combos')?.checked ?? true;
+  const active = $('#extra-active')?.checked ?? true;
+
+  if (!name || isNaN(price)) {
+    return adminToast('Preencha o nome e o preço de venda do adicional.', 'danger');
+  }
+
+  const payload = { name, price, costPrice, allowInAcai, allowInCombos, active };
 
   try {
-    const res = await fetch(`${API_URL}/catalog/extras`, {
-      method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify({
-        name,
-        price,
-        costPrice,
-        active: true,
-        allowInAcai: true,
-        allowInCombos
-      })
-    });
+    let res;
+    if (id) {
+      res = await fetch(`${API_URL}/catalog/extras/${id}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify(payload)
+      });
+    } else {
+      res = await fetch(`${API_URL}/catalog/extras`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify(payload)
+      });
+    }
     const data = await res.json();
     if (data.ok) {
+      closeExtraModal();
       await loadExtras();
-      adminToast('Adicional cadastrado com sucesso!', 'success');
+      adminToast(id ? 'Adicional atualizado com sucesso!' : 'Adicional cadastrado com sucesso!', 'success');
+    } else {
+      adminToast(data.error || 'Erro ao salvar adicional.', 'danger');
     }
-  } catch (e) {
-    adminToast('Erro ao cadastrar adicional.', 'danger');
+  } catch (err) {
+    adminToast('Erro de conexão ao salvar adicional.', 'danger');
   }
 };
+
+window.createExtraPrompt = window.openNewExtraModal;
 
 window.deleteExtra = async function(id) {
   if (!confirm('Deseja excluir este adicional?')) return;
@@ -1589,65 +1753,56 @@ function renderCouponsList() {
   `).join('');
 }
 
-window.sendCouponViaChat = async function(code, value, type) {
-  if (!ACTIVE_CHAT_PHONE) {
-    adminToast('Selecione uma conversa com um cliente na aba "Chat de Atendimento" para enviar o cupom!', 'danger');
-    return;
-  }
-
-  const desc = type === 'percent' ? `${value}% de desconto` : `desconto de ${R(value)}`;
-  const text = `Olá! Temos um presente exclusivo para você: use o cupom ${code} e ganhe ${desc} no seu pedido de hoje no Explosão Açaí!`;
-
-  try {
-    await fetch(`${API_URL}/chat`, {
-      method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify({
-        sender: 'admin',
-        customerPhone: ACTIVE_CHAT_PHONE,
-        customerName: $('#active-chat-name').textContent,
-        message: text
-      })
-    });
-    adminToast(`Cupom ${code} enviado com sucesso no chat de ${$('#active-chat-name').textContent}!`, 'success');
-  } catch (e) {
-    adminToast('Erro ao enviar cupom no chat.', 'danger');
-  }
+window.openNewCouponModal = function() {
+  if ($('#cup-code')) $('#cup-code').value = '';
+  if ($('#cup-type')) $('#cup-type').value = 'percent';
+  if ($('#cup-value')) $('#cup-value').value = '10';
+  if ($('#cup-minorder')) $('#cup-minorder').value = '30';
+  if ($('#cup-maxuses')) $('#cup-maxuses').value = '';
+  if ($('#cup-active')) $('#cup-active').checked = true;
+  const modal = $('#coupon-edit-modal');
+  if (modal) modal.style.display = 'flex';
 };
 
-window.copyCouponText = function(code, value, type) {
-  const desc = type === 'percent' ? `${value}% de desconto` : `desconto de ${R(value)}`;
-  const text = `Olá! Aproveite nosso cupom especial: digite *${code}* e ganhe ${desc} no seu pedido no Explosão Açaí!`;
-  navigator.clipboard.writeText(text);
-  adminToast('Texto do cupom copiado para a área de transferência!', 'success');
+window.closeCouponModal = function() {
+  const modal = $('#coupon-edit-modal');
+  if (modal) modal.style.display = 'none';
 };
 
-window.createCoupon = async function() {
-  const code = prompt('Código do novo cupom (Ex: EXPLOSAO15):');
-  if (!code) return;
-  const value = parseFloat(prompt('Valor do desconto (ex: 10 para 10% ou 5 para R$ 5,00):'));
-  if (isNaN(value)) return;
-  const isPercent = confirm('O desconto é em porcentagem (%)? Clique OK para %, ou Cancelar para valor fixo em R$.');
-  const type = isPercent ? 'percent' : 'fixed';
-  const minOrder = parseFloat(prompt('Valor mínimo do pedido para aplicar o cupom (R$):', '30.00')) || 0;
+window.saveCouponForm = async function(e) {
+  if (e) e.preventDefault();
+  const code = $('#cup-code')?.value.trim().toUpperCase();
+  const type = $('#cup-type')?.value || 'percent';
+  const value = parseFloat($('#cup-value')?.value);
+  const minOrder = parseFloat($('#cup-minorder')?.value) || 0;
+  const maxUsesVal = $('#cup-maxuses')?.value.trim();
+  const maxUses = maxUsesVal ? parseInt(maxUsesVal, 10) : null;
+  const active = $('#cup-active')?.checked ?? true;
+
+  if (!code || isNaN(value)) {
+    return adminToast('Informe o código e o valor do cupom.', 'danger');
+  }
 
   try {
     const res = await fetch(`${API_URL}/coupons`, {
       method: 'POST',
       headers: authHeaders(),
-      body: JSON.stringify({ code, type, value, minOrder, active: true })
+      body: JSON.stringify({ code, type, value, minOrder, maxUses, active })
     });
     const data = await res.json();
     if (data.ok) {
+      closeCouponModal();
       await loadCoupons();
-      adminToast('Cupom criado com sucesso!', 'success');
+      adminToast(`Cupom ${code} criado com sucesso!`, 'success');
     } else {
       adminToast(data.error || 'Erro ao criar cupom.', 'danger');
     }
-  } catch (e) {
+  } catch (err) {
     adminToast('Erro de conexão ao criar cupom.', 'danger');
   }
 };
+
+window.createCoupon = window.openNewCouponModal;
 
 window.deleteCoupon = async function(id) {
   if (!confirm('Deseja excluir este cupom?')) return;

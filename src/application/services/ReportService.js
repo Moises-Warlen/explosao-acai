@@ -26,10 +26,7 @@ export class ReportService {
     const now = new Date();
 
     // 1. Filtragem robusta por datas
-    const filteredOrders = orders.filter(o => {
-      // Ignora pedidos cancelados na contabilização financeira
-      if (o.status === 'cancelled') return false;
-
+    const allPeriodOrders = orders.filter(o => {
       const orderDate = new Date(o.createdAt);
 
       // Filtro personalizado por intervalo de datas (YYYY-MM-DD ou Date)
@@ -66,13 +63,20 @@ export class ReportService {
       return true; // 'all'
     });
 
+    // Separação de pedidos cancelados e ativos
+    const cancelledOrders = allPeriodOrders.filter(o => o.status === 'cancelled');
+    const cancelledOrdersCount = cancelledOrders.length;
+    const cancelledTotal = cancelledOrders.reduce((acc, o) => acc + Number(o.total || 0), 0);
+
+    const activeOrders = allPeriodOrders.filter(o => o.status !== 'cancelled');
+
     // 2. Acumuladores financeiros e métricas
     let totalGrossSales = 0; // Soma dos itens/subtotais
     let totalFreight = 0;    // Faturamento total de entregas
     let totalDiscount = 0;   // Descontos concedidos em cupons
     let totalNetSales = 0;   // Total recebido
     let totalCost = 0;       // Custo total de insumos
-    const ordersCount = filteredOrders.length;
+    const ordersCount = activeOrders.length;
 
     // Métricas de tempos operacionais
     let prepTimeSum = 0;
@@ -108,8 +112,8 @@ export class ReportService {
       'pickup': { count: 0 }
     };
 
-    // 3. Processa cada pedido filtrado
-    filteredOrders.forEach(o => {
+    // 3. Processa cada pedido ativo
+    activeOrders.forEach(o => {
       const orderSubtotal = Number(o.subtotal || 0);
       const orderFreight = Number(o.freight || 0);
       const orderDiscount = Number(o.discount || 0);
@@ -233,6 +237,8 @@ export class ReportService {
         grossProfit: Number(grossProfit.toFixed(2)),
         profitMargin: Number(profitMargin.toFixed(1)),
         ordersCount,
+        cancelledOrdersCount,
+        cancelledTotal: Number(cancelledTotal.toFixed(2)),
         averageTicket: Number(averageTicket.toFixed(2)),
         averagePreparationTimeMinutes,
         averageDeliveryTimeMinutes
@@ -241,7 +247,7 @@ export class ReportService {
       worstSellers,
       paymentBreakdown,
       deliveryBreakdown,
-      orders: filteredOrders.map(o => ({
+      orders: allPeriodOrders.map(o => ({
         id: o.id,
         orderNo: o.orderNo,
         customerName: o.customer.name,
@@ -258,6 +264,8 @@ export class ReportService {
         costTotal: o.costTotal,
         profit: Number((o.total - (o.costTotal || 0)).toFixed(2)),
         status: o.status,
+        isCancelled: o.status === 'cancelled',
+        cancellationReason: o.cancellationReason || '',
         preparationTimeMinutes: o.preparationTimeMinutes || null,
         deliveryTimeMinutes: o.deliveryTimeMinutes || null,
         createdAt: o.createdAt

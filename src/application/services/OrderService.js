@@ -106,13 +106,22 @@ export class OrderService {
       }
     }
 
-    // 5. Calcula Frete
+    // 5. Calcula Frete (Regra: Até 2 km a entrega é GRÁTIS!)
     let freight = 0;
     if (delivery && delivery.type === 'delivery') {
-      freight = Number(delivery.freight || 0);
-      const minFreight = catalog.settings.minFreight || 4.5;
-      if (freight < minFreight) {
-        freight = minFreight;
+      const km = Number(delivery.km || 0);
+      const freeKmThreshold = catalog.settings?.freeKmThreshold !== undefined ? Number(catalog.settings.freeKmThreshold) : 2.0;
+
+      if (km > 0 && km <= freeKmThreshold) {
+        freight = 0; // Entrega GRÁTIS até 2 km
+      } else {
+        freight = Number(delivery.freight || 0);
+        const minFreight = catalog.settings?.minFreight || 4.5;
+        if (freight < minFreight && freight > 0) {
+          freight = minFreight;
+        } else if (freight === 0 && km > freeKmThreshold) {
+          freight = minFreight;
+        }
       }
     }
 
@@ -221,7 +230,7 @@ export class OrderService {
     return newOrder;
   }
 
-  updateOrderStatus(orderId, newStatus) {
+  updateOrderStatus(orderId, newStatus, cancellationReason = null) {
     const data = this.db.get();
     const orderIndex = data.orders.findIndex(o => o.id === orderId || o.orderNo === String(orderId));
     if (orderIndex === -1) throw new Error('Pedido não encontrado.');
@@ -240,6 +249,11 @@ export class OrderService {
       order.deliveredAt = now.toISOString();
       const baseTime = order.preparedAt ? new Date(order.preparedAt).getTime() : new Date(order.createdAt).getTime();
       order.deliveryTimeMinutes = Math.max(1, Math.round((now.getTime() - baseTime) / 60000));
+    }
+
+    if (newStatus === OrderStatus.CANCELLED) {
+      order.cancellationReason = cancellationReason || 'Cancelado pelo operador';
+      order.cancelledAt = now.toISOString();
     }
 
     order.status = newStatus;

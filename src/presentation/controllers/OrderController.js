@@ -32,9 +32,9 @@ export class OrderController {
 
   async updateStatus(req, res) {
     try {
-      const { status } = req.body;
+      const { status, reason } = req.body;
       if (!status) return res.status(400).json({ ok: false, error: 'Status é obrigatório.' });
-      const order = orderService.updateOrderStatus(req.params.id, status);
+      const order = orderService.updateOrderStatus(req.params.id, status, reason);
       return res.json({ ok: true, order });
     } catch (err) {
       return res.status(400).json({ ok: false, error: err.message });

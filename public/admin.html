@@ -154,6 +154,11 @@
             <span class="kpi-value" id="kpi-discount">R$ 0,00</span>
             <span class="kpi-sub" style="color:var(--danger)">Concedidos em promoções</span>
           </div>
+          <div class="kpi-card" id="kpi-card-cancelled" style="border-left: 3px solid var(--danger);">
+            <span class="kpi-title" style="color:var(--danger)">Pedidos Cancelados</span>
+            <span class="kpi-value" id="kpi-cancelled" style="color:var(--danger)">0</span>
+            <span class="kpi-sub" id="kpi-cancelled-sub" style="color:var(--mut)">R$ 0,00 cancelado</span>
+          </div>
           <div class="kpi-card">
             <span class="kpi-title">Custo Total de Insumos</span>
             <span class="kpi-value" id="kpi-costs">R$ 0,00</span>
@@ -218,6 +223,7 @@
             <thead>
               <tr>
                 <th>Pedido</th>
+                <th>Status</th>
                 <th>Cliente</th>
                 <th>Pagamento</th>
                 <th>Modalidade</th>
@@ -319,7 +325,7 @@
               Defina preços de venda, custos e vincule os adicionais a Copos de Açaí ou Combos específicos.
             </p>
           </div>
-          <button class="btn-sm btn-next" onclick="createExtraPrompt()">+ Novo Adicional</button>
+          <button class="btn-sm btn-next" onclick="openNewExtraModal()">+ Novo Adicional</button>
         </div>
 
         <div class="table-responsive">
@@ -350,7 +356,7 @@
               Gere cupons e copie a mensagem formatada para enviar diretamente no Chat ou no WhatsApp do cliente.
             </p>
           </div>
-          <button class="btn-sm btn-next" onclick="createCoupon()">+ Criar Novo Cupom</button>
+          <button class="btn-sm btn-next" onclick="openNewCouponModal()">+ Criar Novo Cupom</button>
         </div>
 
         <div class="table-responsive">
@@ -397,18 +403,54 @@
               <input type="number" step="0.5" id="st-minfreight" value="4.5">
             </div>
             <div>
-              <label>WhatsApp da Loja (com DDD)</label>
-              <input id="st-wpp" value="5516991098863">
+              <label>Distância p/ Frete Grátis (KM)</label>
+              <input type="number" step="0.5" id="st-freekm" value="2.0" title="Entregas até esta distância terão frete R$ 0,00 grátis">
             </div>
           </div>
 
-          <label>Endereço da Loja (Ponto de Partida do Frete)</label>
+          <div class="form-grid" style="margin-top:12px">
+            <div>
+              <label>WhatsApp da Loja (com DDD)</label>
+              <input id="st-wpp" value="5516991098863">
+            </div>
+            <div>
+              <label>Nome do Atendente exibido no Chat</label>
+              <input id="st-chatsender" value="Delivery" placeholder="Ex: Delivery, Suporte, Explosão Açaí">
+            </div>
+          </div>
+
+          <label style="margin-top:12px">Endereço da Loja (Ponto de Partida do Frete)</label>
           <input id="st-address" value="Rua Renato Lourenço Fernandes Rosa, 1721, Aeroporto 3, Franca - SP" style="margin-bottom:12px">
 
           <label>Texto do Banner Promocional do Topo</label>
           <input id="st-banner" value="Bem-vindo ao nosso delivery próprio! Peça direto por aqui e ganhe descontos." style="margin-bottom:18px">
 
           <button class="btn-sm btn-next" type="submit" style="padding:10px 20px;font-size:14px">Salvar Configurações</button>
+        </form>
+      </div>
+
+      <!-- Card de Alteração de Senha do Administrador -->
+      <div class="admin-card" style="margin-top:20px">
+        <h2>Segurança & Senha de Acesso do Administrador</h2>
+        <p style="color:var(--mut);font-size:13px;margin-bottom:16px">
+          Altere a senha mestra de acesso ao Painel Administrativo. A alteração passa a valer imediatamente.
+        </p>
+        <form onsubmit="saveNewAdminPassword(event)">
+          <div class="form-grid">
+            <div>
+              <label>Senha Atual</label>
+              <input type="password" id="adm-cur-pass" placeholder="Senha atual" required autocomplete="current-password">
+            </div>
+            <div>
+              <label>Nova Senha</label>
+              <input type="password" id="adm-new-pass" placeholder="Nova senha (ex: RafaeLL@2)" required autocomplete="new-password">
+            </div>
+            <div>
+              <label>Confirmar Nova Senha</label>
+              <input type="password" id="adm-conf-pass" placeholder="Repita a nova senha" required autocomplete="new-password">
+            </div>
+          </div>
+          <button class="btn-sm btn-next" type="submit" style="padding:10px 20px;font-size:14px;margin-top:14px">Atualizar Senha de Acesso</button>
         </form>
       </div>
     </div>
@@ -616,6 +658,133 @@
           Fechar
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal de Criação / Edição de Cupom de Desconto (Sem prompt) -->
+  <div id="coupon-edit-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;z-index:125;backdrop-filter:blur(5px)">
+    <div style="background:var(--panel);border:1.5px solid var(--ln);border-radius:20px;padding:24px;width:min(460px,95vw);max-height:90vh;overflow-y:auto">
+      <h3 style="margin-top:0">Criar Novo Cupom de Desconto</h3>
+      <p style="font-size:13px;color:var(--mut);margin-top:-6px;margin-bottom:16px">Defina a regra do cupom promocional para seus clientes.</p>
+      <form onsubmit="saveCouponForm(event)">
+        <label>Código do Cupom (Letras maiúsculas)
+          <input id="cup-code" required placeholder="Ex: EXPLOSAO10, VERAO15" style="text-transform:uppercase" oninput="this.value = this.value.toUpperCase()">
+        </label>
+
+        <div class="form-grid" style="margin-top:12px">
+          <div>
+            <label>Tipo de Desconto</label>
+            <select id="cup-type">
+              <option value="percent">Porcentagem (%)</option>
+              <option value="fixed">Valor Fixo (R$)</option>
+            </select>
+          </div>
+          <div>
+            <label>Valor do Desconto</label>
+            <input type="number" step="0.5" id="cup-value" required placeholder="Ex: 10 ou 5.00">
+          </div>
+        </div>
+
+        <div class="form-grid" style="margin-top:12px">
+          <div>
+            <label>Pedido Mínimo (R$)</label>
+            <input type="number" step="0.5" id="cup-minorder" value="30.0" placeholder="0 para sem mínimo">
+          </div>
+          <div>
+            <label>Limite de Usos (Opcional)</label>
+            <input type="number" id="cup-maxuses" placeholder="Deixe vazio p/ ilimitado">
+          </div>
+        </div>
+
+        <div style="margin-top:14px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="cup-active" checked style="width:auto">
+            <span>Cupom Ativo (Válido para aplicação no carrinho)</span>
+          </label>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:20px">
+          <button type="submit" class="btn-sm btn-next" style="flex:1;padding:12px">Salvar Cupom</button>
+          <button type="button" class="btn-sm btn-secondary" style="padding:12px" onclick="closeCouponModal()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de Criação / Edição de Adicional Extra (Sem prompt) -->
+  <div id="extra-edit-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;z-index:125;backdrop-filter:blur(5px)">
+    <div style="background:var(--panel);border:1.5px solid var(--ln);border-radius:20px;padding:24px;width:min(480px,95vw);max-height:90vh;overflow-y:auto">
+      <h3 id="extra-modal-title" style="margin-top:0">Novo Adicional Extra</h3>
+      <p style="font-size:13px;color:var(--mut);margin-top:-6px;margin-bottom:16px">Defina preço de venda, custo de insumo e regras de vínculo.</p>
+      <form onsubmit="saveExtraForm(event)">
+        <input type="hidden" id="extra-id">
+        <label>Nome do Adicional
+          <input id="extra-name" required placeholder="Ex: Granola Especial, Kit Kat picado, Nutella">
+        </label>
+
+        <div class="form-grid" style="margin-top:12px">
+          <div>
+            <label>Preço de Venda (R$)</label>
+            <input type="number" step="0.1" id="extra-price" required placeholder="Ex: 4.90">
+          </div>
+          <div>
+            <label>Custo do Insumo (R$)</label>
+            <input type="number" step="0.05" id="extra-cost" required value="1.50" placeholder="Ex: 1.50">
+          </div>
+        </div>
+
+        <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="extra-allow-acai" checked style="width:auto">
+            <span>Permitir em Copos de Açaí Tradicional</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="extra-allow-combos" checked style="width:auto">
+            <span>Permitir adicionar também em Combos / Especiais</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="extra-active" checked style="width:auto">
+            <span>Adicional Ativo (Disponível para venda)</span>
+          </label>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:20px">
+          <button type="submit" class="btn-sm btn-next" style="flex:1;padding:12px">Salvar Adicional</button>
+          <button type="button" class="btn-sm btn-secondary" style="padding:12px" onclick="closeExtraModal()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de Cancelamento de Pedido com Motivo -->
+  <div id="cancel-order-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.78);display:none;align-items:center;justify-content:center;z-index:130;backdrop-filter:blur(5px)">
+    <div style="background:var(--panel);border:1.5px solid var(--danger);border-radius:20px;padding:24px;width:min(460px,95vw);max-height:90vh;overflow-y:auto">
+      <h3 id="cancel-modal-title" style="margin-top:0;color:var(--danger)">Cancelar Pedido</h3>
+      <p style="font-size:13px;color:var(--mut);margin-top:-6px;margin-bottom:16px">
+        O pedido será marcado como Cancelado, mantendo histórico contábil para o relatório de vendas.
+      </p>
+      <form onsubmit="confirmCancelOrder(event)">
+        <input type="hidden" id="cancel-order-id">
+        
+        <label>Motivo do Cancelamento</label>
+        <select id="cancel-order-reason" required style="margin-bottom:12px">
+          <option value="Desistência do cliente">Desistência do cliente</option>
+          <option value="Cliente não atende / não responde">Cliente não atende / não responde</option>
+          <option value="Endereço fora do raio de entrega">Endereço fora do raio de entrega</option>
+          <option value="Falta de insumo / produto esgotado">Falta de insumo / produto esgotado</option>
+          <option value="Problema com pagamento / recusado">Problema com pagamento / recusado</option>
+          <option value="Pedido duplicado">Pedido duplicado</option>
+          <option value="Outro motivo">Outro motivo</option>
+        </select>
+
+        <label>Observação Adicional (Opcional)</label>
+        <textarea id="cancel-order-obs" rows="3" placeholder="Detalhes adicionais sobre o cancelamento..."></textarea>
+
+        <div style="display:flex;gap:10px;margin-top:20px">
+          <button type="submit" class="btn-sm btn-danger" style="flex:1;padding:12px">Confirmar Cancelamento</button>
+          <button type="button" class="btn-sm btn-secondary" style="padding:12px" onclick="closeCancelOrderModal()">Voltar</button>
+        </div>
+      </form>
     </div>
   </div>
 

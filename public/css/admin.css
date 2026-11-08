@@ -627,6 +627,91 @@ input:focus, select:focus, textarea:focus {
   display: none;
 }
 
+/* ================= RESPONSIVIDADE (MOBILE & TABLETS) ================= */
+@media (max-width: 900px) {
+  .sales-ranking-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .admin-card {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
+    gap: 10px;
+  }
+
+  .kpi-card {
+    padding: 14px;
+  }
+
+  .kpi-value {
+    font-size: 20px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  #recipe-modal > div,
+  #product-edit-modal > div,
+  #accompaniment-edit-modal > div,
+  #category-edit-modal > div,
+  #coupon-edit-modal > div,
+  #extra-edit-modal > div,
+  #cancel-order-modal > div {
+    padding: 16px;
+    border-radius: 16px;
+    width: 95vw;
+  }
+
+  .table-responsive {
+    -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
+  }
+
+  table {
+    font-size: 13px;
+    min-width: 600px;
+  }
+
+  th, td {
+    padding: 10px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .order-card {
+    padding: 14px;
+  }
+
+  .order-actions {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .order-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 @media print {
   /* Se for impressão da Ficha Técnica / Receita do Produto */
   body.printing-recipe * {

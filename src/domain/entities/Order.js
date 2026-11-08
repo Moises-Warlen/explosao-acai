@@ -48,6 +48,8 @@ export class Order {
     deliveredAt = null,
     preparationTimeMinutes = null,
     deliveryTimeMinutes = null,
+    cancellationReason = null,
+    cancelledAt = null,
     createdAt = new Date().toISOString(),
     updatedAt = new Date().toISOString()
   }) {
@@ -69,6 +71,8 @@ export class Order {
     this.deliveredAt = deliveredAt;
     this.preparationTimeMinutes = preparationTimeMinutes;
     this.deliveryTimeMinutes = deliveryTimeMinutes;
+    this.cancellationReason = cancellationReason;
+    this.cancelledAt = cancelledAt;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }

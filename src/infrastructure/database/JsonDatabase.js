@@ -23,6 +23,9 @@ const INITIAL_DATA = {
   // CONFIGURAÇÕES GERAIS DA LOJA
   settings: {
     storeName: "Explosão Açaí",
+    adminPassword: "RafaeLL@2",
+    chatSenderName: "Delivery",
+    freeKmThreshold: 2.0,
     wpp: "5516991098863",
     pixKey: "16991098863",
     address: "Rua Renato Lourenço Fernandes Rosa, 1721, Aeroporto 3, Franca - SP",
@@ -532,12 +535,18 @@ class JsonDatabase {
   }
 
   saveLocal() {
+    const jsonStr = JSON.stringify(this.data, null, 2);
+    const tempFile = `${this.filePath}.${Date.now()}.${Math.random().toString(36).substring(2, 7)}.tmp`;
     try {
-      const tempFile = `${this.filePath}.tmp`;
-      fs.writeFileSync(tempFile, JSON.stringify(this.data, null, 2), 'utf-8');
+      fs.writeFileSync(tempFile, jsonStr, 'utf-8');
       fs.renameSync(tempFile, this.filePath);
     } catch (err) {
-      console.error("Erro ao salvar database.json localmente:", err);
+      try {
+        fs.writeFileSync(this.filePath, jsonStr, 'utf-8');
+        if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
+      } catch (innerErr) {
+        console.error("Erro ao salvar database.json localmente:", innerErr);
+      }
     }
   }
 
