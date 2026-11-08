@@ -59,6 +59,16 @@ export class OrderController {
       return res.status(400).json({ ok: false, error: err.message });
     }
   }
+
+  async returnOrder(req, res) {
+    try {
+      const { reason } = req.body;
+      const order = orderService.returnOrder(req.params.id, reason);
+      return res.json({ ok: true, order });
+    } catch (err) {
+      return res.status(400).json({ ok: false, error: err.message });
+    }
+  }
 }
 
 export const orderController = new OrderController();

@@ -63,12 +63,16 @@ export class ReportService {
       return true; // 'all'
     });
 
-    // Separação de pedidos cancelados e ativos
+    // Separação de pedidos cancelados, devolvidos e ativos
     const cancelledOrders = allPeriodOrders.filter(o => o.status === 'cancelled');
     const cancelledOrdersCount = cancelledOrders.length;
     const cancelledTotal = cancelledOrders.reduce((acc, o) => acc + Number(o.total || 0), 0);
 
-    const activeOrders = allPeriodOrders.filter(o => o.status !== 'cancelled');
+    const returnedOrders = allPeriodOrders.filter(o => o.status === 'returned');
+    const returnedOrdersCount = returnedOrders.length;
+    const returnedTotal = returnedOrders.reduce((acc, o) => acc + Number(o.total || 0), 0);
+
+    const activeOrders = allPeriodOrders.filter(o => o.status !== 'cancelled' && o.status !== 'returned');
 
     // 2. Acumuladores financeiros e métricas
     let totalGrossSales = 0; // Soma dos itens/subtotais
@@ -239,6 +243,8 @@ export class ReportService {
         ordersCount,
         cancelledOrdersCount,
         cancelledTotal: Number(cancelledTotal.toFixed(2)),
+        returnedOrdersCount,
+        returnedTotal: Number(returnedTotal.toFixed(2)),
         averageTicket: Number(averageTicket.toFixed(2)),
         averagePreparationTimeMinutes,
         averageDeliveryTimeMinutes
@@ -266,6 +272,9 @@ export class ReportService {
         status: o.status,
         isCancelled: o.status === 'cancelled',
         cancellationReason: o.cancellationReason || '',
+        isReturned: o.status === 'returned',
+        returnReason: o.returnReason || '',
+        returnedAt: o.returnedAt || null,
         preparationTimeMinutes: o.preparationTimeMinutes || null,
         deliveryTimeMinutes: o.deliveryTimeMinutes || null,
         createdAt: o.createdAt

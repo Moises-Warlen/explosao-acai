@@ -320,5 +320,94 @@ describe('Explosão Açaí - Testes das Novas Funcionalidades', () => {
     const getData = await getRes.json();
     assert.ok(getData.messages.some(m => m.customerName === 'Carlos Silva VIP'), 'Mensagens devem refletir o novo nome');
     assert.ok(getData.messages.some(m => m.isSystemClose === true), 'Deve conter a mensagem de encerramento amigável');
+
+    // 5. Verifica se a conversa foi removida da lista ativa do painel admin
+    const listRes = await fetch(`${baseUrl}/api/chat/conversations`, { headers: authHeaders });
+    const listData = await listRes.json();
+    assert.ok(!listData.conversations.some(c => c.customerPhone === testPhone), 'Conversa finalizada DEVE ser removida das conversas ativas');
+
+    // 6. Se o cliente enviar uma nova mensagem após ser finalizado, histórico antigo deve ser limpo e chat recomeçar limpo
+    await fetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sender: 'customer',
+        customerPhone: testPhone,
+        customerName: 'Carlos Silva VIP',
+        message: 'Olá, gostaria de fazer outro pedido!'
+      })
+    });
+
+    const getResClean = await fetch(`${baseUrl}/api/chat?phone=${testPhone}`);
+    const getDataClean = await getResClean.json();
+    assert.strictEqual(getDataClean.messages.length, 1, 'Novo chat deve conter APENAS a nova mensagem sem histórico antigo');
+    assert.strictEqual(getDataClean.messages[0].message, 'Olá, gostaria de fazer outro pedido!');
+  });
+
+  test('Fluxo de Pedidos Devolvidos: POST /api/orders/:id/return e Relatório de Vendas', async () => {
+    // 1. Cria pedido para entrega
+    const orderPayload = {
+      customer: { name: 'Mariana Devolução Test', phone: '16988884433' },
+      delivery: {
+        type: 'delivery',
+        street: 'Rua Deserta',
+        number: '99',
+        bairro: 'Jardim Primavera',
+        km: 4.0
+      },
+      payment: {
+        method: 'Dinheiro',
+        timing: 'delivery',
+        trocoValue: 0
+      },
+      items: [
+        {
+          productId: 'p1',
+          name: 'Copo Tradicional 500ml',
+          size: 500,
+          quantity: 2,
+          unitPrice: 29.90,
+          totalPrice: 59.80
+        }
+      ]
+    };
+
+    const createRes = await fetch(`${baseUrl}/api/orders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(orderPayload)
+    });
+    const createData = await createRes.json();
+    assert.strictEqual(createRes.status, 201);
+    const orderId = createData.order.id;
+
+    // 2. Devolve o pedido informando motivo
+    const returnReason = 'Cliente não atendeu o interfone nem telefone';
+    const returnRes = await fetch(`${baseUrl}/api/orders/${orderId}/return`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: returnReason })
+    });
+    const returnData = await returnRes.json();
+    assert.strictEqual(returnRes.status, 200);
+    assert.strictEqual(returnData.ok, true);
+    assert.strictEqual(returnData.order.status, 'returned', 'Status do pedido deve ser returned');
+    assert.strictEqual(returnData.order.returnReason, returnReason, 'Deve gravar o motivo da devolução');
+    assert.ok(returnData.order.returnedAt, 'Deve registrar data/hora da devolução');
+
+    // 3. Consulta relatório de vendas e verifica contadores de devolvidos
+    const authHeaders = {
+      'Authorization': 'Bearer RafaeLL@2'
+    };
+    const repRes = await fetch(`${baseUrl}/api/reports/sales?period=today`, { headers: authHeaders });
+    const repData = await repRes.json();
+    assert.strictEqual(repRes.status, 200);
+    assert.ok(repData.report.summary.returnedOrdersCount >= 1, 'Deve registrar ao menos 1 pedido devolvido no sumário');
+    assert.ok(repData.report.summary.returnedTotal >= 59.80, 'Deve contabilizar o valor devolvido no sumário');
+
+    const returnedOrderInReport = repData.report.orders.find(o => o.id === orderId);
+    assert.ok(returnedOrderInReport, 'Pedido devolvido deve constar na listagem detalhada do relatório');
+    assert.strictEqual(returnedOrderInReport.isReturned, true);
+    assert.strictEqual(returnedOrderInReport.returnReason, returnReason);
   });
 });

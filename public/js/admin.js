@@ -149,8 +149,11 @@ function initWebSocket() {
           const idx = ORDERS.findIndex(o => o.id === data.payload.id);
           if (idx !== -1) {
             ORDERS[idx] = data.payload;
-            renderKanban();
+          } else {
+            ORDERS.unshift(data.payload);
           }
+          renderKanban();
+          updateOrdersBadge();
           loadSalesReport({ period: $('#report-period-select')?.value || 'today' });
         }
         if (data.event === 'CHAT_MESSAGE') {
@@ -158,6 +161,19 @@ function initWebSocket() {
           loadChatConversations();
           if (ACTIVE_CHAT_PHONE === data.payload.customerPhone) {
             loadChatMessages(ACTIVE_CHAT_PHONE);
+          }
+        }
+        if (data.event === 'CHAT_CLOSED') {
+          loadChatConversations();
+          if (ACTIVE_CHAT_PHONE === data.payload.customerPhone) {
+            ACTIVE_CHAT_PHONE = null;
+            if ($('#active-chat-name')) $('#active-chat-name').textContent = 'Selecione uma conversa';
+            if ($('#active-chat-phone')) $('#active-chat-phone').textContent = '';
+            if ($('#btn-edit-chat-name')) $('#btn-edit-chat-name').style.display = 'none';
+            if ($('#btn-close-chat')) $('#btn-close-chat').style.display = 'none';
+            if ($('#admin-chat-messages')) {
+              $('#admin-chat-messages').innerHTML = '<p style="text-align:center;color:var(--mut);margin:auto">Atendimento finalizado com sucesso.</p>';
+            }
           }
         }
         if (data.event === 'PRINT_JOB') {
@@ -346,7 +362,9 @@ const KANBAN_PAGE = {
   received: 1,
   preparing: 1,
   ready: 1,
-  delivered: 1
+  delivered: 1,
+  returned: 1,
+  cancelled: 1
 };
 const KANBAN_PER_PAGE = 3;
 
@@ -364,12 +382,13 @@ function renderKanban() {
   const payFilter = $('#kanban-pay-filter')?.value || 'all';
 
   const filteredOrders = ORDERS.filter(order => {
-    // Busca por número, cliente ou telefone
+    // Busca por número, cliente, telefone ou motivo de cancelamento/devolução
     if (q) {
       const matchNo = String(order.orderNo || '').toLowerCase().includes(q.replace('#', ''));
       const matchName = String(order.customer?.name || '').toLowerCase().includes(q);
       const matchPhone = String(order.customer?.phone || '').includes(q);
-      if (!matchNo && !matchName && !matchPhone) return false;
+      const matchReason = String(order.returnReason || order.cancellationReason || '').toLowerCase().includes(q);
+      if (!matchNo && !matchName && !matchPhone && !matchReason) return false;
     }
 
     // Filtro de status
@@ -378,6 +397,7 @@ function renderKanban() {
       if (stFilter === 'preparing' && order.status !== 'preparing') return false;
       if (stFilter === 'ready' && order.status !== 'ready' && order.status !== 'out_for_delivery') return false;
       if (stFilter === 'delivered' && order.status !== 'delivered') return false;
+      if (stFilter === 'returned' && order.status !== 'returned') return false;
       if (stFilter === 'cancelled' && order.status !== 'cancelled') return false;
     }
 
@@ -397,11 +417,15 @@ function renderKanban() {
   const ordersPreparing = filteredOrders.filter(o => o.status === 'preparing');
   const ordersReady = filteredOrders.filter(o => o.status === 'ready' || o.status === 'out_for_delivery');
   const ordersDelivered = filteredOrders.filter(o => o.status === 'delivered');
+  const ordersReturned = filteredOrders.filter(o => o.status === 'returned');
+  const ordersCancelled = filteredOrders.filter(o => o.status === 'cancelled');
 
   renderKanbanColumn('received', ordersReceived, 'cards-received', 'cards-received-pagination', 'col-header-received', 'Novos Pedidos');
   renderKanbanColumn('preparing', ordersPreparing, 'cards-preparing', 'cards-preparing-pagination', 'col-header-preparing', 'Em Preparo (Cozinha)');
   renderKanbanColumn('ready', ordersReady, 'cards-ready', 'cards-ready-pagination', 'col-header-ready', 'Pronto / Saiu para Entrega');
   renderKanbanColumn('delivered', ordersDelivered, 'cards-delivered', 'cards-delivered-pagination', 'col-header-delivered', 'Entregues (Concluídos)');
+  renderKanbanColumn('returned', ordersReturned, 'cards-returned', 'cards-returned-pagination', 'col-header-returned', 'Devolvidos à Loja');
+  renderKanbanColumn('cancelled', ordersCancelled, 'cards-cancelled', 'cards-cancelled-pagination', 'col-header-cancelled', 'Cancelados');
 }
 
 function renderKanbanColumn(colKey, list, containerId, paginationId, headerId, title) {
@@ -472,6 +496,9 @@ function createOrderCardHtml(order) {
         <button class="btn-sm btn-secondary" style="font-size:10px;padding:4px 6px" onclick="copyMotoboyLink('${order.id}')" title="Copiar link para o celular do entregador">
           📱 Link Motoboy
         </button>
+        <button class="btn-sm" style="background:#b45309;color:#fff;font-size:10px;padding:4px 6px" onclick="openReturnOrderModal('${order.id}', '${order.orderNo}')" title="Marcar como devolvido à loja se o cliente não atendeu">
+          ↩ Devolver
+        </button>
       `;
     } else {
       nextAction = `
@@ -480,6 +507,12 @@ function createOrderCardHtml(order) {
         </button>
       `;
     }
+  } else if (order.status === 'returned') {
+    nextAction = `
+      <button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'preparing')" title="Reenviar este pedido para a cozinha preparar novamente">
+        Reenviar p/ Cozinha
+      </button>
+    `;
   }
 
   // Identificação clara da forma e timing do pagamento
@@ -489,6 +522,13 @@ function createOrderCardHtml(order) {
     paymentBadgeHtml = `
       <div class="payment-approved" style="background:#064e3b;color:#a7f3d0;border:1px solid #10b981;font-weight:700;padding:6px 10px;border-radius:8px">
         ✓ PEDIDO FINALIZADO & PAGO (${payMethod})
+      </div>
+    `;
+  } else if (order.status === 'returned') {
+    paymentBadgeHtml = `
+      <div class="troco-alert" style="background:#451a03;color:#fed7aa;border:1px solid #f97316;padding:6px 10px;border-radius:8px">
+        ↩ PEDIDO DEVOLVIDO À LOJA
+        <div style="font-size:12px;margin-top:4px;color:#fff"><b>Motivo:</b> ${esc(order.returnReason || 'Cliente não atendeu / não localizado')}</div>
       </div>
     `;
   } else if (order.status === 'cancelled') {
@@ -573,14 +613,16 @@ function createOrderCardHtml(order) {
 
       <!-- Ações de Impressão e Status -->
       <div class="order-actions" style="flex-wrap:wrap;gap:6px">
-        ${order.status !== 'delivered' ? `
+        ${(order.status !== 'delivered' && order.status !== 'cancelled' && order.status !== 'returned') ? `
           <button class="btn-sm btn-print" ${!canPrint ? 'disabled title="Impressão bloqueada até confirmação bancária do pagamento"' : ''} onclick="printOrderStation('${order.id}', 'kitchen')">
             Imprimir Cozinha
           </button>
         ` : ''}
-        <button class="btn-sm btn-print" ${!canPrint ? 'disabled title="Impressão bloqueada até confirmação bancária do pagamento"' : ''} onclick="printOrderStation('${order.id}', 'counter')">
-          ${order.status === 'delivered' ? 'Reimprimir Comanda' : 'Imprimir Balcão'}
-        </button>
+        ${order.status !== 'cancelled' ? `
+          <button class="btn-sm btn-print" ${!canPrint ? 'disabled title="Impressão bloqueada até confirmação bancária do pagamento"' : ''} onclick="printOrderStation('${order.id}', 'counter')">
+            ${(order.status === 'delivered' || order.status === 'returned') ? 'Reimprimir Comanda' : 'Imprimir Balcão'}
+          </button>
+        ` : ''}
         ${nextAction}
         ${(order.status !== 'delivered' && order.status !== 'cancelled') ? `
           <button class="btn-sm btn-danger" style="margin-left:auto;font-size:11px;padding:4px 8px" onclick="openCancelOrderModal('${order.id}', '${order.orderNo}')" title="Cancelar este pedido">
@@ -637,6 +679,51 @@ window.confirmCancelOrder = async function(e) {
   }
 };
 
+window.openReturnOrderModal = function(orderId, orderNo) {
+  if ($('#return-order-id')) $('#return-order-id').value = orderId;
+  if ($('#return-modal-title')) $('#return-modal-title').textContent = `Devolver Pedido #${orderNo} à Loja`;
+  if ($('#return-order-reason')) $('#return-order-reason').selectedIndex = 0;
+  if ($('#return-order-obs')) $('#return-order-obs').value = '';
+  const modal = $('#return-order-modal');
+  if (modal) modal.style.display = 'flex';
+};
+
+window.closeReturnOrderModal = function() {
+  const modal = $('#return-order-modal');
+  if (modal) modal.style.display = 'none';
+};
+
+window.confirmReturnOrder = async function(e) {
+  if (e) e.preventDefault();
+  const orderId = $('#return-order-id')?.value;
+  const reasonVal = $('#return-order-reason')?.value || 'Cliente não atendeu no interfone / portaria';
+  const obs = $('#return-order-obs')?.value.trim();
+  const fullReason = obs ? `${reasonVal} - ${obs}` : reasonVal;
+
+  try {
+    const res = await fetch(`${API_URL}/orders/${orderId}/return`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ reason: fullReason })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      closeReturnOrderModal();
+      const idx = ORDERS.findIndex(o => o.id === orderId);
+      if (idx !== -1) ORDERS[idx] = data.order;
+      renderKanban();
+      updateOrdersBadge();
+      const periodSelect = $('#report-period-select');
+      loadSalesReport({ period: periodSelect ? periodSelect.value : 'today' });
+      adminToast(`Pedido #${data.order.orderNo} registrado como Devolvido!`, 'info');
+    } else {
+      adminToast(data.error || 'Erro ao registrar devolução.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Erro de conexão ao registrar devolução.', 'danger');
+  }
+};
+
 window.advanceOrderStatus = async function(orderId, newStatus) {
   try {
     const res = await fetch(`${API_URL}/orders/${orderId}/status`, {
@@ -685,8 +772,9 @@ window.showConfirmModal = function({ icon = '⚠️', title = 'Confirmar Ação'
     okBtn.textContent = btnText;
     okBtn.className = `btn-sm ${btnClass}`;
     okBtn.onclick = () => {
+      const cb = CONFIRM_MODAL_CALLBACK;
       closeConfirmModal();
-      if (typeof CONFIRM_MODAL_CALLBACK === 'function') CONFIRM_MODAL_CALLBACK();
+      if (typeof cb === 'function') cb();
     };
   }
   CONFIRM_MODAL_CALLBACK = onConfirm;
@@ -872,6 +960,8 @@ function renderReportDashboard(rep) {
   if ($('#kpi-discount')) $('#kpi-discount').textContent = R(sum.totalDiscount);
   if ($('#kpi-cancelled')) $('#kpi-cancelled').textContent = `${sum.cancelledOrdersCount || 0}`;
   if ($('#kpi-cancelled-sub')) $('#kpi-cancelled-sub').textContent = `${R(sum.cancelledTotal || 0)} cancelado`;
+  if ($('#kpi-returned')) $('#kpi-returned').textContent = `${sum.returnedOrdersCount || 0}`;
+  if ($('#kpi-returned-sub')) $('#kpi-returned-sub').textContent = `${R(sum.returnedTotal || 0)} devolvido`;
   if ($('#kpi-costs')) $('#kpi-costs').textContent = R(sum.totalCost);
   if ($('#kpi-profit')) {
     $('#kpi-profit').textContent = R(sum.grossProfit);
@@ -912,16 +1002,21 @@ function getFilteredReportOrders(orders) {
     if (q) {
       const matchNo = String(o.orderNo || '').toLowerCase().includes(q.replace('#', ''));
       const matchName = String(o.customerName || '').toLowerCase().includes(q);
-      if (!matchNo && !matchName) return false;
+      const matchReason = String(o.returnReason || o.cancellationReason || '').toLowerCase().includes(q);
+      if (!matchNo && !matchName && !matchReason) return false;
     }
     if (st !== 'all') {
       if (st === 'cancelled' && !o.isCancelled) return false;
-      if (st === 'completed' && o.isCancelled) return false;
+      if (st === 'returned' && !o.isReturned) return false;
+      if (st === 'delivered' && (o.isCancelled || o.isReturned || o.status !== 'delivered')) return false;
+      if (st === 'completed' && (o.isCancelled || o.isReturned)) return false;
+      if (st === 'open' && (o.status === 'delivered' || o.isCancelled || o.isReturned)) return false;
     }
     if (pay !== 'all') {
       const isDelivery = o.paymentTiming === 'delivery';
       if (pay === 'approved' && isDelivery) return false;
       if (pay === 'delivery' && !isDelivery) return false;
+      if (pay !== 'approved' && pay !== 'delivery' && o.paymentMethod !== pay) return false;
     }
     return true;
   });
@@ -939,12 +1034,18 @@ window.applyReportTableFilters = function() {
   }
 
   tbody.innerHTML = filtered.map(o => `
-    <tr style="${o.isCancelled ? 'opacity:0.8;background:rgba(239,68,68,0.06)' : ''}">
+    <tr style="${o.isCancelled ? 'opacity:0.8;background:rgba(239,68,68,0.06)' : (o.isReturned ? 'opacity:0.85;background:rgba(245,158,11,0.06)' : '')}">
       <td><b>#${o.orderNo}</b></td>
       <td>
         ${o.isCancelled 
           ? `<span class="order-badge danger" style="font-size:10px">Cancelado</span>${o.cancellationReason ? `<div style="font-size:10px;color:var(--danger);max-width:140px;line-height:1.2;margin-top:2px">${esc(o.cancellationReason)}</div>` : ''}` 
-          : `<span class="order-badge success" style="font-size:10px">Concluído</span>`
+          : (o.isReturned
+            ? `<span class="order-badge" style="background:#b45309;color:#fff;font-size:10px">Devolvido</span>${o.returnReason ? `<div style="font-size:10px;color:#f59e0b;max-width:140px;line-height:1.2;margin-top:2px">${esc(o.returnReason)}</div>` : ''}`
+            : (o.status === 'delivered'
+              ? `<span class="order-badge success" style="font-size:10px">Concluído</span>`
+              : `<span class="order-badge warning" style="font-size:10px">Em Andamento</span>`
+            )
+          )
         }
       </td>
       <td>${esc(o.customerName)}</td>

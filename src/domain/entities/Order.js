@@ -11,7 +11,8 @@ export const OrderStatus = {
   READY: 'ready',                       // Pronto para entrega ou retirada
   OUT_FOR_DELIVERY: 'out_for_delivery', // Saiu para entrega (em rota com entregador)
   DELIVERED: 'delivered',               // Entregue / Concluído
-  CANCELLED: 'cancelled'                // Cancelado
+  CANCELLED: 'cancelled',               // Cancelado
+  RETURNED: 'returned'                  // Devolvido à loja (não entregue)
 };
 
 export const PaymentMethod = {
@@ -50,6 +51,8 @@ export class Order {
     deliveryTimeMinutes = null,
     cancellationReason = null,
     cancelledAt = null,
+    returnReason = null,
+    returnedAt = null,
     createdAt = new Date().toISOString(),
     updatedAt = new Date().toISOString()
   }) {
@@ -73,6 +76,8 @@ export class Order {
     this.deliveryTimeMinutes = deliveryTimeMinutes;
     this.cancellationReason = cancellationReason;
     this.cancelledAt = cancelledAt;
+    this.returnReason = returnReason;
+    this.returnedAt = returnedAt;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }

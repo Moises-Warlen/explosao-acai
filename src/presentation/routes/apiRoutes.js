@@ -23,6 +23,7 @@ router.get('/orders', (req, res) => orderController.getAll(req, res));
 router.get('/orders/:id', (req, res) => orderController.getById(req, res));
 router.patch('/orders/:id/status', adminAuthMiddleware, (req, res) => orderController.updateStatus(req, res));
 router.post('/orders/:id/confirm-delivery', (req, res) => orderController.confirmDelivery(req, res));
+router.post('/orders/:id/return', (req, res) => orderController.returnOrder(req, res));
 router.post('/orders/:id/print', adminAuthMiddleware, (req, res) => orderController.printTicket(req, res));
 
 // ================= CARDÁPIO & PRODUTOS =================

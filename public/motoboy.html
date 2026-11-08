@@ -218,6 +218,32 @@
     </div>
   </div>
 
+  <!-- Modal de Devolução pelo Entregador -->
+  <div id="motoboy-return-modal" class="modal-overlay">
+    <div class="modal-box">
+      <div style="font-size:44px;margin-bottom:8px">↩️🏠</div>
+      <h3 style="color:#f59e0b;font-size:18px;margin-bottom:6px">Devolver Pedido à Loja?</h3>
+      <p style="color:var(--tx);opacity:0.9;font-size:13px;line-height:1.45;margin-bottom:14px">
+        Informe o motivo da devolução para registrar no sistema da loja:
+      </p>
+      <select id="motoboy-return-reason" style="width:100%;padding:10px;border-radius:10px;background:var(--card);color:#fff;border:1px solid var(--ln);font-size:14px;margin-bottom:16px">
+        <option value="Cliente não atendeu interfone / portaria">Cliente não atendeu interfone / portaria</option>
+        <option value="Endereço não localizado / incorreto">Endereço não localizado / incorreto</option>
+        <option value="Cliente recusou o pedido">Cliente recusou o pedido</option>
+        <option value="Problema mecânico com a moto">Problema mecânico com a moto</option>
+        <option value="Outro motivo">Outro motivo</option>
+      </select>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button id="btn-modal-return-yes" class="btn" style="background:#b45309;color:#fff" onclick="executeReturnOrder()">
+          Confirmar Devolução
+        </button>
+        <button class="btn" style="background:rgba(255,255,255,0.1);color:#fff" onclick="closeMotoboyReturnModal()">
+          Voltar / Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="container">
     <div class="header">
       <img src="imagens/Logo.png" alt="Logo" onerror="this.style.display='none'">
@@ -282,10 +308,13 @@
         <div id="order-items-list" style="margin-top:8px;font-size:14px;display:flex;flex-direction:column;gap:6px"></div>
       </div>
 
-      <!-- Botão Gigante de Finalização -->
-      <div id="action-container">
+      <!-- Botão Gigante de Finalização e Devolução -->
+      <div id="action-container" style="display:flex;flex-direction:column;gap:10px">
         <button id="btn-confirm-delivery" class="btn btn-confirm" onclick="openMotoboyConfirmModal()">
           ✓ Confirmar Entrega e Recebimento
+        </button>
+        <button id="btn-return-order" class="btn" style="background:#78350f;color:#fde68a;font-size:14px;padding:12px" onclick="openMotoboyReturnModal()">
+          ↩ Devolver Pedido à Loja
         </button>
       </div>
     </div>
@@ -344,6 +373,43 @@
 
     function closeMotoboyModal() {
       document.getElementById('motoboy-modal').style.display = 'none';
+    }
+
+    function openMotoboyReturnModal() {
+      document.getElementById('motoboy-return-modal').style.display = 'flex';
+    }
+
+    function closeMotoboyReturnModal() {
+      document.getElementById('motoboy-return-modal').style.display = 'none';
+    }
+
+    async function executeReturnOrder() {
+      closeMotoboyReturnModal();
+      const reason = document.getElementById('motoboy-return-reason')?.value || 'Devolvido pelo entregador';
+      const btn = document.getElementById('btn-return-order');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Registrando devolução...';
+      }
+
+      try {
+        const res = await fetch(`${API_URL}/orders/${orderId}/return`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          showMotoboyToast('Pedido registrado como Devolvido à Loja!', true);
+          setTimeout(() => location.reload(), 1200);
+        } else {
+          showMotoboyToast(data.error || 'Erro ao registrar devolução.');
+          if (btn) { btn.disabled = false; btn.textContent = '↩ Devolver Pedido à Loja'; }
+        }
+      } catch (e) {
+        showMotoboyToast('Falha de conexão ao registrar devolução.');
+        if (btn) { btn.disabled = false; btn.textContent = '↩ Devolver Pedido à Loja'; }
+      }
     }
 
     window.addEventListener('DOMContentLoaded', async () => {
@@ -451,6 +517,7 @@
       // Status
       const badge = document.getElementById('order-status-badge');
       const btnConfirm = document.getElementById('btn-confirm-delivery');
+      const btnReturn = document.getElementById('btn-return-order');
 
       if (order.status === 'delivered') {
         badge.className = 'badge delivered';
@@ -458,9 +525,20 @@
         btnConfirm.disabled = true;
         btnConfirm.textContent = '✓ Pedido Já Entregue e Concluído';
         btnConfirm.style.background = '#064e3b';
+        if (btnReturn) btnReturn.style.display = 'none';
+      } else if (order.status === 'returned') {
+        badge.className = 'badge';
+        badge.style.background = '#b45309';
+        badge.style.color = '#fff';
+        badge.textContent = 'Devolvido à Loja';
+        btnConfirm.disabled = true;
+        btnConfirm.textContent = '↩ Pedido Devolvido à Loja';
+        btnConfirm.style.background = '#451a03';
+        if (btnReturn) btnReturn.style.display = 'none';
       } else {
         badge.className = 'badge out';
         badge.textContent = 'Em Rota de Entrega';
+        if (btnReturn) btnReturn.style.display = 'flex';
       }
     }
 
@@ -496,7 +574,7 @@
         const res = await fetch(`${API_URL}/orders`);
         const data = await res.json();
         if (data.ok) {
-          const openOrders = (data.orders || []).filter(o => o.status !== 'delivered' && o.status !== 'cancelled' && o.delivery?.type === 'delivery');
+          const openOrders = (data.orders || []).filter(o => o.status !== 'delivered' && o.status !== 'cancelled' && o.status !== 'returned' && o.delivery?.type === 'delivery');
           const box = document.getElementById('open-orders-box');
           const list = document.getElementById('orders-list-container');
           box.style.display = 'block';

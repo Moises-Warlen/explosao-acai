@@ -256,6 +256,11 @@ export class OrderService {
       order.cancelledAt = now.toISOString();
     }
 
+    if (newStatus === OrderStatus.RETURNED) {
+      order.returnReason = cancellationReason || 'Devolvido pelo entregador / não entregue';
+      order.returnedAt = now.toISOString();
+    }
+
     order.status = newStatus;
     order.updatedAt = now.toISOString();
 
@@ -265,6 +270,14 @@ export class OrderService {
     wsHub.notifyOrderStatus(updated);
 
     return updated;
+  }
+
+  returnOrder(orderId, returnReason = null) {
+    return this.updateOrderStatus(orderId, OrderStatus.RETURNED, returnReason || 'Devolvido pelo entregador / não entregue');
+  }
+
+  cancelOrder(orderId, cancellationReason = null) {
+    return this.updateOrderStatus(orderId, OrderStatus.CANCELLED, cancellationReason || 'Cancelado pelo operador');
   }
 
   /**

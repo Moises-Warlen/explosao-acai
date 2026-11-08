@@ -79,6 +79,8 @@
           <option value="preparing">Em Preparo</option>
           <option value="ready">Prontos / Em Entrega</option>
           <option value="delivered">Concluídos</option>
+          <option value="returned">Devolvidos à Loja</option>
+          <option value="cancelled">Cancelados</option>
         </select>
         <select id="kanban-pay-filter" style="width:auto;padding:8px 12px;font-size:13px" onchange="renderKanban()">
           <option value="all">Todas as Formas de Pagamento</option>
@@ -123,6 +125,24 @@
           </div>
           <div class="kanban-cards" id="cards-delivered"></div>
           <div id="cards-delivered-pagination"></div>
+        </div>
+
+        <!-- Coluna: Devolvidos à Loja -->
+        <div class="kanban-col">
+          <div class="kanban-col-header" style="color:#f59e0b">
+            <span id="col-header-returned">Devolvidos à Loja</span>
+          </div>
+          <div class="kanban-cards" id="cards-returned"></div>
+          <div id="cards-returned-pagination"></div>
+        </div>
+
+        <!-- Coluna: Cancelados -->
+        <div class="kanban-col">
+          <div class="kanban-col-header" style="color:var(--danger)">
+            <span id="col-header-cancelled">Cancelados</span>
+          </div>
+          <div class="kanban-cards" id="cards-cancelled"></div>
+          <div id="cards-cancelled-pagination"></div>
         </div>
       </div>
     </div>
@@ -181,6 +201,11 @@
             <span class="kpi-title" style="color:var(--danger)">Pedidos Cancelados</span>
             <span class="kpi-value" id="kpi-cancelled" style="color:var(--danger)">0</span>
             <span class="kpi-sub" id="kpi-cancelled-sub" style="color:var(--mut)">R$ 0,00 cancelado</span>
+          </div>
+          <div class="kpi-card" id="kpi-card-returned" style="border-left: 3px solid #f59e0b;">
+            <span class="kpi-title" style="color:#f59e0b">Pedidos Devolvidos</span>
+            <span class="kpi-value" id="kpi-returned" style="color:#f59e0b">0</span>
+            <span class="kpi-sub" id="kpi-returned-sub" style="color:var(--mut)">R$ 0,00 devolvido</span>
           </div>
           <div class="kpi-card">
             <span class="kpi-title">Custo Total de Insumos</span>
@@ -250,6 +275,7 @@
             <select id="report-status-filter" style="width:auto;padding:6px 10px;font-size:12px" onchange="applyReportTableFilters()">
               <option value="all">Todos os Status</option>
               <option value="delivered">Apenas Concluídos</option>
+              <option value="returned">Apenas Devolvidos</option>
               <option value="cancelled">Apenas Cancelados</option>
               <option value="open">Em Andamento</option>
             </select>
@@ -844,6 +870,37 @@
         <div style="display:flex;gap:10px;margin-top:20px">
           <button type="submit" class="btn-sm btn-danger" style="flex:1;padding:12px">Confirmar Cancelamento</button>
           <button type="button" class="btn-sm btn-secondary" style="padding:12px" onclick="closeCancelOrderModal()">Voltar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de Devolução de Pedido (Motivo da Devolução à Loja) -->
+  <div id="return-order-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.78);display:none;align-items:center;justify-content:center;z-index:130;backdrop-filter:blur(5px)">
+    <div style="background:var(--panel);border:1.5px solid #f59e0b;border-radius:20px;padding:24px;width:min(460px,95vw);max-height:90vh;overflow-y:auto">
+      <div style="font-size:32px;text-align:center;margin-bottom:8px">↩️</div>
+      <h3 id="return-modal-title" style="margin-top:0;text-align:center;color:#f59e0b">Devolver Pedido à Loja</h3>
+      <p style="font-size:13px;color:var(--mut);margin-top:-6px;margin-bottom:16px;text-align:center">
+        O pedido será movido para Devolvidos, registrando o motivo para relatórios e histórico.
+      </p>
+      <form onsubmit="confirmReturnOrder(event)">
+        <input type="hidden" id="return-order-id">
+        
+        <label>Motivo da Devolução pelo Entregador</label>
+        <select id="return-order-reason" required style="margin-bottom:12px">
+          <option value="Cliente não atendeu no interfone / portaria">Cliente não atendeu no interfone / portaria</option>
+          <option value="Endereço incorreto / não localizado">Endereço incorreto / não localizado</option>
+          <option value="Cliente recusou o pedido">Cliente recusou o pedido</option>
+          <option value="Problema no veículo do entregador">Problema no veículo do entregador</option>
+          <option value="Outro motivo">Outro motivo</option>
+        </select>
+
+        <label>Observação Adicional (Opcional)</label>
+        <textarea id="return-order-obs" rows="3" placeholder="Detalhes adicionais sobre a devolução..."></textarea>
+
+        <div style="display:flex;gap:10px;margin-top:20px">
+          <button type="submit" class="btn-sm" style="flex:1;padding:12px;background:#b45309;color:#fff;font-weight:700">Confirmar Devolução</button>
+          <button type="button" class="btn-sm btn-secondary" style="padding:12px" onclick="closeReturnOrderModal()">Voltar</button>
         </div>
       </form>
     </div>
