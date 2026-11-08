@@ -32,6 +32,26 @@ export class ChatController {
       return res.status(400).json({ ok: false, error: err.message });
     }
   }
+
+  async closeConversation(req, res) {
+    try {
+      const { customerPhone } = req.body;
+      const result = chatService.closeConversation(customerPhone);
+      return res.json(result);
+    } catch (err) {
+      return res.status(400).json({ ok: false, error: err.message });
+    }
+  }
+
+  async updateCustomerName(req, res) {
+    try {
+      const { customerPhone, newName } = req.body;
+      const result = chatService.updateCustomerName(customerPhone, newName);
+      return res.json(result);
+    } catch (err) {
+      return res.status(400).json({ ok: false, error: err.message });
+    }
+  }
 }
 
 export const chatController = new ChatController();

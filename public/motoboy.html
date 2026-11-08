@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Painel do Entregador · Explosão Açaí</title>
+  <link rel="icon" type="image/png" href="imagens/Logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f051d;
+      --card: #1b0a2e;
+      --panel: #270f3f;
+      --tx: #f3e8ff;
+      --mut: #a78bfa;
+      --y: #facc15;
+      --green: #10b981;
+      --green-dark: #064e3b;
+      --danger: #ef4444;
+      --ln: rgba(255, 255, 255, 0.1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+    body {
+      background: var(--bg);
+      color: var(--tx);
+      min-height: 100vh;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--ln);
+    }
+    .header img {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--y);
+    }
+    .header h1 {
+      font-size: 18px;
+      color: var(--y);
+      margin: 0;
+      line-height: 1.2;
+    }
+    .header small {
+      color: var(--mut);
+      font-size: 12px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--ln);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge.out { background: #3b82f6; color: #fff; }
+    .badge.delivered { background: var(--green); color: #fff; }
+    .badge.pay-cash { background: #d97706; color: #fff; }
+    .badge.pay-card { background: #8b5cf6; color: #fff; }
+    .badge.pay-approved { background: var(--green-dark); color: #a7f3d0; border: 1px solid var(--green); }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 15px;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-maps { background: #2563eb; color: #fff; margin-top: 8px; }
+    .btn-wpp { background: #22c55e; color: #fff; margin-top: 8px; }
+    .btn-confirm {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+      font-size: 17px;
+      padding: 18px;
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    }
+    .btn-confirm:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .pay-highlight {
+      border-radius: 12px;
+      padding: 14px;
+      margin: 12px 0;
+      text-align: center;
+      font-weight: 700;
+      font-size: 15px;
+    }
+    .pay-highlight.cash {
+      background: #78350f;
+      color: #fef08a;
+      border: 1.5px solid var(--y);
+    }
+    .pay-highlight.card {
+      background: #3b0764;
+      color: #e9d5ff;
+      border: 1.5px solid #a855f7;
+    }
+    .pay-highlight.free {
+      background: var(--green-dark);
+      color: #a7f3d0;
+      border: 1.5px solid var(--green);
+    }
+    .success-box {
+      background: var(--green-dark);
+      border: 2px solid var(--green);
+      border-radius: 16px;
+      padding: 24px 16px;
+      text-align: center;
+      display: none;
+    }
+    .success-box h2 {
+      color: #a7f3d0;
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+    .order-list-item {
+      background: var(--panel);
+      border: 1px solid var(--ln);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+    .order-list-item:hover { border-color: var(--y); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="imagens/Logo.png" alt="Logo" onerror="this.style.display='none'">
+      <div>
+        <h1>EXPLOSÃO AÇAÍ</h1>
+        <small>Portal do Entregador · Conclusão Rápida</small>
+      </div>
+    </div>
+
+    <!-- Mensagem de Sucesso após Confirmação -->
+    <div id="success-screen" class="success-box">
+      <div style="font-size:48px;margin-bottom:10px">✅</div>
+      <h2>Entrega & Recebimento Confirmados!</h2>
+      <p style="color:#d1fae5;font-size:14px;margin-bottom:16px">
+        O pedido foi baixado e marcado como <b>PAGO</b> no sistema da loja. Bom trabalho!
+      </p>
+      <button class="btn" style="background:rgba(255,255,255,0.15);color:#fff" onclick="location.reload()">
+        Ver Detalhes do Pedido
+      </button>
+    </div>
+
+    <!-- Detalhes do Pedido Único -->
+    <div id="order-details-box" style="display:none;display:flex;flex-direction:column;gap:14px">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span style="font-size:22px;font-weight:900;color:var(--y)" id="order-no">#000</span>
+          <span id="order-status-badge" class="badge out">A Caminho</span>
+        </div>
+
+        <div style="font-size:16px;font-weight:700" id="customer-name">Cliente</div>
+        <div style="font-size:13px;color:var(--mut)" id="customer-phone">(00) 00000-0000</div>
+
+        <a id="btn-wpp" href="#" target="_blank" class="btn btn-wpp">
+          💬 Falar no WhatsApp com Cliente
+        </a>
+      </div>
+
+      <!-- Endereço de Entrega -->
+      <div class="card">
+        <b style="color:var(--y);font-size:13px;text-transform:uppercase">Endereço de Entrega</b>
+        <div style="font-size:16px;font-weight:700;margin-top:4px" id="delivery-address">Carregando endereço...</div>
+        <div style="font-size:13px;color:var(--mut);margin-top:2px" id="delivery-details">Bairro · Distância</div>
+
+        <a id="btn-maps" href="#" target="_blank" class="btn btn-maps">
+          📍 Abrir Rota no Google Maps / Waze
+        </a>
+      </div>
+
+      <!-- Forma de Cobrança / Pagamento -->
+      <div class="card">
+        <b style="color:var(--y);font-size:13px;text-transform:uppercase">Cobrança & Pagamento</b>
+        <div id="payment-box"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:18px;font-weight:900;margin-top:8px">
+          <span>Total a Cobrar:</span>
+          <span style="color:var(--green);font-size:22px" id="order-total">R$ 0,00</span>
+        </div>
+      </div>
+
+      <!-- Resumo dos Produtos -->
+      <div class="card">
+        <b style="color:var(--y);font-size:13px;text-transform:uppercase">Itens do Pedido</b>
+        <div id="order-items-list" style="margin-top:8px;font-size:14px;display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+
+      <!-- Botão Gigante de Finalização -->
+      <div id="action-container">
+        <button id="btn-confirm-delivery" class="btn btn-confirm" onclick="confirmDeliveryAction()">
+          ✓ Confirmar Entrega e Recebimento
+        </button>
+      </div>
+    </div>
+
+    <!-- Lista de Pedidos em Aberto (Caso não passe ?orderId) -->
+    <div id="open-orders-box" style="display:none" class="card">
+      <h3 style="margin-bottom:12px;color:var(--y)">Entregas Pendentes</h3>
+      <div id="orders-list-container">Carregando pedidos...</div>
+    </div>
+
+    <div id="error-box" style="display:none" class="card">
+      <p style="color:var(--danger);font-weight:700;text-align:center" id="error-msg">Pedido não encontrado.</p>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = '/api';
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get('orderId') || params.get('id');
+
+    const R = (n) => 'R$ ' + Number(n || 0).toFixed(2).replace('.', ',');
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      if (orderId) {
+        await loadSingleOrder(orderId);
+      } else {
+        await loadActiveOrdersList();
+      }
+    });
+
+    async function loadSingleOrder(id) {
+      try {
+        const res = await fetch(`${API_URL}/orders/${id}`);
+        const data = await res.json();
+        if (!data.ok || !data.order) {
+          document.getElementById('error-box').style.display = 'block';
+          document.getElementById('error-msg').textContent = data.error || 'Pedido não encontrado.';
+          return;
+        }
+
+        const order = data.order;
+        renderOrderDetails(order);
+      } catch (e) {
+        document.getElementById('error-box').style.display = 'block';
+        document.getElementById('error-msg').textContent = 'Erro ao carregar os dados do pedido.';
+      }
+    }
+
+    function renderOrderDetails(order) {
+      document.getElementById('order-details-box').style.display = 'flex';
+      document.getElementById('order-no').textContent = '#' + order.orderNo;
+      document.getElementById('customer-name').textContent = order.customer.name;
+      document.getElementById('customer-phone').textContent = order.customer.phone;
+
+      // WhatsApp
+      const cleanPhone = (order.customer.phone || '').replace(/\\D/g, '');
+      const wppLink = `https://wa.me/55${cleanPhone}?text=Ol%C3%A1%20${encodeURIComponent(order.customer.name)}!%20Sou%20o%20entregador%20da%20Explos%C3%A3o%20A%C3%A7a%C3%AD%20com%20o%20seu%20pedido%20%23${order.orderNo}.`;
+      document.getElementById('btn-wpp').href = wppLink;
+
+      // Endereço
+      const del = order.delivery || {};
+      const fullAddr = `${del.street || ''}, ${del.number || ''}${del.complement ? ' - ' + del.complement : ''}`;
+      document.getElementById('delivery-address').textContent = fullAddr || 'Retirada no balcão';
+      document.getElementById('delivery-details').textContent = `${del.bairro || ''} · ${del.km ? del.km.toFixed(1) + ' km da loja' : ''}`;
+
+      // Google Maps / Waze
+      const mapsQuery = encodeURIComponent(`${fullAddr}, ${del.bairro || ''}, Franca - SP`);
+      document.getElementById('btn-maps').href = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`;
+
+      // Total
+      document.getElementById('order-total').textContent = R(order.total);
+
+      // Cobrança
+      const isMoney = order.payment?.method === 'Dinheiro';
+      const isDeliveryPayment = order.payment?.timing === 'delivery' || isMoney;
+      const isApproved = order.payment?.status === 'approved';
+      const payBox = document.getElementById('payment-box');
+
+      if (isDeliveryPayment) {
+        if (isMoney) {
+          const hasTroco = order.payment?.trocoValue > 0;
+          payBox.innerHTML = `
+            <div class="pay-highlight cash">
+              💵 RECEBER EM DINHEIRO: ${R(order.total)}<br>
+              ${hasTroco ? `⚠️ LEVAR TROCO DE ${R(order.payment.trocoValue)}` : '✓ NÃO PRECISA DE TROCO (VALOR EXATO)'}
+            </div>
+          `;
+        } else {
+          payBox.innerHTML = `
+            <div class="pay-highlight card">
+              💳 PASSAR NA MAQUININHA: ${R(order.total)}<br>
+              Forma: <b>${order.payment?.method.toUpperCase()}</b>
+            </div>
+          `;
+        }
+      } else {
+        if (isApproved) {
+          payBox.innerHTML = `
+            <div class="pay-highlight free">
+              ✅ JÁ PAGO ONLINE (${order.payment?.method.toUpperCase()})<br>
+              NÃO COBRAR NADA DO CLIENTE!
+            </div>
+          `;
+        } else {
+          payBox.innerHTML = `
+            <div class="pay-highlight" style="background:#451a03;color:#fdba74">
+              ⏳ Aguardando Aprovação Bancária (${order.payment?.method})
+            </div>
+          `;
+        }
+      }
+
+      // Itens
+      const itemsList = document.getElementById('order-items-list');
+      itemsList.innerHTML = (order.items || []).map(it => `
+        <div style="border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:4px">
+          <b>${it.quantity}x</b> ${it.name}
+          ${it.accompaniments?.length ? `<div style="font-size:12px;color:var(--mut)">• Acomp: ${it.accompaniments.join(', ')}</div>` : ''}
+          ${it.extras?.length ? `<div style="font-size:12px;color:var(--y)">• Extras: ${it.extras.join(', ')}</div>` : ''}
+          ${it.note ? `<div style="font-size:12px;color:var(--danger)">Obs: ${it.note}</div>` : ''}
+        </div>
+      `).join('');
+
+      // Status
+      const badge = document.getElementById('order-status-badge');
+      const btnConfirm = document.getElementById('btn-confirm-delivery');
+
+      if (order.status === 'delivered') {
+        badge.className = 'badge delivered';
+        badge.textContent = 'Entregue & Concluído';
+        btnConfirm.disabled = true;
+        btnConfirm.textContent = '✓ Pedido Já Entregue e Concluído';
+        btnConfirm.style.background = '#064e3b';
+      } else {
+        badge.className = 'badge out';
+        badge.textContent = 'Em Rota de Entrega';
+      }
+    }
+
+    async function confirmDeliveryAction() {
+      if (!confirm('Deseja confirmar a entrega e o recebimento deste pedido agora?')) return;
+
+      const btn = document.getElementById('btn-confirm-delivery');
+      btn.disabled = true;
+      btn.textContent = 'Salvando no sistema...';
+
+      try {
+        const res = await fetch(`${API_URL}/orders/${orderId}/confirm-delivery`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if (data.ok) {
+          document.getElementById('order-details-box').style.display = 'none';
+          document.getElementById('success-screen').style.display = 'block';
+        } else {
+          alert(data.error || 'Erro ao confirmar entrega.');
+          btn.disabled = false;
+          btn.textContent = '✓ Confirmar Entrega e Recebimento';
+        }
+      } catch (e) {
+        alert('Falha de conexão ao confirmar entrega.');
+        btn.disabled = false;
+        btn.textContent = '✓ Confirmar Entrega e Recebimento';
+      }
+    }
+
+    async function loadActiveOrdersList() {
+      try {
+        const res = await fetch(`${API_URL}/orders`);
+        const data = await res.json();
+        if (data.ok) {
+          const openOrders = (data.orders || []).filter(o => o.status !== 'delivered' && o.status !== 'cancelled' && o.delivery?.type === 'delivery');
+          const box = document.getElementById('open-orders-box');
+          const list = document.getElementById('orders-list-container');
+          box.style.display = 'block';
+
+          if (openOrders.length === 0) {
+            list.innerHTML = '<p style="color:var(--mut);text-align:center;padding:20px">Nenhuma entrega pendente no momento!</p>';
+            return;
+          }
+
+          list.innerHTML = openOrders.map(o => `
+            <div class="order-list-item" onclick="location.href='motoboy.html?orderId=${o.id}'">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <b style="font-size:16px;color:var(--y)">#${o.orderNo}</b>
+                <span class="badge ${o.payment?.method === 'Dinheiro' ? 'pay-cash' : 'pay-card'}">${o.payment?.method}</span>
+              </div>
+              <div style="font-weight:700;margin-top:4px">${o.customer.name}</div>
+              <div style="font-size:12px;color:var(--mut)">${o.delivery.street}, ${o.delivery.number} — ${o.delivery.bairro}</div>
+              <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:13px">
+                <span>Distância: <b>${(o.delivery.km || 0).toFixed(1)} km</b></span>
+                <span style="color:var(--green);font-weight:700">${R(o.total)}</span>
+              </div>
+            </div>
+          `).join('');
+        }
+      } catch (e) {}
+    }
+  </script>
+</body>
+</html>

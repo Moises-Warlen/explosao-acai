@@ -50,6 +50,15 @@ export class OrderController {
       return res.status(400).json({ ok: false, error: err.message });
     }
   }
+
+  async confirmDelivery(req, res) {
+    try {
+      const order = orderService.confirmDeliveryAndPayment(req.params.id);
+      return res.json({ ok: true, order });
+    } catch (err) {
+      return res.status(400).json({ ok: false, error: err.message });
+    }
+  }
 }
 
 export const orderController = new OrderController();

@@ -26,7 +26,8 @@
         <input type="checkbox" id="store-toggle-switch" checked onchange="toggleStoreStatus()">
         <span class="slider"></span>
       </label>
-      <button class="btn-sm" style="background:#33144a;color:#fff;margin-left:12px" onclick="logout()">Sair</button>
+      <button class="btn-sm btn-print" style="margin-left:8px;padding:6px 12px" onclick="openAdminPasswordModal()">🔒 Senha Admin</button>
+      <button class="btn-sm" style="background:#33144a;color:#fff;margin-left:6px" onclick="logout()">Sair</button>
     </div>
   </header>
 
@@ -57,7 +58,7 @@
       Impressoras de Comanda
     </button>
     <button class="nav-tab" data-tab="tab-store">
-      Horários & Entrega
+      Configurações & Senha
     </button>
     <button class="nav-tab" data-tab="tab-chat">
       Chat de Atendimento
@@ -69,6 +70,24 @@
 
     <!-- ABA 1: KANBAN DE PEDIDOS -->
     <div class="tab-pane active" id="tab-kanban">
+      <!-- Barra de Pesquisa e Filtros Rápidos do Kanban -->
+      <div class="kanban-filters-bar" style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+        <input type="text" id="kanban-search" placeholder="🔍 Buscar por nº do pedido (#123) ou nome do cliente..." style="flex:1;min-width:240px;padding:8px 14px;font-size:13px" oninput="renderKanban()">
+        <select id="kanban-status-filter" style="width:auto;padding:8px 12px;font-size:13px" onchange="renderKanban()">
+          <option value="all">Todos os Status</option>
+          <option value="received">Novos Pedidos</option>
+          <option value="preparing">Em Preparo</option>
+          <option value="ready">Prontos / Em Entrega</option>
+          <option value="delivered">Concluídos</option>
+        </select>
+        <select id="kanban-pay-filter" style="width:auto;padding:8px 12px;font-size:13px" onchange="renderKanban()">
+          <option value="all">Todas as Formas de Pagamento</option>
+          <option value="approved">Pagamento Confirmado</option>
+          <option value="delivery">Cobrar na Entrega</option>
+          <option value="pending">Aguardando Pagamento</option>
+        </select>
+      </div>
+
       <div class="kanban-board">
         <!-- Coluna: Novos Pedidos -->
         <div class="kanban-col">
@@ -216,8 +235,28 @@
         <h3 style="margin:24px 0 10px;font-size:16px">Vendas por Forma de Pagamento</h3>
         <div class="form-grid" id="report-payments-breakdown"></div>
 
-        <!-- Tabela Detalhada de Transações -->
-        <h3 style="margin:24px 0 10px;font-size:16px">Histórico Detalhado de Transações</h3>
+        <!-- Tabela Detalhada de Transações com Busca e Filtros -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:28px 0 12px;flex-wrap:wrap;gap:10px">
+          <div>
+            <h3 style="margin:0;font-size:17px">Histórico Detalhado de Transações</h3>
+            <p style="color:var(--mut);font-size:12px;margin:2px 0 0">Filtre por número do pedido, cliente, status ou pagamento:</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <input type="text" id="report-search-input" placeholder="🔍 Nº do pedido ou cliente..." style="width:auto;min-width:180px;padding:6px 10px;font-size:12px" oninput="applyReportTableFilters()">
+            <select id="report-status-filter" style="width:auto;padding:6px 10px;font-size:12px" onchange="applyReportTableFilters()">
+              <option value="all">Todos os Status</option>
+              <option value="delivered">Apenas Concluídos</option>
+              <option value="cancelled">Apenas Cancelados</option>
+              <option value="open">Em Andamento</option>
+            </select>
+            <select id="report-pay-filter" style="width:auto;padding:6px 10px;font-size:12px" onchange="applyReportTableFilters()">
+              <option value="all">Todas as Formas</option>
+              <option value="Pix">Pix</option>
+              <option value="Dinheiro">Dinheiro</option>
+              <option value="Cartão">Cartão</option>
+            </select>
+          </div>
+        </div>
         <div class="table-responsive">
           <table>
             <thead>
@@ -465,14 +504,26 @@
           </div>
 
           <div class="admin-chat-window">
-            <div style="padding:14px;border-bottom:1px solid var(--ln);background:var(--panel);display:flex;justify-content:space-between">
+            <div style="padding:12px 16px;border-bottom:1px solid var(--ln);background:var(--panel);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
               <div>
-                <b id="active-chat-name">Selecione uma conversa</b>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <b id="active-chat-name" style="font-size:15px">Selecione uma conversa</b>
+                  <button class="btn-sm btn-secondary" id="btn-edit-chat-name" style="display:none;padding:2px 8px;font-size:11px" onclick="editCurrentCustomerName()">✎ Alterar Nome</button>
+                </div>
                 <div style="font-size:12px;color:var(--mut)" id="active-chat-phone"></div>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <div style="display:flex;align-items:center;gap:6px;background:var(--card);padding:4px 8px;border-radius:8px;border:1px solid var(--ln)">
+                  <span style="font-size:11px;color:var(--mut)">Atendente:</span>
+                  <input id="chat-fast-sender" value="Delivery" style="width:85px;padding:3px 6px;font-size:12px" title="Nome exibido nas respostas deste chat">
+                  <button class="btn-sm btn-next" style="padding:3px 8px;font-size:11px" onclick="saveFastSenderName()">Salvar</button>
+                </div>
+                <button class="btn-sm btn-danger" id="btn-close-chat" style="display:none;padding:6px 12px;font-size:12px" onclick="closeCurrentChat()">✓ Finalizar Atendimento</button>
               </div>
             </div>
 
-            <div style="flex:1;padding:14px;overflow-y:auto;display:flex;flex-direction:column" id="admin-chat-messages">
+            <div style="flex:1;padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:8px" id="admin-chat-messages">
               <p style="text-align:center;color:var(--mut);margin:auto">Selecione uma conversa ao lado para responder o cliente.</p>
             </div>
 
@@ -799,6 +850,31 @@
       <p style="color:var(--mut);font-size:13px;margin:0 0 18px">Digite a senha do painel administrativo:</p>
       <input type="password" id="admin-pass-input" placeholder="Senha do painel" style="text-align:center;font-size:16px;margin-bottom:16px" onkeydown="if(event.key==='Enter') doLogin()">
       <button class="btn-sm btn-next" style="width:100%;padding:12px;font-size:15px;justify-content:center" onclick="doLogin()">Acessar Painel</button>
+    </div>
+  </div>
+
+  <!-- Modal Rápido de Alteração de Senha do Administrador -->
+  <div id="admin-password-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center;z-index:220;backdrop-filter:blur(5px)">
+    <div style="background:var(--panel);border:1.5px solid var(--ln);border-radius:20px;padding:24px;width:min(440px,95vw);max-height:90vh;overflow-y:auto">
+      <h3 style="margin-top:0">Alterar Senha do Administrador</h3>
+      <p style="color:var(--mut);font-size:13px;margin-top:-6px;margin-bottom:16px">
+        Defina sua nova senha de acesso ao painel administrativo.
+      </p>
+      <form onsubmit="saveNewAdminPasswordModal(event)">
+        <label>Senha Atual
+          <input type="password" id="modal-adm-cur-pass" placeholder="Digite a senha atual" required autocomplete="current-password">
+        </label>
+        <label style="margin-top:10px">Nova Senha
+          <input type="password" id="modal-adm-new-pass" placeholder="Nova senha (ex: RafaeLL@2)" required autocomplete="new-password">
+        </label>
+        <label style="margin-top:10px">Confirmar Nova Senha
+          <input type="password" id="modal-adm-conf-pass" placeholder="Repita a nova senha" required autocomplete="new-password">
+        </label>
+        <div style="display:flex;gap:10px;margin-top:20px">
+          <button type="submit" class="btn-sm btn-next" style="flex:1;padding:12px">Atualizar Senha</button>
+          <button type="button" class="btn-sm btn-secondary" style="padding:12px" onclick="closeAdminPasswordModal()">Cancelar</button>
+        </div>
+      </form>
     </div>
   </div>
 

@@ -222,4 +222,103 @@ describe('Explosão Açaí - Testes das Novas Funcionalidades', () => {
     const dataEmpty = await resEmpty.json();
     assert.strictEqual(dataEmpty.messages.length, 0, 'Consulta sem telefone deve retornar array vazio');
   });
+
+  test('Fluxo de Entrega do Motoboy: POST /api/orders/:id/confirm-delivery marca como entregue e pago', async () => {
+    // 1. Cria pedido com pagamento na entrega (dinheiro)
+    const orderPayload = {
+      customer: { name: 'Lucas Motoboy Test', phone: '16999995544' },
+      delivery: {
+        type: 'delivery',
+        street: 'Rua do Entregador',
+        number: '100',
+        bairro: 'Centro',
+        km: 3.5
+      },
+      payment: {
+        method: 'Dinheiro',
+        timing: 'delivery',
+        trocoValue: 10.0
+      },
+      items: [
+        {
+          productId: 'p1',
+          name: 'Copo Tradicional 300ml',
+          size: 300,
+          quantity: 1,
+          unitPrice: 24.90,
+          totalPrice: 24.90
+        }
+      ]
+    };
+
+    const createRes = await fetch(`${baseUrl}/api/orders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(orderPayload)
+    });
+    const createData = await createRes.json();
+    assert.strictEqual(createRes.status, 201);
+    const orderId = createData.order.id;
+
+    // 2. Confirma entrega e recebimento pelo motoboy
+    const confirmRes = await fetch(`${baseUrl}/api/orders/${orderId}/confirm-delivery`, {
+      method: 'POST'
+    });
+    const confirmData = await confirmRes.json();
+    assert.strictEqual(confirmRes.status, 200);
+    assert.strictEqual(confirmData.ok, true);
+    assert.strictEqual(confirmData.order.status, 'delivered', 'Status deve mudar para delivered');
+    assert.strictEqual(confirmData.order.payment.status, 'approved', 'Pagamento deve mudar para approved');
+    assert.ok(confirmData.order.deliveredAt, 'Deve registrar data e hora da entrega');
+  });
+
+  test('Gerenciamento de Chat: PUT /api/chat/customer-name e POST /api/chat/close', async () => {
+    const testPhone = '16977771234';
+
+    // 1. Envia mensagem do cliente
+    await fetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sender: 'customer',
+        customerPhone: testPhone,
+        customerName: 'Cliente Inicial',
+        message: 'Dúvida sobre o açaí'
+      })
+    });
+
+    // 2. Altera o nome do cliente no chat
+    const authHeaders = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer RafaeLL@2'
+    };
+
+    const renameRes = await fetch(`${baseUrl}/api/chat/customer-name`, {
+      method: 'PUT',
+      headers: authHeaders,
+      body: JSON.stringify({
+        customerPhone: testPhone,
+        newName: 'Carlos Silva VIP'
+      })
+    });
+    const renameData = await renameRes.json();
+    assert.strictEqual(renameRes.status, 200);
+    assert.strictEqual(renameData.ok, true);
+
+    // 3. Finaliza o chat
+    const closeRes = await fetch(`${baseUrl}/api/chat/close`, {
+      method: 'POST',
+      headers: authHeaders,
+      body: JSON.stringify({ customerPhone: testPhone })
+    });
+    const closeData = await closeRes.json();
+    assert.strictEqual(closeRes.status, 200);
+    assert.strictEqual(closeData.ok, true);
+
+    // 4. Verifica histórico de mensagens
+    const getRes = await fetch(`${baseUrl}/api/chat?phone=${testPhone}`);
+    const getData = await getRes.json();
+    assert.ok(getData.messages.some(m => m.customerName === 'Carlos Silva VIP'), 'Mensagens devem refletir o novo nome');
+    assert.ok(getData.messages.some(m => m.isSystemClose === true), 'Deve conter a mensagem de encerramento amigável');
+  });
 });

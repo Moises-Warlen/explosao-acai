@@ -291,6 +291,38 @@ export class OrderService {
   }
 
   /**
+   * Confirmação de Entrega & Recebimento pelo Entregador ou Operador
+   * Marca o pedido como entregue (DELIVERED) e pagamento como aprovado (APPROVED).
+   */
+  confirmDeliveryAndPayment(orderId) {
+    const data = this.db.get();
+    const orderIndex = data.orders.findIndex(o => o.id === orderId || o.orderNo === String(orderId));
+    if (orderIndex === -1) throw new Error('Pedido não encontrado.');
+
+    const order = data.orders[orderIndex];
+    const now = new Date();
+
+    order.status = OrderStatus.DELIVERED;
+    order.deliveredAt = now.toISOString();
+
+    const baseTime = order.preparedAt ? new Date(order.preparedAt).getTime() : new Date(order.createdAt).getTime();
+    order.deliveryTimeMinutes = Math.max(1, Math.round((now.getTime() - baseTime) / 60000));
+
+    // Confirma pagamento
+    if (order.payment) {
+      order.payment.status = PaymentStatus.APPROVED;
+      order.payment.paidAt = now.toISOString();
+    }
+    order.updatedAt = now.toISOString();
+    this.db.save();
+
+    const updated = new Order(order);
+    wsHub.notifyOrderStatus(updated);
+
+    return updated;
+  }
+
+  /**
    * Dispara impressão para impressoras configuradas (cozinha ou balcão)
    * APLICA REGRA RÍGIDA: Só imprime Pix e Cartão após confirmação bancária!
    */

@@ -1163,15 +1163,23 @@ function renderChatMessagesList(messages) {
 
   box.innerHTML = messages.map(m => {
     const isStore = m.sender === 'store' || m.sender === 'admin';
+    const isSystem = m.isSystemClose;
+    if (isSystem) {
+      return `
+        <div class="chat-bubble system">
+          ${esc(m.message)}
+          <small>${new Date(m.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</small>
+        </div>
+      `;
+    }
+    const storeName = m.senderName || SETTINGS.chatSenderName || 'Delivery';
     return `
       <div class="chat-bubble ${isStore ? 'store' : 'customer'}">
-        ${isStore ? `
-          <div class="chat-bubble-author">
-            <img src="imagens/Logo.png" alt="Logo"> ${esc(SETTINGS.chatSenderName || 'Delivery')}
-          </div>
-        ` : ''}
-        ${esc(m.message)}
-        <small>${new Date(m.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</small>
+        <div class="chat-bubble-author" style="${isStore ? 'color:#6b21a8' : 'color:#fde047;justify-content:flex-end'}">
+          ${isStore ? `<img src="imagens/Logo.png" alt="Logo" onerror="this.style.display='none'"> <b>${esc(storeName)}</b>` : `<b>Você</b>`}
+        </div>
+        <div>${esc(m.message)}</div>
+        <small style="opacity:0.8">${new Date(m.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</small>
       </div>
     `;
   }).join('');

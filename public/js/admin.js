@@ -345,7 +345,41 @@ function renderKanban() {
   colReady.innerHTML = '';
   colDelivered.innerHTML = '';
 
-  ORDERS.forEach(order => {
+  const q = ($('#kanban-search')?.value || '').trim().toLowerCase();
+  const stFilter = $('#kanban-status-filter')?.value || 'all';
+  const payFilter = $('#kanban-pay-filter')?.value || 'all';
+
+  const filteredOrders = ORDERS.filter(order => {
+    // Busca por número, cliente ou telefone
+    if (q) {
+      const matchNo = String(order.orderNo || '').toLowerCase().includes(q.replace('#', ''));
+      const matchName = String(order.customer?.name || '').toLowerCase().includes(q);
+      const matchPhone = String(order.customer?.phone || '').includes(q);
+      if (!matchNo && !matchName && !matchPhone) return false;
+    }
+
+    // Filtro de status
+    if (stFilter !== 'all') {
+      if (stFilter === 'received' && order.status !== 'received') return false;
+      if (stFilter === 'preparing' && order.status !== 'preparing') return false;
+      if (stFilter === 'ready' && order.status !== 'ready' && order.status !== 'out_for_delivery') return false;
+      if (stFilter === 'delivered' && order.status !== 'delivered') return false;
+      if (stFilter === 'cancelled' && order.status !== 'cancelled') return false;
+    }
+
+    // Filtro de pagamento
+    if (payFilter !== 'all') {
+      const isApproved = order.payment?.status === 'approved';
+      const isDeliveryPayment = order.payment?.timing === 'delivery' || order.payment?.method === 'Dinheiro';
+      if (payFilter === 'approved' && !isApproved) return false;
+      if (payFilter === 'waiting' && (isApproved || isDeliveryPayment)) return false;
+      if (payFilter === 'delivery' && !isDeliveryPayment) return false;
+    }
+
+    return true;
+  });
+
+  filteredOrders.forEach(order => {
     const card = createOrderCardHtml(order);
     if (order.status === 'received') {
       colReceived.innerHTML += card;
@@ -393,7 +427,7 @@ function createOrderCardHtml(order) {
       paymentBadgeHtml = `
         <div class="payment-waiting">
           AGUARDANDO CONFIRMAÇÃO DO BANCO (${order.payment?.method})
-          <button class="btn-sm btn-secondary" style="margin-top:4px;font-size:10px;padding:3px 8px;width:100%" onclick="simulateBankApproval('${order.id}')">Simular Confirmação Bancária</button>
+          <button class="btn-sm btn-secondary" style="margin-top:4px;font-size:10px;padding:3px 8px;width:100%" onclick="simulateBankApproval('${order.id}')">Confirmar Pagamento</button>
         </div>
       `;
     }
@@ -439,7 +473,7 @@ function createOrderCardHtml(order) {
       </div>
 
       <!-- Ações de Impressão e Status -->
-      <div class="order-actions">
+      <div class="order-actions" style="flex-wrap:wrap;gap:6px">
         <button class="btn-sm btn-print" ${!canPrint ? 'disabled title="Impressão bloqueada até confirmação bancária do pagamento"' : ''} onclick="printOrderStation('${order.id}', 'kitchen')">
           Imprimir Cozinha
         </button>
@@ -447,6 +481,16 @@ function createOrderCardHtml(order) {
           Imprimir Balcão
         </button>
         ${nextAction}
+        ${(order.status !== 'delivered' && order.status !== 'cancelled') ? `
+          <button class="btn-sm" style="background:#10b981;color:#fff;font-weight:700;font-size:11px;padding:4px 8px" onclick="confirmOrderDeliveryAndPayment('${order.id}')" title="Confirmar que o cliente recebeu e o pagamento foi concluído">
+            ✓ Entregue & Recebido
+          </button>
+        ` : ''}
+        ${isDelivery ? `
+          <button class="btn-sm btn-secondary" style="font-size:10px;padding:4px 6px" onclick="copyMotoboyLink('${order.id}')" title="Copiar link para o celular do entregador">
+            📱 Link Motoboy
+          </button>
+        ` : ''}
         ${order.status !== 'cancelled' ? `
           <button class="btn-sm btn-danger" style="margin-left:auto;font-size:11px;padding:4px 8px" onclick="openCancelOrderModal('${order.id}', '${order.orderNo}')" title="Cancelar este pedido">
             Cancelar
@@ -530,11 +574,49 @@ window.simulateBankApproval = async function(orderId) {
     });
     const data = await res.json();
     if (data.ok) {
-      adminToast(data.message, 'success');
+      adminToast('Pagamento confirmado com sucesso!', 'success');
       await loadOrders();
     }
   } catch (e) {
-    adminToast('Falha ao simular confirmação.', 'danger');
+    adminToast('Falha ao confirmar pagamento.', 'danger');
+  }
+};
+window.confirmPayment = window.simulateBankApproval;
+
+window.confirmOrderDeliveryAndPayment = async function(orderId) {
+  if (!confirm('Deseja confirmar que o pedido foi entregue e o pagamento recebido?')) return;
+  try {
+    const res = await fetch(`${API_URL}/orders/${orderId}/confirm-delivery`, {
+      method: 'POST',
+      headers: authHeaders()
+    });
+    const data = await res.json();
+    if (data.ok) {
+      const idx = ORDERS.findIndex(o => o.id === orderId);
+      if (idx !== -1) ORDERS[idx] = data.order;
+      renderKanban();
+      updateOrdersBadge();
+      const periodSelect = $('#report-period-select');
+      loadSalesReport({ period: periodSelect ? periodSelect.value : 'today' });
+      adminToast(`Pedido #${data.order.orderNo} finalizado e pagamento confirmado!`, 'success');
+    } else {
+      adminToast(data.error || 'Erro ao confirmar entrega.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Erro de conexão ao confirmar entrega.', 'danger');
+  }
+};
+
+window.copyMotoboyLink = function(orderId) {
+  const link = `${location.origin}/motoboy.html?orderId=${orderId}`;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(link).then(() => {
+      adminToast('Link do entregador copiado com sucesso!', 'success');
+    }).catch(() => {
+      prompt('Copie o link do entregador abaixo:', link);
+    });
+  } else {
+    prompt('Copie o link do entregador abaixo:', link);
   }
 };
 
@@ -640,35 +722,71 @@ function renderReportDashboard(rep) {
     `).join('');
   }
 
-  // Tabela Detalhada de Histórico
-  const tbody = $('#report-orders-table-body');
-  if (tbody) {
-    tbody.innerHTML = rep.orders.map(o => `
-      <tr style="${o.isCancelled ? 'opacity:0.8;background:rgba(239,68,68,0.06)' : ''}">
-        <td><b>#${o.orderNo}</b></td>
-        <td>
-          ${o.isCancelled 
-            ? `<span class="order-badge danger" style="font-size:10px">Cancelado</span>${o.cancellationReason ? `<div style="font-size:10px;color:var(--danger);max-width:140px;line-height:1.2;margin-top:2px">${esc(o.cancellationReason)}</div>` : ''}` 
-            : `<span class="order-badge success" style="font-size:10px">Concluído</span>`
-          }
-        </td>
-        <td>${esc(o.customerName)}</td>
-        <td>
-          <span class="order-badge ${o.paymentMethod === 'Pix' ? 'pix' : (o.paymentMethod === 'Dinheiro' ? 'money' : 'card')}">
-            ${o.paymentMethod}
-          </span>
-          <div style="font-size:11px;color:var(--mut)">${o.paymentTiming === 'delivery' ? 'Na Entrega' : 'Online'}</div>
-        </td>
-        <td>${o.deliveryType} (${esc(o.bairro)})</td>
-        <td>${R(o.freight)}</td>
-        <td><b>${R(o.total)}</b></td>
-        <td>${R(o.costTotal)}</td>
-        <td style="color:${o.profit >= 0 ? 'var(--green)' : 'var(--danger)'};font-weight:700">${R(o.profit)}</td>
-        <td>${new Date(o.createdAt).toLocaleString('pt-BR')}</td>
-      </tr>
-    `).join('');
-  }
+  // Tabela Detalhada de Histórico com Filtros Aplicados
+  applyReportTableFilters();
 }
+
+function getFilteredReportOrders(orders) {
+  if (!orders || !orders.length) return [];
+  const q = ($('#report-search-input')?.value || '').trim().toLowerCase();
+  const st = $('#report-status-filter')?.value || 'all';
+  const pay = $('#report-pay-filter')?.value || 'all';
+
+  return orders.filter(o => {
+    if (q) {
+      const matchNo = String(o.orderNo || '').toLowerCase().includes(q.replace('#', ''));
+      const matchName = String(o.customerName || '').toLowerCase().includes(q);
+      if (!matchNo && !matchName) return false;
+    }
+    if (st !== 'all') {
+      if (st === 'cancelled' && !o.isCancelled) return false;
+      if (st === 'completed' && o.isCancelled) return false;
+    }
+    if (pay !== 'all') {
+      const isDelivery = o.paymentTiming === 'delivery';
+      if (pay === 'approved' && isDelivery) return false;
+      if (pay === 'delivery' && !isDelivery) return false;
+    }
+    return true;
+  });
+}
+
+window.applyReportTableFilters = function() {
+  if (!CURRENT_REPORT) return;
+  const tbody = $('#report-orders-table-body');
+  if (!tbody) return;
+
+  const filtered = getFilteredReportOrders(CURRENT_REPORT.orders || []);
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:18px;color:var(--mut)">Nenhum pedido encontrado para os filtros selecionados.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(o => `
+    <tr style="${o.isCancelled ? 'opacity:0.8;background:rgba(239,68,68,0.06)' : ''}">
+      <td><b>#${o.orderNo}</b></td>
+      <td>
+        ${o.isCancelled 
+          ? `<span class="order-badge danger" style="font-size:10px">Cancelado</span>${o.cancellationReason ? `<div style="font-size:10px;color:var(--danger);max-width:140px;line-height:1.2;margin-top:2px">${esc(o.cancellationReason)}</div>` : ''}` 
+          : `<span class="order-badge success" style="font-size:10px">Concluído</span>`
+        }
+      </td>
+      <td>${esc(o.customerName)}</td>
+      <td>
+        <span class="order-badge ${o.paymentMethod === 'Pix' ? 'pix' : (o.paymentMethod === 'Dinheiro' ? 'money' : 'card')}">
+          ${o.paymentMethod}
+        </span>
+        <div style="font-size:11px;color:var(--mut)">${o.paymentTiming === 'delivery' ? 'Na Entrega' : 'Online'}</div>
+      </td>
+      <td>${o.deliveryType} (${esc(o.bairro)})</td>
+      <td>${R(o.freight)}</td>
+      <td><b>${R(o.total)}</b></td>
+      <td>${R(o.costTotal)}</td>
+      <td style="color:${o.profit >= 0 ? 'var(--green)' : 'var(--danger)'};font-weight:700">${R(o.profit)}</td>
+      <td>${new Date(o.createdAt).toLocaleString('pt-BR')}</td>
+    </tr>
+  `).join('');
+};
 
 function renderRankings(bestSellers, worstSellers) {
   const bestBox = $('#ranking-best-sellers-list');
@@ -826,7 +944,7 @@ window.exportReportToPdf = function() {
         </tr>
       </thead>
       <tbody>
-        ${rep.orders.map(o => `
+        ${getFilteredReportOrders(rep.orders || []).map(o => `
           <tr style="${o.isCancelled ? 'background:#fff5f5;color:#666' : ''}">
             <td style="padding:6px;border:1px solid #ddd">#${o.orderNo}</td>
             <td style="padding:6px;border:1px solid #ddd">
@@ -951,23 +1069,23 @@ window.openRecipeModal = function(productId) {
             </div>
           </div>
 
-          <div class="table-responsive">
-            <table style="font-size:12px;width:100%;min-width:320px">
+          <div class="table-responsive" style="width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;box-sizing:border-box">
+            <table class="recipe-table" style="font-size:11.5px;width:100%;min-width:0;box-sizing:border-box">
               <thead>
                 <tr style="color:var(--mut);border-bottom:1px solid rgba(255,255,255,0.08)">
-                  <th style="padding:4px 6px">Insumo / Ingrediente</th>
-                  <th style="padding:4px 6px;text-align:center">Quantidade</th>
-                  <th style="padding:4px 6px;text-align:right">Custo Unitário</th>
-                  <th style="padding:4px 6px;text-align:right">Custo Total</th>
+                  <th style="padding:4px 4px;text-align:left">Insumo</th>
+                  <th style="padding:4px 4px;text-align:center">Qtd</th>
+                  <th style="padding:4px 4px;text-align:right">Unitário</th>
+                  <th style="padding:4px 4px;text-align:right">Total</th>
                 </tr>
               </thead>
               <tbody>
                 ${(rc.ingredients || []).map(ig => `
                   <tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
-                    <td style="padding:6px">${esc(ig.name)}</td>
-                    <td style="padding:6px;text-align:center"><b>${ig.quantity} ${ig.unit}</b></td>
-                    <td style="padding:6px;text-align:right">${R(ig.unitCost)}</td>
-                    <td style="padding:6px;text-align:right;color:var(--y)">${R(ig.totalCost)}</td>
+                    <td style="padding:5px 4px;word-break:break-word">${esc(ig.name)}</td>
+                    <td style="padding:5px 4px;text-align:center"><b>${ig.quantity} ${ig.unit}</b></td>
+                    <td style="padding:5px 4px;text-align:right">${R(ig.unitCost)}</td>
+                    <td style="padding:5px 4px;text-align:right;color:var(--y)">${R(ig.totalCost)}</td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -1897,8 +2015,11 @@ function renderChatConversationsList() {
 
 window.selectChat = function(phone, name) {
   ACTIVE_CHAT_PHONE = phone;
-  $('#active-chat-name').textContent = name;
-  $('#active-chat-phone').textContent = phone;
+  if ($('#active-chat-name')) $('#active-chat-name').textContent = name;
+  if ($('#active-chat-phone')) $('#active-chat-phone').textContent = phone;
+  if ($('#btn-edit-chat-name')) $('#btn-edit-chat-name').style.display = 'inline-block';
+  if ($('#btn-close-chat')) $('#btn-close-chat').style.display = 'inline-block';
+  if ($('#chat-fast-sender')) $('#chat-fast-sender').value = SETTINGS.chatSenderName || 'Delivery';
   renderChatConversationsList();
   loadChatMessages(phone);
 };
@@ -1909,14 +2030,31 @@ async function loadChatMessages(phone) {
     const data = await res.json();
     if (data.ok) {
       const box = $('#admin-chat-messages');
-      box.innerHTML = data.messages.map(m => `
-        <div style="max-width:70%;padding:10px 14px;border-radius:14px;margin-bottom:8px;line-height:1.4;${m.sender === 'admin' ? 'margin-left:auto;background:var(--p2);color:#fff' : 'margin-right:auto;background:var(--card);border:1px solid var(--ln)'}">
-          ${esc(m.message)}
-          <div style="font-size:10px;opacity:0.7;text-align:right;margin-top:4px">
-            ${new Date(m.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+      if (!box) return;
+      box.innerHTML = data.messages.map(m => {
+        if (m.isSystemClose) {
+          return `
+            <div class="admin-msg-bubble system">
+              🏁 ${esc(m.message)}
+            </div>
+          `;
+        }
+        const isStore = m.sender === 'admin';
+        const senderLabel = isStore ? `${esc(m.senderName || SETTINGS.chatSenderName || 'Delivery')} (Loja)` : `${esc(m.customerName || 'Cliente')}`;
+        const timeStr = new Date(m.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+        return `
+          <div class="admin-msg-bubble ${isStore ? 'store' : 'client'}">
+            <div style="font-size:11px;font-weight:700;margin-bottom:3px;color:${isStore ? '#34d399' : '#c084fc'}">
+              ${senderLabel}
+            </div>
+            <div style="line-height:1.45">${esc(m.message)}</div>
+            <div style="font-size:10px;opacity:0.75;text-align:right;margin-top:4px">
+              ${timeStr}
+            </div>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
       box.scrollTop = box.scrollHeight;
     }
   } catch (e) {}
@@ -1928,6 +2066,7 @@ window.sendAdminChatMessage = async function() {
 
   const text = inp.value.trim();
   inp.value = '';
+  const senderName = $('#chat-fast-sender')?.value.trim() || SETTINGS.chatSenderName || 'Delivery';
 
   try {
     await fetch(`${API_URL}/chat`, {
@@ -1935,11 +2074,136 @@ window.sendAdminChatMessage = async function() {
       headers: authHeaders(),
       body: JSON.stringify({
         sender: 'admin',
+        senderName: senderName,
         customerPhone: ACTIVE_CHAT_PHONE,
         customerName: $('#active-chat-name').textContent,
         message: text
       })
     });
     loadChatMessages(ACTIVE_CHAT_PHONE);
+    loadChatConversations();
   } catch (e) {}
+};
+
+window.saveFastSenderName = async function() {
+  const val = $('#chat-fast-sender')?.value.trim();
+  if (!val) return;
+  try {
+    const res = await fetch(`${API_URL}/store/settings`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({ chatSenderName: val })
+    });
+    const d = await res.json();
+    if (d.ok) {
+      SETTINGS = d.settings;
+      if ($('#st-chatsender')) $('#st-chatsender').value = val;
+      adminToast(`Nome de envio no chat alterado para "${val}"!`, 'success');
+    }
+  } catch(e) {}
+};
+
+window.editCurrentCustomerName = async function() {
+  if (!ACTIVE_CHAT_PHONE) return;
+  const currentName = $('#active-chat-name')?.textContent || '';
+  const newName = prompt('Digite o nome correto deste cliente:', currentName);
+  if (!newName || !newName.trim() || newName.trim() === currentName) return;
+
+  try {
+    const res = await fetch(`${API_URL}/chat/customer-name`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        customerPhone: ACTIVE_CHAT_PHONE,
+        newName: newName.trim()
+      })
+    });
+    const d = await res.json();
+    if (d.ok) {
+      $('#active-chat-name').textContent = newName.trim();
+      const conv = CHAT_CONVERSATIONS.find(c => c.customerPhone === ACTIVE_CHAT_PHONE);
+      if (conv) conv.customerName = newName.trim();
+      renderChatConversationsList();
+      loadChatMessages(ACTIVE_CHAT_PHONE);
+      adminToast('Nome do cliente atualizado com sucesso!', 'success');
+    } else {
+      adminToast(d.error || 'Erro ao atualizar nome.', 'danger');
+    }
+  } catch(e) {
+    adminToast('Erro de conexão ao salvar nome.', 'danger');
+  }
+};
+
+window.closeCurrentChat = async function() {
+  if (!ACTIVE_CHAT_PHONE) return;
+  if (!confirm('Deseja realmente encerrar este atendimento? O cliente receberá a mensagem de finalização.')) return;
+
+  try {
+    const res = await fetch(`${API_URL}/chat/close`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ customerPhone: ACTIVE_CHAT_PHONE })
+    });
+    const d = await res.json();
+    if (d.ok) {
+      adminToast('Atendimento finalizado com sucesso!', 'info');
+      loadChatMessages(ACTIVE_CHAT_PHONE);
+      loadChatConversations();
+    }
+  } catch(e) {
+    adminToast('Erro ao finalizar atendimento.', 'danger');
+  }
+};
+
+// ==================== MODAL DE ALTERAÇÃO DE SENHA DO ADMIN ====================
+window.openAdminPasswordModal = function() {
+  if ($('#modal-adm-cur-pass')) $('#modal-adm-cur-pass').value = '';
+  if ($('#modal-adm-new-pass')) $('#modal-adm-new-pass').value = '';
+  if ($('#modal-adm-conf-pass')) $('#modal-adm-conf-pass').value = '';
+  const m = $('#admin-password-modal');
+  if (m) m.style.display = 'flex';
+};
+
+window.closeAdminPasswordModal = function() {
+  const m = $('#admin-password-modal');
+  if (m) m.style.display = 'none';
+};
+
+window.saveNewAdminPasswordModal = async function(e) {
+  if (e) e.preventDefault();
+  const curPass = $('#modal-adm-cur-pass')?.value;
+  const newPass = $('#modal-adm-new-pass')?.value;
+  const confPass = $('#modal-adm-conf-pass')?.value;
+
+  if (!curPass || !newPass) {
+    adminToast('Preencha a senha atual e a nova senha.', 'danger');
+    return;
+  }
+  if (newPass.length < 4) {
+    adminToast('A nova senha deve ter pelo menos 4 caracteres.', 'danger');
+    return;
+  }
+  if (newPass !== confPass) {
+    adminToast('A confirmação da nova senha não confere.', 'danger');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/admin/change-password`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ currentPassword: curPass, newPassword: newPass })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      ADMIN_TOKEN = newPass;
+      localStorage.setItem('admin_token', newPass);
+      closeAdminPasswordModal();
+      adminToast('Senha do administrador alterada com sucesso!', 'success');
+    } else {
+      adminToast(data.error || 'Erro ao alterar senha. Verifique a senha atual.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Erro de conexão ao alterar senha.', 'danger');
+  }
 };

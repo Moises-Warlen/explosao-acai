@@ -735,14 +735,59 @@ input:focus, select:focus, textarea:focus {
     max-width: 100%;
   }
 
-  table {
+  .table-responsive > table:not(.recipe-table) {
     font-size: 13px;
-    min-width: 600px;
+    min-width: 580px;
+  }
+
+  .recipe-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    font-size: 11.5px;
+    table-layout: auto;
+  }
+
+  .recipe-table th, .recipe-table td {
+    padding: 6px 4px !important;
   }
 
   th, td {
     padding: 10px 10px;
   }
+}
+
+/* Balões de Chat no Painel Admin (Cores e Lados Opostos Estilo WhatsApp) */
+.admin-msg-bubble {
+  max-width: 82%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  margin-bottom: 8px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+.admin-msg-bubble.client {
+  align-self: flex-start;
+  background: var(--card);
+  border: 1.5px solid #6b21a8;
+  color: #f8f4fc;
+  border-bottom-left-radius: 3px;
+}
+.admin-msg-bubble.store {
+  align-self: flex-end;
+  background: #064e3b;
+  border: 1.5px solid #10b981;
+  color: #ffffff;
+  border-bottom-right-radius: 3px;
+}
+.admin-msg-bubble.system {
+  align-self: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px dashed var(--ln);
+  color: var(--mut);
+  font-size: 11px;
+  text-align: center;
+  max-width: 90%;
+  border-radius: 8px;
 }
 
 @media (max-width: 480px) {

@@ -1009,16 +1009,31 @@ body.hascart .fab-container {
 
 .chat-bubble.customer {
   align-self: flex-end;
-  background: var(--p2);
+  background: linear-gradient(135deg, #7b2cbf, #5a189a);
   color: #fff;
   border-bottom-right-radius: 4px;
+  box-shadow: 0 2px 8px rgba(123, 44, 191, 0.25);
 }
 
+.chat-bubble.store,
 .chat-bubble.admin {
   align-self: flex-start;
-  background: var(--card);
-  border: 1px solid var(--ln);
+  background: #ffffff;
+  color: #2a0a3d;
+  border: 1.5px solid #d8b4fe;
   border-bottom-left-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.chat-bubble.system {
+  align-self: center;
+  background: rgba(88, 28, 135, 0.08);
+  border: 1px dashed var(--ln);
+  color: var(--mut);
+  font-size: 11px;
+  text-align: center;
+  max-width: 90%;
+  border-radius: 8px;
 }
 
 .chat-bubble small {

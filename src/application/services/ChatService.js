@@ -27,7 +27,9 @@ export class ChatService {
   }
 
   getAllConversations() {
-    const chats = this.db.get().chats || [];
+    const data = this.db.get();
+    const chats = data.chats || [];
+    const orders = data.orders || [];
     const map = new Map();
 
     for (const msg of chats) {
@@ -35,9 +37,24 @@ export class ChatService {
       if (!p) continue;
 
       if (!map.has(p)) {
+        // Tenta descobrir o nome real do cliente a partir de pedidos anteriores
+        let resolvedName = msg.customerName;
+        if (!resolvedName || resolvedName === 'Cliente') {
+          const cleanP = String(p).replace(/\D/g, '');
+          const prevOrder = orders.find(o => {
+            const oPhone = String(o.customer?.phone || '').replace(/\D/g, '');
+            return cleanP && oPhone && cleanP === oPhone;
+          });
+          if (prevOrder && prevOrder.customer?.name) {
+            resolvedName = prevOrder.customer.name;
+          } else {
+            resolvedName = 'Cliente';
+          }
+        }
+
         map.set(p, {
           customerPhone: p,
-          customerName: msg.customerName || 'Cliente',
+          customerName: resolvedName,
           lastMessage: msg.message,
           lastTimestamp: msg.timestamp,
           unreadCount: 0
@@ -46,7 +63,7 @@ export class ChatService {
       const conv = map.get(p);
       conv.lastMessage = msg.message;
       conv.lastTimestamp = msg.timestamp;
-      if (msg.customerName && conv.customerName === 'Cliente') {
+      if (msg.customerName && msg.customerName !== 'Cliente') {
         conv.customerName = msg.customerName;
       }
       if (!msg.read && msg.sender === 'customer') {
@@ -62,20 +79,37 @@ export class ChatService {
     const raw = String(customerPhone || '').trim();
     if (!raw) throw new Error('Identificação do cliente é obrigatória para o chat.');
 
+    const data = this.db.get();
     const cleanDigits = raw.replace(/\D/g, '');
     const cleanPhone = (cleanDigits && cleanDigits.length >= 8) ? cleanDigits : raw;
 
+    // Se o cliente não passou nome ou passou 'Cliente', verifica se já tem pedidos no histórico
+    let finalCustomerName = customerName || 'Cliente';
+    if ((!customerName || customerName === 'Cliente') && sender !== 'admin') {
+      const orders = data.orders || [];
+      const prevOrder = orders.find(o => {
+        const oPhone = String(o.customer?.phone || '').replace(/\D/g, '');
+        return cleanDigits && oPhone && cleanDigits === oPhone;
+      });
+      if (prevOrder && prevOrder.customer?.name) {
+        finalCustomerName = prevOrder.customer.name;
+      }
+    }
+
+    const storeSenderName = data.settings?.chatSenderName || 'Delivery';
+    const finalSender = sender || 'customer';
+
     const newMsg = {
       id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-      sender: sender || 'customer', // 'customer' ou 'admin'
+      sender: finalSender, // 'customer' ou 'admin'
+      senderName: finalSender === 'admin' ? storeSenderName : finalCustomerName,
       customerPhone: cleanPhone,
-      customerName: customerName || 'Cliente',
+      customerName: finalCustomerName,
       message: message.trim(),
       timestamp: new Date().toISOString(),
-      read: sender === 'admin'
+      read: finalSender === 'admin'
     };
 
-    const data = this.db.get();
     if (!data.chats) data.chats = [];
     data.chats.push(newMsg);
     this.db.save();
@@ -84,6 +118,68 @@ export class ChatService {
     wsHub.notifyChatMessage(newMsg);
 
     return newMsg;
+  }
+
+  closeConversation(customerPhone) {
+    const raw = String(customerPhone || '').trim();
+    if (!raw) throw new Error('Telefone do cliente é obrigatório.');
+
+    const data = this.db.get();
+    const storeSenderName = data.settings?.chatSenderName || 'Delivery';
+
+    // Cria mensagem de encerramento amigável
+    const closeMsg = {
+      id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      sender: 'admin',
+      senderName: storeSenderName,
+      customerPhone: raw,
+      customerName: 'Cliente',
+      message: '✓ Atendimento finalizado pelo operador. Agradecemos o contato com o Explosão Açaí! Se precisar de algo, envie uma nova mensagem.',
+      timestamp: new Date().toISOString(),
+      read: true,
+      isSystemClose: true
+    };
+
+    if (!data.chats) data.chats = [];
+    data.chats.push(closeMsg);
+
+    // Marca todas as mensagens anteriores como lidas
+    const cleanDigits = raw.replace(/\D/g, '');
+    data.chats.forEach(m => {
+      const mDigits = String(m.customerPhone || '').replace(/\D/g, '');
+      if ((cleanDigits && mDigits && cleanDigits === mDigits) || m.customerPhone === raw) {
+        m.read = true;
+      }
+    });
+
+    this.db.save();
+    wsHub.notifyChatMessage(closeMsg);
+
+    return { ok: true, message: closeMsg };
+  }
+
+  updateCustomerName(customerPhone, newName) {
+    const raw = String(customerPhone || '').trim();
+    const name = String(newName || '').trim();
+    if (!raw || !name) throw new Error('Telefone e nome são obrigatórios.');
+
+    const data = this.db.get();
+    const cleanDigits = raw.replace(/\D/g, '');
+
+    if (data.chats) {
+      data.chats.forEach(m => {
+        const mDigits = String(m.customerPhone || '').replace(/\D/g, '');
+        if ((cleanDigits && mDigits && cleanDigits === mDigits) || m.customerPhone === raw) {
+          m.customerName = name;
+          if (m.sender === 'customer') {
+            m.senderName = name;
+          }
+        }
+      });
+    }
+
+    this.db.save();
+    return { ok: true, customerPhone: raw, customerName: name };
   }
 
   markAsRead(customerPhone) {
