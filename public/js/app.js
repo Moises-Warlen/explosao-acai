@@ -757,12 +757,12 @@ function renderCheckoutModal() {
   if (isDelivery) {
     h += `
       <label>Rua ou Avenida
-        <input id="f_rua" value="${esc(CHECKOUT_DATA.rua || '')}" placeholder="Ex: Avenida Brasil" onchange="calcFrete()">
+        <input id="f_rua" value="${esc(CHECKOUT_DATA.rua || '')}" placeholder="Ex: Avenida Brasil" oninput="CHECKOUT_DATA.rua = this.value; calcFrete()" onchange="CHECKOUT_DATA.rua = this.value; calcFrete()">
       </label>
 
       <div class="g2">
         <label>Número
-          <input id="f_num" value="${esc(CHECKOUT_DATA.num || '')}" placeholder="Ex: 123" oninput="CHECKOUT_DATA.num = this.value">
+          <input id="f_num" value="${esc(CHECKOUT_DATA.num || '')}" placeholder="Ex: 123 (ou S/N)" oninput="CHECKOUT_DATA.num = this.value" onchange="CHECKOUT_DATA.num = this.value">
         </label>
         <label>CEP
           <input id="f_cep" value="${esc(CHECKOUT_DATA.cep || '')}" placeholder="14400-000" onchange="buscaCep(this.value)">
@@ -896,24 +896,54 @@ window.submitOrder = async function() {
     btn.textContent = 'Enviando Pedido...';
   }
 
+  // Leitura direta e sincronização com os campos visíveis no DOM
+  const elNome = $('#f_nome');
+  const elTel = $('#f_tel');
+  const elRua = $('#f_rua');
+  const elNum = $('#f_num');
+  const elCep = $('#f_cep');
+  const elBairro = $('#f_bairro');
+  const elRef = $('#f_ref');
+  const elTroco = $('#f_troco');
+
+  if (elNome) CHECKOUT_DATA.nome = elNome.value.trim();
+  if (elTel) CHECKOUT_DATA.tel = elTel.value.trim();
+  if (elRua) CHECKOUT_DATA.rua = elRua.value.trim();
+  if (elNum) CHECKOUT_DATA.num = elNum.value.trim();
+  if (elCep) CHECKOUT_DATA.cep = elCep.value.trim();
+  if (elBairro) CHECKOUT_DATA.bairro = elBairro.value.trim();
+  if (elRef) CHECKOUT_DATA.ref = elRef.value.trim();
+  if (elTroco) CHECKOUT_DATA.troco = elTroco.value.trim();
+
   if (!CHECKOUT_DATA.nome || !CHECKOUT_DATA.nome.trim()) {
-    toast('Por favor, informe seu nome.');
+    toast('Por favor, informe seu nome completo.');
     if (btn) { btn.disabled = false; btn.textContent = 'Enviar Pedido'; }
     return;
   }
 
-  const cleanPhone = String(CHECKOUT_DATA.tel || '').replace(/\D/g, '');
+  let cleanPhone = String(CHECKOUT_DATA.tel || '').replace(/\D/g, '');
+  if (cleanPhone.length === 8 || cleanPhone.length === 9) {
+    cleanPhone = '16' + cleanPhone; // Prefixo DDD 16 padrão de Franca/SP
+    CHECKOUT_DATA.tel = cleanPhone;
+  }
   if (cleanPhone.length < 10) {
-    toast('Por favor, informe um telefone válido com DDD.');
+    toast('Por favor, informe um telefone válido com DDD (ex: 16 99999-9999).');
     if (btn) { btn.disabled = false; btn.textContent = 'Enviar Pedido'; }
     return;
   }
 
   const isDelivery = CHECKOUT_DATA.ent !== 'r';
-  if (isDelivery && (!CHECKOUT_DATA.rua || !CHECKOUT_DATA.num)) {
-    toast('Por favor, informe a rua e o número para entrega.');
-    if (btn) { btn.disabled = false; btn.textContent = 'Enviar Pedido'; }
-    return;
+  if (isDelivery) {
+    if (!CHECKOUT_DATA.rua || !CHECKOUT_DATA.rua.trim()) {
+      toast('Por favor, informe a rua ou avenida para entrega.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Enviar Pedido'; }
+      return;
+    }
+    if (!CHECKOUT_DATA.num || !CHECKOUT_DATA.num.trim()) {
+      toast('Por favor, informe o número da residência (ou S/N).');
+      if (btn) { btn.disabled = false; btn.textContent = 'Enviar Pedido'; }
+      return;
+    }
   }
 
   const payload = {

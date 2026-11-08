@@ -182,6 +182,16 @@ function bindNavigation() {
       tab.classList.add('active');
       const targetPane = $(`#${tab.dataset.tab}`);
       if (targetPane) targetPane.classList.add('active');
+
+      if (tab.dataset.tab === 'tab-chat') {
+        loadChatConversations().then(() => {
+          if (!ACTIVE_CHAT_PHONE && CHAT_CONVERSATIONS.length > 0) {
+            selectChat(CHAT_CONVERSATIONS[0].customerPhone, CHAT_CONVERSATIONS[0].customerName);
+          }
+          const inp = $('#admin-chat-input');
+          if (inp) inp.focus();
+        });
+      }
     });
   });
 }
@@ -449,16 +459,29 @@ function createOrderCardHtml(order) {
   } else if (order.status === 'preparing') {
     nextAction = isDelivery 
       ? `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'out_for_delivery')">Despachar Entrega</button>`
-      : `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'ready')">Pronto no Balcão</button>`;
+      : `<button class="btn-sm btn-next" style="background:#10b981;color:#fff;font-weight:700" onclick="confirmPickupOrder('${order.id}')">✓ Entregar no Balcão & Confirmar</button>`;
   } else if (order.status === 'out_for_delivery' || order.status === 'ready') {
     nextAction = isDelivery
       ? `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'delivered')">Concluir Pedido</button>`
-      : `<button class="btn-sm btn-next" onclick="confirmPickupOrder('${order.id}')">Concluir Retirada</button>`;
+      : `<button class="btn-sm btn-next" style="background:#10b981;color:#fff;font-weight:700" onclick="confirmPickupOrder('${order.id}')">✓ Entregar no Balcão & Confirmar</button>`;
   }
 
   // Identificação clara da forma e timing do pagamento
   let paymentBadgeHtml = '';
-  if (isDelivery) {
+  if (order.status === 'delivered') {
+    const payMethod = order.payment?.method ? order.payment.method.toUpperCase() : 'PAGO';
+    paymentBadgeHtml = `
+      <div class="payment-approved" style="background:#064e3b;color:#a7f3d0;border:1px solid #10b981;font-weight:700;padding:6px 10px;border-radius:8px">
+        ✓ PEDIDO FINALIZADO & PAGO (${payMethod})
+      </div>
+    `;
+  } else if (order.status === 'cancelled') {
+    paymentBadgeHtml = `
+      <div class="troco-alert" style="background:#450a0a;color:#fca5a5;border:1px solid #ef4444;padding:6px 10px;border-radius:8px">
+        ✕ PEDIDO CANCELADO ${order.cancellationReason ? `(${esc(order.cancellationReason)})` : ''}
+      </div>
+    `;
+  } else if (isDelivery) {
     if (isDeliveryPayment) {
       if (isMoney) {
         paymentBadgeHtml = `<div class="troco-alert" style="background:#064e3b;color:#a7f3d0">COBRAR NA ENTREGA: DINHEIRO ${hasTroco ? `(LEVAR TROCO DE ${R(order.payment.trocoValue)})` : '(VALOR EXATO)'}</div>`;
@@ -534,11 +557,13 @@ function createOrderCardHtml(order) {
 
       <!-- Ações de Impressão e Status -->
       <div class="order-actions" style="flex-wrap:wrap;gap:6px">
-        <button class="btn-sm btn-print" ${!canPrint ? 'disabled title="Impressão bloqueada até confirmação bancária do pagamento"' : ''} onclick="printOrderStation('${order.id}', 'kitchen')">
-          Imprimir Cozinha
-        </button>
+        ${order.status !== 'delivered' ? `
+          <button class="btn-sm btn-print" ${!canPrint ? 'disabled title="Impressão bloqueada até confirmação bancária do pagamento"' : ''} onclick="printOrderStation('${order.id}', 'kitchen')">
+            Imprimir Cozinha
+          </button>
+        ` : ''}
         <button class="btn-sm btn-print" ${!canPrint ? 'disabled title="Impressão bloqueada até confirmação bancária do pagamento"' : ''} onclick="printOrderStation('${order.id}', 'counter')">
-          Imprimir Balcão
+          ${order.status === 'delivered' ? 'Reimprimir Comanda' : 'Imprimir Balcão'}
         </button>
         ${nextAction}
         ${(order.status !== 'delivered' && order.status !== 'cancelled') ? (
@@ -550,12 +575,14 @@ function createOrderCardHtml(order) {
               📱 Link Motoboy
             </button>
           ` : `
-            <button class="btn-sm" style="background:#10b981;color:#fff;font-weight:700;font-size:11px;padding:4px 8px" onclick="confirmPickupOrder('${order.id}')" title="Marcar como Pago e Retirado pelo Cliente no Balcão">
-              ✓ Entregar no Balcão & Confirmar Pagamento
-            </button>
+            ${order.status === 'received' ? `
+              <button class="btn-sm" style="background:#10b981;color:#fff;font-weight:700;font-size:11px;padding:4px 8px" onclick="confirmPickupOrder('${order.id}')" title="Marcar como Pago e Retirado pelo Cliente no Balcão">
+                ✓ Entregar no Balcão & Confirmar
+              </button>
+            ` : ''}
           `
         ) : ''}
-        ${order.status !== 'cancelled' ? `
+        ${(order.status !== 'delivered' && order.status !== 'cancelled') ? `
           <button class="btn-sm btn-danger" style="margin-left:auto;font-size:11px;padding:4px 8px" onclick="openCancelOrderModal('${order.id}', '${order.orderNo}')" title="Cancelar este pedido">
             Cancelar
           </button>
@@ -2320,6 +2347,9 @@ async function loadChatConversations() {
     if (data.ok) {
       CHAT_CONVERSATIONS = data.conversations;
       renderChatConversationsList();
+      if (!ACTIVE_CHAT_PHONE && CHAT_CONVERSATIONS.length > 0) {
+        selectChat(CHAT_CONVERSATIONS[0].customerPhone, CHAT_CONVERSATIONS[0].customerName);
+      }
     }
   } catch (e) {}
 }
@@ -2355,8 +2385,19 @@ window.selectChat = function(phone, name) {
   if ($('#btn-edit-chat-name')) $('#btn-edit-chat-name').style.display = 'inline-block';
   if ($('#btn-close-chat')) $('#btn-close-chat').style.display = 'inline-block';
   if ($('#chat-fast-sender')) $('#chat-fast-sender').value = SETTINGS.chatSenderName || 'Delivery';
+  
+  const inp = $('#admin-chat-input');
+  if (inp) {
+    inp.placeholder = `Responder para ${name}... (Pressione Enter para enviar)`;
+    inp.focus();
+  }
   renderChatConversationsList();
   loadChatMessages(phone);
+
+  if (window.innerWidth <= 768) {
+    const chatWin = $('.admin-chat-window');
+    if (chatWin) chatWin.scrollIntoView({ behavior: 'smooth' });
+  }
 };
 
 async function loadChatMessages(phone) {
@@ -2397,27 +2438,43 @@ async function loadChatMessages(phone) {
 
 window.sendAdminChatMessage = async function() {
   const inp = $('#admin-chat-input');
-  if (!inp || !inp.value.trim() || !ACTIVE_CHAT_PHONE) return;
+  if (!inp || !inp.value.trim()) return;
+
+  if (!ACTIVE_CHAT_PHONE && CHAT_CONVERSATIONS.length > 0) {
+    selectChat(CHAT_CONVERSATIONS[0].customerPhone, CHAT_CONVERSATIONS[0].customerName);
+  }
+
+  if (!ACTIVE_CHAT_PHONE) {
+    adminToast('Nenhuma conversa de cliente selecionada. Clique em um cliente na lista ao lado.', 'info');
+    return;
+  }
 
   const text = inp.value.trim();
   inp.value = '';
   const senderName = $('#chat-fast-sender')?.value.trim() || SETTINGS.chatSenderName || 'Delivery';
 
   try {
-    await fetch(`${API_URL}/chat`, {
+    const res = await fetch(`${API_URL}/chat`, {
       method: 'POST',
       headers: authHeaders(),
       body: JSON.stringify({
         sender: 'admin',
         senderName: senderName,
         customerPhone: ACTIVE_CHAT_PHONE,
-        customerName: $('#active-chat-name').textContent,
+        customerName: $('#active-chat-name')?.textContent || 'Cliente',
         message: text
       })
     });
-    loadChatMessages(ACTIVE_CHAT_PHONE);
-    loadChatConversations();
-  } catch (e) {}
+    const d = await res.json();
+    if (d.ok) {
+      loadChatMessages(ACTIVE_CHAT_PHONE);
+      loadChatConversations();
+    } else {
+      adminToast(d.error || 'Erro ao enviar mensagem.', 'danger');
+    }
+  } catch (e) {
+    adminToast('Erro de conexão ao enviar mensagem no chat.', 'danger');
+  }
 };
 
 window.saveFastSenderName = async function() {

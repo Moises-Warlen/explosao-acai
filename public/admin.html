@@ -534,8 +534,11 @@
               <p style="text-align:center;color:var(--mut);margin:auto">Selecione uma conversa ao lado para responder o cliente.</p>
             </div>
 
-            <div style="padding:14px;border-top:1px solid var(--ln);background:var(--panel);display:flex;gap:10px">
-              <input id="admin-chat-input" placeholder="Digite sua resposta..." onkeydown="if(event.key==='Enter') sendAdminChatMessage()">
+            <div class="admin-chat-input-row">
+              <input id="admin-chat-input" placeholder="Digite sua resposta..." 
+                     onfocus="if(!ACTIVE_CHAT_PHONE && CHAT_CONVERSATIONS.length > 0) selectChat(CHAT_CONVERSATIONS[0].customerPhone, CHAT_CONVERSATIONS[0].customerName)"
+                     onclick="if(!ACTIVE_CHAT_PHONE && CHAT_CONVERSATIONS.length > 0) selectChat(CHAT_CONVERSATIONS[0].customerPhone, CHAT_CONVERSATIONS[0].customerName)"
+                     onkeydown="if(event.key==='Enter') sendAdminChatMessage()">
               <button class="btn-sm btn-next" style="padding:0 20px" onclick="sendAdminChatMessage()">Enviar</button>
             </div>
           </div>

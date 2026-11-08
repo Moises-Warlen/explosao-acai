@@ -1049,6 +1049,12 @@ body.hascart .fab-container {
   gap: 8px;
   padding-top: 10px;
   border-top: 1px solid var(--ln);
+  align-items: center;
+}
+
+.chat-input-row input {
+  flex: 1;
+  min-width: 0;
 }
 
 /* QR Code Pix Box */
