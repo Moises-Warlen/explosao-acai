@@ -1,0 +1,798 @@
+// Origens permitidas (domínio novo em http/https + GitHub Pages antigo)
+const ALLOWED_ORIGINS = [
+  "http://cardapioexplosaoacai.com.br",
+  "https://cardapioexplosaoacai.com.br",
+  "https://moises-warlen.github.io"
+];
+
+const STORE = {
+  name: "EXPLOSÃO AÇAÍ",
+  address: "Rua Renato Lourenço Fernandes Rosa, 1721, Aeroporto 3, Franca, SP, Brasil",
+  perKm: 1,
+  minFreight: 4.5,
+  maxKm: 0
+};
+
+const SIZES = [300, 500, 700];
+const MONTE = [15.9, 19.9, 26.9];
+
+const ACCOMPANIMENTS = [
+  "Morango", "Banana", "Kiwi", "Uva", "Manga",
+  "Granola", "Leite condensado", "Ninho", "Chantilly",
+  "Confete", "Bis", "Ovomaltine", "Paçoca",
+  "Sucrilhos", "Gotas de chocolate"
+];
+
+const FRUITS = ["Banana", "Morango", "Uva", "Manga", "Kiwi"];
+
+const EXTRAS = [
+  ["Nutella",5.9],
+  ["Brigadeiro",4.9],
+  ["Chocolate com avelã",4.9],
+  ["Ovomaltine",3.9],
+  ["Bis",4.9],
+  ["Sonho de Valsa",4.9],
+  ["Kit Kat (picado)",5.9],
+  ["Ninho",3.9],
+  ["Leite condensado",2.9],
+  ["Chantilly",3.9],
+  ["Granola extra",2.9],
+  ["Paçoca",2.9],
+  ["Confete",2.9],
+  ["Acrescentar fruta",3.9]
+];
+
+const PRODUCTS = [
+  ["Doce Tentação",[24.9,30.9,36.9]],
+  ["Mix Fini",[22.9,27.9,33.9]],
+  ["Puro Polpa",[15.9,19.9,26.9]],
+  ["Ninho com Morango",[24.9,30.9,36.9]],
+  ["Clássico",[21.9,26.9,32.9]],
+  ["Nutella",[26.5,33.9,40.9]],
+  ["Par Perfeito",[26.5,33.9,40.9]],
+  ["Granola",[21.9,26.9,32.9]]
+];
+
+const COMBOS = [
+  ["Combo Família",99,"4 copos de 500 ml","1 Nutella · 1 Ninho com Morango · 1 Clássico · 1 Mix Fini"],
+  ["Combo Kids",54.9,"3 copos de 300 ml","2 Mix Fini (cobertura Fini, confete e Ninho) · 1 Clássico"],
+  ["Combo Casal",64.9,"2 copos de 500 ml","2 Par Perfeito com brigadeiro, Ninho, Bis, morango, chocolate com avelã e chocolates em formato de coração"],
+  ["Combo Econômico",29.9,"2 copos de 300 ml","Em cada copo: banana, Ninho, leite condensado e granola"]
+];
+
+const PURE_PULP = [
+  ["Pura Polpa de Açaí 1 litro",29.9],
+  ["Pura Polpa de Açaí 2 litros",38.73]
+];
+
+const money = n => "R$ " + n.toFixed(2).replace(".", ",");
+
+// Responde com a origem correta (se estiver na lista de permitidas)
+const json = (data, status, origin) => {
+  const safeOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Access-Control-Allow-Origin": safeOrigin,
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+      "Vary": "Origin"
+    }
+  });
+};
+
+function validIndex(v, max) {
+  return Number.isInteger(v) && v >= 0 && v < max;
+}
+
+function clean(s, max=180) {
+  return String(s ?? "")
+    .replace(/[<>\u0000-\u001f]/g, " ")
+    .trim()
+    .slice(0, max);
+}
+
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function norm(s) {
+  return String(s || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function distanceKm(a, b) {
+  const rad = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * rad;
+  const dLon = (b.lon - a.lon) * rad;
+  const x = Math.sin(dLat/2)**2 +
+    Math.cos(a.lat*rad) * Math.cos(b.lat*rad) *
+    Math.sin(dLon/2)**2;
+
+  return 12742 * Math.asin(Math.sqrt(x));
+}
+
+async function viaCep(cep) {
+  const digits = String(cep || "").replace(/\D/g, "");
+  if (!/^\d{8}$/.test(digits)) return null;
+
+  const r = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+
+  if (!r.ok) {
+    throw new Error("Não consegui consultar o CEP. Confira o número e tente novamente.");
+  }
+
+  const data = await r.json();
+
+  if (data.erro) {
+    throw new Error("CEP não encontrado. Confira o CEP informado.");
+  }
+
+  if (norm(data.localidade) !== "franca" || norm(data.uf) !== "sp") {
+    throw new Error("O CEP informado não pertence a Franca-SP. Confira o endereço.");
+  }
+
+  return data;
+}
+
+async function nominatimSearch(params) {
+  const u = new URL("https://nominatim.openstreetmap.org/search");
+
+  for (const [k,v] of Object.entries(params)) {
+    if (v) u.searchParams.set(k, v);
+  }
+
+  u.searchParams.set("format", "jsonv2");
+  u.searchParams.set("addressdetails", "1");
+  u.searchParams.set("limit", "5");
+  u.searchParams.set("countrycodes", "br");
+
+  const r = await fetch(u.toString(), {
+    headers: {
+      "User-Agent": "ExplosaoAcaiOrder/1.1 (Cloudflare Worker)"
+    }
+  });
+
+  if (!r.ok) return [];
+
+  const a = await r.json();
+
+  return Array.isArray(a) ? a.map(x => ({
+    lat: Number(x.lat),
+    lon: Number(x.lon),
+    address: x.address || {}
+  })) : [];
+}
+
+async function photonSearch(q) {
+  const u = new URL("https://photon.komoot.io/api/");
+  u.searchParams.set("q", q);
+  u.searchParams.set("limit", "5");
+  u.searchParams.set("lang", "pt");
+
+  const r = await fetch(u.toString(), {
+    headers: {
+      "User-Agent": "ExplosaoAcaiOrder/1.1"
+    }
+  });
+
+  if (!r.ok) return [];
+
+  const data = await r.json();
+
+  return (data.features || []).map(f => {
+    const p = f.properties || {};
+    const c = f.geometry && f.geometry.coordinates || [];
+
+    return {
+      lat: Number(c[1]),
+      lon: Number(c[0]),
+      address: {
+        city: p.city || p.town || p.village,
+        municipality: p.municipality,
+        county: p.county,
+        state: p.state,
+        country: p.country,
+        postcode: p.postcode
+      }
+    };
+  }).filter(x => Number.isFinite(x.lat) && Number.isFinite(x.lon));
+}
+
+function belongsToFranca(point, storePoint, cepConfirmed) {
+  const a = point.address || {};
+
+  const locality = norm(
+    a.city || a.town || a.village ||
+    a.municipality || a.county || a.city_district || ""
+  );
+
+  const state = norm(a.state || "");
+  const country = norm(a.country || "");
+
+  if (locality.includes("franca")) {
+    return !state || state.includes("sao paulo");
+  }
+
+  if (!locality && cepConfirmed && storePoint &&
+      distanceKm(storePoint, point) <= 35) {
+    return true;
+  }
+
+  return false;
+}
+
+async function geocodeStore() {
+  const parts = STORE.address.split(",").map(x => x.trim());
+
+  const attempts = [
+    STORE.address,
+    parts.filter((_,i) => i !== 1).join(", "),
+    "Franca, São Paulo, Brasil"
+  ];
+
+  for (const q of attempts) {
+    const a = await nominatimSearch({q});
+    if (a.length) return a[0];
+  }
+
+  const a = await photonSearch(STORE.address);
+  if (a.length) return a[0];
+
+  throw new Error("Não consegui localizar o endereço da loja no mapa. Tente novamente mais tarde.");
+}
+
+async function geocodeDelivery(d, storePoint) {
+  const cepData = await viaCep(d.cep);
+
+  const street = (cepData && cepData.logradouro) || d.street;
+  const bairro = (cepData && cepData.bairro) || d.bairro;
+  const cep = (cepData && cepData.cep) || String(d.cep || "");
+
+  const city = "Franca";
+  const state = "São Paulo";
+
+  const structured = [
+    {street:`${d.number} ${street}`,city,state,postalcode:cep,country:"Brasil"},
+    {street:`${d.number} ${street}`,city,state,country:"Brasil"},
+    {street,bairro,city,state,postalcode:cep,country:"Brasil"}
+  ];
+
+  for (const params of structured) {
+    const found = await nominatimSearch(params);
+    const valid = found.find(p =>
+      belongsToFranca(p, storePoint, !!cepData)
+    );
+
+    if (valid) return {point:valid,street,bairro,cep};
+  }
+
+  const queries = [
+    `${d.number} ${street}, ${bairro}, Franca, São Paulo, ${cep}, Brasil`,
+    `${street}, ${bairro}, Franca, São Paulo, Brasil`,
+    `${street}, Franca, São Paulo, Brasil`,
+    `${cep}, Franca, São Paulo, Brasil`
+  ];
+
+  for (const q of queries) {
+    const found = await nominatimSearch({q});
+    const valid = found.find(p =>
+      belongsToFranca(p, storePoint, !!cepData)
+    );
+
+    if (valid) return {point:valid,street,bairro,cep};
+  }
+
+  for (const q of queries) {
+    const found = await photonSearch(q);
+    const valid = found.find(p =>
+      belongsToFranca(p, storePoint, !!cepData)
+    );
+
+    if (valid) return {point:valid,street,bairro,cep};
+  }
+
+  throw new Error("O endereço foi preenchido, mas o mapa não conseguiu localizar um ponto confiável em Franca. Confira o CEP e tente novamente.");
+}
+
+async function freight(delivery) {
+  const storePoint = await geocodeStore();
+  const found = await geocodeDelivery(delivery, storePoint);
+  const to = found.point;
+
+  let km = null;
+
+  const routeUrls = [
+    `https://router.project-osrm.org/route/v1/driving/${storePoint.lon},${storePoint.lat};${to.lon},${to.lat}?overview=false`,
+    `https://routing.openstreetmap.de/routed-car/route/v1/driving/${storePoint.lon},${storePoint.lat};${to.lon},${to.lat}?overview=false`
+  ];
+
+  for (const url of routeUrls) {
+    try {
+      const rr = await fetch(url, {
+        headers: {
+          "User-Agent": "ExplosaoAcaiOrder/1.2"
+        }
+      });
+
+      if (!rr.ok) continue;
+
+      const route = await rr.json();
+      const meters = route && route.routes &&
+        route.routes[0] && route.routes[0].distance;
+
+      if (Number.isFinite(meters) && meters > 0) {
+        km = meters / 1000;
+        break;
+      }
+    } catch (_) {}
+  }
+
+  if (km === null) {
+    try {
+      const vr = await fetch("https://valhalla1.openstreetmap.de/route", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Client-Id": "explosao-acai"
+        },
+        body: JSON.stringify({
+          locations: [
+            {lat:storePoint.lat,lon:storePoint.lon},
+            {lat:to.lat,lon:to.lon}
+          ],
+          costing: "auto",
+          units: "kilometers"
+        })
+      });
+
+      if (vr.ok) {
+        const vd = await vr.json();
+        const length = vd && vd.trip &&
+          vd.trip.summary && vd.trip.summary.length;
+
+        if (Number.isFinite(length) && length > 0) {
+          km = length;
+        }
+      }
+    } catch (_) {}
+  }
+
+  if (km === null) {
+    throw new Error("Os endereços foram localizados, mas os serviços de rota estão indisponíveis no momento. Tente novamente em alguns minutos.");
+  }
+
+  if (STORE.maxKm && km > STORE.maxKm) {
+    throw new Error(`Endereço fora da área de entrega (limite de ${STORE.maxKm} km).`);
+  }
+
+  const value = Math.max(
+    STORE.minFreight,
+    Math.ceil(km * STORE.perKm * 2) / 2
+  );
+
+  return {
+    km,
+    value,
+    street:found.street,
+    bairro:found.bairro,
+    cep:found.cep
+  };
+}
+
+/* ===================== PREÇOS E ITENS ===================== */
+
+function priceItems(items) {
+  if (!Array.isArray(items) || items.length < 1 || items.length > 30) {
+    throw new Error("Carrinho inválido.");
+  }
+
+  let subtotal = 0;
+  let lines = [];
+
+  const FRUIT_EXTRA_INDEX = EXTRAS.findIndex(
+    e => e[0] === "Acrescentar fruta"
+  );
+
+  for (const item of items) {
+    if (!item || !Number.isInteger(item.q) ||
+        item.q < 1 || item.q > 20) {
+      throw new Error("Quantidade inválida.");
+    }
+
+    const x = Array.isArray(item.x) ? item.x : [];
+
+    if (
+      x.length > EXTRAS.length ||
+      x.some(i => !validIndex(i, EXTRAS.length)) ||
+      new Set(x).size !== x.length
+    ) {
+      throw new Error("Adicionais inválidos.");
+    }
+
+    // Frutas escolhidas (índices de FRUITS). Pode escolher de 1 até todas as 5.
+    const fr = Array.isArray(item.fr) ? item.fr : [];
+
+    if (
+      fr.length > FRUITS.length ||
+      fr.some(i => !validIndex(i, FRUITS.length)) ||
+      new Set(fr).size !== fr.length
+    ) {
+      throw new Error("Frutas inválidas.");
+    }
+
+    const hasFruitExtra = x.includes(FRUIT_EXTRA_INDEX);
+
+    if (hasFruitExtra && !fr.length) {
+      throw new Error(
+        "Escolha a fruta que deseja acrescentar: Banana, Morango, Uva, Manga ou Kiwi."
+      );
+    }
+
+    if (!hasFruitExtra && fr.length) {
+      throw new Error("Frutas informadas sem o extra de fruta selecionado.");
+    }
+
+    // "Acrescentar fruta" cobra o valor POR FRUTA escolhida
+    const extras = x.reduce(
+      (s,i) => s + EXTRAS[i][1] * (i === FRUIT_EXTRA_INDEX ? fr.length : 1),
+      0
+    );
+
+    let name = "";
+    let unit = 0;
+    let details = [];
+
+    const observation = clean(item.note, 250);
+
+    if (item.k === "p") {
+      if (
+        !validIndex(item.i, PRODUCTS.length) ||
+        !validIndex(item.s, SIZES.length)
+      ) {
+        throw new Error("Produto ou tamanho inválido.");
+      }
+
+      name = PRODUCTS[item.i][0] + " " + SIZES[item.s] + " ml";
+      unit = PRODUCTS[item.i][1][item.s] + extras;
+
+    } else if (item.k === "m") {
+      if (!validIndex(item.s, SIZES.length)) {
+        throw new Error("Tamanho do açaí inválido.");
+      }
+
+      const ac = Array.isArray(item.ac) ? item.ac : [];
+
+      if (
+        ac.length > 5 ||
+        ac.some(i => !validIndex(i, ACCOMPANIMENTS.length)) ||
+        new Set(ac).size !== ac.length
+      ) {
+        throw new Error("Acompanhamentos inválidos.");
+      }
+
+      name = "Monte seu açaí " + SIZES[item.s] + " ml";
+      unit = MONTE[item.s] + extras;
+
+      details.push(
+        "Acompanhamentos: " +
+        (ac.length ? ac.map(i => ACCOMPANIMENTS[i]).join(", ") : "a definir")
+      );
+
+    } else if (item.k === "c") {
+      if (!validIndex(item.i, COMBOS.length) || x.length) {
+        throw new Error("Combo inválido.");
+      }
+
+      name = COMBOS[item.i][0];
+      unit = COMBOS[item.i][1];
+
+      details.push(COMBOS[item.i][2], COMBOS[item.i][3]);
+
+    } else if (item.k === "l") {
+      if (!validIndex(item.i, PURE_PULP.length) || x.length) {
+        throw new Error("Produto de polpa inválido.");
+      }
+
+      name = PURE_PULP[item.i][0];
+      unit = PURE_PULP[item.i][1];
+
+    } else {
+      throw new Error("Tipo de produto inválido.");
+    }
+
+    x.forEach(i => {
+      if (i === FRUIT_EXTRA_INDEX) {
+        details.push(
+          "+ Acrescentar fruta (" + fr.map(f => FRUITS[f]).join(", ") + ")"
+        );
+      } else {
+        details.push("+ " + EXTRAS[i][0]);
+      }
+    });
+
+    if (observation) {
+      details.push("Obs: " + observation);
+    }
+
+    subtotal += unit * item.q;
+
+    lines.push({
+      name,
+      q:item.q,
+      unit,
+      details
+    });
+  }
+
+  return {subtotal,lines};
+}
+
+/* ===================== RECEBIMENTO DO PEDIDO ===================== */
+
+async function handle(request, env) {
+  const origin = request.headers.get("Origin") || "";
+
+  // Só aceita origens da lista
+  if (!ALLOWED_ORIGINS.includes(origin)) {
+    return json(
+      {ok:false,error:"Origem não autorizada."},
+      403,
+      ALLOWED_ORIGINS[0]
+    );
+  }
+
+  if (request.method === "OPTIONS") {
+    // Preflight do navegador
+    return new Response(null, {
+      status:204,
+      headers: {
+        "Access-Control-Allow-Origin": origin,
+        "Access-Control-Allow-Methods":"POST, OPTIONS",
+        "Access-Control-Allow-Headers":"Content-Type",
+        "Vary":"Origin"
+      }
+    });
+  }
+
+  if (new URL(request.url).pathname !== "/orders") {
+    return json({ok:false,error:"Rota não encontrada."},404,origin);
+  }
+
+  if (request.method !== "POST") {
+    return json({ok:false,error:"Método não permitido."},405,origin);
+  }
+
+  if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) {
+    return json(
+      {ok:false,error:"Configuração do Telegram incompleta no servidor."},
+      500,
+      origin
+    );
+  }
+
+  let body;
+
+  try {
+    body = await request.json();
+  } catch {
+    return json({ok:false,error:"Pedido inválido."},400,origin);
+  }
+
+  try {
+    const customer = body.customer || {};
+    const delivery = body.delivery || {};
+    const payment = body.payment || {};
+
+    const name = clean(customer.name,80);
+    const phone = String(customer.phone || "").replace(/\D/g,"");
+
+    if (name.length < 2 || phone.length < 10 || phone.length > 13) {
+      throw new Error("Informe nome e telefone válidos.");
+    }
+
+    if (![
+      "Pix",
+      "Cartão de crédito",
+      "Cartão de débito",
+      "Dinheiro"
+    ].includes(payment.method)) {
+      throw new Error("Forma de pagamento inválida.");
+    }
+
+    const {subtotal,lines} = priceItems(body.items);
+
+    let ship = 0;
+    let km = null;
+
+    if (delivery.type === "delivery") {
+      const d = {
+        street:clean(delivery.street,120),
+        number:clean(delivery.number,20),
+        bairro:clean(delivery.bairro,100),
+        city:clean(delivery.city,80),
+        state:clean(delivery.state,2).toUpperCase(),
+        cep:clean(delivery.cep,12)
+      };
+
+      if (
+        !d.street ||
+        !d.number ||
+        !d.bairro ||
+        norm(d.city) !== "franca" ||
+        d.state !== "SP"
+      ) {
+        throw new Error("Informe rua, número e bairro de Franca-SP para entrega.");
+      }
+
+      const clientFreight = Number(delivery.freight);
+      const clientKm = Number(delivery.km);
+
+      if (
+        Number.isFinite(clientFreight) &&
+        clientFreight >= 0 &&
+        clientFreight <= 500 &&
+        Number.isFinite(clientKm) &&
+        clientKm > 0 &&
+        clientKm <= 200
+      ) {
+        ship = clientFreight;
+        km = clientKm;
+        Object.assign(delivery,d);
+
+      } else {
+        const f = await freight(d);
+
+        ship = f.value;
+        km = f.km;
+
+        Object.assign(delivery,d,{
+          street:f.street || d.street,
+          bairro:f.bairro || d.bairro,
+          cep:f.cep || d.cep
+        });
+      }
+
+    } else if (delivery.type !== "pickup") {
+      throw new Error("Tipo de recebimento inválido.");
+    }
+
+    const total = subtotal + ship;
+    const orderNo = String(
+      Math.floor(100000 + Math.random() * 900000)
+    );
+
+    const out = [];
+
+    out.push(
+      "EXPLOSÃO AÇAÍ",
+      `PEDIDO #${orderNo}`,
+      "--------------------",
+      "",
+      `Cliente: ${name}`,
+      `Telefone: ${phone}`,
+      ""
+    );
+
+    for (const l of lines) {
+      out.push(`${l.q}x ${l.name} — ${money(l.unit*l.q)}`);
+
+      for (const d of l.details) {
+        out.push("  • " + d);
+      }
+
+      out.push("");
+    }
+
+    out.push(
+      "--------------------",
+      `Subtotal: ${money(subtotal)}`
+    );
+
+    if (delivery.type === "delivery") {
+      out.push(
+        `Frete (${km.toFixed(1).replace(".",",")} km): ${money(ship)}`
+      );
+    } else {
+      out.push("Recebimento: RETIRADA NO LOCAL");
+    }
+
+    out.push(
+      `TOTAL: ${money(total)}`,
+      "",
+      `Pagamento: ${payment.method}`
+    );
+
+    if (
+      payment.method === "Dinheiro" &&
+      clean(payment.change,40)
+    ) {
+      out.push("Troco para: " + clean(payment.change,40));
+    }
+
+    let mapAddress = "";
+
+    if (delivery.type === "delivery") {
+      mapAddress = [
+        delivery.street,
+        delivery.number,
+        delivery.bairro,
+        delivery.city,
+        delivery.state
+      ].filter(Boolean).join(", ");
+
+      out.push("", "ENDEREÇO DE ENTREGA:", "__MAP_LINK__");
+
+      if (delivery.cep) {
+        out.push("CEP: " + clean(delivery.cep,12));
+      }
+
+      if (delivery.reference) {
+        out.push("Referência: " + clean(delivery.reference,120));
+      }
+    }
+
+    const rawMessage = out.join("\n");
+    const message = rawMessage.replace("__MAP_LINK__",mapAddress);
+
+    const mapUrl = delivery.type === "delivery"
+      ? "https://www.google.com/maps/dir/?api=1&destination=" +
+        encodeURIComponent(mapAddress)
+      : "";
+
+    const telegramMessage = delivery.type === "delivery"
+      ? escapeHtml(rawMessage).replace(
+          "__MAP_LINK__",
+          `<a href="${escapeHtml(mapUrl)}">${escapeHtml(mapAddress)}</a>`
+        )
+      : escapeHtml(rawMessage);
+
+    const tg = await fetch(
+      `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+      {
+        method:"POST",
+        headers: {
+          "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+          chat_id:env.TELEGRAM_CHAT_ID,
+          text:telegramMessage,
+          parse_mode:"HTML",
+          disable_web_page_preview:true
+        })
+      }
+    );
+
+    const tgResult = await tg.json();
+
+    if (!tg.ok || !tgResult.ok) {
+      throw new Error("O Telegram não confirmou o recebimento. Tente novamente.");
+    }
+
+    return json({
+      ok:true,
+      orderNo,
+      message,
+      subtotal,
+      freight:ship,
+      total
+    },200,origin);
+
+  } catch (e) {
+    return json({
+      ok:false,
+      error:e && e.message
+        ? e.message
+        : "Não foi possível validar o pedido."
+    },400,origin);
+  }
+}
+
+export default {fetch:handle};

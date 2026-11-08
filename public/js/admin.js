@@ -1,0 +1,1551 @@
+/* =========================================================================
+   PAINEL ADMINISTRATIVO COMPLETO & GESTÃO AVANÇADA — EXPLOSÃO AÇAÍ
+   - Regra de Impressão Rígida: Pix e Cartão só imprimem após confirmação bancária
+   - Relatórios Gerenciais de Vendas, Fretes, Lucros, Tempos de Preparo e Entrega
+   - Gráficos Visuais dos Mais Vendidos e Menos Vendidos com Fotos e Exportação em PDF A4
+   - Ficha Técnica de Insumos com Detecção e Alertas Automáticos de Prejuízo
+   - Soma Automática de Custos em Combos a partir dos produtos selecionados
+   - CRUD de Categorias, Produtos (com Pausa, Upload do Computador, Novidades e Promoções)
+   - CRUD de Acompanhamentos Dinâmicos com limites editáveis por tamanho
+   - Geração de Cupons de Desconto com Envio no Chat ao Vivo e WhatsApp
+   ========================================================================= */
+
+const API_URL = '/api';
+const WS_URL = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws`;
+
+let ADMIN_TOKEN = localStorage.getItem('admin_token') || '';
+let ORDERS = [];
+let CATEGORIES = [];
+let PRODUCTS = [];
+let ACCOMPANIMENTS = [];
+let EXTRAS = [];
+let COUPONS = [];
+let PRINTERS = [];
+let SETTINGS = {};
+let CHAT_CONVERSATIONS = [];
+let ACTIVE_CHAT_PHONE = null;
+let CURRENT_REPORT = null;
+let WS = null;
+
+// Áudio de Notificação de Novo Pedido ou Mensagem
+let audioCtx = null;
+function playNotificationChime() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const notes = [523.25, 659.25, 783.99, 1046.50];
+    notes.forEach((freq, idx) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.value = freq;
+      gain.gain.value = 0.25;
+      osc.start(audioCtx.currentTime + idx * 0.12);
+      osc.stop(audioCtx.currentTime + idx * 0.12 + 0.25);
+    });
+  } catch (e) {}
+}
+
+// Helpers Utilitários
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+const R = (n) => 'R$ ' + Number(n || 0).toFixed(2).replace('.', ',');
+const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+
+window.addEventListener('DOMContentLoaded', async () => {
+  if (!ADMIN_TOKEN) {
+    showLoginModal();
+  } else {
+    initDashboard();
+  }
+});
+
+// Autenticação do Administrador
+function showLoginModal() {
+  const modal = $('#login-modal');
+  if (modal) modal.style.display = 'flex';
+}
+
+window.doLogin = async function() {
+  const pass = $('#admin-pass-input').value.trim();
+  if (!pass) return alert('Digite a senha de administrador.');
+
+  try {
+    const res = await fetch(`${API_URL}/admin/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pass })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      ADMIN_TOKEN = data.token;
+      localStorage.setItem('admin_token', ADMIN_TOKEN);
+      $('#login-modal').style.display = 'none';
+      initDashboard();
+    } else {
+      alert(data.error || 'Senha incorreta.');
+    }
+  } catch (e) {
+    alert('Erro de conexão ao autenticar.');
+  }
+};
+
+window.logout = function() {
+  localStorage.removeItem('admin_token');
+  location.reload();
+};
+
+function authHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'x-admin-token': ADMIN_TOKEN
+  };
+}
+
+// Inicialização Geral do Painel
+async function initDashboard() {
+  initWebSocket();
+  await loadStoreStatus();
+  await loadOrders();
+  await loadCategories();
+  await loadProducts();
+  await loadAccompaniments();
+  await loadExtras();
+  await loadCoupons();
+  await loadPrinters();
+  await loadSalesReport({ period: 'today' });
+  await loadChatConversations();
+  bindNavigation();
+}
+
+// Conexão WebSocket para Atualizações em Tempo Real
+function initWebSocket() {
+  try {
+    WS = new WebSocket(WS_URL);
+    WS.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.event === 'NEW_ORDER') {
+          playNotificationChime();
+          ORDERS.unshift(data.payload);
+          renderKanban();
+          updateOrdersBadge();
+          loadSalesReport({ period: $('#report-period-select')?.value || 'today' });
+        }
+        if (data.event === 'ORDER_STATUS_CHANGED') {
+          const idx = ORDERS.findIndex(o => o.id === data.payload.id);
+          if (idx !== -1) {
+            ORDERS[idx] = data.payload;
+            renderKanban();
+          }
+          loadSalesReport({ period: $('#report-period-select')?.value || 'today' });
+        }
+        if (data.event === 'CHAT_MESSAGE') {
+          playNotificationChime();
+          loadChatConversations();
+          if (ACTIVE_CHAT_PHONE === data.payload.customerPhone) {
+            loadChatMessages(ACTIVE_CHAT_PHONE);
+          }
+        }
+        if (data.event === 'PRINT_JOB') {
+          executeBrowserPrint(data.payload.ticketText);
+        }
+      } catch (e) {}
+    };
+    WS.onclose = () => setTimeout(initWebSocket, 4000);
+  } catch (err) {
+    console.warn('WebSocket indisponível.');
+  }
+}
+
+// Navegação entre Abas
+function bindNavigation() {
+  const tabs = $$('.nav-tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      $$('.tab-pane').forEach(p => p.classList.remove('active'));
+
+      tab.classList.add('active');
+      const targetPane = $(`#${tab.dataset.tab}`);
+      if (targetPane) targetPane.classList.add('active');
+    });
+  });
+}
+
+// ==================== STATUS & CONFIGURAÇÕES DA LOJA ====================
+async function loadStoreStatus() {
+  try {
+    const res = await fetch(`${API_URL}/store/status`);
+    const data = await res.json();
+    if (data.ok) {
+      const sw = $('#store-toggle-switch');
+      const label = $('#store-toggle-label');
+      if (sw) sw.checked = data.isOpen;
+      if (label) {
+        label.textContent = data.isOpen ? 'Loja ABERTA' : 'Loja FECHADA';
+        label.style.color = data.isOpen ? 'var(--green)' : 'var(--danger)';
+      }
+    }
+
+    const setRes = await fetch(`${API_URL}/store/settings`);
+    const setData = await setRes.json();
+    if (setData.ok) {
+      SETTINGS = setData.settings;
+      renderStoreSettingsForm();
+    }
+  } catch (e) {}
+}
+
+window.toggleStoreStatus = async function() {
+  const sw = $('#store-toggle-switch');
+  const label = $('#store-toggle-label');
+  try {
+    const res = await fetch(`${API_URL}/store/toggle-status`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ isOpen: sw.checked })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      label.textContent = data.isOpen ? 'Loja ABERTA' : 'Loja FECHADA';
+      label.style.color = data.isOpen ? 'var(--green)' : 'var(--danger)';
+    }
+  } catch (e) {
+    alert('Erro ao atualizar status da loja.');
+  }
+};
+
+function renderStoreSettingsForm() {
+  if ($('#st-perkm')) $('#st-perkm').value = SETTINGS.perKmRate || 1.0;
+  if ($('#st-minfreight')) $('#st-minfreight').value = SETTINGS.minFreight || 4.5;
+  if ($('#st-banner')) $('#st-banner').value = SETTINGS.bannerPromo || '';
+  if ($('#st-wpp')) $('#st-wpp').value = SETTINGS.wpp || '';
+  if ($('#st-address')) $('#st-address').value = SETTINGS.address || '';
+}
+
+window.saveStoreSettings = async function(e) {
+  if (e) e.preventDefault();
+  const updates = {
+    perKmRate: parseFloat($('#st-perkm').value) || 1.0,
+    minFreight: parseFloat($('#st-minfreight').value) || 4.5,
+    bannerPromo: $('#st-banner').value.trim(),
+    wpp: $('#st-wpp').value.trim(),
+    address: $('#st-address').value.trim()
+  };
+
+  try {
+    const res = await fetch(`${API_URL}/store/settings`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify(updates)
+    });
+    const data = await res.json();
+    if (data.ok) {
+      alert('Configurações salvas com sucesso!');
+    }
+  } catch (e) {
+    alert('Falha ao salvar configurações.');
+  }
+};
+
+// ==================== PEDIDOS & KANBAN (PRODUÇÃO & LOGÍSTICA) ====================
+async function loadOrders() {
+  try {
+    const res = await fetch(`${API_URL}/orders`);
+    const data = await res.json();
+    if (data.ok) {
+      ORDERS = data.orders;
+      renderKanban();
+      updateOrdersBadge();
+    }
+  } catch (e) {}
+}
+
+function updateOrdersBadge() {
+  const pendingCount = ORDERS.filter(o => o.status === 'received').length;
+  const badge = $('#badge-pending-orders');
+  if (badge) {
+    badge.textContent = pendingCount;
+    badge.style.display = pendingCount > 0 ? 'inline-block' : 'none';
+  }
+}
+
+function renderKanban() {
+  const colReceived = $('#cards-received');
+  const colPreparing = $('#cards-preparing');
+  const colReady = $('#cards-ready');
+  const colDelivered = $('#cards-delivered');
+
+  if (!colReceived) return;
+
+  colReceived.innerHTML = '';
+  colPreparing.innerHTML = '';
+  colReady.innerHTML = '';
+  colDelivered.innerHTML = '';
+
+  ORDERS.forEach(order => {
+    const card = createOrderCardHtml(order);
+    if (order.status === 'received') {
+      colReceived.innerHTML += card;
+    } else if (order.status === 'preparing') {
+      colPreparing.innerHTML += card;
+    } else if (order.status === 'ready' || order.status === 'out_for_delivery') {
+      colReady.innerHTML += card;
+    } else if (order.status === 'delivered') {
+      colDelivered.innerHTML += card;
+    }
+  });
+}
+
+function createOrderCardHtml(order) {
+  const isMoney = order.payment?.method === 'Dinheiro';
+  const isDeliveryPayment = order.payment?.timing === 'delivery' || isMoney;
+  const isApproved = order.payment?.status === 'approved';
+  // Regra de impressão: dinheiro ou cartão na entrega imprime na hora; online só após aprovado pelo banco
+  const canPrint = isDeliveryPayment || isApproved;
+  const hasTroco = isMoney && order.payment?.trocoValue > 0;
+  const isDelivery = order.delivery?.type === 'delivery';
+
+  let nextAction = '';
+  if (order.status === 'received') {
+    nextAction = `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'preparing')">Mandar p/ Cozinha</button>`;
+  } else if (order.status === 'preparing') {
+    nextAction = `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'out_for_delivery')">Despachar Entrega</button>`;
+  } else if (order.status === 'out_for_delivery' || order.status === 'ready') {
+    nextAction = `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'delivered')">Concluir Pedido</button>`;
+  }
+
+  // Identificação clara da forma e timing do pagamento
+  let paymentBadgeHtml = '';
+  if (isDeliveryPayment) {
+    if (isMoney) {
+      paymentBadgeHtml = `<div class="troco-alert" style="background:#064e3b;color:#a7f3d0">COBRAR NA ENTREGA: DINHEIRO ${hasTroco ? `(LEVAR TROCO DE ${R(order.payment.trocoValue)})` : '(VALOR EXATO)'}</div>`;
+    } else {
+      paymentBadgeHtml = `<div class="troco-alert" style="background:#3b115b;color:var(--y)">COBRAR NA ENTREGA: LEVAR MAQUININHA (${order.payment?.method.toUpperCase()})</div>`;
+    }
+  } else {
+    // Pagamento online
+    if (isApproved) {
+      paymentBadgeHtml = `<div class="payment-approved">PAGAMENTO ONLINE CONFIRMADO (${order.payment?.method.toUpperCase()})</div>`;
+    } else {
+      paymentBadgeHtml = `
+        <div class="payment-waiting">
+          AGUARDANDO CONFIRMAÇÃO DO BANCO (${order.payment?.method})
+          <button class="btn-sm btn-secondary" style="margin-top:4px;font-size:10px;padding:3px 8px;width:100%" onclick="simulateBankApproval('${order.id}')">Simular Confirmação Bancária</button>
+        </div>
+      `;
+    }
+  }
+
+  return `
+    <div class="order-card" id="card-${order.id}">
+      <div class="order-card-head">
+        <b style="font-size:16px;color:var(--y)">#${order.orderNo}</b>
+        <span class="order-badge ${order.payment?.method === 'Pix' ? 'pix' : (isMoney ? 'money' : 'card')}">
+          ${order.payment?.method}
+        </span>
+      </div>
+
+      ${paymentBadgeHtml}
+
+      <div style="font-weight:600;font-size:14px;margin-top:6px">
+        Cliente: ${esc(order.customer.name)} 
+        <a href="https://wa.me/55${order.customer.phone}" target="_blank" style="color:var(--green);text-decoration:none;font-size:12px;margin-left:4px">WhatsApp</a>
+      </div>
+
+      ${isDelivery ? `
+        <div style="font-size:12px;color:var(--mut)">
+          Entrega: ${esc(order.delivery.street)}, ${esc(order.delivery.number)} — ${esc(order.delivery.bairro)} (${(order.delivery.km || 0).toFixed(1)} km)
+        </div>
+      ` : `
+        <div style="font-size:12px;color:var(--y)">Retirada no Balcão da Loja</div>
+      `}
+
+      <!-- Resumo dos Itens e Acompanhamentos -->
+      <div class="order-items-summary">
+        ${order.items.map(it => `
+          <div><b>${it.quantity}x</b> ${esc(it.name)}</div>
+          ${it.accompaniments?.length ? `<div style="font-size:11px;color:var(--mut)">• Acomp: ${esc(it.accompaniments.join(', '))}</div>` : ''}
+          ${it.extras?.length ? `<div style="font-size:11px;color:var(--y)">• Extras: ${esc(it.extras.join(', '))}</div>` : ''}
+          ${it.note ? `<div style="font-size:11px;color:var(--danger)">Obs: ${esc(it.note)}</div>` : ''}
+        `).join('')}
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:15px;margin-top:4px">
+        <span>Total a Cobrar:</span>
+        <span style="color:var(--green)">${R(order.total)}</span>
+      </div>
+
+      <!-- Ações de Impressão e Status -->
+      <div class="order-actions">
+        <button class="btn-sm btn-print" ${!canPrint ? 'disabled title="Impressão bloqueada até confirmação bancária do pagamento"' : ''} onclick="printOrderStation('${order.id}', 'kitchen')">
+          Imprimir Cozinha
+        </button>
+        <button class="btn-sm btn-print" ${!canPrint ? 'disabled title="Impressão bloqueada até confirmação bancária do pagamento"' : ''} onclick="printOrderStation('${order.id}', 'counter')">
+          Imprimir Balcão
+        </button>
+        ${nextAction}
+      </div>
+    </div>
+  `;
+}
+
+window.advanceOrderStatus = async function(orderId, newStatus) {
+  try {
+    const res = await fetch(`${API_URL}/orders/${orderId}/status`, {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify({ status: newStatus })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      const idx = ORDERS.findIndex(o => o.id === orderId);
+      if (idx !== -1) ORDERS[idx] = data.order;
+      renderKanban();
+      updateOrdersBadge();
+    }
+  } catch (e) {
+    alert('Erro ao atualizar status.');
+  }
+};
+
+window.simulateBankApproval = async function(orderId) {
+  try {
+    const res = await fetch(`${API_URL}/test/simulate-payment/${orderId}`, {
+      method: 'POST',
+      headers: authHeaders()
+    });
+    const data = await res.json();
+    if (data.ok) {
+      alert(data.message);
+      await loadOrders();
+    }
+  } catch (e) {
+    alert('Falha ao simular confirmação.');
+  }
+};
+
+// ==================== IMPRESSÃO TÉRMICA ====================
+window.printOrderStation = async function(orderId, target) {
+  try {
+    const res = await fetch(`${API_URL}/orders/${orderId}/print`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ target })
+    });
+    const data = await res.json();
+    if (data.ok && data.printJob) {
+      executeBrowserPrint(data.printJob.ticketText);
+    } else {
+      alert(data.error || 'Não foi possível imprimir a comanda.');
+    }
+  } catch (e) {
+    alert('Erro ao gerar impressão da comanda.');
+  }
+};
+
+function executeBrowserPrint(text) {
+  document.body.classList.remove('printing-report');
+  const printArea = $('#thermal-print-area');
+  if (printArea) {
+    printArea.textContent = text;
+    setTimeout(() => {
+      window.print();
+    }, 150);
+  }
+}
+
+// ==================== RELATÓRIOS GERENCIAIS & EXPORTAÇÃO PDF ====================
+window.handlePeriodSelectChange = function(val) {
+  const dateBox = $('#date-range-box');
+  if (val === 'custom') {
+    if (dateBox) dateBox.style.display = 'flex';
+  } else {
+    if (dateBox) dateBox.style.display = 'none';
+    loadSalesReport({ period: val });
+  }
+};
+
+window.applyCustomDateFilter = function() {
+  const start = $('#report-start-date')?.value;
+  const end = $('#report-end-date')?.value;
+  if (!start && !end) {
+    return alert('Selecione ao menos uma data inicial ou final.');
+  }
+  loadSalesReport({ period: 'custom', startDate: start, endDate: end });
+};
+
+window.loadSalesReport = async function(params = {}) {
+  const period = typeof params === 'string' ? params : (params.period || 'today');
+  let url = `${API_URL}/reports/sales?period=${period}`;
+  if (params.startDate) url += `&startDate=${encodeURIComponent(params.startDate)}`;
+  if (params.endDate) url += `&endDate=${encodeURIComponent(params.endDate)}`;
+
+  try {
+    const res = await fetch(url, { headers: authHeaders() });
+    const data = await res.json();
+    if (data.ok) {
+      CURRENT_REPORT = data.report;
+      renderReportDashboard(data.report);
+    }
+  } catch (e) {}
+};
+
+function renderReportDashboard(rep) {
+  const sum = rep.summary;
+
+  // Atualiza Cards de KPI
+  if ($('#kpi-total-sales')) $('#kpi-total-sales').textContent = R(sum.totalNetSales);
+  if ($('#kpi-freight')) $('#kpi-freight').textContent = R(sum.totalFreight);
+  if ($('#kpi-discount')) $('#kpi-discount').textContent = R(sum.totalDiscount);
+  if ($('#kpi-costs')) $('#kpi-costs').textContent = R(sum.totalCost);
+  if ($('#kpi-profit')) {
+    $('#kpi-profit').textContent = R(sum.grossProfit);
+    $('#kpi-profit-margin').textContent = `Margem de Lucro: ${sum.profitMargin}%`;
+  }
+  if ($('#kpi-orders-count')) $('#kpi-orders-count').textContent = `${sum.ordersCount} pedidos`;
+  if ($('#kpi-avg-ticket')) $('#kpi-avg-ticket').textContent = R(sum.averageTicket);
+  if ($('#kpi-prep-time')) $('#kpi-prep-time').textContent = `${sum.averagePreparationTimeMinutes || 0} min`;
+  if ($('#kpi-delivery-time')) $('#kpi-delivery-time').textContent = `${sum.averageDeliveryTimeMinutes || 0} min`;
+
+  // Renderiza Gráficos Visuais de Mais e Menos Vendidos
+  renderRankings(rep.bestSellers || [], rep.worstSellers || []);
+
+  // Breakdown por Forma de Pagamento
+  const payBox = $('#report-payments-breakdown');
+  if (payBox) {
+    const pb = rep.paymentBreakdown;
+    payBox.innerHTML = Object.entries(pb).map(([method, val]) => `
+      <div style="background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:12px">
+        <div style="font-size:12px;color:var(--mut)">${method}</div>
+        <div style="font-size:18px;font-weight:700;color:#fff">${R(val.total)}</div>
+        <div style="font-size:11px;color:var(--mut)">${val.count} pedidos</div>
+      </div>
+    `).join('');
+  }
+
+  // Tabela Detalhada de Histórico
+  const tbody = $('#report-orders-table-body');
+  if (tbody) {
+    tbody.innerHTML = rep.orders.map(o => `
+      <tr>
+        <td><b>#${o.orderNo}</b></td>
+        <td>${esc(o.customerName)}</td>
+        <td>
+          <span class="order-badge ${o.paymentMethod === 'Pix' ? 'pix' : (o.paymentMethod === 'Dinheiro' ? 'money' : 'card')}">
+            ${o.paymentMethod}
+          </span>
+          <div style="font-size:11px;color:var(--mut)">${o.paymentTiming === 'delivery' ? 'Na Entrega' : 'Online'}</div>
+        </td>
+        <td>${o.deliveryType} (${esc(o.bairro)})</td>
+        <td>${R(o.freight)}</td>
+        <td><b>${R(o.total)}</b></td>
+        <td>${R(o.costTotal)}</td>
+        <td style="color:${o.profit >= 0 ? 'var(--green)' : 'var(--danger)'};font-weight:700">${R(o.profit)}</td>
+        <td>${new Date(o.createdAt).toLocaleString('pt-BR')}</td>
+      </tr>
+    `).join('');
+  }
+}
+
+function renderRankings(bestSellers, worstSellers) {
+  const bestBox = $('#ranking-best-sellers-list');
+  const worstBox = $('#ranking-worst-sellers-list');
+
+  const maxBestSold = bestSellers.length > 0 ? Math.max(...bestSellers.map(b => b.quantitySold), 1) : 1;
+  const maxWorstSold = worstSellers.length > 0 ? Math.max(...worstSellers.map(w => w.quantitySold), 1) : 1;
+
+  if (bestBox) {
+    if (bestSellers.length === 0) {
+      bestBox.innerHTML = `<p style="color:var(--mut);font-size:13px">Nenhum produto vendido no período.</p>`;
+    } else {
+      bestBox.innerHTML = bestSellers.map(item => {
+        const percent = Math.round((item.quantitySold / maxBestSold) * 100);
+        return `
+          <div class="ranking-item">
+            <img class="ranking-img" src="${item.image || 'imagens/Logo.png'}" alt="${esc(item.name)}" onerror="this.src='imagens/Logo.png'">
+            <div class="ranking-info">
+              <b>${esc(item.name)}</b>
+              <div style="font-size:11px;color:var(--mut)">Faturamento: ${R(item.grossRevenue)} · Lucro: ${R(item.profit)} (${item.marginPercent}%)</div>
+              <div class="ranking-bar-bg">
+                <div class="ranking-bar-fill" style="width:${Math.max(percent, 8)}%"></div>
+              </div>
+            </div>
+            <div class="ranking-metrics">
+              <b>${item.quantitySold}</b>
+              <div style="font-size:11px;color:var(--mut)">unidades</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  if (worstBox) {
+    if (worstSellers.length === 0) {
+      worstBox.innerHTML = `<p style="color:var(--mut);font-size:13px">Nenhum produto cadastrado.</p>`;
+    } else {
+      worstBox.innerHTML = worstSellers.map(item => {
+        const percent = Math.round((item.quantitySold / maxWorstSold) * 100);
+        return `
+          <div class="ranking-item">
+            <img class="ranking-img" src="${item.image || 'imagens/Logo.png'}" alt="${esc(item.name)}" onerror="this.src='imagens/Logo.png'">
+            <div class="ranking-info">
+              <b>${esc(item.name)}</b>
+              <div style="font-size:11px;color:var(--mut)">Faturamento: ${R(item.grossRevenue)} · Custo: ${R(item.totalCost)}</div>
+              <div class="ranking-bar-bg">
+                <div class="ranking-bar-fill worst" style="width:${Math.max(percent, 5)}%"></div>
+              </div>
+            </div>
+            <div class="ranking-metrics">
+              <b>${item.quantitySold}</b>
+              <div style="font-size:11px;color:var(--mut)">unidades</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+}
+
+// Exportação em PDF Formatado A4
+window.exportReportToPdf = function() {
+  if (!CURRENT_REPORT) return alert('Nenhum relatório carregado.');
+
+  const rep = CURRENT_REPORT;
+  const sum = rep.summary;
+  const printArea = $('#report-pdf-area');
+
+  let filterLabel = 'Todo o Histórico';
+  if (rep.filter.period === 'today') filterLabel = 'Hoje (Dia)';
+  else if (rep.filter.period === 'month') filterLabel = 'Este Mês';
+  else if (rep.filter.period === 'year') filterLabel = 'Este Ano';
+  else if (rep.filter.startDate || rep.filter.endDate) {
+    filterLabel = `${rep.filter.startDate || 'Início'} até ${rep.filter.endDate || 'Fim'}`;
+  }
+
+  printArea.innerHTML = `
+    <div style="border-bottom:2px solid #4b0f6b;padding-bottom:14px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center">
+      <div style="display:flex;align-items:center;gap:14px">
+        <img src="imagens/Logo.png" style="width:60px;height:60px;object-fit:cover;border-radius:50%">
+        <div>
+          <h1 style="margin:0;font-size:24px;color:#4b0f6b">EXPLOSÃO AÇAÍ</h1>
+          <div style="font-size:14px;color:#333;font-weight:bold">Relatório Executivo de Vendas & Logística</div>
+          <div style="font-size:12px;color:#666">Delivery Próprio · Franca - SP</div>
+        </div>
+      </div>
+      <div style="text-align:right;font-size:12px;color:#444">
+        <div><b>Data de Emissão:</b> ${new Date().toLocaleString('pt-BR')}</div>
+        <div><b>Período Filtrado:</b> ${filterLabel}</div>
+        <div><b>Pedidos Concluídos:</b> ${sum.ordersCount}</div>
+      </div>
+    </div>
+
+    <!-- Indicadores Principais -->
+    <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;margin-bottom:20px">
+      <div style="border:1.5px solid #e2d3f0;padding:10px;border-radius:8px;background:#fbf8fd">
+        <div style="font-size:11px;color:#6b5280;font-weight:bold">FATURAMENTO LÍQUIDO</div>
+        <div style="font-size:18px;font-weight:bold;color:#4b0f6b">${R(sum.totalNetSales)}</div>
+      </div>
+      <div style="border:1.5px solid #e2d3f0;padding:10px;border-radius:8px;background:#fbf8fd">
+        <div style="font-size:11px;color:#6b5280;font-weight:bold">TAXAS DE ENTREGA</div>
+        <div style="font-size:18px;font-weight:bold;color:#4b0f6b">${R(sum.totalFreight)}</div>
+      </div>
+      <div style="border:1.5px solid #e2d3f0;padding:10px;border-radius:8px;background:#fbf8fd">
+        <div style="font-size:11px;color:#6b5280;font-weight:bold">CUSTO DE INSUMOS</div>
+        <div style="font-size:18px;font-weight:bold;color:#666">${R(sum.totalCost)}</div>
+      </div>
+      <div style="border:1.5px solid #e2d3f0;padding:10px;border-radius:8px;background:#fbf8fd">
+        <div style="font-size:11px;color:#6b5280;font-weight:bold">LUCRO BRUTO ESTIMADO</div>
+        <div style="font-size:18px;font-weight:bold;color:#166534">${R(sum.grossProfit)} (${sum.profitMargin}%)</div>
+      </div>
+    </div>
+
+    <!-- Tempos Operacionais -->
+    <div style="display:flex;gap:20px;background:#f4f4f4;padding:10px 14px;border-radius:8px;margin-bottom:20px;font-size:13px">
+      <div><b>Tempo Médio de Preparo (Cozinha):</b> ${sum.averagePreparationTimeMinutes} min</div>
+      <div><b>Tempo Médio de Entrega (Motoboy):</b> ${sum.averageDeliveryTimeMinutes} min</div>
+      <div><b>Ticket Médio por Pedido:</b> ${R(sum.averageTicket)}</div>
+    </div>
+
+    <!-- Seção dos Produtos Mais Vendidos com Fotos -->
+    <h3 style="margin:16px 0 8px;font-size:14px;color:#4b0f6b;text-transform:uppercase">Top Produtos Mais Vendidos (com Fotos)</h3>
+    <div style="display:grid;grid-template-columns:repeat(2, 1fr);gap:10px;margin-bottom:20px">
+      ${(rep.bestSellers || []).slice(0, 6).map(it => `
+        <div style="display:flex;align-items:center;gap:10px;border:1px solid #ddd;padding:8px;border-radius:6px">
+          <img src="${it.image || 'imagens/Logo.png'}" style="width:40px;height:40px;object-fit:cover;border-radius:6px">
+          <div style="flex:1;font-size:12px">
+            <b>${esc(it.name)}</b>
+            <div style="color:#555">Quantidade: <b>${it.quantitySold}</b> · Receita: ${R(it.grossRevenue)} · Lucro: ${R(it.profit)}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <!-- Tabela Detalhada de Pedidos -->
+    <h3 style="margin:16px 0 8px;font-size:14px;color:#4b0f6b;text-transform:uppercase">Transações Detalhadas</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead>
+        <tr style="background:#f4f0fa;text-align:left">
+          <th style="padding:6px;border:1px solid #ddd">Pedido</th>
+          <th style="padding:6px;border:1px solid #ddd">Cliente</th>
+          <th style="padding:6px;border:1px solid #ddd">Tipo</th>
+          <th style="padding:6px;border:1px solid #ddd">Pagamento</th>
+          <th style="padding:6px;border:1px solid #ddd">Frete</th>
+          <th style="padding:6px;border:1px solid #ddd">Total</th>
+          <th style="padding:6px;border:1px solid #ddd">Custo</th>
+          <th style="padding:6px;border:1px solid #ddd">Lucro</th>
+          <th style="padding:6px;border:1px solid #ddd">Data</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rep.orders.map(o => `
+          <tr>
+            <td style="padding:6px;border:1px solid #ddd">#${o.orderNo}</td>
+            <td style="padding:6px;border:1px solid #ddd">${esc(o.customerName)}</td>
+            <td style="padding:6px;border:1px solid #ddd">${o.deliveryType}</td>
+            <td style="padding:6px;border:1px solid #ddd">${o.paymentMethod} (${o.paymentTiming === 'delivery' ? 'Entrega' : 'Online'})</td>
+            <td style="padding:6px;border:1px solid #ddd">${R(o.freight)}</td>
+            <td style="padding:6px;border:1px solid #ddd;font-weight:bold">${R(o.total)}</td>
+            <td style="padding:6px;border:1px solid #ddd">${R(o.costTotal)}</td>
+            <td style="padding:6px;border:1px solid #ddd;color:${o.profit >= 0 ? '#166534' : '#991b1b'}">${R(o.profit)}</td>
+            <td style="padding:6px;border:1px solid #ddd">${new Date(o.createdAt).toLocaleString('pt-BR')}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+
+  document.body.classList.add('printing-report');
+  setTimeout(() => {
+    window.print();
+    setTimeout(() => {
+      document.body.classList.remove('printing-report');
+    }, 1000);
+  }, 150);
+};
+
+// ==================== GESTÃO DE PRODUTOS & FICHA TÉCNICA ====================
+async function loadProducts() {
+  try {
+    const res = await fetch(`${API_URL}/catalog`);
+    const data = await res.json();
+    if (data.ok) {
+      PRODUCTS = data.products;
+      renderProductsTable();
+    }
+  } catch (e) {}
+}
+
+function renderProductsTable() {
+  const tbody = $('#products-table-body');
+  if (!tbody) return;
+
+  tbody.innerHTML = PRODUCTS.map(p => {
+    let flags = [];
+    if (p.isNewLaunch) flags.push('<span class="profit-badge" style="background:var(--y);color:#000">Lançamento</span>');
+    if (p.isPromo) flags.push('<span class="loss-badge" style="background:var(--danger)">Promoção</span>');
+    if (p.hasAnyLoss) flags.push('<span class="loss-badge">Prejuízo</span>');
+
+    return `
+      <tr>
+        <td><img src="${p.image || 'imagens/do seu jeitinho.png'}" style="width:44px;height:44px;border-radius:10px;object-fit:cover"></td>
+        <td>
+          <b>${esc(p.name)}</b>
+          <br><small style="color:var(--mut)">${esc(p.categorySlug || p.category)}</small>
+        </td>
+        <td>
+          ${p.prices.map(pr => `
+            <div style="font-size:12px;margin-bottom:2px">
+              <b>${pr.size}ml:</b> Venda ${R(pr.price)} · Custo ${R(pr.costPrice)} (${pr.maxAccompaniments} acomp.)
+              ${pr.isLoss ? `<span class="loss-badge">-${R(pr.lossAmount)}</span>` : `<span class="profit-badge">+${R(pr.margin)}</span>`}
+            </div>
+          `).join('')}
+        </td>
+        <td>${flags.join(' ') || '<span style="color:var(--mut);font-size:12px">Padrão</span>'}</td>
+        <td>
+          <button class="btn-sm ${p.active ? 'btn-next' : 'btn-secondary'}" onclick="toggleProductPause('${p.id}')">
+            ${p.active ? 'Ativo' : 'Pausado'}
+          </button>
+        </td>
+        <td>
+          <button class="btn-sm btn-print" onclick="editProductModal('${p.id}')">Editar</button>
+          <button class="btn-sm btn-danger" onclick="deleteProduct('${p.id}')">Excluir</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+window.toggleProductPause = async function(id) {
+  try {
+    const res = await fetch(`${API_URL}/catalog/products/${id}/toggle`, {
+      method: 'PATCH',
+      headers: authHeaders()
+    });
+    const data = await res.json();
+    if (data.ok) {
+      await loadProducts();
+    }
+  } catch (e) {}
+};
+
+window.openNewProductModal = function() {
+  $('#prod-modal-title').textContent = 'Novo Produto';
+  $('#p-id').value = '';
+  $('#p-name').value = '';
+  $('#p-desc').value = '';
+  $('#p-is-launch').checked = false;
+  $('#p-is-promo').checked = false;
+  $('#p-img').value = 'imagens/do seu jeitinho.png';
+  $('#p-photo-preview').src = 'imagens/do seu jeitinho.png';
+  
+  $('#p-price-300').value = '15.90';
+  $('#p-cost-300').value = '6.80';
+  $('#p-max-acomp-300').value = '3';
+
+  $('#p-price-500').value = '19.90';
+  $('#p-cost-500').value = '9.40';
+  $('#p-max-acomp-500').value = '4';
+
+  $('#p-price-700').value = '26.90';
+  $('#p-cost-700').value = '12.50';
+  $('#p-max-acomp-700').value = '5';
+
+  $('#loss-alert-box').style.display = 'none';
+  handleCategoryChange($('#p-category')?.value);
+  $('#product-edit-modal').style.display = 'flex';
+};
+
+window.editProductModal = function(id) {
+  const prod = PRODUCTS.find(p => p.id === id);
+  if (!prod) return;
+
+  $('#prod-modal-title').textContent = `Editar ${prod.name}`;
+  $('#p-id').value = prod.id;
+  $('#p-name').value = prod.name;
+  $('#p-category').value = prod.categoryId || '';
+  $('#p-is-launch').checked = !!prod.isNewLaunch;
+  $('#p-is-promo').checked = !!prod.isPromo;
+  $('#p-desc').value = prod.description || '';
+  $('#p-img').value = prod.image || '';
+  $('#p-photo-preview').src = prod.image || 'imagens/do seu jeitinho.png';
+
+  const p300 = prod.prices.find(x => x.size === 300);
+  const p500 = prod.prices.find(x => x.size === 500);
+  const p700 = prod.prices.find(x => x.size === 700);
+
+  $('#p-price-300').value = p300 ? p300.price : '';
+  $('#p-cost-300').value = p300 ? p300.costPrice : '';
+  $('#p-max-acomp-300').value = p300 ? p300.maxAccompaniments : '3';
+
+  $('#p-price-500').value = p500 ? p500.price : '';
+  $('#p-cost-500').value = p500 ? p500.costPrice : '';
+  $('#p-max-acomp-500').value = p500 ? p500.maxAccompaniments : '4';
+
+  $('#p-price-700').value = p700 ? p700.price : '';
+  $('#p-cost-700').value = p700 ? p700.costPrice : '';
+  $('#p-max-acomp-700').value = p700 ? p700.maxAccompaniments : '5';
+
+  handleCategoryChange(prod.categoryId, prod.comboProductIds || []);
+  checkFormPrejuizo();
+  $('#product-edit-modal').style.display = 'flex';
+};
+
+window.closeProductModal = function() {
+  $('#product-edit-modal').style.display = 'none';
+};
+
+window.handleCategoryChange = function(catId, selectedComboIds = []) {
+  const cat = CATEGORIES.find(c => c.id === catId || c.slug === catId);
+  const isCombo = cat && (cat.slug === 'combos' || cat.name.toLowerCase().includes('combo'));
+  const comboSection = $('#combo-selection-section');
+  const comboCheckboxes = $('#combo-products-checkboxes');
+
+  if (isCombo && comboSection && comboCheckboxes) {
+    comboSection.style.display = 'block';
+    // Lista os copos de açaí individuais cadastrados para somar o custo no combo
+    const individualProducts = PRODUCTS.filter(p => p.categorySlug !== 'combos');
+    comboCheckboxes.innerHTML = individualProducts.map(p => {
+      const isChecked = selectedComboIds.includes(p.id);
+      const cost = p.prices && p.prices[0] ? p.prices[0].costPrice : 0;
+      return `
+        <label class="combo-check-item">
+          <input type="checkbox" value="${p.id}" data-cost="${cost}" ${isChecked ? 'checked' : ''} onchange="recalculateComboCostFromCheckboxes()">
+          <span>${esc(p.name)} (${R(cost)})</span>
+        </label>
+      `;
+    }).join('');
+  } else if (comboSection) {
+    comboSection.style.display = 'none';
+  }
+};
+
+window.recalculateComboCostFromCheckboxes = function() {
+  const checkboxes = $$('#combo-products-checkboxes input[type="checkbox"]:checked');
+  let totalComboCost = 0;
+  checkboxes.forEach(cb => {
+    totalComboCost += parseFloat(cb.dataset.cost || 0);
+  });
+
+  if (totalComboCost > 0) {
+    $('#p-cost-500').value = totalComboCost.toFixed(2);
+    checkFormPrejuizo();
+  }
+};
+
+// Checagem em tempo real de prejuízo na edição do produto
+window.checkFormPrejuizo = function() {
+  const p300 = parseFloat($('#p-price-300').value) || 0;
+  const c300 = parseFloat($('#p-cost-300').value) || 0;
+  const p500 = parseFloat($('#p-price-500').value) || 0;
+  const c500 = parseFloat($('#p-cost-500').value) || 0;
+  const p700 = parseFloat($('#p-price-700').value) || 0;
+  const c700 = parseFloat($('#p-cost-700').value) || 0;
+
+  const box = $('#loss-alert-box');
+  const losses = [];
+
+  if (p300 > 0 && c300 > p300) losses.push(`Tamanho 300ml: Custo R$ ${c300.toFixed(2)} é MAIOR que Preço R$ ${p300.toFixed(2)} (Prejuízo de R$ ${(c300 - p300).toFixed(2)})`);
+  if (p500 > 0 && c500 > p500) losses.push(`Tamanho 500ml: Custo R$ ${c500.toFixed(2)} é MAIOR que Preço R$ ${p500.toFixed(2)} (Prejuízo de R$ ${(c500 - p500).toFixed(2)})`);
+  if (p700 > 0 && c700 > p700) losses.push(`Tamanho 700ml: Custo R$ ${c700.toFixed(2)} é MAIOR que Preço R$ ${p700.toFixed(2)} (Prejuízo de R$ ${(c700 - p700).toFixed(2)})`);
+
+  if (losses.length > 0) {
+    box.style.display = 'block';
+    box.innerHTML = `<b>ALERTA DE PREJUÍZO DETECTADO:</b><br>${losses.join('<br>')}`;
+  } else {
+    box.style.display = 'none';
+  }
+};
+
+// Upload de Foto do Computador com visualização imediata
+window.uploadProductPhoto = async function(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append('image', file);
+
+  try {
+    const res = await fetch(`${API_URL}/upload`, {
+      method: 'POST',
+      headers: { 'x-admin-token': ADMIN_TOKEN },
+      body: formData
+    });
+    const data = await res.json();
+    if (data.ok) {
+      $('#p-img').value = data.filePath;
+      $('#p-photo-preview').src = data.filePath;
+      alert('Foto enviada com sucesso do seu computador!');
+    } else {
+      alert(data.error || 'Erro ao enviar foto.');
+    }
+  } catch (e) {
+    alert('Erro de conexão no upload da imagem.');
+  }
+};
+
+window.saveProductForm = async function(e) {
+  if (e) e.preventDefault();
+  const id = $('#p-id').value;
+  const name = $('#p-name').value.trim();
+  const categoryId = $('#p-category').value;
+  const isNewLaunch = $('#p-is-launch').checked;
+  const isPromo = $('#p-is-promo').checked;
+  const description = $('#p-desc').value.trim();
+  const image = $('#p-img').value.trim();
+
+  // Combo sub-products
+  const comboCheckboxes = $$('#combo-products-checkboxes input[type="checkbox"]:checked');
+  const comboProductIds = Array.from(comboCheckboxes).map(cb => cb.value);
+
+  const prices = [];
+  const pr300 = parseFloat($('#p-price-300').value);
+  const cs300 = parseFloat($('#p-cost-300').value) || 0;
+  const mx300 = parseInt($('#p-max-acomp-300').value) || 3;
+
+  const pr500 = parseFloat($('#p-price-500').value);
+  const cs500 = parseFloat($('#p-cost-500').value) || 0;
+  const mx500 = parseInt($('#p-max-acomp-500').value) || 4;
+
+  const pr700 = parseFloat($('#p-price-700').value);
+  const cs700 = parseFloat($('#p-cost-700').value) || 0;
+  const mx700 = parseInt($('#p-max-acomp-700').value) || 5;
+
+  if (!isNaN(pr300)) prices.push({ size: 300, price: pr300, costPrice: cs300, maxAccompaniments: mx300, promoPrice: null });
+  if (!isNaN(pr500)) prices.push({ size: 500, price: pr500, costPrice: cs500, maxAccompaniments: mx500, promoPrice: null });
+  if (!isNaN(pr700)) prices.push({ size: 700, price: pr700, costPrice: cs700, maxAccompaniments: mx700, promoPrice: null });
+
+  if (prices.length === 0) {
+    prices.push({ size: 500, price: 25.00, costPrice: 10.00, maxAccompaniments: 4, promoPrice: null });
+  }
+
+  const payload = {
+    name,
+    categoryId,
+    description,
+    image,
+    isNewLaunch,
+    isPromo,
+    comboProductIds,
+    prices,
+    active: true
+  };
+
+  try {
+    let res;
+    if (id) {
+      res = await fetch(`${API_URL}/catalog/products/${id}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify(payload)
+      });
+    } else {
+      res = await fetch(`${API_URL}/catalog/products`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify(payload)
+      });
+    }
+    const data = await res.json();
+    if (data.ok) {
+      closeProductModal();
+      await loadProducts();
+      alert('Produto salvo com sucesso!');
+    }
+  } catch (err) {
+    alert('Erro ao salvar produto.');
+  }
+};
+
+window.deleteProduct = async function(id) {
+  if (!confirm('Deseja realmente excluir este produto?')) return;
+  try {
+    const res = await fetch(`${API_URL}/catalog/products/${id}`, {
+      method: 'DELETE',
+      headers: authHeaders()
+    });
+    const data = await res.json();
+    if (data.ok) {
+      await loadProducts();
+    }
+  } catch (e) {
+    alert('Falha ao excluir produto.');
+  }
+};
+
+// ==================== GESTÃO DE ACOMPANHAMENTOS (CRUD COMPLETO) ====================
+async function loadAccompaniments() {
+  try {
+    const res = await fetch(`${API_URL}/catalog/accompaniments`, { headers: authHeaders() });
+    const data = await res.json();
+    if (data.ok) {
+      ACCOMPANIMENTS = data.accompaniments || [];
+      renderAccompanimentsTable();
+    }
+  } catch (e) {}
+}
+
+function renderAccompanimentsTable() {
+  const tbody = $('#accompaniments-table-body');
+  if (!tbody) return;
+
+  tbody.innerHTML = ACCOMPANIMENTS.map(ac => `
+    <tr>
+      <td><b>${esc(ac.name)}</b></td>
+      <td>${R(ac.costPrice || 0.50)}</td>
+      <td><span style="color:var(--mut);font-size:12px">Liberado para todos os açaís</span></td>
+      <td>
+        <button class="btn-sm ${ac.active ? 'btn-next' : 'btn-secondary'}" onclick="toggleAccompanimentActive('${ac.id}')">
+          ${ac.active ? 'Ativo' : 'Inativo'}
+        </button>
+      </td>
+      <td>
+        <button class="btn-sm btn-print" onclick="openEditAccompanimentModal('${ac.id}')">Editar</button>
+        <button class="btn-sm btn-danger" onclick="deleteAccompaniment('${ac.id}')">Excluir</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+window.openNewAccompanimentModal = function() {
+  $('#acomp-modal-title').textContent = 'Novo Acompanhamento';
+  $('#acomp-id').value = '';
+  $('#acomp-name').value = '';
+  $('#acomp-cost').value = '0.50';
+  $('#acomp-active').checked = true;
+  $('#accompaniment-edit-modal').style.display = 'flex';
+};
+
+window.openEditAccompanimentModal = function(id) {
+  const ac = ACCOMPANIMENTS.find(a => a.id === id);
+  if (!ac) return;
+
+  $('#acomp-modal-title').textContent = `Editar ${ac.name}`;
+  $('#acomp-id').value = ac.id;
+  $('#acomp-name').value = ac.name;
+  $('#acomp-cost').value = ac.costPrice || 0.50;
+  $('#acomp-active').checked = ac.active !== false;
+  $('#accompaniment-edit-modal').style.display = 'flex';
+};
+
+window.closeAccompanimentModal = function() {
+  $('#accompaniment-edit-modal').style.display = 'none';
+};
+
+window.saveAccompanimentForm = async function(e) {
+  if (e) e.preventDefault();
+  const id = $('#acomp-id').value;
+  const name = $('#acomp-name').value.trim();
+  const costPrice = parseFloat($('#acomp-cost').value) || 0.50;
+  const active = $('#acomp-active').checked;
+
+  try {
+    let res;
+    if (id) {
+      res = await fetch(`${API_URL}/catalog/accompaniments/${id}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify({ name, costPrice, active })
+      });
+    } else {
+      res = await fetch(`${API_URL}/catalog/accompaniments`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ name, costPrice, active })
+      });
+    }
+    const data = await res.json();
+    if (data.ok) {
+      closeAccompanimentModal();
+      await loadAccompaniments();
+      alert('Acompanhamento salvo com sucesso!');
+    }
+  } catch (e) {
+    alert('Erro ao salvar acompanhamento.');
+  }
+};
+
+window.toggleAccompanimentActive = async function(id) {
+  const ac = ACCOMPANIMENTS.find(a => a.id === id);
+  if (!ac) return;
+  try {
+    await fetch(`${API_URL}/catalog/accompaniments/${id}`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({ active: !ac.active })
+    });
+    await loadAccompaniments();
+  } catch (e) {}
+};
+
+window.deleteAccompaniment = async function(id) {
+  if (!confirm('Deseja realmente excluir este acompanhamento?')) return;
+  try {
+    const res = await fetch(`${API_URL}/catalog/accompaniments/${id}`, {
+      method: 'DELETE',
+      headers: authHeaders()
+    });
+    const data = await res.json();
+    if (data.ok) {
+      await loadAccompaniments();
+    }
+  } catch (e) {
+    alert('Falha ao excluir acompanhamento.');
+  }
+};
+
+// ==================== GESTÃO DE CATEGORIAS ====================
+async function loadCategories() {
+  try {
+    const res = await fetch(`${API_URL}/catalog/categories`, { headers: authHeaders() });
+    const data = await res.json();
+    if (data.ok) {
+      CATEGORIES = data.categories;
+      renderCategoriesList();
+      populateCategorySelects();
+    }
+  } catch (e) {}
+}
+
+function renderCategoriesList() {
+  const box = $('#categories-list');
+  if (!box) return;
+
+  box.innerHTML = CATEGORIES.map(c => `
+    <div style="background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <b>${esc(c.name)}</b>
+        <div style="font-size:12px;color:var(--mut)">Slug: ${esc(c.slug)} · Ordem: ${c.order}</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-sm btn-secondary" onclick="editCategoryModal('${c.id}')">Editar</button>
+        <button class="btn-sm btn-danger" onclick="deleteCategory('${c.id}')">Excluir</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function populateCategorySelects() {
+  const sel = $('#p-category');
+  if (!sel) return;
+  sel.innerHTML = CATEGORIES.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+}
+
+window.createCategory = async function() {
+  const name = prompt('Nome da nova categoria (Ex: Açaí na Tigela):');
+  if (!name) return;
+
+  try {
+    const res = await fetch(`${API_URL}/catalog/categories`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ name })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      await loadCategories();
+      alert('Categoria criada com sucesso!');
+    }
+  } catch (e) {
+    alert('Erro ao criar categoria.');
+  }
+};
+
+window.editCategoryModal = async function(id) {
+  const cat = CATEGORIES.find(c => c.id === id);
+  if (!cat) return;
+
+  const newName = prompt('Novo nome da categoria:', cat.name);
+  if (!newName) return;
+
+  try {
+    const res = await fetch(`${API_URL}/catalog/categories/${id}`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({ name: newName })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      await loadCategories();
+    }
+  } catch (e) {}
+};
+
+window.deleteCategory = async function(id) {
+  if (!confirm('Deseja realmente excluir esta categoria?')) return;
+  try {
+    const res = await fetch(`${API_URL}/catalog/categories/${id}`, {
+      method: 'DELETE',
+      headers: authHeaders()
+    });
+    const data = await res.json();
+    if (data.ok) {
+      await loadCategories();
+    }
+  } catch (e) {
+    alert('Erro ao excluir categoria.');
+  }
+};
+
+// ==================== GESTÃO DE ADICIONAIS & EXTRAS ====================
+async function loadExtras() {
+  try {
+    const res = await fetch(`${API_URL}/catalog`);
+    const data = await res.json();
+    if (data.ok) {
+      EXTRAS = data.extras || [];
+      renderExtrasTable();
+    }
+  } catch (e) {}
+}
+
+function renderExtrasTable() {
+  const tbody = $('#extras-table-body');
+  if (!tbody) return;
+
+  tbody.innerHTML = EXTRAS.map(e => `
+    <tr>
+      <td><b>${esc(e.name)}</b></td>
+      <td>${R(e.price)}</td>
+      <td>${R(e.costPrice || 0)}</td>
+      <td>
+        ${e.allowInAcai ? '<span class="profit-badge" style="margin-right:4px">Copos de Açaí</span>' : ''}
+        ${e.allowInCombos ? '<span class="profit-badge">Combos</span>' : ''}
+      </td>
+      <td>${e.active ? '<span style="color:var(--green)">Ativo</span>' : '<span style="color:var(--danger)">Pausado</span>'}</td>
+      <td>
+        <button class="btn-sm btn-danger" onclick="deleteExtra('${e.id}')">Excluir</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+window.createExtraPrompt = async function() {
+  const name = prompt('Nome do adicional (Ex: Granola Especial, Kit Kat picado):');
+  if (!name) return;
+  const price = parseFloat(prompt('Preço de venda cobrado do cliente (R$):', '4.90'));
+  if (isNaN(price)) return;
+  const costPrice = parseFloat(prompt('Custo estimado do insumo (R$):', '1.50')) || 0;
+  const allowInCombos = confirm('Permitir adicionar este item em Combos também?');
+
+  try {
+    const res = await fetch(`${API_URL}/catalog/extras`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        name,
+        price,
+        costPrice,
+        active: true,
+        allowInAcai: true,
+        allowInCombos
+      })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      await loadExtras();
+      alert('Adicional cadastrado!');
+    }
+  } catch (e) {
+    alert('Erro ao cadastrar adicional.');
+  }
+};
+
+window.deleteExtra = async function(id) {
+  if (!confirm('Deseja excluir este adicional?')) return;
+  try {
+    await fetch(`${API_URL}/catalog/extras/${id}`, { method: 'DELETE', headers: authHeaders() });
+    await loadExtras();
+  } catch (e) {}
+};
+
+// ==================== GESTÃO DE CUPONS & ENVIO ====================
+async function loadCoupons() {
+  try {
+    const res = await fetch(`${API_URL}/coupons`, { headers: authHeaders() });
+    const data = await res.json();
+    if (data.ok) {
+      COUPONS = data.coupons;
+      renderCouponsList();
+    }
+  } catch (e) {}
+}
+
+function renderCouponsList() {
+  const tbody = $('#coupons-table-body');
+  if (!tbody) return;
+
+  tbody.innerHTML = COUPONS.map(c => `
+    <tr>
+      <td><b style="color:var(--y)">${esc(c.code)}</b></td>
+      <td>${c.type === 'percent' ? `${c.value}%` : R(c.value)}</td>
+      <td>${R(c.minOrder)}</td>
+      <td>${c.uses} / ${c.maxUses || 'Ilimitado'}</td>
+      <td>${c.active ? '<span style="color:var(--green)">Ativo</span>' : '<span style="color:var(--danger)">Inativo</span>'}</td>
+      <td>
+        <button class="btn-sm btn-print" onclick="sendCouponViaChat('${c.code}', '${c.value}', '${c.type}')">Enviar no Chat</button>
+        <button class="btn-sm btn-secondary" onclick="copyCouponText('${c.code}', '${c.value}', '${c.type}')">Copiar Texto</button>
+        <button class="btn-sm btn-danger" onclick="deleteCoupon('${c.id}')">Excluir</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+window.sendCouponViaChat = async function(code, value, type) {
+  if (!ACTIVE_CHAT_PHONE) {
+    alert('Selecione uma conversa com um cliente na aba "Chat de Atendimento" para enviar o cupom!');
+    return;
+  }
+
+  const desc = type === 'percent' ? `${value}% de desconto` : `desconto de ${R(value)}`;
+  const text = `Olá! Temos um presente exclusivo para você: use o cupom ${code} e ganhe ${desc} no seu pedido de hoje no Explosão Açaí!`;
+
+  try {
+    await fetch(`${API_URL}/chat`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        sender: 'admin',
+        customerPhone: ACTIVE_CHAT_PHONE,
+        customerName: $('#active-chat-name').textContent,
+        message: text
+      })
+    });
+    alert(`Cupom ${code} enviado com sucesso no chat de ${$('#active-chat-name').textContent}!`);
+  } catch (e) {
+    alert('Erro ao enviar cupom no chat.');
+  }
+};
+
+window.copyCouponText = function(code, value, type) {
+  const desc = type === 'percent' ? `${value}% de desconto` : `desconto de ${R(value)}`;
+  const text = `Olá! Aproveite nosso cupom especial: digite *${code}* e ganhe ${desc} no seu pedido no Explosão Açaí!`;
+  navigator.clipboard.writeText(text);
+  alert('Texto do cupom copiado para a área de transferência!');
+};
+
+window.createCoupon = async function() {
+  const code = prompt('Código do novo cupom (Ex: EXPLOSAO15):');
+  if (!code) return;
+  const value = parseFloat(prompt('Valor do desconto (ex: 10 para 10% ou 5 para R$ 5,00):'));
+  if (isNaN(value)) return;
+  const isPercent = confirm('O desconto é em porcentagem (%)? Clique OK para %, ou Cancelar para valor fixo em R$.');
+  const type = isPercent ? 'percent' : 'fixed';
+  const minOrder = parseFloat(prompt('Valor mínimo do pedido para aplicar o cupom (R$):', '30.00')) || 0;
+
+  try {
+    const res = await fetch(`${API_URL}/coupons`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ code, type, value, minOrder, active: true })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      await loadCoupons();
+      alert('Cupom criado com sucesso!');
+    } else {
+      alert(data.error || 'Erro ao criar cupom.');
+    }
+  } catch (e) {
+    alert('Erro de conexão ao criar cupom.');
+  }
+};
+
+window.deleteCoupon = async function(id) {
+  if (!confirm('Deseja excluir este cupom?')) return;
+  try {
+    await fetch(`${API_URL}/coupons/${id}`, { method: 'DELETE', headers: authHeaders() });
+    await loadCoupons();
+  } catch (e) {}
+};
+
+// ==================== GESTÃO DE IMPRESSORAS ====================
+async function loadPrinters() {
+  try {
+    const res = await fetch(`${API_URL}/printers`, { headers: authHeaders() });
+    const data = await res.json();
+    if (data.ok) {
+      PRINTERS = data.printers;
+      renderPrintersList();
+    }
+  } catch (e) {}
+}
+
+function renderPrintersList() {
+  const box = $('#printers-list');
+  if (!box) return;
+
+  box.innerHTML = PRINTERS.map(p => `
+    <div style="background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <b style="font-size:16px">${esc(p.name)}</b>
+        <div style="font-size:12px;color:var(--mut)">Destino: <b>${p.target.toUpperCase()}</b> · Bobina: <b>${p.paperWidth}mm</b></div>
+        <div style="font-size:12px;color:var(--green)">${p.autoPrintOnApproved ? 'Auto-impressão ativa ao confirmar pagamento' : 'Auto-impressão desligada'}</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-sm btn-print" onclick="testPrinterPrint('${p.id}')">Imprimir Teste</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.testPrinterPrint = function(printerId) {
+  const dummyText = `
+================================
+     EXPLOSÃO AÇAÍ - TESTE
+================================
+Impressora Conectada com Sucesso!
+Data: ${new Date().toLocaleString('pt-BR')}
+Largura: 80mm / ESC-POS Suportado
+Corte Automático Ativado.
+================================
+  `;
+  executeBrowserPrint(dummyText);
+};
+
+// ==================== CHAT AO VIVO DE ATENDIMENTO ====================
+async function loadChatConversations() {
+  try {
+    const res = await fetch(`${API_URL}/chat/conversations`, { headers: authHeaders() });
+    const data = await res.json();
+    if (data.ok) {
+      CHAT_CONVERSATIONS = data.conversations;
+      renderChatConversationsList();
+    }
+  } catch (e) {}
+}
+
+function renderChatConversationsList() {
+  const box = $('#chat-conversations-list');
+  if (!box) return;
+
+  if (CHAT_CONVERSATIONS.length === 0) {
+    box.innerHTML = `<p style="color:var(--mut);text-align:center;padding:20px">Nenhuma conversa recente.</p>`;
+    return;
+  }
+
+  box.innerHTML = CHAT_CONVERSATIONS.map(c => `
+    <div onclick="selectChat('${c.customerPhone}', '${esc(c.customerName)}')" 
+         style="background:${ACTIVE_CHAT_PHONE === c.customerPhone ? 'var(--p2)' : 'var(--card)'};border:1px solid var(--ln);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer">
+      <div style="display:flex;justify-content:space-between">
+        <b>${esc(c.customerName)}</b>
+        <small style="color:var(--mut)">${new Date(c.lastTimestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</small>
+      </div>
+      <div style="font-size:12px;color:var(--tx);opacity:0.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+        ${esc(c.lastMessage)}
+      </div>
+      ${c.unreadCount > 0 ? `<span class="badge" style="background:var(--y);color:#000;font-size:10px;padding:2px 6px;border-radius:99px">${c.unreadCount} nova</span>` : ''}
+    </div>
+  `).join('');
+}
+
+window.selectChat = function(phone, name) {
+  ACTIVE_CHAT_PHONE = phone;
+  $('#active-chat-name').textContent = name;
+  $('#active-chat-phone').textContent = phone;
+  renderChatConversationsList();
+  loadChatMessages(phone);
+};
+
+async function loadChatMessages(phone) {
+  try {
+    const res = await fetch(`${API_URL}/chat?phone=${phone}&markRead=true`);
+    const data = await res.json();
+    if (data.ok) {
+      const box = $('#admin-chat-messages');
+      box.innerHTML = data.messages.map(m => `
+        <div style="max-width:70%;padding:10px 14px;border-radius:14px;margin-bottom:8px;line-height:1.4;${m.sender === 'admin' ? 'margin-left:auto;background:var(--p2);color:#fff' : 'margin-right:auto;background:var(--card);border:1px solid var(--ln)'}">
+          ${esc(m.message)}
+          <div style="font-size:10px;opacity:0.7;text-align:right;margin-top:4px">
+            ${new Date(m.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+          </div>
+        </div>
+      `).join('');
+      box.scrollTop = box.scrollHeight;
+    }
+  } catch (e) {}
+}
+
+window.sendAdminChatMessage = async function() {
+  const inp = $('#admin-chat-input');
+  if (!inp || !inp.value.trim() || !ACTIVE_CHAT_PHONE) return;
+
+  const text = inp.value.trim();
+  inp.value = '';
+
+  try {
+    await fetch(`${API_URL}/chat`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        sender: 'admin',
+        customerPhone: ACTIVE_CHAT_PHONE,
+        customerName: $('#active-chat-name').textContent,
+        message: text
+      })
+    });
+    loadChatMessages(ACTIVE_CHAT_PHONE);
+  } catch (e) {}
+};

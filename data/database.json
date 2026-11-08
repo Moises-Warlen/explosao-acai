@@ -1,0 +1,1190 @@
+{
+  "settings": {
+    "storeName": "Explosão Açaí",
+    "wpp": "5516991098863",
+    "pixKey": "16991098863",
+    "address": "Rua Renato Lourenço Fernandes Rosa, 1721, Aeroporto 3, Franca - SP",
+    "city": "Franca",
+    "state": "SP",
+    "perKmRate": 1,
+    "minFreight": 4.5,
+    "maxKm": 25,
+    "isOpenManual": true,
+    "useAutoSchedule": false,
+    "bannerPromo": "Bem-vindo ao nosso delivery próprio! Peça direto por aqui e ganhe descontos exclusivos.",
+    "schedules": [
+      {
+        "day": 0,
+        "dayName": "Domingo",
+        "open": "13:00",
+        "close": "23:00",
+        "active": true
+      },
+      {
+        "day": 1,
+        "dayName": "Segunda-feira",
+        "open": "14:00",
+        "close": "22:00",
+        "active": false
+      },
+      {
+        "day": 2,
+        "dayName": "Terça-feira",
+        "open": "13:00",
+        "close": "23:00",
+        "active": true
+      },
+      {
+        "day": 3,
+        "dayName": "Quarta-feira",
+        "open": "13:00",
+        "close": "23:00",
+        "active": true
+      },
+      {
+        "day": 4,
+        "dayName": "Quinta-feira",
+        "open": "13:00",
+        "close": "23:00",
+        "active": true
+      },
+      {
+        "day": 5,
+        "dayName": "Sexta-feira",
+        "open": "13:00",
+        "close": "23:30",
+        "active": true
+      },
+      {
+        "day": 6,
+        "dayName": "Sábado",
+        "open": "13:00",
+        "close": "23:30",
+        "active": true
+      }
+    ]
+  },
+  "categories": [
+    {
+      "id": "cat_lancamentos",
+      "name": "Lançamentos & Novidades",
+      "slug": "lancamentos",
+      "order": 1,
+      "active": true
+    },
+    {
+      "id": "cat_promocoes",
+      "name": "Produtos em Promoção",
+      "slug": "promocoes",
+      "order": 2,
+      "active": true
+    },
+    {
+      "id": "cat_monte",
+      "name": "Monte seu Açaí",
+      "slug": "monte",
+      "order": 3,
+      "active": true
+    },
+    {
+      "id": "cat_prontos",
+      "name": "Sabores Prontos",
+      "slug": "prontos",
+      "order": 4,
+      "active": true
+    },
+    {
+      "id": "cat_combos",
+      "name": "Combos",
+      "slug": "combos",
+      "order": 5,
+      "active": true
+    },
+    {
+      "id": "cat_polpa",
+      "name": "Pura Polpa",
+      "slug": "polpa",
+      "order": 6,
+      "active": true
+    }
+  ],
+  "printers": [
+    {
+      "id": "prt_kitchen",
+      "name": "Impressora Cozinha / Produção",
+      "target": "kitchen",
+      "paperWidth": 80,
+      "isDefault": true,
+      "autoPrintOnApproved": true,
+      "headerText": "EXPLOSÃO AÇAÍ - PRODUÇÃO"
+    },
+    {
+      "id": "prt_counter",
+      "name": "Impressora Caixa / Balcão & Entrega",
+      "target": "counter",
+      "paperWidth": 80,
+      "isDefault": false,
+      "autoPrintOnApproved": true,
+      "headerText": "EXPLOSÃO AÇAÍ - VIA CLIENTE / MOTOBOY"
+    }
+  ],
+  "products": [
+    {
+      "id": "prod_monte",
+      "name": "Monte seu açaí",
+      "categoryId": "cat_monte",
+      "categorySlug": "monte",
+      "description": "Escolha o tamanho e os acompanhamentos inclusos no valor (300ml: 3 inclusos, 500ml: 4 inclusos, 700ml: 5 inclusos). Depois turbine com extras!",
+      "image": "imagens/do seu jeitinho.png",
+      "active": true,
+      "isCustomizable": true,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "prices": [
+        {
+          "size": 300,
+          "price": 15.9,
+          "promoPrice": null,
+          "costPrice": 6.8,
+          "maxAccompaniments": 3
+        },
+        {
+          "size": 500,
+          "price": 19.9,
+          "promoPrice": null,
+          "costPrice": 9.4,
+          "maxAccompaniments": 4
+        },
+        {
+          "size": 700,
+          "price": 26.9,
+          "promoPrice": null,
+          "costPrice": 12.5,
+          "maxAccompaniments": 5
+        }
+      ],
+      "recipes": [
+        {
+          "size": 300,
+          "ingredients": [
+            {
+              "name": "Polpa de açaí especial batida",
+              "quantity": 200,
+              "unit": "g",
+              "unitCost": 0.02,
+              "totalCost": 4
+            },
+            {
+              "name": "Copo térmico 300ml com tampa",
+              "quantity": 1,
+              "unit": "un",
+              "unitCost": 0.8,
+              "totalCost": 0.8
+            },
+            {
+              "name": "3 acompanhamentos inclusos",
+              "quantity": 3,
+              "unit": "porções",
+              "unitCost": 0.6,
+              "totalCost": 1.8
+            },
+            {
+              "name": "Colher e guardanapo",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 0.2,
+              "totalCost": 0.2
+            }
+          ]
+        },
+        {
+          "size": 500,
+          "ingredients": [
+            {
+              "name": "Polpa de açaí especial batida",
+              "quantity": 350,
+              "unit": "g",
+              "unitCost": 0.02,
+              "totalCost": 7
+            },
+            {
+              "name": "Copo térmico 500ml com tampa",
+              "quantity": 1,
+              "unit": "un",
+              "unitCost": 0.9,
+              "totalCost": 0.9
+            },
+            {
+              "name": "4 acompanhamentos inclusos",
+              "quantity": 4,
+              "unit": "porções",
+              "unitCost": 0.325,
+              "totalCost": 1.3
+            },
+            {
+              "name": "Colher e guardanapo",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 0.2,
+              "totalCost": 0.2
+            }
+          ]
+        },
+        {
+          "size": 700,
+          "ingredients": [
+            {
+              "name": "Polpa de açaí especial batida",
+              "quantity": 500,
+              "unit": "g",
+              "unitCost": 0.02,
+              "totalCost": 10
+            },
+            {
+              "name": "Copo térmico 700ml com tampa",
+              "quantity": 1,
+              "unit": "un",
+              "unitCost": 1.1,
+              "totalCost": 1.1
+            },
+            {
+              "name": "5 acompanhamentos inclusos",
+              "quantity": 5,
+              "unit": "porções",
+              "unitCost": 0.24,
+              "totalCost": 1.2
+            },
+            {
+              "name": "Colher e guardanapo",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 0.2,
+              "totalCost": 0.2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prod_docetentacao",
+      "name": "Doce Tentação",
+      "categoryId": "cat_prontos",
+      "categorySlug": "prontos",
+      "description": "Chocolate com avelã, morango, Ninho, mescla de bombom e Sonho de Valsa.",
+      "image": "imagens/doce tentacao.png",
+      "active": true,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "prices": [
+        {
+          "size": 300,
+          "price": 24.9,
+          "promoPrice": null,
+          "costPrice": 10.5,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 500,
+          "price": 30.9,
+          "promoPrice": null,
+          "costPrice": 13.8,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 700,
+          "price": 36.9,
+          "promoPrice": null,
+          "costPrice": 16.9,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": [
+        {
+          "size": 500,
+          "ingredients": [
+            {
+              "name": "Polpa de açaí",
+              "quantity": 320,
+              "unit": "g",
+              "unitCost": 0.02,
+              "totalCost": 6.4
+            },
+            {
+              "name": "Creme de avelã",
+              "quantity": 40,
+              "unit": "g",
+              "unitCost": 0.06,
+              "totalCost": 2.4
+            },
+            {
+              "name": "Morango fresco",
+              "quantity": 50,
+              "unit": "g",
+              "unitCost": 0.03,
+              "totalCost": 1.5
+            },
+            {
+              "name": "Sonho de Valsa",
+              "quantity": 1,
+              "unit": "un",
+              "unitCost": 1.8,
+              "totalCost": 1.8
+            },
+            {
+              "name": "Leite Ninho",
+              "quantity": 20,
+              "unit": "g",
+              "unitCost": 0.04,
+              "totalCost": 0.8
+            },
+            {
+              "name": "Copo 500ml e tampa",
+              "quantity": 1,
+              "unit": "un",
+              "unitCost": 0.9,
+              "totalCost": 0.9
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prod_mixfini",
+      "name": "Mix Fini",
+      "categoryId": "cat_prontos",
+      "categorySlug": "prontos",
+      "description": "Cobertura Fini, confete, Ninho e Fini.",
+      "image": "imagens/mix fini.png",
+      "active": true,
+      "isNewLaunch": false,
+      "isPromo": true,
+      "prices": [
+        {
+          "size": 300,
+          "price": 22.9,
+          "promoPrice": 19.9,
+          "costPrice": 9.2,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 500,
+          "price": 27.9,
+          "promoPrice": 24.9,
+          "costPrice": 12.1,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 700,
+          "price": 33.9,
+          "promoPrice": null,
+          "costPrice": 15.4,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_puropolpa",
+      "name": "Puro Polpa",
+      "categoryId": "cat_prontos",
+      "categorySlug": "prontos",
+      "description": "Polpa pura de açaí, textura extremamente cremosa e sabor marcante.",
+      "image": "imagens/Pura Polpa.png",
+      "active": true,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "prices": [
+        {
+          "size": 300,
+          "price": 15.9,
+          "promoPrice": null,
+          "costPrice": 5.5,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 500,
+          "price": 19.9,
+          "promoPrice": null,
+          "costPrice": 8.5,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 700,
+          "price": 26.9,
+          "promoPrice": null,
+          "costPrice": 11.8,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_ninhomorango",
+      "name": "Ninho com Morango",
+      "categoryId": "cat_prontos",
+      "categorySlug": "prontos",
+      "description": "Mescla de Ninho, morango fresco selecionado e camada generosa de leite Ninho.",
+      "image": "imagens/ninho com morango.png",
+      "active": true,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "prices": [
+        {
+          "size": 300,
+          "price": 24.9,
+          "promoPrice": null,
+          "costPrice": 10.2,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 500,
+          "price": 30.9,
+          "promoPrice": null,
+          "costPrice": 13.5,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 700,
+          "price": 36.9,
+          "promoPrice": null,
+          "costPrice": 16.5,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_classico",
+      "name": "Clássico",
+      "categoryId": "cat_prontos",
+      "categorySlug": "prontos",
+      "description": "Chantilly, morango e leite condensado de primeira qualidade.",
+      "image": "imagens/classico.png",
+      "active": true,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "prices": [
+        {
+          "size": 300,
+          "price": 21.9,
+          "promoPrice": null,
+          "costPrice": 8.9,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 500,
+          "price": 26.9,
+          "promoPrice": null,
+          "costPrice": 11.9,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 700,
+          "price": 32.9,
+          "promoPrice": null,
+          "costPrice": 14.8,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_nutella",
+      "name": "Nutella",
+      "categoryId": "cat_prontos",
+      "categorySlug": "prontos",
+      "description": "Nutella original, Bis crocante, morango fresco e Ninho.",
+      "image": "imagens/nutella.png",
+      "active": true,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "prices": [
+        {
+          "size": 300,
+          "price": 26.5,
+          "promoPrice": null,
+          "costPrice": 11.8,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 500,
+          "price": 33.9,
+          "promoPrice": null,
+          "costPrice": 15.2,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 700,
+          "price": 40.9,
+          "promoPrice": null,
+          "costPrice": 18.9,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_parperfeito",
+      "name": "Par Perfeito",
+      "categoryId": "cat_prontos",
+      "categorySlug": "prontos",
+      "description": "Brigadeiro artesanal, mescla de Ninho, Bis, morango, Ninho, chocolate com avelã e chocolates em formato de coração.",
+      "image": "imagens/par perfeito.png",
+      "active": true,
+      "isNewLaunch": true,
+      "isPromo": false,
+      "prices": [
+        {
+          "size": 300,
+          "price": 26.5,
+          "promoPrice": null,
+          "costPrice": 12,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 500,
+          "price": 33.9,
+          "promoPrice": null,
+          "costPrice": 15.5,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 700,
+          "price": 40.9,
+          "promoPrice": null,
+          "costPrice": 19.2,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_granola",
+      "name": "Granola",
+      "categoryId": "cat_prontos",
+      "categorySlug": "prontos",
+      "description": "Açaí tradicional com granola crocante, mel puro, banana e morango.",
+      "image": "imagens/granola.png",
+      "active": true,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "prices": [
+        {
+          "size": 300,
+          "price": 21.9,
+          "promoPrice": null,
+          "costPrice": 8.8,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 500,
+          "price": 26.9,
+          "promoPrice": null,
+          "costPrice": 11.5,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 700,
+          "price": 32.9,
+          "promoPrice": null,
+          "costPrice": 14.5,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "combo_familia",
+      "name": "Combo Família",
+      "categoryId": "cat_combos",
+      "categorySlug": "combos",
+      "description": "4 copos de 500 ml: 1 Nutella · 1 Ninho com Morango · 1 Clássico · 1 Mix Fini.",
+      "details": "Ideal para compartilhar com quem você ama!",
+      "image": "imagens/combo familia.png",
+      "active": true,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [
+        "prod_nutella",
+        "prod_ninhomorango",
+        "prod_classico",
+        "prod_mixfini"
+      ],
+      "prices": [
+        {
+          "size": 500,
+          "price": 99,
+          "promoPrice": null,
+          "costPrice": 52.7,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "combo_kids",
+      "name": "Combo Kids",
+      "categoryId": "cat_combos",
+      "categorySlug": "combos",
+      "description": "3 copos de 300 ml: 2 Mix Fini (cobertura Fini, confete e Ninho) · 1 Clássico.",
+      "details": "A alegria da criançada em cada colherada!",
+      "image": "imagens/combo kids.png",
+      "active": true,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [
+        "prod_mixfini",
+        "prod_mixfini",
+        "prod_classico"
+      ],
+      "prices": [
+        {
+          "size": 300,
+          "price": 54.9,
+          "promoPrice": null,
+          "costPrice": 27.3,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "combo_casal",
+      "name": "Combo Casal",
+      "categoryId": "cat_combos",
+      "categorySlug": "combos",
+      "description": "2 copos de 500 ml: 2 Par Perfeito com brigadeiro, Ninho, Bis, morango, chocolate com avelã e chocolates em formato de coração.",
+      "details": "O combo mais apaixonante da casa!",
+      "image": "imagens/combo casal.png",
+      "active": true,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [
+        "prod_parperfeito",
+        "prod_parperfeito"
+      ],
+      "prices": [
+        {
+          "size": 500,
+          "price": 64.9,
+          "promoPrice": null,
+          "costPrice": 31,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "combo_economico",
+      "name": "Combo Econômico",
+      "categoryId": "cat_combos",
+      "categorySlug": "combos",
+      "description": "2 copos de 300 ml: Em cada copo: banana, Ninho, leite condensado e granola.",
+      "details": "Saboroso e no precinho que cabe no bolso!",
+      "image": "imagens/combo economico.png",
+      "active": true,
+      "isNewLaunch": false,
+      "isPromo": true,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 300,
+          "price": 29.9,
+          "promoPrice": 26.9,
+          "costPrice": 14,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "polpa_1l",
+      "name": "Pura Polpa de Açaí 1 litro",
+      "categoryId": "cat_polpa",
+      "categorySlug": "polpa",
+      "description": "Pote de 1 Litro de açaí cremoso puro, pronto para consumo ou para criar suas próprias receitas em casa.",
+      "image": "imagens/pote 1l e 2 l.png",
+      "active": true,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "prices": [
+        {
+          "size": 1000,
+          "price": 29.9,
+          "promoPrice": null,
+          "costPrice": 15,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "polpa_2l",
+      "name": "Pura Polpa de Açaí 2 litros",
+      "categoryId": "cat_polpa",
+      "categorySlug": "polpa",
+      "description": "Pote de 2 Litros de pura polpa cremosa com rendimento máximo.",
+      "image": "imagens/pote 1l e 2 l.png",
+      "active": true,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "prices": [
+        {
+          "size": 2000,
+          "price": 38.73,
+          "promoPrice": null,
+          "costPrice": 22,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_1794118103233",
+      "name": "perereca",
+      "categoryId": "cat_lancamentos",
+      "categorySlug": "lancamentos",
+      "description": "vvv",
+      "details": "",
+      "image": "imagens/uploads/1794118095172-kit.jpg",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 300,
+          "price": 20,
+          "costPrice": 8,
+          "promoPrice": null,
+          "maxAccompaniments": 3
+        },
+        {
+          "size": 500,
+          "price": 26,
+          "costPrice": 11,
+          "promoPrice": null,
+          "maxAccompaniments": 4
+        },
+        {
+          "size": 700,
+          "price": 32,
+          "costPrice": 14,
+          "promoPrice": null,
+          "maxAccompaniments": 5
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_1794118173945",
+      "name": "pererecannn",
+      "categoryId": "cat_lancamentos",
+      "categorySlug": "lancamentos",
+      "description": "",
+      "details": "",
+      "image": "imagens/do seu jeitinho.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 300,
+          "price": 20,
+          "costPrice": 8,
+          "promoPrice": null,
+          "maxAccompaniments": 3
+        },
+        {
+          "size": 500,
+          "price": 26,
+          "costPrice": 11,
+          "promoPrice": null,
+          "maxAccompaniments": 4
+        },
+        {
+          "size": 700,
+          "price": 32,
+          "costPrice": 14,
+          "promoPrice": null,
+          "maxAccompaniments": 5
+        }
+      ],
+      "recipes": []
+    }
+  ],
+  "accompaniments": [
+    {
+      "id": "acomp_1",
+      "name": "Morango",
+      "costPrice": 0.8,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_2",
+      "name": "Banana",
+      "costPrice": 0.4,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_3",
+      "name": "Kiwi",
+      "costPrice": 0.7,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_4",
+      "name": "Uva",
+      "costPrice": 0.6,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_5",
+      "name": "Manga",
+      "costPrice": 0.5,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_6",
+      "name": "Granola",
+      "costPrice": 0.3,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_7",
+      "name": "Leite condensado",
+      "costPrice": 0.5,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_8",
+      "name": "Ninho",
+      "costPrice": 0.6,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_9",
+      "name": "Chantilly",
+      "costPrice": 0.4,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_10",
+      "name": "Confete",
+      "costPrice": 0.4,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_11",
+      "name": "Bis",
+      "costPrice": 0.7,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_12",
+      "name": "Ovomaltine",
+      "costPrice": 0.6,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_13",
+      "name": "Paçoca",
+      "costPrice": 0.3,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_14",
+      "name": "Sucrilhos",
+      "costPrice": 0.3,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_15",
+      "name": "Gotas de chocolate",
+      "costPrice": 0.5,
+      "active": true,
+      "allowedProductIds": []
+    }
+  ],
+  "fruits": [
+    "Banana",
+    "Morango",
+    "Uva",
+    "Manga",
+    "Kiwi"
+  ],
+  "extras": [
+    {
+      "id": "ext_nutella",
+      "name": "Nutella",
+      "price": 5.9,
+      "costPrice": 2.2,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_brigadeiro",
+      "name": "Brigadeiro",
+      "price": 4.9,
+      "costPrice": 1.5,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_chocoavela",
+      "name": "Chocolate com avelã",
+      "price": 4.9,
+      "costPrice": 1.6,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_ovomaltine",
+      "name": "Ovomaltine",
+      "price": 3.9,
+      "costPrice": 1.2,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_bis",
+      "name": "Bis",
+      "price": 4.9,
+      "costPrice": 1.4,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_sonhodevalsa",
+      "name": "Sonho de Valsa",
+      "price": 4.9,
+      "costPrice": 1.8,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_kitkat",
+      "name": "Kit Kat (picado)",
+      "price": 5.9,
+      "costPrice": 2.1,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_ninho",
+      "name": "Ninho",
+      "price": 3.9,
+      "costPrice": 0.9,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_leitecond",
+      "name": "Leite condensado",
+      "price": 2.9,
+      "costPrice": 0.8,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_chantilly",
+      "name": "Chantilly",
+      "price": 3.9,
+      "costPrice": 1.1,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_granola",
+      "name": "Granola extra",
+      "price": 2.9,
+      "costPrice": 0.7,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_pacoca",
+      "name": "Paçoca",
+      "price": 2.9,
+      "costPrice": 0.6,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_confete",
+      "name": "Confete",
+      "price": 2.9,
+      "costPrice": 0.7,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_fruta",
+      "name": "Acrescentar fruta",
+      "price": 3.9,
+      "costPrice": 1.3,
+      "isFruitExtra": true,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    }
+  ],
+  "coupons": [
+    {
+      "id": "cp_1",
+      "code": "EXPLOSAO10",
+      "type": "percent",
+      "value": 10,
+      "minOrder": 30,
+      "maxDiscount": 15,
+      "active": true,
+      "uses": 0,
+      "maxUses": 100
+    },
+    {
+      "id": "cp_2",
+      "code": "PRIMEIRACOMPRA",
+      "type": "fixed",
+      "value": 5,
+      "minOrder": 25,
+      "maxDiscount": null,
+      "active": true,
+      "uses": 0,
+      "maxUses": 200
+    },
+    {
+      "id": "cp_3",
+      "code": "QUEROACAI",
+      "type": "fixed",
+      "value": 8,
+      "minOrder": 45,
+      "maxDiscount": null,
+      "active": true,
+      "uses": 0,
+      "maxUses": 50
+    }
+  ],
+  "orders": [
+    {
+      "id": "ord_1794117646006_midmt",
+      "orderNo": "898994",
+      "customer": {
+        "name": "MOISES WARLEN DOS REIS",
+        "phone": "5516991133817"
+      },
+      "delivery": {
+        "type": "pickup"
+      },
+      "items": [
+        {
+          "name": "Doce Tentação 300 ml",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 38.599999999999994,
+          "costPrice": 10.5,
+          "subtotal": 38.599999999999994,
+          "accompaniments": [],
+          "extras": [
+            "+ Nutella",
+            "+ Acrescentar fruta (Banana, Morango)"
+          ],
+          "fruits": [
+            "Banana",
+            "Morango"
+          ],
+          "note": ""
+        },
+        {
+          "name": "Monte seu açaí 700 ml",
+          "size": 700,
+          "quantity": 1,
+          "unitPrice": 62.199999999999996,
+          "costPrice": 12.5,
+          "subtotal": 62.199999999999996,
+          "accompaniments": [],
+          "extras": [
+            "+ Nutella",
+            "+ Brigadeiro",
+            "+ Chocolate com avelã",
+            "+ Ovomaltine",
+            "+ Bis",
+            "+ Sonho de Valsa",
+            "+ Kit Kat (picado)"
+          ],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Cartão de crédito",
+        "status": "pending",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 100.79999999999998,
+      "discount": 0,
+      "freight": 0,
+      "total": 100.79999999999998,
+      "costTotal": 23,
+      "status": "preparing",
+      "printedStations": [],
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "createdAt": "2026-11-08T06:00:46.005Z",
+      "updatedAt": "2026-11-08T06:02:01.803Z"
+    }
+  ],
+  "chats": [
+    {
+      "id": "msg_1794117658856_cyx5",
+      "sender": "customer",
+      "customerPhone": "5516991133817",
+      "customerName": "MOISES WARLEN DOS REIS",
+      "message": "oi",
+      "timestamp": "2026-11-08T06:00:58.856Z",
+      "read": true
+    },
+    {
+      "id": "msg_1794117682046_rse2",
+      "sender": "admin",
+      "customerPhone": "5516991133817",
+      "customerName": "MOISES WARLEN DOS REIS",
+      "message": "oi",
+      "timestamp": "2026-11-08T06:01:22.046Z",
+      "read": true
+    }
+  ]
+}

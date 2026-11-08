@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Explosão Açaí — Cardápio</title>
+<link rel="icon" href="imagens/Logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>:root{--logo-h:56px;--foto-h:150px;--foto-fit:cover;--foto-zoom:1.3;--foto-max:320px;--bg:#f6eefc;--card:#fff;--tx:#2a0a3d;--mut:#6b5280;--ln:#e2d3f0;--p:#4b0f6b;--p2:#7b2cbf;--y:#ffc800;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d0630;--card:#2e0d47;--tx:#fff;--mut:#cdb4e4;--ln:#4b2470}}:root[data-theme="dark"]{--bg:#1d0630;--card:#2e0d47;--tx:#fff;--mut:#cdb4e4;--ln:#4b2470}html{scroll-behavior:smooth;scroll-padding-top:calc(165px + env(safe-area-inset-top,0px))}*{box-sizing:border-box;touch-action:manipulation}body{margin:0;font-family:Poppins,system-ui,sans-serif;background:var(--bg);color:var(--tx);padding-bottom:110px}body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--p);z-index:30}button{font-family:inherit;cursor:pointer}.promo{background:var(--y);color:#2a0a3d;font-weight:700;font-size:16px;text-align:center;padding:12px 40px;position:relative;max-height:70px;overflow:hidden;transition:opacity .6s,max-height .6s,padding .6s}.promo.off{opacity:0;max-height:0;padding-top:0;padding-bottom:0}.promo button{position:absolute;right:10px;top:7px;border:0;background:#0002;border-radius:50%;width:26px;height:26px}.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--p);color:#fff;padding:10px 18px;height:calc(var(--logo-h) + 20px)}.brand{font-family:'Lilita One',Poppins,sans-serif;font-size:24px;max-width:1100px;margin:auto;height:100%;display:flex;align-items:center;justify-content:center;gap:12px}.brand img{height:var(--logo-h);width:auto;max-width:50vw;object-fit:contain;animation:pulse 1.6s ease-in-out infinite}@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}.bt{display:flex;flex-direction:column;align-items:center;text-align:center;line-height:1.1;min-width:0}.bt b{font-family:'Lilita One',Poppins,sans-serif;font-weight:400;font-size:22px;color:#fff}.bt small{font-family:Poppins,sans-serif;font-weight:600;font-size:18px;color:var(--y)}@media(min-width:600px){.bt b{font-size:28px}.bt small{font-size:22px}}.brand span{color:var(--y)}.hero{background:linear-gradient(160deg,var(--p),#2a0a3d);color:#fff;text-align:center;padding:30px 18px}.hero h1{font-family:'Lilita One',Poppins,sans-serif;font-weight:400;font-size:clamp(26px,6vw,40px);margin:0 0 8px}.hero p{margin:0 auto 14px;max-width:520px;opacity:.9}.pills span{display:inline-block;background:#fff2;border-radius:99px;padding:6px 12px;margin:3px;font-size:13px}.cats{position:sticky;top:calc(var(--logo-h) + 20px + env(safe-area-inset-top,0px));z-index:15;background:var(--bg);display:flex;justify-content:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--ln)}.cats a{white-space:nowrap;background:var(--card);border:1px solid var(--ln);color:var(--tx);text-decoration:none;border-radius:99px;padding:7px 14px;font-size:14px;font-weight:600}main{max-width:1100px;margin:auto;padding:0 18px}h2{font-family:'Lilita One',Poppins,sans-serif;font-weight:400;font-size:26px;margin:26px 0 12px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:14px}.card{background:var(--card);border:1px solid var(--ln);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:6px}.ic{width:100%;height:var(--foto-h);border-radius:14px;background:linear-gradient(135deg,var(--p2),var(--p));display:grid;place-items:center;font-size:48px;position:relative;overflow:hidden}.card h3{margin:4px 0 0;font-size:17px}.card p{margin:0;font-size:13px;color:var(--mut);flex:1}.ft{display:flex;justify-content:space-between;align-items:center;margin-top:8px}.ft b{color:var(--p2)}.mini{background:var(--y);color:#2a0a3d;border:0;border-radius:12px;padding:9px 14px;font-weight:700;font-size:13px}footer{text-align:center;color:var(--mut);font-size:13px;padding:30px 18px}footer a{color:var(--tx);text-decoration:none;font-weight:600;display:flex;align-items:center;gap:8px}.social{display:flex;justify-content:center;align-items:center;gap:25px;flex-wrap:wrap}.bar{position:fixed;left:0;right:0;bottom:0;z-index:35;padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));display:none}.bar.on{display:block}.bar div{max-width:560px;margin:auto;background:var(--y);color:#2a0a3d;border-radius:16px;padding:14px 18px;display:flex;justify-content:space-between;font-weight:700;cursor:pointer;box-shadow:0 8px 24px #0005}.ov{position:fixed;inset:0;background:#000a;opacity:0;pointer-events:none;transition:.2s;z-index:40}.ov.on{opacity:1;pointer-events:auto}.sheet{position:fixed;left:50%;bottom:0;transform:translate(-50%,100%);width:min(560px,100%);max-height:92vh;overflow:auto;background:var(--bg);color:var(--tx);border-radius:22px 22px 0 0;padding:20px 18px calc(24px + env(safe-area-inset-bottom,0px));z-index:50;transition:.25s}.sheet.on{transform:translate(-50%,0)}.sheet h3{font-family:'Lilita One',Poppins,sans-serif;font-weight:400;font-size:24px;margin:0 30px 4px 0}.sheet h4{margin:18px 0 8px;font-size:15px}.sheet small{color:var(--mut);font-weight:400}.mut{color:var(--mut);font-size:14px;margin:0}.x{position:absolute;right:14px;top:14px;border:0;background:var(--ln);color:var(--tx);border-radius:50%;width:30px;height:30px}.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{border:1.5px solid var(--ln);background:var(--card);border-radius:12px;padding:8px 12px;font-size:14px;cursor:pointer}.chip.on{background:var(--p2);border-color:var(--p2);color:#fff}.row{display:flex;justify-content:space-between;border:1.5px solid var(--ln);background:var(--card);border-radius:12px;padding:10px 12px;margin-bottom:6px;font-size:14px;cursor:pointer}.row.on{border-color:var(--y);box-shadow:inset 0 0 0 1px var(--y)}textarea,input{width:100%;font:inherit;background:var(--card);color:var(--tx);border:1.5px solid var(--ln);border-radius:12px;padding:10px}label{display:block;font-size:13px;font-weight:600;margin-top:10px}label input{margin-top:4px;font-weight:400}.err{border-color:#f87171!important;background:#fee2e2!important;color:#7f1d1d!important}.chips.err{background:#fee2e2;border-radius:12px;padding:6px}.chips.err .chip{color:var(--tx)}.chips.err .chip.on{color:#fff}.fe{display:none;color:#e11d48;font-size:12px;font-weight:600;margin-top:3px}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .fe{color:#fda4af}}:root[data-theme="dark"] .fe{color:#fda4af}.errbox{display:none;background:#fee2e2;border:1.5px solid #f87171;color:#7f1d1d;border-radius:12px;padding:10px 12px;font-size:13px;font-weight:600;margin:10px 0 0}.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.g31{grid-template-columns:3fr 1fr}.qty{display:flex;align-items:center;justify-content:center;gap:18px;margin:16px 0 10px}.qty button{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--ln);background:var(--card);color:var(--tx);font-size:20px}.qty.sm{margin:0;gap:8px}.qty.sm button{width:28px;height:28px;font-size:16px}.btn{width:100%;background:var(--y);color:#2a0a3d;border:0;border-radius:14px;padding:14px;font-weight:700;font-size:15px;margin-top:8px}.btn.g{background:#25d366;color:#fff}.btn.o{background:transparent;color:var(--mut);font-weight:500}.ci{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--ln);font-size:14px}.ci small{display:block}.tot{display:flex;justify-content:space-between;padding:8px 0;font-size:15px}.tot.g{font-size:19px;font-weight:700}.ic .em{font-size:13px;font-weight:600;color:#fff;opacity:.65}.ic.has .em{display:none}.ic img{position:absolute;inset:0;width:100%;height:100%;object-fit:var(--foto-fit);object-position:center;transition:transform .35s ease;-webkit-touch-callout:none;user-select:none;-webkit-user-drag:none}@media(hover:hover){.ic.has:hover img{transform:scale(var(--foto-zoom))}}.ic.zoom img{transform:scale(var(--foto-zoom))}.ic.has{display:block;height:auto;max-height:var(--foto-max);background:none}.ic.has img{position:static;display:block;width:100%;height:auto;max-height:var(--foto-max);object-fit:var(--foto-fit)}.fr{margin:8px 0 0;font-size:13px}.cats a i{font-style:normal}@media(max-width:560px){.cats{gap:6px;padding:8px 8px}.cats a{flex:1;text-align:center;padding:6px 2px;font-size:12px;line-height:1.25;border-radius:14px}.cats a i{display:block;font-size:18px}}@media(min-width:760px){.sheet{bottom:auto;top:50%;transform:translate(-50%,-46%);opacity:0;pointer-events:none;border-radius:22px;max-height:88vh}.sheet.on{transform:translate(-50%,-50%);opacity:1;pointer-events:auto}}@media(max-width:360px){.brand{font-size:20px}h2{font-size:22px}.mini{padding:8px 10px}.hero{padding:22px 14px}}
+.wa{position:fixed;right:14px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:34;display:flex;align-items:center;gap:8px;background:#25d366;color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:12px 16px;border-radius:99px;box-shadow:0 6px 18px #0006;transition:bottom .2s}
+body.hascart .wa{bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+.wa svg{flex:none}
+.frbox{margin:4px 0 10px;padding:10px 12px;border:1.5px dashed var(--y);border-radius:12px}
+.frbox p{margin:0 0 8px;font-size:13px;font-weight:600}
+a.btn{display:block;text-align:center;text-decoration:none}
+.ok{text-align:center}.ok .big{font-size:48px}
+.sum{white-space:pre-wrap;text-align:left;background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:12px;font:13px/1.5 Poppins,system-ui,sans-serif;max-height:38vh;overflow:auto;margin:12px 0 4px}
+.plat{margin:15px 0 0;display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:8px}
+.plat a{display:inline-flex;color:var(--tx);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="promo" id="promo">Bem-vindo ao nosso cardápio! <button onclick="this.parentNode.classList.add('off')">×</button></div>
+<header class="top"><div class="brand"><img id="logo" src="imagens/Logo.png" alt="Explosão Açaí" onerror="this.style.display='none'"><div class="bt"><b>Explosão Açaí</b><small>Cardápio Digital</small></div></div></header>
+<section class="hero">
+<h1>Uma explosão de sabor em cada colherada!</h1>
+<p>Mais que açaí, é puro sabor! Monte do seu jeito, escolha os extras e receba em casa.</p>
+<div class="pills"><span>Açaí cremoso</span><span>Frutas frescas</span><span>Somente delivery</span></div>
+</section>
+<nav class="cats"><a href="#prontos">Sabores</a><a href="#monte">Monte o seu</a><a href="#combos">Combos</a><a href="#polpa">Pura polpa</a></nav>
+<main id="main"></main>
+<footer>
+  <div class="social">
+    <a href="https://wa.me/5516991098863" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" width="23" height="23" fill="#25D366">
+        <path d="M20.5 3.5A11.8 11.8 0 0 0 2 17.7L.5 23.5l6-1.6a11.8 11.8 0 0 0 14-18.4ZM12 21a9.8 9.8 0 0 1-5-1.4l-.4-.2-3.5.9.9-3.4-.2-.4A9.8 9.8 0 1 1 12 21Zm5.4-7.3c-.3-.2-1.8-.9-2.1-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7.1a8 8 0 0 1-2.4-1.5 9 9 0 0 1-1.7-2.1c-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.4.3-.6s0-.4 0-.6l-1-2.3c-.2-.5-.5-.4-.7-.4h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.8 1.2 3.2 1.4 3.4a11 11 0 0 0 4.3 3.8c.6.3 1.1.5 1.5.6.6.2 1.2.2 1.7.1.5-.1 1.8-.7 2.1-1.4.3-.7.3-1.3.2-1.4s-.2-.2-.5-.3Z"/>
+      </svg>
+      WhatsApp
+    </a>
+    <a href="https://www.instagram.com/expl.osaoacai/" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" width="23" height="23">
+        <defs>
+          <linearGradient id="instaGradient" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0%" stop-color="#FFDC80"/>
+            <stop offset="50%" stop-color="#F77737"/>
+            <stop offset="100%" stop-color="#C13584"/>
+          </linearGradient>
+        </defs>
+        <rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="url(#instaGradient)" stroke-width="2"/>
+        <circle cx="12" cy="12" r="4" fill="none" stroke="url(#instaGradient)" stroke-width="2"/>
+        <circle cx="17.5" cy="6.5" r="1.2" fill="#E1306C"/>
+      </svg>
+      Instagram
+    </a>
+  </div>
+  <p class="plat">Também no
+
+
+
+
+
+
+    
+    e
+    <a href="#" target="_blank" rel="noopener noreferrer" aria-label="99Food">
+      <svg viewBox="0 0 24 24" width="23" height="23"><rect x="1" y="1" width="22" height="22" rx="6" fill="#FFC800"/><text x="12" y="16.5" text-anchor="middle" font-size="11" font-weight="800" font-family="Poppins,Arial,sans-serif" fill="#2a0a3d">99</text></svg>
+      99Food
+    </a>
+    : Explosão Açaí
+  </p>
+  <p style="margin:8px 0 0">Explosão Açaí © 2026 · Todos os direitos reservados</p>
+</footer>
+<a class="wa" href="https://wa.me/5516991098863?text=Ol%C3%A1!%20Vim%20pelo%20card%C3%A1pio%20digital%20e%20gostaria%20de%20ajuda." target="_blank" rel="noopener noreferrer" aria-label="Fale conosco pelo WhatsApp">
+  <svg viewBox="0 0 24 24" width="24" height="24" fill="#fff"><path d="M20.5 3.5A11.8 11.8 0 0 0 2 17.7L.5 23.5l6-1.6a11.8 11.8 0 0 0 14-18.4ZM12 21a9.8 9.8 0 0 1-5-1.4l-.4-.2-3.5.9.9-3.4-.2-.4A9.8 9.8 0 1 1 12 21Zm5.4-7.3c-.3-.2-1.8-.9-2.1-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7.1a8 8 0 0 1-2.4-1.5 9 9 0 0 1-1.7-2.1c-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.4.3-.6s0-.4 0-.6l-1-2.3c-.2-.5-.5-.4-.7-.4h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.8 1.2 3.2 1.4 3.4a11 11 0 0 0 4.3 3.8c.6.3 1.1.5 1.5.6.6.2 1.2.2 1.7.1.5-.1 1.8-.7 2.1-1.4.3-.7.3-1.3.2-1.4s-.2-.2-.5-.3Z"/></svg>
+  Fale com a loja
+</a>
+<div class="bar" id="bar"><div><span id="bc">0 itens</span><span id="bt">R$ 0,00</span></div></div>
+<div class="ov" id="ov"></div>
+<aside class="sheet" id="sheet"></aside>
+<div id="toast" style="position:fixed;left:50%;top:80px;transform:translateX(-50%);background:#2a0a3d;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:60;display:none"></div>
+<script>
+
+/* ===================== CONFIGURAÇÕES — EDITE AQUI ===================== */
+var C={
+ nome:"EXPLOSÃO AÇAÍ",
+ wpp:"5516991098863",   // WhatsApp (55 + DDD + número)
+ pix:"",                // chave Pix (opcional)
+ loja:{
+  endereco:"Rua Renato Lourenço Fernandes Rosa, 1721, Aeroporto 3, Franca - SP",
+  lat:null, lon:null    // opcional: latitude/longitude da loja
+ },
+ cidade:"Franca", uf:"SP",
+ valorPorKm:1,          // R$ por km
+ freteMinimo:4.5,       // frete mínimo em R$
+ kmMax:0                // distância máxima (0 = sem limite)
+};
+var ENVIO_MODO="telegram"; // Somente Telegram; não abre WhatsApp ("ambos" abre também o WhatsApp)
+var WORKER_URL="https://aged-moon-6bbc.francaexplosaoacai.workers.dev/orders";
+var PROMO_SEGUNDOS=3;
+/* ============================ IMAGENS ============================
+   Salve as fotos na pasta "imagens" e escreva o nome EXATO do arquivo (maiúsculas/minúsculas importam!).
+   À ESQUERDA: título do card. À DIREITA: nome do arquivo.
+   ================================================================ */
+var IMG_DIR="imagens/";
+var LOGO=IMG_DIR+"Logo.png";   // atenção: L maiúsculo, igual ao arquivo no GitHub
+var IMGS={
+ "Monte do seu jeito":"do seu jeitinho.png",
+
+ "Doce Tentação":"doce tentacao.png",
+ "Mix Fini":"mix fini.png",
+ "Puro Polpa":"Pura Polpa.png",
+ "Ninho com Morango":"ninho com morango.png",
+ "Clássico":"classico.png",
+ "Nutella":"nutella.png",
+ "Par Perfeito":"par perfeito.png",
+ "Granola":"granola.png",
+
+ "Combo Família":"combo familia.png",
+ "Combo Kids":"combo kids.png",
+ "Combo Casal":"combo casal.png",
+ "Combo Econômico":"combo economico.png",
+
+ "Pura Polpa de Açaí 1 litro":"pote 1l e 2 l.png",
+ "Pura Polpa de Açaí 2 litros":"pote 1l e 2 l.png"
+};
+/* ============================ CARDÁPIO ============================ */
+var $=function(s){return document.querySelector(s)},R=function(n){return "R$ "+n.toFixed(2).replace(".",",")},Z=[300,500,700];
+var MONTE=[15.9,19.9,26.9];
+var AC=["Morango","Banana","Kiwi","Uva","Manga","Granola","Leite condensado","Ninho","Chantilly","Confete","Bis","Ovomaltine","Paçoca","Sucrilhos","Gotas de chocolate"];
+var EX=[["Nutella",5.9],["Brigadeiro",4.9],["Chocolate com avelã",4.9],["Ovomaltine",3.9],["Bis",4.9],["Sonho de Valsa",4.9],["Kit Kat (picado)",5.9],["Ninho",3.9],["Leite condensado",2.9],["Chantilly",3.9],["Granola extra",2.9],["Paçoca",2.9],["Confete",2.9],["Acrescentar fruta",3.9]];
+var FR=["Banana","Morango","Uva","Manga","Kiwi"];
+var FRI=EX.findIndex(function(e){return e[0]=="Acrescentar fruta"});
+/* total dos extras: "Acrescentar fruta" cobra R$ 3,90 POR FRUTA escolhida */
+function xt(ex,fr){return ex.reduce(function(a,i){return a+EX[i][1]*(i==FRI?Math.max(1,fr.length):1)},0)}
+var PR=[
+["Doce Tentação","Chocolate com avelã, morango, Ninho, mescla de bombom e Sonho de Valsa.",[24.9,30.9,36.9],""],
+["Mix Fini","Cobertura Fini, confete, Ninho e Fini.",[22.9,27.9,33.9],""],
+["Puro Polpa","Polpa pura de açaí.",[15.9,19.9,26.9],""],
+["Ninho com Morango","Mescla de Ninho, morango e Ninho.",[24.9,30.9,36.9],""],
+["Clássico","Chantilly, morango e leite condensado.",[21.9,26.9,32.9],""],
+["Nutella","Nutella, Bis, morango e Ninho.",[26.5,33.9,40.9],""],
+["Par Perfeito","Brigadeiro, mescla de Ninho, Bis, morango, Ninho, chocolate com avelã e chocolate em formato de coração.",[26.5,33.9,40.9],""],
+["Granola","Açaí com granola, mel, banana e morango.",[21.9,26.9,32.9],""]
+];
+var CB=[
+["Combo Família",99,"4 copos de 500 ml","1 Nutella · 1 Ninho com Morango · 1 Clássico · 1 Mix Fini",""],
+["Combo Kids",54.9,"3 copos de 300 ml","2 Mix Fini (cobertura Fini, confete e Ninho) · 1 Clássico",""],
+["Combo Casal",64.9,"2 copos de 500 ml","2 Par Perfeito com brigadeiro, Ninho, Bis, morango, chocolate com avelã e chocolates em formato de coração",""],
+["Combo Econômico",29.9,"2 copos de 300 ml","Em cada copo: banana, Ninho, leite condensado e granola",""]];
+var PP=[["Pura Polpa de Açaí 1 litro",29.9],["Pura Polpa de Açaí 2 litros",38.73]];
+/* CONFERÊNCIA DE PREÇOS */
+var TAB=(function(){var t=JSON.stringify({pr:PR.map(function(p){return p[2].slice()}),mo:MONTE.slice(),cb:CB.map(function(c){return c[1]}),pp:PP.map(function(p){return p[1]}),ex:EX.map(function(e){return e[1]}),kv:C.valorPorKm,mn:C.freteMinimo});return function(){return JSON.parse(t)}})();
+function esp(c,T){var x=(c.x||[]).reduce(function(a,i){return a+(T.ex[i]||0)*(i==FRI?Math.max(1,(c.fi||[]).length):1)},0),v;
+ if(c.k=="p")v=T.pr[c.i]&&T.pr[c.i][c.s];else if(c.k=="m")v=T.mo[c.s];else if(c.k=="c")v=T.cb[c.i];else if(c.k=="l")v=T.pp[c.i];
+ if(v==null)return null;return(c.k=="p"||c.k=="m")?v+x:v}
+var S=$("#sheet"),OV=$("#ov"),cart=[],st=null,view="",F={ent:"e",cid:C.cidade,uf:C.uf},no=Math.floor(1000+Math.random()*9000);
+function card(e,t,d,p,k,i,b){return '<div class="card"><div class="ic'+(IMGS[t]?' has':'')+'">'+(IMGS[t]?'<img src="'+IMG_DIR+encodeURI(IMGS[t])+'" alt="'+t+'" loading="lazy" onerror="this.parentNode.classList.remove(\'has\');this.remove()">':'')+'<span class="em">'+e+' Foto em breve</span></div><h3>'+t+'</h3><p>'+d+'</p><div class="ft"><b>'+p+'</b><button class="mini" data-k="'+k+'" data-i="'+i+'">'+b+'</button></div></div>'}
+function sec(id,t,h){return '<section id="'+id+'"><h2>'+t+'</h2><div class="grid">'+h+'</div></section>'}
+var SM=sec("monte","Monte seu açaí",card("","Monte do seu jeito","Escolha o tamanho e até 5 acompanhamentos inclusos no preço. Depois turbine com extras!","a partir de "+R(MONTE[0]),"m",0,"Montar"));
+$("#main").innerHTML=
+sec("prontos","Sabores prontos",PR.map(function(x,i){return card(x[3],x[0],x[1],"a partir de "+R(x[2][0]),"p",i,"Escolher")}).join(""))+
+SM+
+sec("combos","Combos",CB.map(function(x,i){return card(x[4],x[0],"<b>"+x[2]+"</b><br>"+x[3],R(x[1]),"c",i,"+ Pedir")}).join(""))+
+sec("polpa","Pura polpa",PP.map(function(x,i){return card("",x[0],"Açaí cremoso, feito com pura polpa.",R(x[1]),"l",i,"+ Pedir")}).join(""));
+$("#main").onclick=function(e){var b=e.target.closest("[data-k]");if(!b)return;var k=b.dataset.k,i=+b.dataset.i;
+ if(k=="m")openItem({n:"Monte seu açaí",d:"Escolha o tamanho, até 5 acompanhamentos inclusos e turbine com extras.",pr:MONTE,m:1,k:"m"});
+ else if(k=="p")openItem({n:PR[i][0],d:PR[i][1],pr:PR[i][2],k:"p",i:i});
+ else if(k=="c")add({n:CB[i][0],l:[CB[i][2],CB[i][3]],q:1,u:CB[i][1],fix:1,k:"c",i:i});
+ else add({n:PP[i][0],l:[],q:1,u:PP[i][1],fix:1,k:"l",i:i})};
+function toast(m){var t=$("#toast");t.textContent=m;t.style.display="block";clearTimeout(t.h);t.h=setTimeout(function(){t.style.display="none"},2000)}
+function sub(){return cart.reduce(function(a,c){return a+c.u*c.q},0)}
+function tot(){return sub()+(F.ent!="r"&&F.frete!=null?F.frete:0)}
+function bar(){var n=cart.reduce(function(a,c){return a+c.q},0);$("#bar").classList.toggle("on",n>0);document.body.classList.toggle("hascart",n>0);$("#bc").textContent="Ver meu pedido · "+n+(n==1?" item":" itens");$("#bt").textContent=R(sub())}
+function add(o){var f=o.fix&&cart.find(function(x){return x.n==o.n&&x.fix});if(f)f.q++;else cart.push(o);bar();toast(""+o.n+" adicionado")}
+function show(){OV.classList.add("on");S.classList.add("on");document.body.style.overflow="hidden"}
+function close(){OV.classList.remove("on");S.classList.remove("on");document.body.style.overflow="";view=""}
+function openItem(it){st={it:it,s:1,ac:[],ex:[],q:1,o:"",fr:[],ferr:0};view="item";draw();show();S.scrollTop=0}
+function draw(){var it=st.it,s=st.s,ac=st.ac,ex=st.ex,q=st.q;
+ var u=it.pr[s]+xt(ex,st.fr);
+ var h='<button class="x" data-x="1">×</button><h3>'+it.n+'</h3><p class="mut">'+it.d+'</p><h4>1. Tamanho</h4><div class="chips">'+Z.map(function(z,i){return '<div class="chip '+(s==i?"on":"")+'" data-s="'+i+'">'+z+' ml · '+R(it.pr[i])+'</div>'}).join("")+'</div>';
+ if(it.m)h+='<h4>2. Acompanhamentos <small>'+ac.length+'/5 · inclusos no preço</small></h4><div class="chips">'+AC.map(function(a,i){return '<div class="chip '+(ac.indexOf(i)>-1?"on":"")+'" data-a="'+i+'">'+a+'</div>'}).join("")+'</div>';
+ h+='<h4>'+(it.m?3:2)+'. Turbine com extras <small>valor por porção</small></h4>'+EX.map(function(x,i){return '<div class="row '+(ex.indexOf(i)>-1?"on":"")+'" data-e="'+i+'"><span>'+x[0]+'</span><b>+ '+R(x[1])+'</b></div>'}).join("");
+ h+='<div class="frbox"><p>Frutas disponíveis <small>escolha quantas quiser (R$ 3,90 cada)</small></p><div class="chips'+(st.ferr&&!st.fr.length?" err":"")+'">'+FR.map(function(f,i){return '<div class="chip '+(st.fr.indexOf(i)>-1?"on":"")+'" data-fr="'+i+'">'+f+'</div>'}).join("")+'</div></div>';
+ h+='<h4>Observações</h4><textarea id="obs" rows="2" placeholder="Ex.: sem granola, calda à parte ou outra preferência">'+esc(st.o)+'</textarea><div class="qty"><button data-q="-1">−</button><b>'+q+'</b><button data-q="1">+</button></div><button class="btn" data-add="1">Adicionar · '+R(u*q)+'</button>';
+ S.innerHTML=h}
+function cartView(){view="cart";var h='<button class="x" data-x="1">×</button><h3>Seu pedido</h3>';
+ if(!cart.length)h+='<p class="mut">Seu carrinho está vazio.</p>';
+ cart.forEach(function(c,i){h+='<div class="ci"><div><b>'+c.n+'</b>'+c.l.map(function(l){return '<small>'+l+'</small>'}).join("")+(c.o?'<small>Obs: '+esc(c.o)+'</small>':"")+'</div><div class="qty sm"><button data-cq="'+i+'" data-dl="-1">−</button><b>'+c.q+'</b><button data-cq="'+i+'" data-dl="1">+</button></div><b>'+R(c.u*c.q)+'</b></div>'});
+ h+='<div class="tot g"><span>Subtotal</span><b>'+R(sub())+'</b></div>';
+ if(cart.length)h+='<button class="btn" data-go="1">Continuar</button>';
+ h+='<button class="btn o" data-x="1">Adicionar mais itens</button>';S.innerHTML=h}
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;")}
+function nz(s){return (s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim()}
+function nomeRua(s){return nz(s).replace(/^(avenida|av|rua|r|alameda|al|travessa|tv|rodovia|rod|estrada|est|praca|pca|pc)\.?\s+/,"")}
+function setV(id,v){var el=$("#f_"+id);if(el)el.value=v==null?"":v}
+function okF(id){var el=$("#f_"+id);if(el)el.classList.remove("err");var m=$("#e_"+id);if(m)m.style.display="none"}
+function outView(){view="out";var E=F.ent!="r";
+ var inp=function(id,l,ph,t){return '<label>'+l+'<input id="f_'+id+'" data-f="'+id+'" value="'+esc(F[id])+'" placeholder="'+(ph||"")+'" '+(t||"")+'><span class="fe" id="e_'+id+'"></span></label>'};
+ var h='<button class="x" data-x="1">×</button><h3>Finalizar pedido</h3><h4>Como quer receber?</h4><div class="chips"><div class="chip '+(E?"on":"")+'" data-ent="e">Entrega</div><div class="chip '+(E?"":"on")+'" data-ent="r">Retirada</div></div>'+inp("nome","Seu nome","","autocomplete=name")+inp("tel","Telefone / WhatsApp (com DDD)","","inputmode=tel autocomplete=tel");
+ if(E)h+='<label>Rua ou avenida <small>(digite o nome: o CEP, o bairro e o frete aparecem sozinhos)</small><input id="f_rua" data-f="rua" value="'+esc(F.rua)+'" placeholder="Ex.: Avenida Brasil" autocomplete="off"><span class="fe" id="e_rua"></span></label><div id="sug"></div>'
+  +'<div class="g2">'+inp("num","Número","Ex.: 123","autocomplete=off")+inp("cep","CEP","00000-000","inputmode=numeric maxlength=9 autocomplete=off")+'</div>'
+  +inp("bairro","Bairro")+'<div class="g2 g31">'+inp("cid","Cidade")+inp("uf","UF","SP","maxlength=2")+'</div>'+inp("ref","Complemento / referência")+'<button class="btn o" style="border:1.5px solid var(--ln)" data-calc="1">Recalcular frete</button><p class="mut fr" id="fr">'+frTxt()+'</p>';
+ h+='<h4>Pagamento</h4><div class="chips" id="pay">'+["Pix","Cartão de crédito","Cartão de débito","Dinheiro"].map(function(p){return '<div class="chip '+(F.pay==p?"on":"")+'" data-pay="'+p+'">'+p+'</div>'}).join("")+'</div><span class="fe" id="e_pay"></span>';
+ if(F.pay=="Dinheiro")h+=inp("troco","Troco para quanto?","R$ 50,00");
+ h+='<div class="tot" style="margin-top:14px"><span>Subtotal</span><span>'+R(sub())+'</span></div>';
+ if(E)h+='<div class="tot"><span>Frete</span><span id="t_taxa">'+taxaTxt()+'</span></div>';
+ h+='<div class="tot g"><span>Total</span><b id="t_tot">'+R(tot())+'</b></div><p class="errbox" id="errmsg"></p><button class="btn g" data-send="1">Enviar pedido</button><button class="btn o" data-back="1">← Voltar ao carrinho</button><p class="mut" style="text-align:center">Seu pedido será conferido e enviado com segurança para a loja. </p>';
+ S.innerHTML=h;sugDraw()}
+/* ===== ENVIO: confere os campos obrigatórios e avisa o que falta ===== */
+async function send(){var E=F.ent!="r",miss=[],first=null;
+ function bad(id,label,msg){var el=$("#f_"+id);if(el)el.classList.add("err");var m=$("#e_"+id);if(m){m.textContent=msg||"Preencha este campo";m.style.display="block"}miss.push(label);if(!first&&el)first=el}
+ if(!(F.nome||"").trim())bad("nome","nome","Informe seu nome");
+ var dg=(F.tel||"").replace(/\D/g,"");
+ if(!dg)bad("tel","telefone","Informe seu telefone");else if(dg.length<10)bad("tel","telefone","Telefone incompleto: coloque o DDD");
+ if(E){if(!(F.rua||"").trim())bad("rua","rua ou avenida","Informe a rua ou avenida");if(!(F.num||"").trim())bad("num","número","Falta o número");if(!(F.bairro||"").trim())bad("bairro","bairro","Informe o bairro");if(!(F.cid||"").trim())bad("cid","cidade","Informe a cidade")}
+ if(!F.pay){var p=$("#pay");if(p)p.classList.add("err");var pm=$("#e_pay");if(pm){pm.textContent="Escolha a forma de pagamento";pm.style.display="block"}miss.push("forma de pagamento");if(!first)first=p}
+ var eb=$("#errmsg");if(miss.length){var txt="Faltam dados: "+miss.join(", ")+".";if(eb){eb.textContent=txt;eb.style.display="block"}toast(""+txt);if(first){first.scrollIntoView({block:"center",behavior:"smooth"});if(first.focus&&first.tagName=="INPUT")first.focus({preventScroll:true})}return}
+ if(eb)eb.style.display="none";
+ if(!cart.length)return toast("Seu carrinho está vazio.");
+ if(E&&F.fora)return toast("Endereço fora da área de entrega");
+ if(E&&F.calc)return toast("Calculando o frete, aguarde um instante e envie de novo");
+ if(E&&F.frete==null&&!F.manual){calcFrete();return toast("Calculando o frete... toque em enviar de novo")}
+ var waWindow=null;if(ENVIO_MODO==="ambos")waWindow=window.open("about:blank","_blank");
+ var btn=$("[data-send]");if(btn){btn.disabled=true;btn.textContent="Conferindo pedido..."}
+ var payload={customer:{name:F.nome.trim(),phone:dg},delivery:E?{type:"delivery",street:F.rua_ok||F.rua,number:F.num,bairro:F.bairro,city:F.cid,state:F.uf||"SP",cep:F.cep||"",reference:F.ref||"",freight:F.frete,km:F.km}:{type:"pickup"},payment:{method:F.pay,change:F.pay=="Dinheiro"?(F.troco||""):""},items:cart.map(function(c){return{k:c.k,i:c.i==null?0:c.i,s:c.s==null?0:c.s,x:c.x||[],ac:c.ac||[],fr:c.fi||[],q:c.q,note:c.o||""}})};
+ try{
+  var response=await fetch(WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+  var result=await response.json();
+  if(!response.ok||!result.ok)throw new Error(result.error||"Não foi possível confirmar o pedido.");
+  if(ENVIO_MODO==="ambos"){
+   var waUrl="https://wa.me/"+C.wpp+"?text="+encodeURIComponent(result.message);if(waWindow)waWindow.location.href=waUrl;
+  }
+  var rs=resumo(dg,E);fim();okView(rs,dg);
+ }catch(err){if(waWindow)waWindow.close();toast(""+(err&&err.message?err.message:"Falha ao enviar. Tente novamente."));if(btn){btn.disabled=false;btn.textContent="Enviar pedido"}}
+}
+/* depois de enviar: fecha a janela, esvazia o carrinho e volta ao início */
+function fim(){cart=[];fq++;F={ent:"e",cid:C.cidade,uf:C.uf};no=Math.floor(1000+Math.random()*9000);close();bar();window.scrollTo({top:0,behavior:"smooth"});toast("Pedido recebido pela loja!")}
+/* ===== RESUMO DO PEDIDO + TELA DE CONFIRMAÇÃO (cópia no WhatsApp do cliente) ===== */
+function resumo(dg,E){var L=["*Explosão Açaí* — cópia do seu pedido",""];
+ cart.forEach(function(c){L.push("• "+c.q+"x "+c.n+" — "+R(c.u*c.q));c.l.forEach(function(x){L.push("   "+x)});if(c.o)L.push("   Obs: "+c.o)});
+ L.push("");
+ if(E){L.push("Entrega: "+(F.rua_ok||F.rua||"")+", "+(F.num||"")+" — "+(F.bairro||"")+", "+(F.cid||"")+"/"+(F.uf||""));if(F.ref)L.push("Ref.: "+F.ref)}else L.push("Retirada na loja");
+ L.push("Pagamento: "+F.pay+(F.pay=="Dinheiro"&&F.troco?" (troco para "+F.troco+")":""));
+ if(F.pay=="Pix"&&C.pix)L.push("Chave Pix: "+C.pix);
+ L.push("Subtotal: "+R(sub()));
+ if(E)L.push("Frete: "+(F.frete!=null?R(F.frete):"a confirmar"));
+ L.push("*Total: "+R(tot())+"*");return L.join("\n")}
+function okView(txt,dg){view="ok";var n=dg.length<=11?"55"+dg:dg;
+ S.innerHTML='<button class="x" data-x="1">×</button><div class="ok"><div class="big"></div><h3 style="margin:0 0 6px">Pedido enviado!</h3><p class="mut">A loja já recebeu seu pedido. Quer guardar uma cópia no seu WhatsApp?</p></div><pre class="sum">'+esc(txt)+'</pre><a class="btn g" target="_blank" rel="noopener noreferrer" href="https://wa.me/'+n+'?text='+encodeURIComponent(txt)+'">Receber cópia no meu WhatsApp</a><a class="btn o" target="_blank" rel="noopener noreferrer" href="https://wa.me/'+C.wpp+'">Falar com a loja</a><button class="btn o" data-x="1">Fechar</button>';
+ show();S.scrollTop=0}
+/* ===== DIGITAÇÃO NOS CAMPOS ===== */
+S.oninput=function(e){var t=e.target,f=t.dataset.f;
+ if(t.id=="obs"){st.o=t.value;return}
+ if(!f)return;
+ t.classList.remove("err");var em=$("#e_"+f);if(em)em.style.display="none";
+ if(f=="uf")t.value=t.value.toUpperCase();
+ F[f]=t.value;
+ if(f=="rua"||f=="cid"||f=="uf"){F.rua_ok=null;SR=[];rst();sugDraw();setFr("");clearTimeout(tb);tb=setTimeout(buscaRua,600)}
+ else if(f=="cep"){rst();var d=t.value.replace(/\D/g,"");if(d.length==8)viaCep(d)}
+ else if(f=="bairro"){if(!F.rua_ok&&!F.cep){rst();clearTimeout(tb);tb=setTimeout(calcFrete,900)}}};
+S.addEventListener("focusout",function(e){if(e.target.id=="f_rua"&&F.rua_ok&&view=="out"){F.rua=F.rua_ok;setV("rua",F.rua)}});
+S.onclick=function(e){var t=e.target.closest("[data-x],[data-s],[data-a],[data-e],[data-q],[data-add],[data-cq],[data-go],[data-ent],[data-pay],[data-send],[data-back],[data-calc],[data-pk],[data-fr]");if(!t)return;var d=t.dataset;
+ if("x" in d)return close();
+ if(view=="item"){
+  if("s" in d)st.s=+d.s;
+  else if("a" in d){var i=+d.a,p=st.ac.indexOf(i);if(p>-1)st.ac.splice(p,1);else if(st.ac.length>=5)return toast("Máximo de 5 acompanhamentos");else st.ac.push(i)}
+  else if("e" in d){var j=+d.e,k=st.ex.indexOf(j);if(k>-1){st.ex.splice(k,1);if(j==FRI){st.fr=[];st.ferr=0}}else st.ex.push(j)}
+  else if("fr" in d){var chosen=+d.fr,p2=st.fr.indexOf(chosen);if(p2>-1)st.fr.splice(p2,1);else st.fr.push(chosen);var fp=st.ex.indexOf(FRI);if(st.fr.length){if(fp<0)st.ex.push(FRI)}else if(fp>-1)st.ex.splice(fp,1);st.ferr=0}
+  else if("q" in d)st.q=Math.max(1,st.q+ +d.q);
+  else if("add" in d){
+   if(st.ex.indexOf(FRI)>-1&&!st.fr.length){st.ferr=1;draw();toast("Escolha a fruta do extra");var bx=S.querySelector(".frbox");if(bx)bx.scrollIntoView({block:"center",behavior:"smooth"});return}
+   var it=st.it,u=it.pr[st.s]+xt(st.ex,st.fr),l=[];
+   if(it.m)l.push("Acompanhamentos: "+(st.ac.length?st.ac.map(function(i){return AC[i]}).join(", "):"a definir"));
+   st.ex.forEach(function(i){l.push("+ "+EX[i][0]+(i==FRI&&st.fr.length?" ("+st.fr.map(function(f){return FR[f]}).join(", ")+")":""))});
+   add({n:it.n+" "+Z[st.s]+" ml",l:l,o:st.o.trim(),fi:st.fr.slice(),q:st.q,u:u,k:it.k,i:it.i,s:st.s,x:st.ex.slice(),ac:it.m?st.ac.slice():[]});return close()}
+  draw()}
+ else if(view=="cart"){
+  if("cq" in d){var c=cart[+d.cq];c.q+= +d.dl;if(c.q<1)cart.splice(+d.cq,1);bar();cartView()}
+  else if("go" in d)outView()}
+ else if(view=="out"){
+  if("ent" in d){F.ent=d.ent;outView()}
+  else if("pay" in d){F.pay=d.pay;outView()}
+  else if("back" in d)cartView();
+  else if("calc" in d)calcFrete();
+  else if("pk" in d){pick(+d.pk,true);var nn=$("#f_num");if(nn)nn.focus()}
+  else if("send" in d)send()}};
+/* ===== RUA -> CEP + BAIRRO (ViaCEP) e FRETE POR KM (OpenStreetMap + OSRM) ===== */
+var LJ=null,fq=0,sq=0,SR=[],SEL=0,GC={},tb=null;
+function frTxt(){return F.msg||"Digite o nome da rua ou avenida: o CEP, o bairro e o frete aparecem sozinhos (não precisa do número)."}
+function taxaTxt(){return F.frete!=null?"+ "+R(F.frete):F.manual?"a confirmar no WhatsApp":"aguardando a rua"}
+function updTot(){var a=$("#t_taxa"),b=$("#t_tot");if(a)a.textContent=taxaTxt();if(b)b.textContent=R(tot())}
+function setFr(t){F.msg=t;var el=$("#fr");if(el)el.textContent=frTxt();updTot()}
+function rst(){F.frete=null;F.manual=0;F.fora=0;F.lat=null;F.calc=0;fq++}
+function hav(a,b){var r=Math.PI/180,x=(b.lat-a.lat)*r,y=(b.lon-a.lon)*r,h=Math.sin(x/2)*Math.sin(x/2)+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(y/2)*Math.sin(y/2);return 12742*Math.asin(Math.sqrt(h))}
+function geoQ(qs,ok){var i=0;function n(){if(i>=qs.length)return Promise.reject();var q=qs[i++];
+ if(GC[q]&&(!ok||ok(GC[q])))return Promise.resolve(GC[q]);
+ return fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&"+q).then(function(r){return r.json()}).then(function(j){if(j.length){var p={lat:+j[0].lat,lon:+j[0].lon};if(!ok||ok(p)){GC[q]=p;return p}}return n()}).catch(function(){return n()})}return n()}
+function lojaQs(){var e=C.loja.endereco,p=e.split(",").map(function(x){return x.trim()}),sem=e.replace(/,\s*\d+\s*(?=,)/,"").replace(/\s+,/g,","),qs=["q="+encodeURIComponent(e)];
+ if(sem!=e)qs.push("q="+encodeURIComponent(sem));qs.push("q="+encodeURIComponent(p[0]+", "+p[p.length-1]));return qs}
+function sugDraw(){var el=$("#sug");if(!el)return;if(SR.length<2){el.innerHTML="";return}
+ el.innerHTML='<p class="mut" style="margin:6px 0 4px;font-size:12px">Essa rua aparece em mais de um bairro. Toque no seu:</p><div class="chips">'+SR.map(function(x,i){return '<div class="chip '+(i==SEL?"on":"")+'" data-pk="'+i+'">'+esc(x.logradouro)+' · '+esc(x.bairro||"sem bairro")+'</div>'}).join("")+'</div>'}
+function pick(i,rw){var x=SR[i];if(!x)return;SEL=i;F.cep=x.cep||"";if(x.bairro)F.bairro=x.bairro;F.rua_ok=x.logradouro;
+ if(rw)F.rua=x.logradouro;
+ setV("cep",F.cep);setV("bairro",F.bairro);if(rw)setV("rua",F.rua);["cep","bairro"].forEach(okF);if(rw)okF("rua");
+ sugDraw();calcFrete()}
+function buscaRua(){var core=nomeRua(F.rua),cid=(F.cid||"").trim(),uf=(F.uf||"").trim();
+ if(core.length<3||!cid||uf.length!=2){return}
+ var n=++sq;setFr("Procurando a rua...");
+ fetch("https://viacep.com.br/ws/"+encodeURIComponent(uf.toUpperCase())+"/"+encodeURIComponent(nz(cid))+"/"+encodeURIComponent(core)+"/json/")
+ .then(function(r){return r.json()}).then(function(j){if(n!=sq)return;
+  var typed=nz(F.rua),seen={},L=[];
+  (Array.isArray(j)?j:[]).forEach(function(x){if(!x.logradouro)return;var k=nz(x.logradouro)+"|"+nz(x.bairro);if(seen[k])return;seen[k]=1;L.push(x)});
+  var sc=function(x){var l=nz(x.logradouro);return l.indexOf(typed)==0?3:l.indexOf(typed)>-1?2:0};
+  L.sort(function(a,b){return sc(b)-sc(a)});SR=L.slice(0,8);SEL=0;
+  if(!SR.length){setFr("Não achei essa rua em "+cid+". Confira o nome ou digite o bairro para calcular o frete.");sugDraw();return}
+  pick(0,false)})
+ .catch(function(){if(n!=sq)return;setFr("Não consegui buscar o CEP agora. Digite o bairro para calcular o frete.")})}
+function viaCep(c){var n=++sq;fetch("https://viacep.com.br/ws/"+c+"/json/").then(function(r){return r.json()}).then(function(j){if(n!=sq)return;
+ if(j.erro)return setFr("CEP não encontrado. Digite o nome da rua.");
+ F.cep=c.replace(/^(\d{5})(\d{3})$/,"$1-$2");F.rua=j.logradouro||F.rua||"";F.rua_ok=j.logradouro||null;if(j.bairro)F.bairro=j.bairro;F.cid=j.localidade;F.uf=j.uf;SR=[];
+ ["cep","rua","bairro","cid","uf"].forEach(function(k){setV(k,F[k]);okF(k)});sugDraw();calcFrete();
+ var nn=$("#f_num");if(nn&&j.logradouro)nn.focus()}).catch(function(){})}
+function calcFrete(){
+ var ru=(F.rua_ok||F.rua||"").trim(),cid=(F.cid||"").trim(),uf=(F.uf||C.uf||"").trim();
+ if(!cid)return setFr("Informe a cidade para calcular o frete.");
+ if(!ru&&!F.cep&&!F.bairro)return setFr("Digite o nome da rua ou avenida para calcular o frete.");
+ var tk=++fq;F.manual=0;F.fora=0;F.frete=null;F.calc=1;setFr("Calculando frete...");
+ var e=encodeURIComponent,loc=cid+", "+uf,qs=[];
+ if(ru)qs.push("q="+e(ru+", "+(F.bairro?F.bairro+", ":"")+loc));
+ if(ru)qs.push("q="+e(ru+", "+loc));
+ if(F.cep)qs.push("postalcode="+e(F.cep)+"&city="+e(cid));
+ if(F.bairro)qs.push("q="+e(F.bairro+", "+loc));
+ var pL=LJ?Promise.resolve(LJ):C.loja.lat?Promise.resolve({lat:C.loja.lat,lon:C.loja.lon}):geoQ(lojaQs());
+ pL.then(function(L){LJ=L;return geoQ(qs,function(p){return hav(L,p)<60}).then(function(D){
+  return fetch("https://router.project-osrm.org/route/v1/driving/"+L.lon+","+L.lat+";"+D.lon+","+D.lat+"?overview=false").then(function(r){return r.json()}).then(function(j){return j.routes[0].distance/1000}).catch(function(){return hav(L,D)*1.3}).then(function(km){return{km:km,D:D}})})})
+ .then(function(o){if(tk!=fq)return;F.kmTxt=o.km.toFixed(1).replace(".",",");
+  if(C.kmMax&&o.km>C.kmMax){F.fora=1;F.frete=null;return setFr("Distância de "+F.kmTxt+" km: fora da área de entrega (máx. "+C.kmMax+" km).")}
+  F.km=o.km;F.frete=Math.max(C.freteMinimo,Math.ceil(o.km*C.valorPorKm*2)/2);F.lat=o.D.lat;F.lon=o.D.lon;
+  setFr("Distância "+F.kmTxt+" km · frete "+R(F.frete))})
+ .catch(function(){if(tk!=fq)return;F.frete=null;F.manual=1;setFr("Não encontrei o endereço no mapa. O frete será confirmado no WhatsApp.")})
+ .then(function(){if(tk==fq)F.calc=0;updTot()})}
+/* LOGO: usa o arquivo definido em LOGO (Logo.png, com L maiúsculo) */
+var lg=$("#logo");lg.onerror=function(){this.style.display="none"};lg.src=encodeURI(LOGO);
+/* ZOOM DA FOTO (mouse e toque) */
+var MN=$("#main");
+function zo(e){var ic=e.target.closest&&e.target.closest(".ic.has");if(!ic)return ic;var im=ic.querySelector("img");if(!im)return ic;var r=ic.getBoundingClientRect(),t=e.touches?e.touches[0]:e;im.style.transformOrigin=((t.clientX-r.left)/r.width*100)+"% "+((t.clientY-r.top)/r.height*100)+"%";return ic}
+MN.addEventListener("mousemove",zo);
+/* Toque: o zoom só liga se o dedo ficar PARADO sobre a foto por 0,25 s. Se o dedo andar (rolar a página), não dá zoom. */
+var zt=null,zx=0,zy=0,zon=0;
+function zoff(){clearTimeout(zt);zon=0;document.querySelectorAll(".ic.zoom").forEach(function(x){x.classList.remove("zoom")})}
+MN.addEventListener("touchstart",function(e){zoff();var ic=e.target.closest&&e.target.closest(".ic.has");if(!ic||e.touches.length!=1)return;var t=e.touches[0];zx=t.clientX;zy=t.clientY;zt=setTimeout(function(){zon=1;zo({target:ic,touches:[{clientX:zx,clientY:zy}]});ic.classList.add("zoom")},250)},{passive:true});
+MN.addEventListener("touchmove",function(e){var t=e.touches[0];if(zon){zo(e);return}if(Math.abs(t.clientX-zx)>8||Math.abs(t.clientY-zy)>8)zoff()},{passive:true});
+["touchend","touchcancel"].forEach(function(n){MN.addEventListener(n,zoff)});
+MN.addEventListener("contextmenu",function(e){if(e.target.closest&&e.target.closest(".ic"))e.preventDefault()});
+setTimeout(function(){$("#promo").classList.add("off")},PROMO_SEGUNDOS*1000);
+$("#bar").onclick=function(){cartView();show();S.scrollTop=0};
+OV.onclick=close;
+
+</script>
+</body>
+</html>

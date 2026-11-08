@@ -1,0 +1,216 @@
+// =========================================================================
+// SCHEMA PRISMA — EXPLOSÃO AÇAÍ
+// Banco de dados: PostgreSQL
+// =========================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -------------------------------------------------------------------------
+// CATEGORIAS DE PRODUTOS
+// -------------------------------------------------------------------------
+model Category {
+  id        String    @id @default(uuid())
+  name      String    // Nome da categoria (ex: Sabores Prontos, Monte seu Açaí, Combos, Pura Polpa)
+  slug      String    @unique // Identificador amigável na URL (ex: prontos, monte, combos, polpa)
+  order     Int       @default(0) // Ordem de exibição no cardápio
+  active    Boolean   @default(true) // Ativo ou pausado
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
+}
+
+// -------------------------------------------------------------------------
+// PRODUTOS DO CARDÁPIO
+// -------------------------------------------------------------------------
+model Product {
+  id                 String             @id @default(uuid())
+  name               String             // Nome do produto (ex: Doce Tentação, Nutella, Combo Família)
+  description        String?            // Descrição dos ingredientes
+  details            String?            // Detalhes extras
+  image              String?            // Caminho ou URL da foto
+  active             Boolean            @default(true) // Ativo ou pausado (não aparece no cardápio)
+  isCustomizable     Boolean            @default(false) // Se permite montar/escolher acompanhamentos
+  maxAccompaniments  Int                @default(0) // Máximo de acompanhamentos inclusos
+  categoryId         String
+  category           Category           @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  prices             ProductSizePrice[] // Preços por tamanho (300ml, 500ml, 700ml, etc.)
+  recipes            RecipeItem[]       // Ficha técnica (ingredientes para cálculo de custos e prejuízo)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+}
+
+// -------------------------------------------------------------------------
+// PREÇOS E TAMANHOS DE CADA PRODUTO
+// -------------------------------------------------------------------------
+model ProductSizePrice {
+  id         String   @id @default(uuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  size       Int      // Tamanho em ml (ex: 300, 500, 700, 1000, 2000)
+  price      Float    // Preço de venda normal (R$)
+  promoPrice Float?   // Preço promocional (se houver)
+  costPrice  Float    @default(0.0) // Custo estimado dos insumos (para cálculo de lucro/prejuízo)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([productId, size])
+}
+
+// -------------------------------------------------------------------------
+// FICHA TÉCNICA / RECEITA DO PRODUTO (CUSTOS E PREJUÍZOS)
+// -------------------------------------------------------------------------
+model RecipeItem {
+  id             String   @id @default(uuid())
+  productId      String
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  size           Int      // Tamanho correspondente da receita (ex: 500)
+  ingredientName String   // Nome do insumo (ex: Polpa de Açaí, Morango, Embalagem, Leite Ninho)
+  quantity       Float    // Quantidade usada (ex: 200g, 1 un)
+  unit           String   // Unidade de medida (g, ml, un)
+  unitCost       Float    // Custo unitário do insumo (R$)
+  totalCost      Float    // Custo total desse ingrediente no produto (quantity * unitCost)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// -------------------------------------------------------------------------
+// ADICIONAIS / EXTRAS COM PREÇOS E VÍNCULOS
+// -------------------------------------------------------------------------
+model Extra {
+  id            String   @id @default(uuid())
+  name          String   // Nome do adicional (ex: Nutella, Brigadeiro, Fruta Extra)
+  price         Float    // Preço de venda cobrado do cliente (R$)
+  costPrice     Float    @default(0.0) // Custo do insumo para a loja (R$)
+  active        Boolean  @default(true) // Ativo ou pausado
+  isFruitExtra  Boolean  @default(false) // Se é o extra especial de fruta
+  allowInAcai   Boolean  @default(true) // Pode vincular a copos de açaí
+  allowInCombos Boolean  @default(false) // Pode vincular a combos
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// -------------------------------------------------------------------------
+// CUPONS DE DESCONTO
+// -------------------------------------------------------------------------
+model Coupon {
+  id          String    @id @default(uuid())
+  code        String    @unique // Código do cupom (ex: EXPLOSAO10)
+  type        String    // 'percent' (%) ou 'fixed' (R$)
+  value       Float     // Valor do desconto
+  minOrder    Float     @default(0.0) // Valor mínimo de pedido para aplicar
+  maxDiscount Float?    // Teto máximo de desconto
+  active      Boolean   @default(true) // Ativo ou inativo
+  uses        Int       @default(0) // Quantidade de vezes já utilizado
+  maxUses     Int?      // Limite máximo de utilizações
+  expiresAt   DateTime? // Data de expiração
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// -------------------------------------------------------------------------
+// PEDIDOS E HISTÓRICO DE VENDAS
+// -------------------------------------------------------------------------
+model Order {
+  id             String      @id @default(uuid())
+  orderNo        String      @unique // Número legível do pedido (ex: 123456)
+  customerName   String      // Nome do cliente
+  customerPhone  String      // Telefone com DDD
+  deliveryType   String      // 'delivery' ou 'pickup'
+  street         String?     // Endereço de entrega
+  number         String?     // Número da residência
+  bairro         String?     // Bairro
+  city           String?     // Cidade
+  state          String?     // UF
+  cep            String?     // CEP
+  reference      String?     // Ponto de referência / complemento
+  km             Float       @default(0.0) // Distância calculada
+  freight        Float       @default(0.0) // Taxa de entrega
+  subtotal       Float       // Subtotal dos itens
+  discount       Float       @default(0.0) // Desconto de cupom aplicado
+  total          Float       // Total pago pelo cliente
+  costTotal      Float       @default(0.0) // Custo de insumos total do pedido (para relatório de lucro real)
+  paymentMethod  String      // Pix, Cartão de crédito, Cartão de débito, Dinheiro
+  paymentStatus  String      @default("pending") // pending, approved, rejected
+  transactionId  String?     // ID da transação no Mercado Pago
+  changeFor      Float?      // Valor pago em dinheiro informado para troco
+  trocoValue     Float       @default(0.0) // Valor exato do troco que o motoboy deve levar
+  status         String      @default("received") // received, preparing, ready, out_for_delivery, delivered, cancelled
+  printed        Boolean     @default(false) // Se a comanda já foi impressa
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  items          OrderItem[]
+}
+
+// -------------------------------------------------------------------------
+// ITENS DO PEDIDO
+// -------------------------------------------------------------------------
+model OrderItem {
+  id             String   @id @default(uuid())
+  orderId        String
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productName    String   // Nome do produto no momento da compra
+  size           Int?     // Tamanho em ml
+  quantity       Int      @default(1)
+  unitPrice      Float    // Preço unitário
+  subtotal       Float    // unitPrice * quantity
+  costPrice      Float    @default(0.0) // Custo do item para análise de margem
+  accompaniments String[] // Lista de acompanhamentos inclusos
+  extras         String[] // Lista de extras adicionados
+  fruits         String[] // Frutas adicionais escolhidas
+  note           String?  // Observações do cliente
+}
+
+// -------------------------------------------------------------------------
+// CONFIGURAÇÕES DA LOJA E HORÁRIOS
+// -------------------------------------------------------------------------
+model StoreSettings {
+  id              String   @id @default("default")
+  storeName       String   @default("Explosão Açaí")
+  wpp             String   @default("5516991098863")
+  pixKey          String   @default("16991098863")
+  address         String   @default("Rua Renato Lourenço Fernandes Rosa, 1721, Aeroporto 3, Franca - SP")
+  city            String   @default("Franca")
+  state           String   @default("SP")
+  perKmRate       Float    @default(1.0)
+  minFreight      Float    @default(4.5)
+  maxKm           Float    @default(25.0)
+  isOpenManual    Boolean  @default(true)
+  useAutoSchedule Boolean  @default(false)
+  bannerPromo     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// -------------------------------------------------------------------------
+// IMPRESSORAS TÉRMICAS CADASTRADAS
+// -------------------------------------------------------------------------
+model PrinterConfig {
+  id                  String   @id @default(uuid())
+  name                String   // Nome da impressora (ex: Impressora Cozinha)
+  target              String   // 'kitchen', 'counter', 'all'
+  paperWidth          Int      @default(80) // 80 ou 58mm
+  autoPrintOnApproved Boolean  @default(true) // Imprimir assim que o banco confirmar o pagamento
+  headerText          String?  // Cabeçalho da comanda
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+// -------------------------------------------------------------------------
+// MENSAGENS DO CHAT AO VIVO
+// -------------------------------------------------------------------------
+model ChatMessage {
+  id            String   @id @default(uuid())
+  sender        String   // 'customer' ou 'admin'
+  customerPhone String   // Telefone identificador do cliente
+  customerName  String   // Nome do cliente
+  message       String   // Conteúdo da mensagem
+  read          Boolean  @default(false)
+  timestamp     DateTime @default(now())
+}

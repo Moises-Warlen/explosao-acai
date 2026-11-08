@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel de pedidos — Explosão Açaí</title>
+<style>
+@page{size:80mm auto;margin:3mm}
+body{font-family:system-ui,sans-serif;background:#1d0630;color:#fff;margin:0;padding:20px}
+h1{font-size:22px;margin:0 0 12px}
+h3{margin:18px 0 6px}
+input,button{font:inherit;padding:10px 14px;border-radius:10px;border:0}
+button{background:#ffc800;color:#2a0a3d;font-weight:700;cursor:pointer}
+#st{margin:14px 0;font-weight:600}
+.ok{color:#4ade80}.er{color:#fda4af}
+.h{background:#2e0d47;border-radius:10px;padding:10px 12px;margin:6px 0;display:flex;justify-content:space-between;align-items:center;gap:10px}
+#cupom{display:none;width:74mm;font:12px/1.35 monospace;white-space:pre-wrap;color:#000}
+@media print{
+  body{background:#fff;padding:0}
+  .ui{display:none!important}
+  #cupom{display:block!important}
+}
+</style>
+</head>
+<body>
+<div class="ui">
+  <h1>Painel de pedidos</h1>
+  <input id="tk" type="password" placeholder="Senha do painel">
+  <button id="go">Ativar</button>
+  <div id="st">Digite a senha e toque em Ativar.</div>
+  <h3>Últimos pedidos</h3>
+  <div id="hist"></div>
+</div>
+<div id="cupom"></div>
+
+<script>
+var API="https://aged-moon-6bbc.francaexplosaoacai.workers.dev";
+var T=localStorage.getItem("painel_t")||"",busy=false,feitos={},tm=null,ac=null;
+
+function $(s){return document.querySelector(s)}
+function st(t,ok){var e=$("#st");e.textContent=t;e.className=ok?"ok":"er"}
+function wait(ms){return new Promise(function(r){setTimeout(r,ms)})}
+
+function beep(){
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    [0,0.25,0.5].forEach(function(d){
+      var o=ac.createOscillator(),g=ac.createGain();
+      o.connect(g);g.connect(ac.destination);
+      o.frequency.value=880;g.gain.value=0.3;
+      o.start(ac.currentTime+d);o.stop(ac.currentTime+d+0.15);
+    });
+  }catch(e){}
+}
+
+function imprimir(o){
+  $("#cupom").textContent=o.text.replace(/\*/g,"");
+  return wait(150).then(function(){window.print()});
+}
+
+function addHist(o){
+  var d=document.createElement("div");d.className="h";
+  var s=document.createElement("span");
+  s.textContent="Pedido #"+o.orderNo+" · "+new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+  var b=document.createElement("button");b.textContent="Reimprimir";
+  b.onclick=function(){imprimir(o)};
+  d.appendChild(s);d.appendChild(b);
+  var h=$("#hist");h.insertBefore(d,h.firstChild);
+  while(h.children.length>15)h.removeChild(h.lastChild);
+}
+
+async function poll(){
+  if(!T||busy)return;
+  busy=true;
+  try{
+    var r=await fetch(API+"/pending?t="+encodeURIComponent(T));
+    var j=await r.json();
+    if(!j.ok){st("Erro: "+(j.error||"falha"),0);busy=false;return}
+    st("Conectado · aguardando pedidos",1);
+    for(var i=0;i<j.orders.length;i++){
+      var o=j.orders[i];
+      if(!feitos[o.key]){
+        feitos[o.key]=1;
+        beep();
+        await imprimir(o);
+        addHist(o);
+        await wait(1500);
+      }
+      await fetch(API+"/ack",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({t:T,key:o.key})
+      });
+    }
+  }catch(e){
+    st("Sem conexão, tentando de novo...",0);
+  }
+  busy=false;
+}
+
+$("#go").onclick=function(){
+  T=$("#tk").value.trim()||T;
+  localStorage.setItem("painel_t",T);
+  beep();
+  clearInterval(tm);
+  poll();
+  tm=setInterval(poll,5000);
+};
+
+if(T){$("#tk").value=T}
+</script>
+</body>
+</html>

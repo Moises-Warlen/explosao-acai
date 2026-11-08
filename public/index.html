@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Explosão Açaí — Delivery Próprio</title>
+  <link rel="icon" href="imagens/Logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Banner de Notificação e Promoção Superior -->
+  <div class="promo" id="promo">
+    <span id="promo-text">Bem-vindo ao nosso delivery próprio! Peça direto por aqui com o melhor preço e entrega ágil.</span>
+    <button onclick="this.parentNode.classList.add('off')">×</button>
+  </div>
+
+  <!-- Cabeçalho Institucional -->
+  <header class="top">
+    <div class="brand">
+      <img id="logo" src="imagens/Logo.png" alt="Explosão Açaí" onerror="this.style.display='none'">
+      <div class="bt">
+        <b>Explosão Açaí</b>
+        <small>Cardápio Digital & Delivery</small>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div id="store-status-pill" class="store-pill open">Carregando...</div>
+    </div>
+  </header>
+
+  <!-- Banner Principal de Apresentação -->
+  <section class="hero">
+    <h1>Uma explosão de sabor em cada colherada!</h1>
+    <p>Mais que açaí, é puro sabor! Monte do seu jeito, escolha os acompanhamentos e receba super gelado no conforto da sua casa!</p>
+    <div class="pills">
+      <span>Açaí Cremoso</span>
+      <span>Frutas Frescas Selecionadas</span>
+      <span>Entrega Rápida</span>
+      <span>Pix & Cartões</span>
+    </div>
+  </section>
+
+  <!-- Navegação por Categorias e Seções Especiais -->
+  <nav class="cats" id="category-nav">
+    <a href="#lancamentos" class="cat-pill">Novidades</a>
+    <a href="#promocoes" class="cat-pill">Promoções</a>
+    <a href="#monte" class="cat-pill">Monte seu Açaí</a>
+    <a href="#prontos" class="cat-pill active">Sabores Prontos</a>
+    <a href="#combos" class="cat-pill">Combos</a>
+    <a href="#polpa" class="cat-pill">Pura Polpa</a>
+  </nav>
+
+  <!-- Catálogo Principal de Produtos -->
+  <main id="main">
+    <div style="text-align:center;padding:40px;color:var(--mut)">Carregando o melhor açaí da cidade...</div>
+  </main>
+
+  <!-- Rodapé Institucional (Área do lojista removida conforme solicitado) -->
+  <footer>
+    <div class="social">
+      <a href="https://wa.me/5516991098863" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="#25D366">
+          <path d="M20.5 3.5A11.8 11.8 0 0 0 2 17.7L.5 23.5l6-1.6a11.8 11.8 0 0 0 14-18.4ZM12 21a9.8 9.8 0 0 1-5-1.4l-.4-.2-3.5.9.9-3.4-.2-.4A9.8 9.8 0 1 1 12 21Zm5.4-7.3c-.3-.2-1.8-.9-2.1-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7.1a8 8 0 0 1-2.4-1.5 9 9 0 0 1-1.7-2.1c-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.4.3-.6s0-.4 0-.6l-1-2.3c-.2-.5-.5-.4-.7-.4h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.8 1.2 3.2 1.4 3.4a11 11 0 0 0 4.3 3.8c.6.3 1.1.5 1.5.6.6.2 1.2.2 1.7.1.5-.1 1.8-.7 2.1-1.4.3-.7.3-1.3.2-1.4s-.2-.2-.5-.3Z"/>
+        </svg>
+        WhatsApp
+      </a>
+      <a href="https://www.instagram.com/expl.osaoacai/" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" width="22" height="22">
+          <defs>
+            <linearGradient id="instaGradient" x1="0" y1="1" x2="1" y2="0">
+              <stop offset="0%" stop-color="#FFDC80"/>
+              <stop offset="50%" stop-color="#F77737"/>
+              <stop offset="100%" stop-color="#C13584"/>
+            </linearGradient>
+          </defs>
+          <rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="url(#instaGradient)" stroke-width="2"/>
+          <circle cx="12" cy="12" r="4" fill="none" stroke="url(#instaGradient)" stroke-width="2"/>
+          <circle cx="17.5" cy="6.5" r="1.2" fill="#E1306C"/>
+        </svg>
+        Instagram
+      </a>
+    </div>
+    <p style="margin:16px 0 0">Explosão Açaí © 2026 · Franca/SP · Todos os direitos reservados</p>
+  </footer>
+
+  <!-- Botão Flutuante Único: Chat Oficial com a Loja -->
+  <div class="fab-container">
+    <button class="fab-btn fab-chat" onclick="openChatModal()" title="Falar no Chat ao Vivo com a Explosão Açaí">
+      <img src="imagens/Logo.png" alt="Logo" style="width:24px;height:24px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'">
+      Chat com a Loja
+    </button>
+  </div>
+
+  <!-- Barra Fixa Inferior de Resumo do Carrinho -->
+  <div class="bar" id="bar">
+    <div>
+      <span id="bc">0 itens</span>
+      <span id="bt">R$ 0,00</span>
+    </div>
+  </div>
+
+  <!-- Overlay e Modal Sheet -->
+  <div class="ov" id="ov"></div>
+  <aside class="sheet" id="sheet"></aside>
+
+  <!-- Notificação Toast -->
+  <div id="toast"></div>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+</body>
+</html>

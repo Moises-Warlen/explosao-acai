@@ -1,0 +1,32 @@
+{
+  "name": "explosao-acai-delivery",
+  "version": "1.0.0",
+  "description": "Sistema de Delivery Próprio - Explosão Açaí (Clean Architecture, Mercado Pago, Impressão Térmica Multi-destino, Chat em Tempo Real)",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test tests/**/*.test.js"
+  },
+  "keywords": [
+    "delivery",
+    "clean-architecture",
+    "mercado-pago",
+    "thermal-printing",
+    "esc-pos",
+    "express",
+    "websockets"
+  ],
+  "author": "Moises Warlen",
+  "license": "MIT",
+  "dependencies": {
+    "@prisma/client": "^7.10.1",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0",
+    "mercadopago": "^3.6.1",
+    "multer": "^2.5.0",
+    "ws": "^8.22.1"
+  }
+}
