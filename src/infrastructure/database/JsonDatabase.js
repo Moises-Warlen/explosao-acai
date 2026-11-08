@@ -10,6 +10,9 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import pg from 'pg';
+
+const { Pool } = pg;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -447,7 +450,9 @@ class JsonDatabase {
   constructor() {
     this.filePath = DB_FILE;
     this.data = null;
+    this.pool = null;
     this.ensureInitialized();
+    this.setupPostgres();
   }
 
   ensureInitialized() {
@@ -457,7 +462,7 @@ class JsonDatabase {
 
     if (!fs.existsSync(this.filePath)) {
       this.data = JSON.parse(JSON.stringify(INITIAL_DATA));
-      this.save();
+      this.saveLocal();
     } else {
       try {
         const raw = fs.readFileSync(this.filePath, 'utf-8');
@@ -470,8 +475,54 @@ class JsonDatabase {
       } catch (err) {
         console.error("Erro ao ler database.json, restaurando inicial:", err);
         this.data = JSON.parse(JSON.stringify(INITIAL_DATA));
-        this.save();
+        this.saveLocal();
       }
+    }
+  }
+
+  setupPostgres() {
+    const dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl) return;
+
+    try {
+      this.pool = new Pool({
+        connectionString: dbUrl,
+        ssl: (dbUrl.includes('localhost') || dbUrl.includes('127.0.0.1')) ? false : { rejectUnauthorized: false }
+      });
+
+      this.initPostgresTable();
+    } catch (e) {
+      this.isConnected = false;
+    }
+  }
+
+  async initPostgresTable() {
+    if (!this.pool) return;
+    try {
+      await this.pool.query(`
+        CREATE TABLE IF NOT EXISTS explosao_database (
+          id VARCHAR(50) PRIMARY KEY,
+          content JSONB NOT NULL,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+
+      const res = await this.pool.query('SELECT content FROM explosao_database WHERE id = $1', ['main']);
+      if (res.rows.length > 0 && res.rows[0].content) {
+        this.data = res.rows[0].content;
+        this.saveLocal();
+        this.isConnected = true;
+        console.log('✅ Banco de dados PostgreSQL conectado e sincronizado com sucesso!');
+      } else {
+        await this.pool.query(
+          'INSERT INTO explosao_database (id, content, updated_at) VALUES ($1, $2, NOW()) ON CONFLICT (id) DO UPDATE SET content = $2',
+          ['main', this.data]
+        );
+        this.isConnected = true;
+        console.log('✅ Banco de dados PostgreSQL inicializado com os dados do Explosão Açaí!');
+      }
+    } catch (err) {
+      this.isConnected = false;
     }
   }
 
@@ -480,13 +531,26 @@ class JsonDatabase {
     return this.data;
   }
 
-  save() {
+  saveLocal() {
     try {
       const tempFile = `${this.filePath}.tmp`;
       fs.writeFileSync(tempFile, JSON.stringify(this.data, null, 2), 'utf-8');
       fs.renameSync(tempFile, this.filePath);
     } catch (err) {
-      console.error("Erro ao salvar database.json:", err);
+      console.error("Erro ao salvar database.json localmente:", err);
+    }
+  }
+
+  save() {
+    this.saveLocal();
+
+    if (this.pool && this.isConnected) {
+      this.pool.query(
+        'INSERT INTO explosao_database (id, content, updated_at) VALUES ($1, $2, NOW()) ON CONFLICT (id) DO UPDATE SET content = $2, updated_at = NOW()',
+        ['main', this.data]
+      ).catch(e => {
+        console.error('Erro ao persistir no PostgreSQL:', e.message);
+      });
     }
   }
 }
