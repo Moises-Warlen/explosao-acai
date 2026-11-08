@@ -458,13 +458,13 @@
     <!-- ABA 10: CHAT DE ATENDIMENTO -->
     <div class="tab-pane" id="tab-chat">
       <div class="admin-card" style="padding:0;overflow:hidden">
-        <div style="display:grid;grid-template-columns:300px 1fr;height:650px">
-          <div style="background:var(--panel);border-right:1px solid var(--ln);padding:14px;overflow-y:auto">
+        <div class="admin-chat-layout">
+          <div class="admin-chat-conversations">
             <h3 style="margin:0 0 12px;font-size:16px">Conversas com Clientes</h3>
             <div id="chat-conversations-list"></div>
           </div>
 
-          <div style="display:flex;flex-direction:column;background:var(--bg)">
+          <div class="admin-chat-window">
             <div style="padding:14px;border-bottom:1px solid var(--ln);background:var(--panel);display:flex;justify-content:space-between">
               <div>
                 <b id="active-chat-name">Selecione uma conversa</b>

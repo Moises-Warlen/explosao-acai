@@ -7,10 +7,23 @@ export class ChatService {
   }
 
   getMessages(customerPhone) {
-    const cleanPhone = String(customerPhone || '').replace(/\D/g, '');
+    const raw = String(customerPhone || '').trim();
+    if (!raw) {
+      // Regra de privacidade estrita: sem identificador do cliente, não expõe conversas de ninguém
+      return [];
+    }
+
     const chats = this.db.get().chats || [];
-    if (!cleanPhone) return chats;
-    return chats.filter(m => m.customerPhone === cleanPhone);
+    const cleanDigits = raw.replace(/\D/g, '');
+
+    return chats.filter(m => {
+      const mPhone = String(m.customerPhone || '').trim();
+      const mDigits = mPhone.replace(/\D/g, '');
+      if (cleanDigits && mDigits && cleanDigits.length >= 8 && mDigits.length >= 8) {
+        return mDigits === cleanDigits;
+      }
+      return mPhone.toLowerCase() === raw.toLowerCase();
+    });
   }
 
   getAllConversations() {
@@ -19,6 +32,8 @@ export class ChatService {
 
     for (const msg of chats) {
       const p = msg.customerPhone;
+      if (!p) continue;
+
       if (!map.has(p)) {
         map.set(p, {
           customerPhone: p,
@@ -31,6 +46,9 @@ export class ChatService {
       const conv = map.get(p);
       conv.lastMessage = msg.message;
       conv.lastTimestamp = msg.timestamp;
+      if (msg.customerName && conv.customerName === 'Cliente') {
+        conv.customerName = msg.customerName;
+      }
       if (!msg.read && msg.sender === 'customer') {
         conv.unreadCount++;
       }
@@ -41,8 +59,11 @@ export class ChatService {
 
   sendMessage({ sender, customerPhone, customerName, message }) {
     if (!message || !message.trim()) throw new Error('Mensagem vazia.');
-    const cleanPhone = String(customerPhone || '').replace(/\D/g, '');
-    if (!cleanPhone) throw new Error('Telefone do cliente é obrigatório para o chat.');
+    const raw = String(customerPhone || '').trim();
+    if (!raw) throw new Error('Identificação do cliente é obrigatória para o chat.');
+
+    const cleanDigits = raw.replace(/\D/g, '');
+    const cleanPhone = (cleanDigits && cleanDigits.length >= 8) ? cleanDigits : raw;
 
     const newMsg = {
       id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
@@ -66,12 +87,20 @@ export class ChatService {
   }
 
   markAsRead(customerPhone) {
-    const cleanPhone = String(customerPhone || '').replace(/\D/g, '');
+    const raw = String(customerPhone || '').trim();
+    if (!raw) return;
+    const cleanDigits = raw.replace(/\D/g, '');
+
     const data = this.db.get();
     if (!data.chats) return;
 
     data.chats.forEach(m => {
-      if (m.customerPhone === cleanPhone && m.sender === 'customer') {
+      const mPhone = String(m.customerPhone || '').trim();
+      const mDigits = mPhone.replace(/\D/g, '');
+      const match = (cleanDigits && mDigits && cleanDigits.length >= 8 && mDigits.length >= 8)
+        ? cleanDigits === mDigits 
+        : mPhone.toLowerCase() === raw.toLowerCase();
+      if (match && m.sender === 'customer') {
         m.read = true;
       }
     });

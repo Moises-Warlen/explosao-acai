@@ -176,4 +176,50 @@ describe('Explosão Açaí - Testes das Novas Funcionalidades', () => {
     assert.strictEqual(okRes.status, 200);
     assert.strictEqual(okData.ok, true);
   });
+
+  test('Isolamento Estrito de Chat: Um cliente NUNCA pode ver a conversa de outro cliente', async () => {
+    const phoneClientA = '16988880001';
+    const phoneClientB = '16988880002';
+
+    // 1. Cliente A envia mensagem
+    await fetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sender: 'customer',
+        customerPhone: phoneClientA,
+        customerName: 'Cliente A',
+        message: 'Mensagem confidencial do Cliente A'
+      })
+    });
+
+    // 2. Cliente B envia mensagem
+    await fetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sender: 'customer',
+        customerPhone: phoneClientB,
+        customerName: 'Cliente B',
+        message: 'Mensagem confidencial do Cliente B'
+      })
+    });
+
+    // 3. Consulta mensagens do Cliente A
+    const resA = await fetch(`${baseUrl}/api/chat?phone=${phoneClientA}`);
+    const dataA = await resA.json();
+    assert.ok(dataA.messages.some(m => m.message.includes('Cliente A')));
+    assert.ok(!dataA.messages.some(m => m.message.includes('Cliente B')), 'Cliente A NUNCA deve ver mensagem do Cliente B');
+
+    // 4. Consulta mensagens do Cliente B
+    const resB = await fetch(`${baseUrl}/api/chat?phone=${phoneClientB}`);
+    const dataB = await resB.json();
+    assert.ok(dataB.messages.some(m => m.message.includes('Cliente B')));
+    assert.ok(!dataB.messages.some(m => m.message.includes('Cliente A')), 'Cliente B NUNCA deve ver mensagem do Cliente A');
+
+    // 5. Consulta sem identificador público: deve retornar array vazio, sem vazar nada
+    const resEmpty = await fetch(`${baseUrl}/api/chat`);
+    const dataEmpty = await resEmpty.json();
+    assert.strictEqual(dataEmpty.messages.length, 0, 'Consulta sem telefone deve retornar array vazio');
+  });
 });

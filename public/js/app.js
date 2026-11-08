@@ -52,6 +52,14 @@ window.addEventListener('DOMContentLoaded', async () => {
   renderNavigation();
   renderCatalog();
   bindEvents();
+
+  // Banner amarelo de Boas-Vindas e Desconto: fecha sozinho após 3 segundos
+  setTimeout(() => {
+    const promoEl = document.getElementById('promo');
+    if (promoEl && !promoEl.classList.contains('off')) {
+      promoEl.classList.add('off');
+    }
+  }, 3000);
 });
 
 // Conexão WebSocket em Tempo Real
@@ -956,6 +964,7 @@ window.submitOrder = async function() {
       CART = [];
       APPLIED_COUPON = null;
       updateCartBar();
+      saveClientChatData(data.order.customer?.phone, data.order.customer?.name);
       renderOrderSuccess(data.order);
       toast('Pedido realizado com sucesso!');
     } else {
@@ -1061,10 +1070,35 @@ function formatStatus(status) {
   }
 }
 
+// Identificação Única e Privada do Cliente no Chat
+function getClientChatData() {
+  let clientId = localStorage.getItem('explosao_chat_client_id');
+  if (!clientId) {
+    clientId = 'cli_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+    localStorage.setItem('explosao_chat_client_id', clientId);
+  }
+
+  const savedPhone = localStorage.getItem('explosao_customer_phone');
+  const savedName = localStorage.getItem('explosao_customer_name');
+
+  const phone = (CHECKOUT_DATA && CHECKOUT_DATA.tel) || savedPhone || clientId;
+  const name = (CHECKOUT_DATA && CHECKOUT_DATA.nome) || savedName || 'Cliente';
+
+  return { clientId, phone: String(phone).trim(), name: String(name).trim() };
+}
+
+function saveClientChatData(phone, name) {
+  if (phone) localStorage.setItem('explosao_customer_phone', String(phone).trim());
+  if (name) localStorage.setItem('explosao_customer_name', String(name).trim());
+}
+
 // Chat em Tempo Real com a Loja Oficial "Explosão Açaí"
 window.openChatModal = function(phone, name) {
-  const customerPhone = phone || CHECKOUT_DATA.tel || '16999999999';
-  const customerName = name || CHECKOUT_DATA.nome || 'Cliente';
+  const client = getClientChatData();
+  const customerPhone = phone || client.phone;
+  const customerName = name || client.name;
+
+  if (phone) saveClientChatData(phone, name);
 
   renderChatModal(customerPhone, customerName);
   showSheet();
@@ -1073,6 +1107,7 @@ window.openChatModal = function(phone, name) {
 
 function renderChatModal(phone, name) {
   const sheet = $('#sheet');
+  const isTemp = String(phone).startsWith('cli_');
   sheet.innerHTML = `
     <button class="x" onclick="closeSheet()">×</button>
     
@@ -1084,14 +1119,24 @@ function renderChatModal(phone, name) {
       </div>
     </div>
 
+    ${isTemp ? `
+      <div style="background:rgba(88,28,135,0.06);border-bottom:1px solid var(--ln);padding:8px 12px;font-size:11px;color:var(--mut);text-align:center">
+        Canal de conversa privativo e seguro · Loja ao vivo
+      </div>
+    ` : `
+      <div style="background:rgba(88,28,135,0.06);border-bottom:1px solid var(--ln);padding:6px 12px;font-size:11px;color:var(--mut);text-align:center">
+        Atendimento para: <b>${esc(name)}</b> (${esc(phone)})
+      </div>
+    `}
+
     <div class="chat-window">
       <div class="chat-messages" id="chat-messages-box">
         <p style="text-align:center;color:var(--mut);font-size:12px;padding:20px 0">Carregando mensagens...</p>
       </div>
 
       <div class="chat-input-row">
-        <input id="chat-text-input" placeholder="Digite sua mensagem para a loja..." onkeydown="if(event.key==='Enter') sendChatMessage('${phone}', '${name}')">
-        <button class="btn p" style="width:auto;margin:0;padding:10px 18px" onclick="sendChatMessage('${phone}', '${name}')">Enviar</button>
+        <input id="chat-text-input" placeholder="Digite sua mensagem para a loja..." onkeydown="if(event.key==='Enter') sendChatMessage('${phone}', '${esc(name)}')">
+        <button class="btn p" style="width:auto;margin:0;padding:10px 18px" onclick="sendChatMessage('${phone}', '${esc(name)}')">Enviar</button>
       </div>
     </div>
   `;
@@ -1099,7 +1144,7 @@ function renderChatModal(phone, name) {
 
 async function loadChatMessages(phone) {
   try {
-    const res = await fetch(`${API_URL}/chat?phone=${phone}`);
+    const res = await fetch(`${API_URL}/chat?phone=${encodeURIComponent(phone)}`);
     const data = await res.json();
     if (data.ok) {
       renderChatMessagesList(data.messages);
@@ -1112,7 +1157,7 @@ function renderChatMessagesList(messages) {
   if (!box) return;
 
   if (messages.length === 0) {
-    box.innerHTML = `<p style="text-align:center;color:var(--mut);font-size:12px;padding:30px 0">Envie sua dúvida ou solicitação para falar com nossa equipe.</p>`;
+    box.innerHTML = `<p style="text-align:center;color:var(--mut);font-size:12px;padding:30px 0">Olá! Envie sua dúvida ou solicitação para falar diretamente com nossa equipe.</p>`;
     return;
   }
 
@@ -1141,20 +1186,24 @@ window.sendChatMessage = async function(phone, name) {
   const text = inp.value.trim();
   inp.value = '';
 
+  const client = getClientChatData();
+  const targetPhone = phone || client.phone;
+  const targetName = name || client.name;
+
   try {
     const res = await fetch(`${API_URL}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         sender: 'customer',
-        customerPhone: phone,
-        customerName: name,
+        customerPhone: targetPhone,
+        customerName: targetName,
         message: text
       })
     });
     const data = await res.json();
     if (data.ok) {
-      loadChatMessages(phone);
+      loadChatMessages(targetPhone);
     }
   } catch (e) {
     toast('Falha ao enviar mensagem.');
@@ -1162,10 +1211,20 @@ window.sendChatMessage = async function(phone, name) {
 };
 
 function handleIncomingChatMessage(msg) {
+  const client = getClientChatData();
+  const myPhone = client.phone;
+  const cleanMy = String(myPhone || '').replace(/\D/g, '');
+  const cleanMsg = String(msg.customerPhone || '').replace(/\D/g, '');
+
+  const isForMe = (msg.customerPhone === myPhone) || (cleanMy && cleanMsg && cleanMy === cleanMsg);
+
+  // SE NÃO FOR PARA ESTE CLIENTE, DESCARTE SILENCIOSAMENTE!
+  if (!isForMe) return;
+
   const box = $('#chat-messages-box');
   if (box) {
-    loadChatMessages(msg.customerPhone);
-  } else {
+    loadChatMessages(myPhone);
+  } else if (msg.sender === 'admin' || msg.sender === 'store') {
     toast(`Nova mensagem de Explosão Açaí: "${msg.message}"`);
   }
 }
