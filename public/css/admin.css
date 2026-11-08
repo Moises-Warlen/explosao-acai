@@ -637,17 +637,23 @@ input:focus, select:focus, textarea:focus {
   display: grid;
   grid-template-columns: 300px 1fr;
   height: 650px;
+  overflow: hidden;
+  border-radius: 16px;
 }
 .admin-chat-conversations {
   background: var(--panel);
   border-right: 1px solid var(--ln);
   padding: 14px;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 #chat-conversations-list {
   max-height: 560px;
   overflow-y: auto;
   padding-right: 4px;
+  flex: 1;
 }
 #chat-conversations-list::-webkit-scrollbar {
   width: 5px;
@@ -661,6 +667,34 @@ input:focus, select:focus, textarea:focus {
   flex-direction: column;
   background: var(--bg);
   height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+#admin-chat-messages {
+  flex: 1 1 0;
+  min-height: 0;
+  height: 0;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scroll-behavior: smooth;
+}
+#admin-chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+#admin-chat-messages::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+#admin-chat-messages::-webkit-scrollbar-thumb {
+  background: var(--p2);
+  border-radius: 4px;
+}
+#admin-chat-messages::-webkit-scrollbar-thumb:hover {
+  background: var(--y);
 }
 .admin-chat-input-row {
   padding: 12px 16px;
@@ -669,8 +703,7 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   gap: 10px;
   align-items: center;
-  position: sticky;
-  bottom: 0;
+  flex-shrink: 0;
   z-index: 10;
 }
 #admin-chat-input {
@@ -686,6 +719,28 @@ input:focus, select:focus, textarea:focus {
 #admin-chat-input:focus {
   border-color: var(--y);
   box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+}
+
+/* Cards Minimizados da Coluna Entregues (Concluídos) */
+.order-card.delivered-card {
+  border-left: 3.5px solid #10b981;
+}
+.order-card.delivered-card.minimized {
+  padding: 10px 14px;
+  gap: 6px;
+  background: rgba(27, 10, 46, 0.85);
+}
+.order-card.delivered-card.minimized .order-details-collapsible {
+  display: none !important;
+}
+.order-card.delivered-card.expanded .order-details-collapsible {
+  display: block;
+}
+.order-card.delivered-card.minimized .minimized-summary {
+  display: flex !important;
+}
+.order-card.delivered-card.expanded .minimized-summary {
+  display: none !important;
 }
 
 /* ================= RESPONSIVIDADE (MOBILE & TABLETS) ================= */

@@ -619,17 +619,73 @@ window.openCartModal = function() {
   showSheet();
 };
 
+let APP_CONFIRM_CALLBACK = null;
+window.showAppConfirmModal = function({ icon = '⚠️', title = 'Confirmar', message = 'Tem certeza?', btnText = 'Sim', onConfirm }) {
+  const modal = $('#app-confirm-modal');
+  if (!modal) {
+    if (confirm(message)) { if (onConfirm) onConfirm(); }
+    return;
+  }
+  if ($('#app-confirm-icon')) $('#app-confirm-icon').textContent = icon;
+  if ($('#app-confirm-title')) $('#app-confirm-title').textContent = title;
+  if ($('#app-confirm-msg')) $('#app-confirm-msg').innerHTML = message;
+  const yesBtn = $('#app-confirm-btn-yes');
+  if (yesBtn) {
+    yesBtn.textContent = btnText;
+    yesBtn.onclick = () => {
+      const cb = APP_CONFIRM_CALLBACK;
+      closeAppConfirmModal();
+      if (typeof cb === 'function') cb();
+    };
+  }
+  APP_CONFIRM_CALLBACK = onConfirm;
+  modal.style.display = 'flex';
+};
+
+window.closeAppConfirmModal = function() {
+  const modal = $('#app-confirm-modal');
+  if (modal) modal.style.display = 'none';
+  APP_CONFIRM_CALLBACK = null;
+};
+
+window.clearCart = function() {
+  if (CART.length === 0) return;
+  showAppConfirmModal({
+    icon: '🗑️',
+    title: 'Limpar Pedido?',
+    message: 'Deseja realmente esvaziar seu carrinho e remover todos os itens adicionados?',
+    btnText: 'Sim, Limpar Tudo',
+    onConfirm: () => {
+      CART = [];
+      APPLIED_COUPON = null;
+      updateCartBar();
+      renderCartModal();
+      toast('Carrinho esvaziado com sucesso!');
+    }
+  });
+};
+
 function renderCartModal() {
   const sheet = $('#sheet');
   const subtotal = CART.reduce((acc, it) => acc + (it.unitPrice * it.quantity), 0);
 
   let h = `
     <button class="x" onclick="closeSheet()">×</button>
-    <h3>Seu Pedido</h3>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding-right:32px;margin-bottom:12px">
+      <h3 style="margin:0">Seu Pedido</h3>
+      ${CART.length > 0 ? `
+        <button onclick="clearCart()" style="background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px" title="Remover todos os itens">
+          🗑️ Limpar Pedido
+        </button>
+      ` : ''}
+    </div>
   `;
 
   if (CART.length === 0) {
-    h += `<p class="mut" style="padding:20px 0;text-align:center">Seu carrinho está vazio.</p>`;
+    h += `
+      <p class="mut" style="padding:24px 0;text-align:center">Seu carrinho está vazio.</p>
+      <button class="btn" onclick="closeSheet()">Ver Cardápio</button>
+    `;
     sheet.innerHTML = h;
     return;
   }
@@ -679,7 +735,10 @@ function renderCartModal() {
     <div class="tot g"><span>Subtotal Final</span><b>${R(finalSubtotal)}</b></div>
 
     <button class="btn" onclick="openCheckoutModal()">Continuar para Entrega</button>
-    <button class="btn o" onclick="closeSheet()">Adicionar mais itens</button>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn o" style="flex:1" onclick="closeSheet()">Adicionar mais itens</button>
+      <button class="btn" style="flex:1;background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.3);font-size:13px;font-weight:600" onclick="clearCart()">🗑️ Limpar Pedido</button>
+    </div>
   `;
 
   sheet.innerHTML = h;

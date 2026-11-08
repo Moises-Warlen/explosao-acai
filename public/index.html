@@ -107,6 +107,19 @@
   <div class="ov" id="ov"></div>
   <aside class="sheet" id="sheet"></aside>
 
+  <!-- Modal de Confirmação do App (sem alert nativo) -->
+  <div id="app-confirm-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(5px);padding:16px">
+    <div style="background:var(--card);color:var(--tx);border:1.5px solid var(--ln);border-radius:20px;padding:24px;width:min(380px,92vw);text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.6)">
+      <div id="app-confirm-icon" style="font-size:42px;margin-bottom:8px">🗑️</div>
+      <h3 id="app-confirm-title" style="margin:0 0 8px;font-size:18px;color:var(--tx)">Limpar Pedido?</h3>
+      <p id="app-confirm-msg" style="font-size:13px;color:var(--mut);line-height:1.45;margin:0 0 20px">Deseja remover todos os itens do seu carrinho?</p>
+      <div style="display:flex;gap:10px">
+        <button id="app-confirm-btn-yes" class="btn" style="flex:1;background:#ef4444;color:#fff;padding:12px;font-weight:700;border:none;border-radius:10px;cursor:pointer">Sim, Limpar</button>
+        <button id="app-confirm-btn-no" class="btn o" style="flex:1;padding:12px" onclick="closeAppConfirmModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Notificação Toast -->
   <div id="toast"></div>
 
