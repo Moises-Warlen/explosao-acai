@@ -332,18 +332,22 @@ function updateOrdersBadge() {
   }
 }
 
+const KANBAN_PAGE = {
+  received: 1,
+  preparing: 1,
+  ready: 1,
+  delivered: 1
+};
+const KANBAN_PER_PAGE = 3;
+
+window.setKanbanPage = function(column, page) {
+  KANBAN_PAGE[column] = page;
+  renderKanban();
+};
+
 function renderKanban() {
   const colReceived = $('#cards-received');
-  const colPreparing = $('#cards-preparing');
-  const colReady = $('#cards-ready');
-  const colDelivered = $('#cards-delivered');
-
   if (!colReceived) return;
-
-  colReceived.innerHTML = '';
-  colPreparing.innerHTML = '';
-  colReady.innerHTML = '';
-  colDelivered.innerHTML = '';
 
   const q = ($('#kanban-search')?.value || '').trim().toLowerCase();
   const stFilter = $('#kanban-status-filter')?.value || 'all';
@@ -379,18 +383,55 @@ function renderKanban() {
     return true;
   });
 
-  filteredOrders.forEach(order => {
-    const card = createOrderCardHtml(order);
-    if (order.status === 'received') {
-      colReceived.innerHTML += card;
-    } else if (order.status === 'preparing') {
-      colPreparing.innerHTML += card;
-    } else if (order.status === 'ready' || order.status === 'out_for_delivery') {
-      colReady.innerHTML += card;
-    } else if (order.status === 'delivered') {
-      colDelivered.innerHTML += card;
+  const ordersReceived = filteredOrders.filter(o => o.status === 'received');
+  const ordersPreparing = filteredOrders.filter(o => o.status === 'preparing');
+  const ordersReady = filteredOrders.filter(o => o.status === 'ready' || o.status === 'out_for_delivery');
+  const ordersDelivered = filteredOrders.filter(o => o.status === 'delivered');
+
+  renderKanbanColumn('received', ordersReceived, 'cards-received', 'cards-received-pagination', 'col-header-received', 'Novos Pedidos');
+  renderKanbanColumn('preparing', ordersPreparing, 'cards-preparing', 'cards-preparing-pagination', 'col-header-preparing', 'Em Preparo (Cozinha)');
+  renderKanbanColumn('ready', ordersReady, 'cards-ready', 'cards-ready-pagination', 'col-header-ready', 'Pronto / Saiu para Entrega');
+  renderKanbanColumn('delivered', ordersDelivered, 'cards-delivered', 'cards-delivered-pagination', 'col-header-delivered', 'Entregues (Concluídos)');
+}
+
+function renderKanbanColumn(colKey, list, containerId, paginationId, headerId, title) {
+  const container = $(`#${containerId}`);
+  const paginationBox = $(`#${paginationId}`);
+  const header = $(`#${headerId}`);
+
+  if (header) {
+    header.innerHTML = `${title} <span style="font-size:11px;opacity:0.85;background:rgba(255,255,255,0.12);padding:1px 7px;border-radius:99px;margin-left:4px;color:#fff">${list.length}</span>`;
+  }
+  if (!container) return;
+
+  const total = list.length;
+  const totalPages = Math.max(1, Math.ceil(total / KANBAN_PER_PAGE));
+  if (KANBAN_PAGE[colKey] > totalPages) KANBAN_PAGE[colKey] = totalPages;
+  if (KANBAN_PAGE[colKey] < 1) KANBAN_PAGE[colKey] = 1;
+
+  const curPage = KANBAN_PAGE[colKey];
+  const start = (curPage - 1) * KANBAN_PER_PAGE;
+  const pageOrders = list.slice(start, start + KANBAN_PER_PAGE);
+
+  container.innerHTML = pageOrders.length === 0
+    ? `<div style="color:var(--mut);text-align:center;padding:24px 10px;font-size:12px">Nenhum pedido</div>`
+    : pageOrders.map(o => createOrderCardHtml(o)).join('');
+
+  if (paginationBox) {
+    if (totalPages > 1) {
+      paginationBox.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px;margin-top:6px;border-top:1px solid var(--ln);font-size:11px;color:var(--tx)">
+          <button class="btn-sm btn-secondary" style="padding:3px 8px;font-size:11px" onclick="setKanbanPage('${colKey}', ${curPage - 1})" ${curPage <= 1 ? 'disabled' : ''}>◀ Anterior</button>
+          <span>Pág. <b>${curPage}</b> de <b>${totalPages}</b> (${total})</span>
+          <button class="btn-sm btn-secondary" style="padding:3px 8px;font-size:11px" onclick="setKanbanPage('${colKey}', ${curPage + 1})" ${curPage >= totalPages ? 'disabled' : ''}>Próximo ▶</button>
+        </div>
+      `;
+      paginationBox.style.display = 'block';
+    } else {
+      paginationBox.innerHTML = '';
+      paginationBox.style.display = 'none';
     }
-  });
+  }
 }
 
 function createOrderCardHtml(order) {
@@ -406,27 +447,46 @@ function createOrderCardHtml(order) {
   if (order.status === 'received') {
     nextAction = `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'preparing')">Mandar p/ Cozinha</button>`;
   } else if (order.status === 'preparing') {
-    nextAction = `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'out_for_delivery')">Despachar Entrega</button>`;
+    nextAction = isDelivery 
+      ? `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'out_for_delivery')">Despachar Entrega</button>`
+      : `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'ready')">Pronto no Balcão</button>`;
   } else if (order.status === 'out_for_delivery' || order.status === 'ready') {
-    nextAction = `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'delivered')">Concluir Pedido</button>`;
+    nextAction = isDelivery
+      ? `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'delivered')">Concluir Pedido</button>`
+      : `<button class="btn-sm btn-next" onclick="confirmPickupOrder('${order.id}')">Concluir Retirada</button>`;
   }
 
   // Identificação clara da forma e timing do pagamento
   let paymentBadgeHtml = '';
-  if (isDeliveryPayment) {
-    if (isMoney) {
-      paymentBadgeHtml = `<div class="troco-alert" style="background:#064e3b;color:#a7f3d0">COBRAR NA ENTREGA: DINHEIRO ${hasTroco ? `(LEVAR TROCO DE ${R(order.payment.trocoValue)})` : '(VALOR EXATO)'}</div>`;
+  if (isDelivery) {
+    if (isDeliveryPayment) {
+      if (isMoney) {
+        paymentBadgeHtml = `<div class="troco-alert" style="background:#064e3b;color:#a7f3d0">COBRAR NA ENTREGA: DINHEIRO ${hasTroco ? `(LEVAR TROCO DE ${R(order.payment.trocoValue)})` : '(VALOR EXATO)'}</div>`;
+      } else {
+        paymentBadgeHtml = `<div class="troco-alert" style="background:#3b115b;color:var(--y)">COBRAR NA ENTREGA: LEVAR MAQUININHA (${order.payment?.method.toUpperCase()})</div>`;
+      }
     } else {
-      paymentBadgeHtml = `<div class="troco-alert" style="background:#3b115b;color:var(--y)">COBRAR NA ENTREGA: LEVAR MAQUININHA (${order.payment?.method.toUpperCase()})</div>`;
+      if (isApproved) {
+        paymentBadgeHtml = `<div class="payment-approved">PAGAMENTO ONLINE CONFIRMADO (${order.payment?.method.toUpperCase()})</div>`;
+      } else {
+        paymentBadgeHtml = `
+          <div class="payment-waiting">
+            AGUARDANDO CONFIRMAÇÃO DO BANCO (${order.payment?.method})
+            <button class="btn-sm btn-secondary" style="margin-top:4px;font-size:10px;padding:3px 8px;width:100%" onclick="simulateBankApproval('${order.id}')">Confirmar Pagamento</button>
+          </div>
+        `;
+      }
     }
   } else {
-    // Pagamento online
+    // Retirada no Balcão
     if (isApproved) {
-      paymentBadgeHtml = `<div class="payment-approved">PAGAMENTO ONLINE CONFIRMADO (${order.payment?.method.toUpperCase()})</div>`;
+      paymentBadgeHtml = `<div class="payment-approved">RETIRADA NO BALCÃO: PAGAMENTO JÁ CONFIRMADO (${order.payment?.method.toUpperCase()})</div>`;
+    } else if (isMoney) {
+      paymentBadgeHtml = `<div class="troco-alert" style="background:#064e3b;color:#a7f3d0">RETIRADA NO BALCÃO: RECEBER EM DINHEIRO ${hasTroco ? `(LEVAR TROCO DE ${R(order.payment.trocoValue)})` : '(VALOR EXATO)'}</div>`;
     } else {
       paymentBadgeHtml = `
-        <div class="payment-waiting">
-          AGUARDANDO CONFIRMAÇÃO DO BANCO (${order.payment?.method})
+        <div class="troco-alert" style="background:#3b115b;color:var(--y)">
+          RETIRADA NO BALCÃO: RECEBER NO BALCÃO (${order.payment?.method.toUpperCase()})
           <button class="btn-sm btn-secondary" style="margin-top:4px;font-size:10px;padding:3px 8px;width:100%" onclick="simulateBankApproval('${order.id}')">Confirmar Pagamento</button>
         </div>
       `;
@@ -454,7 +514,7 @@ function createOrderCardHtml(order) {
           Entrega: ${esc(order.delivery.street)}, ${esc(order.delivery.number)} — ${esc(order.delivery.bairro)} (${(order.delivery.km || 0).toFixed(1)} km)
         </div>
       ` : `
-        <div style="font-size:12px;color:var(--y)">Retirada no Balcão da Loja</div>
+        <div style="font-size:12px;color:var(--y);font-weight:700">📍 Retirada no Balcão da Loja</div>
       `}
 
       <!-- Resumo dos Itens e Acompanhamentos -->
@@ -481,16 +541,20 @@ function createOrderCardHtml(order) {
           Imprimir Balcão
         </button>
         ${nextAction}
-        ${(order.status !== 'delivered' && order.status !== 'cancelled') ? `
-          <button class="btn-sm" style="background:#10b981;color:#fff;font-weight:700;font-size:11px;padding:4px 8px" onclick="confirmOrderDeliveryAndPayment('${order.id}')" title="Confirmar que o cliente recebeu e o pagamento foi concluído">
-            ✓ Entregue & Recebido
-          </button>
-        ` : ''}
-        ${isDelivery ? `
-          <button class="btn-sm btn-secondary" style="font-size:10px;padding:4px 6px" onclick="copyMotoboyLink('${order.id}')" title="Copiar link para o celular do entregador">
-            📱 Link Motoboy
-          </button>
-        ` : ''}
+        ${(order.status !== 'delivered' && order.status !== 'cancelled') ? (
+          isDelivery ? `
+            <button class="btn-sm" style="background:#10b981;color:#fff;font-weight:700;font-size:11px;padding:4px 8px" onclick="confirmOrderDeliveryAndPayment('${order.id}')" title="Confirmar que o cliente recebeu e o pagamento foi concluído">
+              ✓ Entregue & Recebido
+            </button>
+            <button class="btn-sm btn-secondary" style="font-size:10px;padding:4px 6px" onclick="copyMotoboyLink('${order.id}')" title="Copiar link para o celular do entregador">
+              📱 Link Motoboy
+            </button>
+          ` : `
+            <button class="btn-sm" style="background:#10b981;color:#fff;font-weight:700;font-size:11px;padding:4px 8px" onclick="confirmPickupOrder('${order.id}')" title="Marcar como Pago e Retirado pelo Cliente no Balcão">
+              ✓ Entregar no Balcão & Confirmar Pagamento
+            </button>
+          `
+        ) : ''}
         ${order.status !== 'cancelled' ? `
           <button class="btn-sm btn-danger" style="margin-left:auto;font-size:11px;padding:4px 8px" onclick="openCancelOrderModal('${order.id}', '${order.orderNo}')" title="Cancelar este pedido">
             Cancelar
@@ -583,40 +647,119 @@ window.simulateBankApproval = async function(orderId) {
 };
 window.confirmPayment = window.simulateBankApproval;
 
-window.confirmOrderDeliveryAndPayment = async function(orderId) {
-  if (!confirm('Deseja confirmar que o pedido foi entregue e o pagamento recebido?')) return;
-  try {
-    const res = await fetch(`${API_URL}/orders/${orderId}/confirm-delivery`, {
-      method: 'POST',
-      headers: authHeaders()
-    });
-    const data = await res.json();
-    if (data.ok) {
-      const idx = ORDERS.findIndex(o => o.id === orderId);
-      if (idx !== -1) ORDERS[idx] = data.order;
-      renderKanban();
-      updateOrdersBadge();
-      const periodSelect = $('#report-period-select');
-      loadSalesReport({ period: periodSelect ? periodSelect.value : 'today' });
-      adminToast(`Pedido #${data.order.orderNo} finalizado e pagamento confirmado!`, 'success');
-    } else {
-      adminToast(data.error || 'Erro ao confirmar entrega.', 'danger');
-    }
-  } catch (err) {
-    adminToast('Erro de conexão ao confirmar entrega.', 'danger');
+// ==================== MODAL UNIVERSAL DE CONFIRMAÇÃO ====================
+let CONFIRM_MODAL_CALLBACK = null;
+window.showConfirmModal = function({ icon = '⚠️', title = 'Confirmar Ação', message = '', btnText = 'Confirmar', btnClass = 'btn-next', onConfirm }) {
+  if ($('#confirm-modal-icon')) $('#confirm-modal-icon').textContent = icon;
+  if ($('#confirm-modal-title')) $('#confirm-modal-title').textContent = title;
+  if ($('#confirm-modal-message')) $('#confirm-modal-message').innerHTML = message;
+  const okBtn = $('#confirm-modal-btn-ok');
+  if (okBtn) {
+    okBtn.textContent = btnText;
+    okBtn.className = `btn-sm ${btnClass}`;
+    okBtn.onclick = () => {
+      closeConfirmModal();
+      if (typeof CONFIRM_MODAL_CALLBACK === 'function') CONFIRM_MODAL_CALLBACK();
+    };
   }
+  CONFIRM_MODAL_CALLBACK = onConfirm;
+  const m = $('#confirm-action-modal');
+  if (m) m.style.display = 'flex';
+};
+
+window.closeConfirmModal = function() {
+  const m = $('#confirm-action-modal');
+  if (m) m.style.display = 'none';
+  CONFIRM_MODAL_CALLBACK = null;
+};
+
+window.confirmOrderDeliveryAndPayment = function(orderId) {
+  const ord = ORDERS.find(o => o.id === orderId);
+  const orderNo = ord ? ord.orderNo : '';
+  const customerName = ord ? ord.customer?.name : '';
+
+  showConfirmModal({
+    icon: '🛵',
+    title: `Confirmar Entrega #${orderNo}`,
+    message: `Confirmar que o pedido de <b>${esc(customerName)}</b> foi entregue pelo motoboy e o pagamento foi devidamente recebido?`,
+    btnText: '✓ Sim, Finalizar Pedido',
+    btnClass: 'btn-next',
+    onConfirm: async () => {
+      try {
+        const res = await fetch(`${API_URL}/orders/${orderId}/confirm-delivery`, {
+          method: 'POST',
+          headers: authHeaders()
+        });
+        const data = await res.json();
+        if (data.ok) {
+          const idx = ORDERS.findIndex(o => o.id === orderId);
+          if (idx !== -1) ORDERS[idx] = data.order;
+          renderKanban();
+          updateOrdersBadge();
+          const periodSelect = $('#report-period-select');
+          loadSalesReport({ period: periodSelect ? periodSelect.value : 'today' });
+          adminToast(`Pedido #${data.order.orderNo} finalizado e pagamento confirmado!`, 'success');
+        } else {
+          adminToast(data.error || 'Erro ao confirmar entrega.', 'danger');
+        }
+      } catch (err) {
+        adminToast('Erro de conexão ao confirmar entrega.', 'danger');
+      }
+    }
+  });
+};
+
+window.confirmPickupOrder = function(orderId) {
+  const ord = ORDERS.find(o => o.id === orderId);
+  const orderNo = ord ? ord.orderNo : '';
+  const customerName = ord ? ord.customer?.name : '';
+
+  showConfirmModal({
+    icon: '🛍️',
+    title: `Concluir Retirada #${orderNo}`,
+    message: `Confirmar que o cliente <b>${esc(customerName)}</b> retirou o pedido e o pagamento foi recebido no balcão da loja?`,
+    btnText: '✓ Confirmar Retirada & Pagamento',
+    btnClass: 'btn-next',
+    onConfirm: async () => {
+      try {
+        const res = await fetch(`${API_URL}/orders/${orderId}/confirm-delivery`, {
+          method: 'POST',
+          headers: authHeaders()
+        });
+        const data = await res.json();
+        if (data.ok) {
+          const idx = ORDERS.findIndex(o => o.id === orderId);
+          if (idx !== -1) ORDERS[idx] = data.order;
+          renderKanban();
+          updateOrdersBadge();
+          const periodSelect = $('#report-period-select');
+          loadSalesReport({ period: periodSelect ? periodSelect.value : 'today' });
+          adminToast(`Pedido #${data.order.orderNo} retirado e pagamento concluído com sucesso!`, 'success');
+        } else {
+          adminToast(data.error || 'Erro ao concluir retirada.', 'danger');
+        }
+      } catch (err) {
+        adminToast('Erro de conexão ao concluir retirada.', 'danger');
+      }
+    }
+  });
 };
 
 window.copyMotoboyLink = function(orderId) {
-  const link = `${location.origin}/motoboy.html?orderId=${orderId}`;
+  const ord = ORDERS.find(o => o.id === orderId);
+  const orderNo = ord ? ord.orderNo : '';
+  const customerName = ord ? ord.customer?.name : '';
+  const link = `${location.origin}/motoboy.html?orderId=${orderId}&orderNo=${encodeURIComponent(orderNo)}&cliente=${encodeURIComponent(customerName)}`;
+  const textToCopy = `🛵 *ENTREGA EXPLOSÃO AÇAÍ*\n📦 *Pedido:* #${orderNo}\n👤 *Cliente:* ${customerName}\n🔗 *Link da Entrega & Rota:* ${link}`;
+
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(link).then(() => {
-      adminToast('Link do entregador copiado com sucesso!', 'success');
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      adminToast(`Link da entrega #${orderNo} (${customerName}) copiado com sucesso!`, 'success');
     }).catch(() => {
-      prompt('Copie o link do entregador abaixo:', link);
+      prompt(`Link da entrega #${orderNo}:`, textToCopy);
     });
   } else {
-    prompt('Copie o link do entregador abaixo:', link);
+    prompt(`Link da entrega #${orderNo}:`, textToCopy);
   }
 };
 
@@ -644,7 +787,13 @@ function executeBrowserPrint(text) {
   document.body.classList.remove('printing-recipe');
   const printArea = $('#thermal-print-area');
   if (printArea) {
-    printArea.textContent = text;
+    printArea.innerHTML = `
+      <div style="text-align:center;margin-bottom:8px">
+        <img src="imagens/Logo.png" alt="Logo" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:1.5px solid #000;display:block;margin:0 auto 4px auto" onerror="this.style.display='none'">
+        <div style="font-weight:900;font-size:15px;letter-spacing:0.5px">EXPLOSÃO AÇAÍ - DELIVERY</div>
+      </div>
+      <pre style="font-family:monospace;white-space:pre-wrap;margin:0;font-size:12px;line-height:1.35">${esc(text)}</pre>
+    `;
     setTimeout(() => {
       window.print();
     }, 150);
@@ -988,11 +1137,35 @@ async function loadProducts() {
   } catch (e) {}
 }
 
+let PRODUCTS_PAGE = 1;
+let PRODUCTS_PER_PAGE = 10;
+
+window.setProductsPage = function(page) {
+  PRODUCTS_PAGE = page;
+  renderProductsTable();
+};
+
+window.setProductsPerPage = function(perPage) {
+  PRODUCTS_PER_PAGE = parseInt(perPage, 10);
+  PRODUCTS_PAGE = 1;
+  renderProductsTable();
+};
+
 function renderProductsTable() {
   const tbody = $('#products-table-body');
+  const paginationBox = $('#products-pagination');
   if (!tbody) return;
 
-  tbody.innerHTML = PRODUCTS.map(p => {
+  const total = PRODUCTS.length;
+  const perPage = PRODUCTS_PER_PAGE || 10;
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  if (PRODUCTS_PAGE > totalPages) PRODUCTS_PAGE = totalPages;
+  if (PRODUCTS_PAGE < 1) PRODUCTS_PAGE = 1;
+
+  const start = (PRODUCTS_PAGE - 1) * perPage;
+  const pageProducts = PRODUCTS.slice(start, start + perPage);
+
+  tbody.innerHTML = pageProducts.map(p => {
     let flags = [];
     if (p.isNewLaunch) flags.push('<span class="profit-badge" style="background:var(--y);color:#000">Lançamento</span>');
     if (p.isPromo) flags.push('<span class="loss-badge" style="background:var(--danger)">Promoção</span>');
@@ -1029,6 +1202,25 @@ function renderProductsTable() {
       </tr>
     `;
   }).join('');
+
+  if (paginationBox) {
+    paginationBox.innerHTML = `
+      <div style="font-size:13px;color:var(--mut)">
+        Mostrando <b>${total === 0 ? 0 : start + 1} - ${Math.min(start + perPage, total)}</b> de <b>${total}</b> itens cadastrados
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <select onchange="setProductsPerPage(this.value)" style="padding:4px 8px;font-size:12px;border-radius:8px">
+          <option value="10" ${perPage === 10 ? 'selected' : ''}>10 por página</option>
+          <option value="25" ${perPage === 25 ? 'selected' : ''}>25 por página</option>
+          <option value="50" ${perPage === 50 ? 'selected' : ''}>50 por página</option>
+          <option value="999" ${perPage >= 999 ? 'selected' : ''}>Mostrar Todos (87+)</option>
+        </select>
+        <button class="btn-sm btn-secondary" onclick="setProductsPage(${PRODUCTS_PAGE - 1})" ${PRODUCTS_PAGE <= 1 ? 'disabled' : ''}>◀ Anterior</button>
+        <span style="font-size:12px">Pág. <b>${PRODUCTS_PAGE}</b> de <b>${totalPages}</b></span>
+        <button class="btn-sm btn-secondary" onclick="setProductsPage(${PRODUCTS_PAGE + 1})" ${PRODUCTS_PAGE >= totalPages ? 'disabled' : ''}>Próximo ▶</button>
+      </div>
+    `;
+  }
 }
 
 // Modal de Ficha Técnica / Receita com Quantidades por Copo
@@ -1455,23 +1647,34 @@ window.saveProductForm = async function(e) {
   }
 };
 
-window.deleteProduct = async function(id) {
-  if (!confirm('Deseja realmente excluir este produto?')) return;
-  try {
-    const res = await fetch(`${API_URL}/catalog/products/${id}`, {
-      method: 'DELETE',
-      headers: authHeaders()
-    });
-    const data = await res.json();
-    if (data.ok) {
-      await loadProducts();
-      adminToast('Produto excluído com sucesso!', 'info');
-    } else {
-      adminToast(data.error || 'Erro ao excluir.', 'danger');
+window.deleteProduct = function(id) {
+  const prod = PRODUCTS.find(p => p.id === id);
+  const name = prod ? prod.name : 'este produto';
+
+  showConfirmModal({
+    icon: '🗑️',
+    title: 'Excluir Produto',
+    message: `Deseja realmente excluir <b>${esc(name)}</b> do cardápio?`,
+    btnText: 'Excluir Produto',
+    btnClass: 'btn-danger',
+    onConfirm: async () => {
+      try {
+        const res = await fetch(`${API_URL}/catalog/products/${id}`, {
+          method: 'DELETE',
+          headers: authHeaders()
+        });
+        const data = await res.json();
+        if (data.ok) {
+          await loadProducts();
+          adminToast('Produto excluído com sucesso!', 'info');
+        } else {
+          adminToast(data.error || 'Erro ao excluir.', 'danger');
+        }
+      } catch (e) {
+        adminToast('Falha ao excluir produto.', 'danger');
+      }
     }
-  } catch (e) {
-    adminToast('Falha ao excluir produto.', 'danger');
-  }
+  });
 };
 
 // ==================== GESTÃO DE ACOMPANHAMENTOS (CRUD COMPLETO) ====================
@@ -1486,11 +1689,35 @@ async function loadAccompaniments() {
   } catch (e) {}
 }
 
+let ACCOMPANIMENTS_PAGE = 1;
+let ACCOMPANIMENTS_PER_PAGE = 10;
+
+window.setAccompanimentsPage = function(page) {
+  ACCOMPANIMENTS_PAGE = page;
+  renderAccompanimentsTable();
+};
+
+window.setAccompanimentsPerPage = function(perPage) {
+  ACCOMPANIMENTS_PER_PAGE = parseInt(perPage, 10);
+  ACCOMPANIMENTS_PAGE = 1;
+  renderAccompanimentsTable();
+};
+
 function renderAccompanimentsTable() {
   const tbody = $('#accompaniments-table-body');
+  const paginationBox = $('#accompaniments-pagination');
   if (!tbody) return;
 
-  tbody.innerHTML = ACCOMPANIMENTS.map(ac => `
+  const total = ACCOMPANIMENTS.length;
+  const perPage = ACCOMPANIMENTS_PER_PAGE || 10;
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  if (ACCOMPANIMENTS_PAGE > totalPages) ACCOMPANIMENTS_PAGE = totalPages;
+  if (ACCOMPANIMENTS_PAGE < 1) ACCOMPANIMENTS_PAGE = 1;
+
+  const start = (ACCOMPANIMENTS_PAGE - 1) * perPage;
+  const pageItems = ACCOMPANIMENTS.slice(start, start + perPage);
+
+  tbody.innerHTML = pageItems.map(ac => `
     <tr>
       <td><b>${esc(ac.name)}</b></td>
       <td>${R(ac.costPrice || 0.50)}</td>
@@ -1506,6 +1733,25 @@ function renderAccompanimentsTable() {
       </td>
     </tr>
   `).join('');
+
+  if (paginationBox) {
+    paginationBox.innerHTML = `
+      <div style="font-size:13px;color:var(--mut)">
+        Mostrando <b>${total === 0 ? 0 : start + 1} - ${Math.min(start + perPage, total)}</b> de <b>${total}</b> acompanhamentos
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <select onchange="setAccompanimentsPerPage(this.value)" style="padding:4px 8px;font-size:12px;border-radius:8px">
+          <option value="10" ${perPage === 10 ? 'selected' : ''}>10 por página</option>
+          <option value="25" ${perPage === 25 ? 'selected' : ''}>25 por página</option>
+          <option value="50" ${perPage === 50 ? 'selected' : ''}>50 por página</option>
+          <option value="999" ${perPage >= 999 ? 'selected' : ''}>Mostrar Todos</option>
+        </select>
+        <button class="btn-sm btn-secondary" onclick="setAccompanimentsPage(${ACCOMPANIMENTS_PAGE - 1})" ${ACCOMPANIMENTS_PAGE <= 1 ? 'disabled' : ''}>◀ Anterior</button>
+        <span style="font-size:12px">Pág. <b>${ACCOMPANIMENTS_PAGE}</b> de <b>${totalPages}</b></span>
+        <button class="btn-sm btn-secondary" onclick="setAccompanimentsPage(${ACCOMPANIMENTS_PAGE + 1})" ${ACCOMPANIMENTS_PAGE >= totalPages ? 'disabled' : ''}>Próximo ▶</button>
+      </div>
+    `;
+  }
 }
 
 window.openNewAccompanimentModal = function() {
@@ -1583,21 +1829,34 @@ window.toggleAccompanimentActive = async function(id) {
   } catch (e) {}
 };
 
-window.deleteAccompaniment = async function(id) {
-  if (!confirm('Deseja realmente excluir este acompanhamento?')) return;
-  try {
-    const res = await fetch(`${API_URL}/catalog/accompaniments/${id}`, {
-      method: 'DELETE',
-      headers: authHeaders()
-    });
-    const data = await res.json();
-    if (data.ok) {
-      await loadAccompaniments();
-      adminToast('Acompanhamento excluído!', 'info');
+window.deleteAccompaniment = function(id) {
+  const ac = ACCOMPANIMENTS.find(a => a.id === id);
+  const name = ac ? ac.name : 'este acompanhamento';
+
+  showConfirmModal({
+    icon: '🗑️',
+    title: 'Excluir Acompanhamento',
+    message: `Deseja realmente excluir <b>${esc(name)}</b>?`,
+    btnText: 'Excluir',
+    btnClass: 'btn-danger',
+    onConfirm: async () => {
+      try {
+        const res = await fetch(`${API_URL}/catalog/accompaniments/${id}`, {
+          method: 'DELETE',
+          headers: authHeaders()
+        });
+        const data = await res.json();
+        if (data.ok) {
+          await loadAccompaniments();
+          adminToast('Acompanhamento excluído!', 'info');
+        } else {
+          adminToast(data.error || 'Erro ao excluir.', 'danger');
+        }
+      } catch (e) {
+        adminToast('Falha ao excluir acompanhamento.', 'danger');
+      }
     }
-  } catch (e) {
-    adminToast('Falha ao excluir acompanhamento.', 'danger');
-  }
+  });
 };
 
 // ==================== GESTÃO DE CATEGORIAS (MODAL REAL SEM ALERT) ====================
@@ -1696,23 +1955,34 @@ window.saveCategoryForm = async function(e) {
   }
 };
 
-window.deleteCategory = async function(id) {
-  if (!confirm('Deseja realmente excluir esta categoria?')) return;
-  try {
-    const res = await fetch(`${API_URL}/catalog/categories/${id}`, {
-      method: 'DELETE',
-      headers: authHeaders()
-    });
-    const data = await res.json();
-    if (data.ok) {
-      await loadCategories();
-      adminToast('Categoria excluída com sucesso!', 'info');
-    } else {
-      adminToast(data.error || 'Erro ao excluir categoria.', 'danger');
+window.deleteCategory = function(id) {
+  const cat = CATEGORIES.find(c => c.id === id);
+  const name = cat ? cat.name : 'esta categoria';
+
+  showConfirmModal({
+    icon: '🗑️',
+    title: 'Excluir Categoria',
+    message: `Deseja realmente excluir a categoria <b>${esc(name)}</b>?`,
+    btnText: 'Excluir Categoria',
+    btnClass: 'btn-danger',
+    onConfirm: async () => {
+      try {
+        const res = await fetch(`${API_URL}/catalog/categories/${id}`, {
+          method: 'DELETE',
+          headers: authHeaders()
+        });
+        const data = await res.json();
+        if (data.ok) {
+          await loadCategories();
+          adminToast('Categoria excluída com sucesso!', 'info');
+        } else {
+          adminToast(data.error || 'Erro ao excluir categoria.', 'danger');
+        }
+      } catch (e) {
+        adminToast('Erro ao excluir categoria.', 'danger');
+      }
     }
-  } catch (e) {
-    adminToast('Erro ao excluir categoria.', 'danger');
-  }
+  });
 };
 
 // ==================== GESTÃO DE ADICIONAIS & EXTRAS ====================
@@ -1727,11 +1997,35 @@ async function loadExtras() {
   } catch (e) {}
 }
 
+let EXTRAS_PAGE = 1;
+let EXTRAS_PER_PAGE = 10;
+
+window.setExtrasPage = function(page) {
+  EXTRAS_PAGE = page;
+  renderExtrasTable();
+};
+
+window.setExtrasPerPage = function(perPage) {
+  EXTRAS_PER_PAGE = parseInt(perPage, 10);
+  EXTRAS_PAGE = 1;
+  renderExtrasTable();
+};
+
 function renderExtrasTable() {
   const tbody = $('#extras-table-body');
+  const paginationBox = $('#extras-pagination');
   if (!tbody) return;
 
-  tbody.innerHTML = EXTRAS.map(e => `
+  const total = EXTRAS.length;
+  const perPage = EXTRAS_PER_PAGE || 10;
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  if (EXTRAS_PAGE > totalPages) EXTRAS_PAGE = totalPages;
+  if (EXTRAS_PAGE < 1) EXTRAS_PAGE = 1;
+
+  const start = (EXTRAS_PAGE - 1) * perPage;
+  const pageItems = EXTRAS.slice(start, start + perPage);
+
+  tbody.innerHTML = pageItems.map(e => `
     <tr>
       <td><b>${esc(e.name)}</b></td>
       <td>${R(e.price)}</td>
@@ -1747,6 +2041,25 @@ function renderExtrasTable() {
       </td>
     </tr>
   `).join('');
+
+  if (paginationBox) {
+    paginationBox.innerHTML = `
+      <div style="font-size:13px;color:var(--mut)">
+        Mostrando <b>${total === 0 ? 0 : start + 1} - ${Math.min(start + perPage, total)}</b> de <b>${total}</b> adicionais
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <select onchange="setExtrasPerPage(this.value)" style="padding:4px 8px;font-size:12px;border-radius:8px">
+          <option value="10" ${perPage === 10 ? 'selected' : ''}>10 por página</option>
+          <option value="25" ${perPage === 25 ? 'selected' : ''}>25 por página</option>
+          <option value="50" ${perPage === 50 ? 'selected' : ''}>50 por página</option>
+          <option value="999" ${perPage >= 999 ? 'selected' : ''}>Mostrar Todos</option>
+        </select>
+        <button class="btn-sm btn-secondary" onclick="setExtrasPage(${EXTRAS_PAGE - 1})" ${EXTRAS_PAGE <= 1 ? 'disabled' : ''}>◀ Anterior</button>
+        <span style="font-size:12px">Pág. <b>${EXTRAS_PAGE}</b> de <b>${totalPages}</b></span>
+        <button class="btn-sm btn-secondary" onclick="setExtrasPage(${EXTRAS_PAGE + 1})" ${EXTRAS_PAGE >= totalPages ? 'disabled' : ''}>Próximo ▶</button>
+      </div>
+    `;
+  }
 }
 
 window.openNewExtraModal = function() {
@@ -1828,15 +2141,26 @@ window.saveExtraForm = async function(e) {
 
 window.createExtraPrompt = window.openNewExtraModal;
 
-window.deleteExtra = async function(id) {
-  if (!confirm('Deseja excluir este adicional?')) return;
-  try {
-    await fetch(`${API_URL}/catalog/extras/${id}`, { method: 'DELETE', headers: authHeaders() });
-    await loadExtras();
-    adminToast('Adicional excluído.', 'info');
-  } catch (e) {
-    adminToast('Erro ao excluir adicional.', 'danger');
-  }
+window.deleteExtra = function(id) {
+  const ex = EXTRAS.find(e => e.id === id);
+  const name = ex ? ex.name : 'este adicional';
+
+  showConfirmModal({
+    icon: '🗑️',
+    title: 'Excluir Adicional',
+    message: `Deseja realmente excluir o adicional <b>${esc(name)}</b>?`,
+    btnText: 'Excluir Adicional',
+    btnClass: 'btn-danger',
+    onConfirm: async () => {
+      try {
+        await fetch(`${API_URL}/catalog/extras/${id}`, { method: 'DELETE', headers: authHeaders() });
+        await loadExtras();
+        adminToast('Adicional excluído.', 'info');
+      } catch (e) {
+        adminToast('Erro ao excluir adicional.', 'danger');
+      }
+    }
+  });
 };
 
 // ==================== GESTÃO DE CUPONS & ENVIO ====================
@@ -1922,15 +2246,26 @@ window.saveCouponForm = async function(e) {
 
 window.createCoupon = window.openNewCouponModal;
 
-window.deleteCoupon = async function(id) {
-  if (!confirm('Deseja excluir este cupom?')) return;
-  try {
-    await fetch(`${API_URL}/coupons/${id}`, { method: 'DELETE', headers: authHeaders() });
-    await loadCoupons();
-    adminToast('Cupom excluído.', 'info');
-  } catch (e) {
-    adminToast('Erro ao excluir cupom.', 'danger');
-  }
+window.deleteCoupon = function(id) {
+  const cp = COUPONS.find(c => c.id === id);
+  const code = cp ? cp.code : 'este cupom';
+
+  showConfirmModal({
+    icon: '🎟️',
+    title: 'Excluir Cupom',
+    message: `Deseja realmente excluir o cupom <b>${esc(code)}</b>?`,
+    btnText: 'Excluir Cupom',
+    btnClass: 'btn-danger',
+    onConfirm: async () => {
+      try {
+        await fetch(`${API_URL}/coupons/${id}`, { method: 'DELETE', headers: authHeaders() });
+        await loadCoupons();
+        adminToast('Cupom excluído.', 'info');
+      } catch (e) {
+        adminToast('Erro ao excluir cupom.', 'danger');
+      }
+    }
+  });
 };
 
 // ==================== GESTÃO DE IMPRESSORAS ====================
@@ -2134,25 +2469,34 @@ window.editCurrentCustomerName = async function() {
   }
 };
 
-window.closeCurrentChat = async function() {
+window.closeCurrentChat = function() {
   if (!ACTIVE_CHAT_PHONE) return;
-  if (!confirm('Deseja realmente encerrar este atendimento? O cliente receberá a mensagem de finalização.')) return;
+  const name = $('#active-chat-name')?.textContent || 'Cliente';
 
-  try {
-    const res = await fetch(`${API_URL}/chat/close`, {
-      method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify({ customerPhone: ACTIVE_CHAT_PHONE })
-    });
-    const d = await res.json();
-    if (d.ok) {
-      adminToast('Atendimento finalizado com sucesso!', 'info');
-      loadChatMessages(ACTIVE_CHAT_PHONE);
-      loadChatConversations();
+  showConfirmModal({
+    icon: '🏁',
+    title: 'Finalizar Atendimento',
+    message: `Deseja realmente encerrar a conversa com <b>${esc(name)}</b>? Uma mensagem de agradecimento será enviada ao cliente.`,
+    btnText: 'Finalizar Chat',
+    btnClass: 'btn-danger',
+    onConfirm: async () => {
+      try {
+        const res = await fetch(`${API_URL}/chat/close`, {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ customerPhone: ACTIVE_CHAT_PHONE })
+        });
+        const d = await res.json();
+        if (d.ok) {
+          adminToast('Atendimento finalizado com sucesso!', 'info');
+          loadChatMessages(ACTIVE_CHAT_PHONE);
+          loadChatConversations();
+        }
+      } catch (e) {
+        adminToast('Erro ao finalizar atendimento.', 'danger');
+      }
     }
-  } catch(e) {
-    adminToast('Erro ao finalizar atendimento.', 'danger');
-  }
+  });
 };
 
 // ==================== MODAL DE ALTERAÇÃO DE SENHA DO ADMIN ====================

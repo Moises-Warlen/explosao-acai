@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Painel do Entregador · Explosão Açaí</title>
+  <title>Portal do Entregador · Explosão Açaí</title>
   <link rel="icon" type="image/png" href="imagens/Logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -157,9 +157,67 @@
       cursor: pointer;
     }
     .order-list-item:hover { border-color: var(--y); }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+    .modal-box {
+      background: var(--panel);
+      border: 1.5px solid var(--ln);
+      border-radius: 20px;
+      padding: 24px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .toast-msg {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ef4444;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 99px;
+      font-size: 13px;
+      font-weight: 700;
+      z-index: 2000;
+      display: none;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+    }
   </style>
 </head>
 <body>
+  <div id="motoboy-toast" class="toast-msg"></div>
+
+  <!-- Modal de Confirmação de Entrega (Sem alertas nativos) -->
+  <div id="motoboy-modal" class="modal-overlay">
+    <div class="modal-box">
+      <div style="font-size:44px;margin-bottom:8px">🛵💨</div>
+      <h3 id="modal-order-title" style="color:var(--y);font-size:18px;margin-bottom:6px">Confirmar Entrega?</h3>
+      <p id="modal-order-desc" style="color:var(--tx);opacity:0.9;font-size:14px;line-height:1.45;margin-bottom:18px">
+        Deseja confirmar que o pedido foi entregue ao cliente e o pagamento foi recebido?
+      </p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button id="btn-modal-confirm-yes" class="btn btn-confirm" onclick="executeConfirmDelivery()">
+          ✓ Sim, Confirmar Entrega
+        </button>
+        <button class="btn" style="background:rgba(255,255,255,0.1);color:#fff" onclick="closeMotoboyModal()">
+          Voltar / Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="container">
     <div class="header">
       <img src="imagens/Logo.png" alt="Logo" onerror="this.style.display='none'">
@@ -226,7 +284,7 @@
 
       <!-- Botão Gigante de Finalização -->
       <div id="action-container">
-        <button id="btn-confirm-delivery" class="btn btn-confirm" onclick="confirmDeliveryAction()">
+        <button id="btn-confirm-delivery" class="btn btn-confirm" onclick="openMotoboyConfirmModal()">
           ✓ Confirmar Entrega e Recebimento
         </button>
       </div>
@@ -248,7 +306,45 @@
     const params = new URLSearchParams(window.location.search);
     const orderId = params.get('orderId') || params.get('id');
 
+    // Pré-preenchimento instantâneo pelo link com nome e pedido
+    const initOrderNo = params.get('orderNo');
+    const initCliente = params.get('cliente');
+    if (initOrderNo) {
+      document.title = `Entrega #${initOrderNo.replace('#', '')} · Explosão Açaí`;
+      const noEl = document.getElementById('order-no');
+      if (noEl) noEl.textContent = '#' + initOrderNo.replace('#', '');
+    }
+    if (initCliente) {
+      const custEl = document.getElementById('customer-name');
+      if (custEl) custEl.textContent = initCliente;
+    }
+
     const R = (n) => 'R$ ' + Number(n || 0).toFixed(2).replace('.', ',');
+
+    function showMotoboyToast(msg, isSuccess = false) {
+      const t = document.getElementById('motoboy-toast');
+      if (!t) return;
+      t.textContent = msg;
+      t.style.background = isSuccess ? '#10b981' : '#ef4444';
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 4000);
+    }
+
+    function openMotoboyConfirmModal() {
+      const orderNo = document.getElementById('order-no')?.textContent || '';
+      const custName = document.getElementById('customer-name')?.textContent || '';
+      const total = document.getElementById('order-total')?.textContent || '';
+
+      document.getElementById('modal-order-title').textContent = `Confirmar Entrega ${orderNo}`;
+      document.getElementById('modal-order-desc').innerHTML = `
+        Confirmar que o pedido de <b>${custName}</b> foi entregue e o valor de <b>${total}</b> foi devidamente recebido?
+      `;
+      document.getElementById('motoboy-modal').style.display = 'flex';
+    }
+
+    function closeMotoboyModal() {
+      document.getElementById('motoboy-modal').style.display = 'none';
+    }
 
     window.addEventListener('DOMContentLoaded', async () => {
       if (orderId) {
@@ -281,9 +377,10 @@
       document.getElementById('order-no').textContent = '#' + order.orderNo;
       document.getElementById('customer-name').textContent = order.customer.name;
       document.getElementById('customer-phone').textContent = order.customer.phone;
+      document.title = `Entrega #${order.orderNo} (${order.customer.name}) · Explosão Açaí`;
 
       // WhatsApp
-      const cleanPhone = (order.customer.phone || '').replace(/\\D/g, '');
+      const cleanPhone = (order.customer.phone || '').replace(/\D/g, '');
       const wppLink = `https://wa.me/55${cleanPhone}?text=Ol%C3%A1%20${encodeURIComponent(order.customer.name)}!%20Sou%20o%20entregador%20da%20Explos%C3%A3o%20A%C3%A7a%C3%AD%20com%20o%20seu%20pedido%20%23${order.orderNo}.`;
       document.getElementById('btn-wpp').href = wppLink;
 
@@ -367,9 +464,8 @@
       }
     }
 
-    async function confirmDeliveryAction() {
-      if (!confirm('Deseja confirmar a entrega e o recebimento deste pedido agora?')) return;
-
+    async function executeConfirmDelivery() {
+      closeMotoboyModal();
       const btn = document.getElementById('btn-confirm-delivery');
       btn.disabled = true;
       btn.textContent = 'Salvando no sistema...';
@@ -384,12 +480,12 @@
           document.getElementById('order-details-box').style.display = 'none';
           document.getElementById('success-screen').style.display = 'block';
         } else {
-          alert(data.error || 'Erro ao confirmar entrega.');
+          showMotoboyToast(data.error || 'Erro ao confirmar entrega.');
           btn.disabled = false;
           btn.textContent = '✓ Confirmar Entrega e Recebimento';
         }
       } catch (e) {
-        alert('Falha de conexão ao confirmar entrega.');
+        showMotoboyToast('Falha de conexão ao confirmar entrega.');
         btn.disabled = false;
         btn.textContent = '✓ Confirmar Entrega e Recebimento';
       }
@@ -411,7 +507,7 @@
           }
 
           list.innerHTML = openOrders.map(o => `
-            <div class="order-list-item" onclick="location.href='motoboy.html?orderId=${o.id}'">
+            <div class="order-list-item" onclick="location.href='motoboy.html?orderId=${o.id}&orderNo=${encodeURIComponent(o.orderNo)}&cliente=${encodeURIComponent(o.customer.name)}'">
               <div style="display:flex;justify-content:space-between;align-items:center">
                 <b style="font-size:16px;color:var(--y)">#${o.orderNo}</b>
                 <span class="badge ${o.payment?.method === 'Dinheiro' ? 'pay-cash' : 'pay-card'}">${o.payment?.method}</span>

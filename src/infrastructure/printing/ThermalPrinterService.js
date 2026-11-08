@@ -53,7 +53,8 @@ export class ThermalPrinterService {
 
     // CABEÇALHO
     lines.push(divider);
-    lines.push(center(store.storeName.toUpperCase()));
+    lines.push(center('EXPLOSÃO AÇAÍ - DELIVERY'));
+    lines.push(center('Especialidades, Copos & Combos'));
     if (isKitchen) {
       lines.push(center('*** VIA DE PRODUÇÃO / COZINHA ***'));
     } else {
@@ -168,7 +169,8 @@ export class ThermalPrinterService {
     }
 
     lines.push(divider);
-    lines.push(center('Explosão Açaí · Franca/SP'));
+    lines.push(center('Explosão Açaí · Delivery Oficial'));
+    lines.push(center('Franca/SP · WhatsApp: (16) 99109-8863'));
     lines.push(center('Agradecemos a sua preferência!'));
     lines.push('\n\n\n');
 

@@ -644,6 +644,18 @@ input:focus, select:focus, textarea:focus {
   padding: 14px;
   overflow-y: auto;
 }
+#chat-conversations-list {
+  max-height: 560px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+#chat-conversations-list::-webkit-scrollbar {
+  width: 5px;
+}
+#chat-conversations-list::-webkit-scrollbar-thumb {
+  background: var(--p2);
+  border-radius: 4px;
+}
 .admin-chat-window {
   display: flex;
   flex-direction: column;
@@ -850,25 +862,33 @@ input:focus, select:focus, textarea:focus {
   }
 
   /* Se for impressão térmica */
-  body:not(.printing-report) * {
+  body:not(.printing-report):not(.printing-recipe) * {
     visibility: hidden;
   }
-  body:not(.printing-report) #thermal-print-area, body:not(.printing-report) #thermal-print-area * {
-    visibility: visible;
+  body:not(.printing-report):not(.printing-recipe) #thermal-print-area,
+  body:not(.printing-report):not(.printing-recipe) #thermal-print-area * {
+    visibility: visible !important;
   }
-  body:not(.printing-report) #thermal-print-area {
+  body:not(.printing-report):not(.printing-recipe) #thermal-print-area {
     display: block !important;
     position: absolute;
     left: 0;
     top: 0;
     width: 80mm;
     margin: 0;
-    padding: 0;
+    padding: 4mm 2mm;
     font-family: monospace;
     font-size: 12px;
     line-height: 1.35;
     color: #000;
     background: #fff;
-    white-space: pre-wrap;
+  }
+  body:not(.printing-report):not(.printing-recipe) #thermal-print-area img {
+    display: block !important;
+    margin: 0 auto 6px auto;
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 50%;
   }
 }
