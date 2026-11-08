@@ -13,6 +13,12 @@
 
 ---
 
+### 🌐 Manual de Hospedagem & Implantação 100% Gratuita
+Para colocar o sistema no ar na internet com banco de dados real **PostgreSQL em nuvem (Neon)** e hospedagem gratuita no **Render.com** com link seguro (`https://`), consulte o guia completo com passo a passo para leigos:
+👉 **[GUIA_PUBLICACAO_PRODUCAO_GRATIS.md](./GUIA_PUBLICACAO_PRODUCAO_GRATIS.md)**
+
+---
+
 ## 🏛️ Arquitetura em Camadas (Clean Architecture)
 
 ```mermaid
