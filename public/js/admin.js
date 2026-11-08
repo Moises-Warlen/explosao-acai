@@ -1659,11 +1659,6 @@ window.deleteCoupon = async function(id) {
     adminToast('Erro ao excluir cupom.', 'danger');
   }
 };
-  try {
-    await fetch(`${API_URL}/coupons/${id}`, { method: 'DELETE', headers: authHeaders() });
-    await loadCoupons();
-  } catch (e) {}
-};
 
 // ==================== GESTÃO DE IMPRESSORAS ====================
 async function loadPrinters() {

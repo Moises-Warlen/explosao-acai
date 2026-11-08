@@ -782,27 +782,12 @@ function renderCheckoutModal() {
     </div>
   `;
 
-  // Opções de Pagamento Online vs Pagamento na Entrega
-  const isCard = CHECKOUT_DATA.pay === 'Cartão de crédito' || CHECKOUT_DATA.pay === 'Cartão de débito';
-  if (isCard) {
-    h += `
-      <div class="sub-payment-choice">
-        <div class="sub-payment-title">Onde você deseja pagar?</div>
-        <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer">
-          <input type="radio" name="timing_choice" value="delivery" ${CHECKOUT_DATA.timing === 'delivery' ? 'checked' : ''} onchange="setPaymentTiming('delivery')">
-          <span><b>Pagar na Entrega</b> (o entregador leva a maquininha de cartão)</span>
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-          <input type="radio" name="timing_choice" value="online" ${CHECKOUT_DATA.timing === 'online' ? 'checked' : ''} onchange="setPaymentTiming('online')">
-          <span><b>Pagar Online Agora</b> com Cartão (Mercado Pago)</span>
-        </label>
-      </div>
-    `;
-  } else if (CHECKOUT_DATA.pay === 'Pix') {
+  // Detalhes conforme a forma de pagamento selecionada
+  if (CHECKOUT_DATA.pay === 'Pix') {
     h += `
       <div class="sub-payment-choice">
         <div class="sub-payment-title">Pagamento via Pix:</div>
-        <div style="font-size:13px;color:var(--mut)">Será gerado um QR Code oficial do Mercado Pago e código Copia e Cola. O pedido é liberado para impressão imediatamente após a confirmação do banco.</div>
+        <div style="font-size:13px;color:var(--mut)">Será gerado o QR Code e código Copia e Cola. O pedido é liberado imediatamente após a confirmação bancária.</div>
       </div>
     `;
   } else if (CHECKOUT_DATA.pay === 'Dinheiro') {
@@ -836,13 +821,10 @@ window.setDeliveryType = function(type) {
 
 window.setPaymentMethod = function(method) {
   CHECKOUT_DATA.pay = method;
-  if (method === 'Dinheiro') {
+  if (method === 'Dinheiro' || method.includes('Cartão')) {
     CHECKOUT_DATA.timing = 'delivery';
   } else if (method === 'Pix') {
     CHECKOUT_DATA.timing = 'online';
-  } else {
-    // Por padrão nos cartões, oferece na entrega com a maquininha
-    if (!CHECKOUT_DATA.timing) CHECKOUT_DATA.timing = 'delivery';
   }
   renderCheckoutModal();
 };
@@ -935,7 +917,7 @@ window.submitOrder = async function() {
     })),
     payment: {
       method: CHECKOUT_DATA.pay,
-      timing: CHECKOUT_DATA.timing || (CHECKOUT_DATA.pay === 'Dinheiro' ? 'delivery' : 'online'),
+      timing: (CHECKOUT_DATA.pay === 'Dinheiro' || CHECKOUT_DATA.pay.includes('Cartão')) ? 'delivery' : 'online',
       changeFor: CHECKOUT_DATA.pay === 'Dinheiro' ? CHECKOUT_DATA.troco : null
     },
     couponCode: APPLIED_COUPON ? APPLIED_COUPON.code : null
