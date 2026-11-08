@@ -374,7 +374,8 @@ const INITIAL_DATA = {
     { id: "acomp_12", name: "Ovomaltine", costPrice: 0.60, active: true, allowedProductIds: [] },
     { id: "acomp_13", name: "Paçoca", costPrice: 0.30, active: true, allowedProductIds: [] },
     { id: "acomp_14", name: "Sucrilhos", costPrice: 0.30, active: true, allowedProductIds: [] },
-    { id: "acomp_15", name: "Gotas de chocolate", costPrice: 0.50, active: true, allowedProductIds: [] }
+    { id: "acomp_15", name: "Gotas de chocolate", costPrice: 0.50, active: true, allowedProductIds: [] },
+    { id: "acomp_16", name: "Mel", costPrice: 0.50, active: true, allowedProductIds: [] }
   ],
 
   // FRUTAS SELECIONÁVEIS

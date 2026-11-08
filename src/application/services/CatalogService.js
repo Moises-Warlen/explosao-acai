@@ -218,11 +218,63 @@ export class CatalogService {
 
     const hasAnyLoss = prices.some(pr => pr.isLoss);
 
+    // Garante que todo produto possua a ficha técnica / receita estruturada por tamanho
+    const recipes = (product.prices || []).map(pr => {
+      const existing = (product.recipes || []).find(r => r.size === pr.size);
+      if (existing && Array.isArray(existing.ingredients) && existing.ingredients.length > 0) {
+        return existing;
+      }
+      return {
+        size: pr.size,
+        ingredients: this.generateDefaultRecipeIngredients(product, pr.size, pr.costPrice || 8.0)
+      };
+    });
+
     return {
       ...product,
       prices,
+      recipes,
       hasAnyLoss
     };
+  }
+
+  /**
+   * Gera a lista detalhada de insumos com quantidades para a Ficha Técnica / Receita
+   */
+  generateDefaultRecipeIngredients(product, size, costPrice = 8.0) {
+    const isCombo = product.categorySlug === 'combos' || product.category === 'combos';
+    const isPolpa = product.categorySlug === 'polpa' || product.category === 'polpa';
+
+    if (isCombo) {
+      return [
+        { name: "Copos de Açaí montados (Conforme composição)", quantity: size === 500 ? 2 : (size === 300 ? 3 : 4), unit: "copos", unitCost: Number((costPrice * 0.85).toFixed(2)), totalCost: Number((costPrice * 0.85).toFixed(2)) },
+        { name: "Embalagem térmica para transporte e sacola", quantity: 1, unit: "un", unitCost: 1.50, totalCost: 1.50 },
+        { name: "Kits de colher e guardanapo", quantity: size === 500 ? 2 : 4, unit: "kits", unitCost: 0.20, totalCost: Number((0.20 * (size === 500 ? 2 : 4)).toFixed(2)) }
+      ];
+    }
+
+    if (isPolpa) {
+      const grams = size >= 1000 ? size : 1000;
+      return [
+        { name: "Polpa pura de açaí especial cremosa", quantity: grams, unit: "g", unitCost: 0.015, totalCost: Number((grams * 0.015).toFixed(2)) },
+        { name: `Pote plástico de ${grams >= 1000 ? grams / 1000 + 'L' : grams + 'ml'} com tampa e lacre`, quantity: 1, unit: "un", unitCost: 2.20, totalCost: 2.20 },
+        { name: "Sacola para entrega", quantity: 1, unit: "un", unitCost: 0.40, totalCost: 0.40 }
+      ];
+    }
+
+    // Açaí individual (300ml, 500ml, 700ml)
+    const grams = size === 300 ? 200 : (size === 500 ? 340 : 480);
+    const cupCost = size === 300 ? 0.80 : (size === 500 ? 0.90 : 1.10);
+    const polpaCost = Number((grams * 0.02).toFixed(2));
+    const toppingsCount = size === 300 ? 3 : (size === 500 ? 4 : 5);
+    const restCost = Math.max(0.50, costPrice - polpaCost - cupCost - 0.20);
+
+    return [
+      { name: "Polpa de açaí especial batida", quantity: grams, unit: "g", unitCost: 0.02, totalCost: polpaCost },
+      { name: `Copo térmico ${size}ml descartável com tampa bolha`, quantity: 1, unit: "un", unitCost: cupCost, totalCost: cupCost },
+      { name: `Ingredientes e acompanhamentos da receita (${toppingsCount} itens)`, quantity: toppingsCount, unit: "porções", unitCost: Number((restCost / toppingsCount).toFixed(2)), totalCost: Number(restCost.toFixed(2)) },
+      { name: "Colher reforçada e guardanapo", quantity: 1, unit: "kit", unitCost: 0.20, totalCost: 0.20 }
+    ];
   }
 
   createProduct(productData) {

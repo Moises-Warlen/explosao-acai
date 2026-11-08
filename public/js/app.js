@@ -228,22 +228,30 @@ function renderCatalog() {
 
 function renderProductCard(prod, isBestSeller = false) {
   const firstPriceObj = prod.prices && prod.prices.length > 0 ? prod.prices[0] : null;
-  const minPrice = firstPriceObj ? (firstPriceObj.promoPrice != null ? firstPriceObj.promoPrice : firstPriceObj.price) : 0;
+  const price = firstPriceObj ? firstPriceObj.price : 0;
+  const promoPrice = firstPriceObj?.promoPrice;
+  const isPromo = prod.isPromo || (promoPrice != null && promoPrice < price);
+  const minPrice = promoPrice != null ? promoPrice : price;
   const isCustom = prod.isCustomizable || prod.categorySlug === 'monte';
   const btnLabel = isCustom ? 'Escolher' : '+ Pedir';
   const imgUrl = prod.image || 'imagens/do seu jeitinho.png';
 
   let badgeHtml = '';
   if (prod.isNewLaunch) {
-    badgeHtml = `<span class="badge-launch">Novidade</span>`;
-  } else if (prod.isPromo) {
-    badgeHtml = `<span class="badge-promo">Promoção</span>`;
+    badgeHtml = `<span class="badge-launch">Lançamento</span>`;
+  } else if (isPromo) {
+    badgeHtml = `<span class="badge-discount">Promoção</span>`;
   } else if (isBestSeller) {
     badgeHtml = `<span class="badge-best">Mais Pedido</span>`;
   }
 
+  let priceHtml = `<b>a partir de ${R(minPrice)}</b>`;
+  if (isPromo && promoPrice != null && promoPrice < price) {
+    priceHtml = `<div><span class="price-old">${R(price)}</span><b class="price-promo">${R(promoPrice)}</b></div>`;
+  }
+
   return `
-    <div class="card" data-id="${prod.id}">
+    <div class="card ${prod.isNewLaunch ? 'card-launch' : ''}" data-id="${prod.id}">
       <div class="ic has">
         ${badgeHtml}
         <img src="${encodeURI(imgUrl)}" alt="${esc(prod.name)}" loading="lazy" onerror="this.src='imagens/do seu jeitinho.png'">
@@ -251,7 +259,7 @@ function renderProductCard(prod, isBestSeller = false) {
       <h3>${esc(prod.name)}</h3>
       <p>${esc(prod.description)}</p>
       <div class="ft">
-        <b>a partir de ${R(minPrice)}</b>
+        ${priceHtml}
         <button class="mini" onclick="openItemModal('${prod.id}')">${btnLabel}</button>
       </div>
     </div>
@@ -285,10 +293,16 @@ function renderItemModal() {
   const selectedSizeObj = prod.prices[st.selectedSizeIdx] || prod.prices[0];
   const basePrice = selectedSizeObj?.promoPrice != null ? selectedSizeObj.promoPrice : (selectedSizeObj?.price || 0);
   const sizeMl = selectedSizeObj?.size || 500;
+  const isMonteSeuAcai = prod.id === 'prod_monte' || prod.categorySlug === 'monte' || prod.name.toLowerCase().includes('monte seu');
 
   // Limite de acompanhamentos inclusos por tamanho
   let maxAcomp = selectedSizeObj?.maxAccompaniments;
-  if (maxAcomp === undefined || maxAcomp === null) {
+  if (isMonteSeuAcai) {
+    if (sizeMl === 300) maxAcomp = 3;
+    else if (sizeMl === 500) maxAcomp = 4;
+    else if (sizeMl === 700) maxAcomp = 5;
+    else maxAcomp = 4;
+  } else if (maxAcomp === undefined || maxAcomp === null) {
     if (sizeMl === 300) maxAcomp = 3;
     else if (sizeMl === 500) maxAcomp = 4;
     else if (sizeMl === 700) maxAcomp = 5;
@@ -297,18 +311,33 @@ function renderItemModal() {
 
   // Filtra adicionais permitidos para este produto (açaí vs combo)
   const isCombo = prod.categorySlug === 'combos' || prod.category === 'combos';
-  const availableExtras = (CATALOG.extras || []).filter(e => {
+  let availableExtras = (CATALOG.extras || []).filter(e => {
     if (!e.active) return false;
     return isCombo ? e.allowInCombos : e.allowInAcai;
   });
 
-  // Acompanhamentos disponíveis vinculados a este produto
-  const availableAccompaniments = (CATALOG.accompaniments || []).filter(ac => {
-    if (typeof ac === 'string') return true;
-    if (ac.active === false) return false;
-    if (!ac.allowedProductIds || ac.allowedProductIds.length === 0) return true;
-    return ac.allowedProductIds.includes(prod.id);
-  });
+  // REGRA ESPECÍFICA: No Monte seu Açaí, tirar o "Acrescentar fruta"
+  if (isMonteSeuAcai) {
+    availableExtras = availableExtras.filter(e => !e.isFruitExtra && !e.name.toLowerCase().includes('fruta'));
+  }
+
+  // Acompanhamentos disponíveis
+  let availableAccompaniments = [];
+  if (isMonteSeuAcai) {
+    // REGRA ESPECÍFICA: No Monte seu Açaí, permitir exclusivamente: Chantilly, Leite condensado, Ninho, Granola, Mel, Paçoca
+    const monteAllowedNames = ['chantilly', 'leite condensado', 'ninho', 'granola', 'mel', 'paçoca'];
+    availableAccompaniments = (CATALOG.accompaniments || []).filter(ac => {
+      const name = (typeof ac === 'string' ? ac : ac.name).toLowerCase().trim();
+      return monteAllowedNames.some(m => name.includes(m) || m.includes(name));
+    });
+  } else {
+    availableAccompaniments = (CATALOG.accompaniments || []).filter(ac => {
+      if (typeof ac === 'string') return true;
+      if (ac.active === false) return false;
+      if (!ac.allowedProductIds || ac.allowedProductIds.length === 0) return true;
+      return ac.allowedProductIds.includes(prod.id);
+    });
+  }
 
   // Calcula adicionais selecionados
   let extrasTotal = 0;
@@ -326,7 +355,7 @@ function renderItemModal() {
   const unitTotal = basePrice + extrasTotal;
   const finalTotal = unitTotal * st.quantity;
 
-  const hasFruitExtra = st.extras.some(extId => {
+  const hasFruitExtra = !isMonteSeuAcai && st.extras.some(extId => {
     const e = availableExtras.find(x => x.id === extId);
     return e && e.isFruitExtra;
   });
@@ -336,7 +365,7 @@ function renderItemModal() {
     <h3>${esc(prod.name)}</h3>
     <p class="mut" style="margin-top:2px;font-size:13px">${esc(prod.description)}</p>
 
-    <h4>1. Escolha o Tamanho</h4>
+    <h4>Escolha o Tamanho</h4>
     <div class="chips">
       ${prod.prices.map((p, idx) => {
         const pr = p.promoPrice != null ? p.promoPrice : p.price;
@@ -350,9 +379,9 @@ function renderItemModal() {
   `;
 
   // Acompanhamentos inclusos (se customizável ou monte seu açaí)
-  if (prod.isCustomizable || prod.categorySlug === 'monte') {
+  if (prod.isCustomizable || isMonteSeuAcai) {
     h += `
-      <h4>2. Acompanhamentos Inclusos <small style="color:var(--mut);font-weight:normal">(${st.accompaniments.length} de ${maxAcomp} inclusos no valor)</small></h4>
+      <h4>Acompanhamentos Inclusos <small style="color:var(--mut);font-weight:normal">(${st.accompaniments.length} de ${maxAcomp} inclusos no valor)</small></h4>
       <div class="chips">
         ${availableAccompaniments.map(ac => {
           const acName = typeof ac === 'string' ? ac : ac.name;
@@ -365,9 +394,8 @@ function renderItemModal() {
 
   // Extras
   if (availableExtras.length > 0) {
-    const stepNum = prod.isCustomizable || prod.categorySlug === 'monte' ? 3 : 2;
     h += `
-      <h4>${stepNum}. Adicionais Extras <small style="color:var(--mut);font-weight:normal">(opcionais para turbinar)</small></h4>
+      <h4>Adicionais Extras <small style="color:var(--mut);font-weight:normal">(opcionais)</small></h4>
       <div>
         ${availableExtras.map(ext => {
           const selected = st.extras.includes(ext.id);
@@ -382,7 +410,7 @@ function renderItemModal() {
     `;
   }
 
-  // Frutas selecionáveis se marcou fruta extra
+  // Frutas selecionáveis se marcou fruta extra (não aplicável ao Monte seu açaí)
   if (hasFruitExtra) {
     h += `
       <div class="frbox">
@@ -420,9 +448,15 @@ window.selectSize = function(idx) {
   const prod = CURRENT_ITEM_STATE.product;
   const selectedSizeObj = prod.prices[idx] || prod.prices[0];
   const sizeMl = selectedSizeObj?.size || 500;
+  const isMonte = prod.id === 'prod_monte' || prod.categorySlug === 'monte' || prod.name.toLowerCase().includes('monte seu');
 
   let maxAcomp = selectedSizeObj?.maxAccompaniments;
-  if (maxAcomp === undefined || maxAcomp === null) {
+  if (isMonte) {
+    if (sizeMl === 300) maxAcomp = 3;
+    else if (sizeMl === 500) maxAcomp = 4;
+    else if (sizeMl === 700) maxAcomp = 5;
+    else maxAcomp = 4;
+  } else if (maxAcomp === undefined || maxAcomp === null) {
     if (sizeMl === 300) maxAcomp = 3;
     else if (sizeMl === 500) maxAcomp = 4;
     else if (sizeMl === 700) maxAcomp = 5;
@@ -445,9 +479,15 @@ window.toggleAccompaniment = function(name) {
   const prod = st.product;
   const selectedSizeObj = prod.prices[st.selectedSizeIdx] || prod.prices[0];
   const sizeMl = selectedSizeObj?.size || 500;
+  const isMonte = prod.id === 'prod_monte' || prod.categorySlug === 'monte' || prod.name.toLowerCase().includes('monte seu');
 
   let maxAcomp = selectedSizeObj?.maxAccompaniments;
-  if (maxAcomp === undefined || maxAcomp === null) {
+  if (isMonte) {
+    if (sizeMl === 300) maxAcomp = 3;
+    else if (sizeMl === 500) maxAcomp = 4;
+    else if (sizeMl === 700) maxAcomp = 5;
+    else maxAcomp = 4;
+  } else if (maxAcomp === undefined || maxAcomp === null) {
     if (sizeMl === 300) maxAcomp = 3;
     else if (sizeMl === 500) maxAcomp = 4;
     else if (sizeMl === 700) maxAcomp = 5;
@@ -459,7 +499,7 @@ window.toggleAccompaniment = function(name) {
     st.accompaniments.splice(idx, 1);
   } else {
     if (st.accompaniments.length >= maxAcomp) {
-      return toast(`Você já escolheu os ${maxAcomp} acompanhamentos inclusos para o tamanho de ${sizeMl}ml! Desmarque um para trocar.`);
+      return toast(`No copo de ${sizeMl}ml você pode escolher até ${maxAcomp} acompanhamentos inclusos! Desmarque um para trocar.`);
     }
     st.accompaniments.push(name);
   }

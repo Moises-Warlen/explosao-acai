@@ -52,6 +52,18 @@ const $$ = (s) => document.querySelectorAll(s);
 const R = (n) => 'R$ ' + Number(n || 0).toFixed(2).replace('.', ',');
 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
+// Notificação Toast Integrada (Substitui alerts invasivos no painel)
+function adminToast(msg, type = 'info') {
+  const toast = $('#admin-toast');
+  if (!toast) return;
+  toast.textContent = msg;
+  toast.className = `show ${type}`;
+  clearTimeout(window.__adminToastTimer);
+  window.__adminToastTimer = setTimeout(() => {
+    toast.className = '';
+  }, 3500);
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
   if (!ADMIN_TOKEN) {
     showLoginModal();
@@ -68,7 +80,7 @@ function showLoginModal() {
 
 window.doLogin = async function() {
   const pass = $('#admin-pass-input').value.trim();
-  if (!pass) return alert('Digite a senha de administrador.');
+  if (!pass) return adminToast('Digite a senha de administrador.', 'danger');
 
   try {
     const res = await fetch(`${API_URL}/admin/auth`, {
@@ -81,12 +93,13 @@ window.doLogin = async function() {
       ADMIN_TOKEN = data.token;
       localStorage.setItem('admin_token', ADMIN_TOKEN);
       $('#login-modal').style.display = 'none';
+      adminToast('Painel administrativo autenticado com sucesso!', 'success');
       initDashboard();
     } else {
-      alert(data.error || 'Senha incorreta.');
+      adminToast(data.error || 'Senha incorreta.', 'danger');
     }
   } catch (e) {
-    alert('Erro de conexão ao autenticar.');
+    adminToast('Erro de conexão ao autenticar.', 'danger');
   }
 };
 
@@ -210,9 +223,10 @@ window.toggleStoreStatus = async function() {
     if (data.ok) {
       label.textContent = data.isOpen ? 'Loja ABERTA' : 'Loja FECHADA';
       label.style.color = data.isOpen ? 'var(--green)' : 'var(--danger)';
+      adminToast(data.isOpen ? 'A loja agora está ABERTA para receber pedidos!' : 'A loja foi FECHADA.', data.isOpen ? 'success' : 'info');
     }
   } catch (e) {
-    alert('Erro ao atualizar status da loja.');
+    adminToast('Erro ao atualizar status da loja.', 'danger');
   }
 };
 
@@ -242,10 +256,10 @@ window.saveStoreSettings = async function(e) {
     });
     const data = await res.json();
     if (data.ok) {
-      alert('Configurações salvas com sucesso!');
+      adminToast('Configurações da loja salvas com sucesso!', 'success');
     }
   } catch (e) {
-    alert('Falha ao salvar configurações.');
+    adminToast('Falha ao salvar configurações.', 'danger');
   }
 };
 
@@ -404,9 +418,10 @@ window.advanceOrderStatus = async function(orderId, newStatus) {
       if (idx !== -1) ORDERS[idx] = data.order;
       renderKanban();
       updateOrdersBadge();
+      adminToast(`Status do Pedido #${data.order.orderNo} atualizado!`, 'info');
     }
   } catch (e) {
-    alert('Erro ao atualizar status.');
+    adminToast('Erro ao atualizar status.', 'danger');
   }
 };
 
@@ -418,11 +433,11 @@ window.simulateBankApproval = async function(orderId) {
     });
     const data = await res.json();
     if (data.ok) {
-      alert(data.message);
+      adminToast(data.message, 'success');
       await loadOrders();
     }
   } catch (e) {
-    alert('Falha ao simular confirmação.');
+    adminToast('Falha ao simular confirmação.', 'danger');
   }
 };
 
@@ -438,15 +453,16 @@ window.printOrderStation = async function(orderId, target) {
     if (data.ok && data.printJob) {
       executeBrowserPrint(data.printJob.ticketText);
     } else {
-      alert(data.error || 'Não foi possível imprimir a comanda.');
+      adminToast(data.error || 'Não foi possível imprimir a comanda.', 'danger');
     }
   } catch (e) {
-    alert('Erro ao gerar impressão da comanda.');
+    adminToast('Erro ao gerar impressão da comanda.', 'danger');
   }
 };
 
 function executeBrowserPrint(text) {
   document.body.classList.remove('printing-report');
+  document.body.classList.remove('printing-recipe');
   const printArea = $('#thermal-print-area');
   if (printArea) {
     printArea.textContent = text;
@@ -471,7 +487,7 @@ window.applyCustomDateFilter = function() {
   const start = $('#report-start-date')?.value;
   const end = $('#report-end-date')?.value;
   if (!start && !end) {
-    return alert('Selecione ao menos uma data inicial ou final.');
+    return adminToast('Selecione ao menos uma data inicial ou final.', 'danger');
   }
   loadSalesReport({ period: 'custom', startDate: start, endDate: end });
 };
@@ -611,7 +627,7 @@ function renderRankings(bestSellers, worstSellers) {
 
 // Exportação em PDF Formatado A4
 window.exportReportToPdf = function() {
-  if (!CURRENT_REPORT) return alert('Nenhum relatório carregado.');
+  if (!CURRENT_REPORT) return adminToast('Nenhum relatório carregado.', 'danger');
 
   const rep = CURRENT_REPORT;
   const sum = rep.summary;
@@ -717,6 +733,7 @@ window.exportReportToPdf = function() {
     </table>
   `;
 
+  document.body.classList.remove('printing-recipe');
   document.body.classList.add('printing-report');
   setTimeout(() => {
     window.print();
@@ -727,6 +744,8 @@ window.exportReportToPdf = function() {
 };
 
 // ==================== GESTÃO DE PRODUTOS & FICHA TÉCNICA ====================
+let CURRENT_RECIPE_PRODUCT = null;
+
 async function loadProducts() {
   try {
     const res = await fetch(`${API_URL}/catalog`);
@@ -770,13 +789,193 @@ function renderProductsTable() {
           </button>
         </td>
         <td>
-          <button class="btn-sm btn-print" onclick="editProductModal('${p.id}')">Editar</button>
-          <button class="btn-sm btn-danger" onclick="deleteProduct('${p.id}')">Excluir</button>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn-sm btn-print" onclick="openRecipeModal('${p.id}')" title="Ver ficha técnica com quantidades e exportar PDF">Receita & PDF</button>
+            <button class="btn-sm btn-secondary" onclick="editProductModal('${p.id}')">Editar</button>
+            <button class="btn-sm btn-danger" onclick="deleteProduct('${p.id}')">Excluir</button>
+          </div>
         </td>
       </tr>
     `;
   }).join('');
 }
+
+// Modal de Ficha Técnica / Receita com Quantidades por Copo
+window.openRecipeModal = function(productId) {
+  const prod = PRODUCTS.find(p => p.id === productId);
+  if (!prod) return;
+  CURRENT_RECIPE_PRODUCT = prod;
+
+  $('#recipe-prod-photo').src = prod.image || 'imagens/do seu jeitinho.png';
+  $('#recipe-prod-name').textContent = prod.name;
+  $('#recipe-prod-category').textContent = (prod.categorySlug || prod.category || 'Açaí').toUpperCase();
+  $('#recipe-prod-desc').textContent = prod.description || 'Receita padronizada com pesagem e insumos para delivery.';
+
+  const container = $('#recipe-tables-container');
+  if (!container) return;
+
+  const recipes = prod.recipes || [];
+  if (recipes.length === 0) {
+    container.innerHTML = `<p style="color:var(--mut);padding:14px">Nenhuma receita detalhada vinculada.</p>`;
+  } else {
+    container.innerHTML = recipes.map(rc => {
+      const priceObj = (prod.prices || []).find(x => x.size === rc.size) || {};
+      const venda = priceObj.price || 0;
+      const custo = priceObj.costPrice || (rc.ingredients || []).reduce((acc, ig) => acc + (ig.totalCost || 0), 0);
+      const lucro = venda - custo;
+      const margem = venda > 0 ? Math.round((lucro / venda) * 100) : 0;
+
+      return `
+        <div style="background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:16px;margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--ln);padding-bottom:10px;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+            <div>
+              <b style="font-size:16px;color:var(--y)">Copo ${rc.size} ml</b>
+              <span style="font-size:12px;color:var(--mut);margin-left:8px">(${priceObj.maxAccompaniments || 3} acomp. inclusos)</span>
+            </div>
+            <div style="font-size:13px;text-align:right">
+              Venda: <b style="color:#fff">${R(venda)}</b> · Custo: <b style="color:var(--danger)">${R(custo)}</b> · 
+              Lucro: <b style="color:var(--green)">${R(lucro)} (${margem}%)</b>
+            </div>
+          </div>
+
+          <table style="font-size:12px;width:100%">
+            <thead>
+              <tr style="color:var(--mut);border-bottom:1px solid rgba(255,255,255,0.08)">
+                <th style="padding:4px 6px">Insumo / Ingrediente</th>
+                <th style="padding:4px 6px;text-align:center">Quantidade</th>
+                <th style="padding:4px 6px;text-align:right">Custo Unitário</th>
+                <th style="padding:4px 6px;text-align:right">Custo Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(rc.ingredients || []).map(ig => `
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
+                  <td style="padding:6px">${esc(ig.name)}</td>
+                  <td style="padding:6px;text-align:center"><b>${ig.quantity} ${ig.unit}</b></td>
+                  <td style="padding:6px;text-align:right">${R(ig.unitCost)}</td>
+                  <td style="padding:6px;text-align:right;color:var(--y)">${R(ig.totalCost)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }).join('');
+  }
+
+  $('#recipe-modal').style.display = 'flex';
+};
+
+window.closeRecipeModal = function() {
+  $('#recipe-modal').style.display = 'none';
+};
+
+window.exportRecipeToPdf = function() {
+  if (!CURRENT_RECIPE_PRODUCT) return adminToast('Nenhum produto selecionado.', 'danger');
+
+  const prod = CURRENT_RECIPE_PRODUCT;
+  const printArea = $('#recipe-pdf-area');
+  if (!printArea) return;
+
+  const recipes = prod.recipes || [];
+
+  printArea.innerHTML = `
+    <div style="border-bottom:3px solid #4b0f6b;padding-bottom:16px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center">
+      <div style="display:flex;align-items:center;gap:16px">
+        <img src="imagens/Logo.png" style="width:70px;height:70px;object-fit:cover;border-radius:50%" onerror="this.style.display='none'">
+        <div>
+          <h1 style="margin:0;font-size:26px;color:#4b0f6b;font-family:Arial,sans-serif">EXPLOSÃO AÇAÍ</h1>
+          <div style="font-size:15px;color:#222;font-weight:bold">Ficha Técnica Operacional & Receituário de Insumos</div>
+          <div style="font-size:12px;color:#666">Delivery Próprio · Franca - SP · Padrão de Qualidade & Lucratividade</div>
+        </div>
+      </div>
+      <div style="text-align:right;font-size:12px;color:#444">
+        <div><b>Data de Emissão:</b> ${new Date().toLocaleString('pt-BR')}</div>
+        <div><b>Responsável Técnico:</b> Gestão Operacional</div>
+        <div><b>Classificação:</b> Documento Interno de Produção</div>
+      </div>
+    </div>
+
+    <!-- Banner do Produto com Foto em Destaque -->
+    <div style="display:flex;gap:20px;align-items:center;background:#fbf8fd;border:1.5px solid #e2d3f0;border-radius:12px;padding:16px;margin-bottom:22px">
+      <img src="${prod.image || 'imagens/do seu jeitinho.png'}" style="width:110px;height:110px;border-radius:10px;object-fit:cover;border:2px solid #4b0f6b">
+      <div style="flex:1">
+        <span style="background:#4b0f6b;color:#fff;font-size:11px;font-weight:bold;padding:3px 8px;border-radius:4px;text-transform:uppercase">
+          ${esc(prod.categorySlug || prod.category || 'Açaí')}
+        </span>
+        <h2 style="margin:6px 0 4px;font-size:22px;color:#222">${esc(prod.name)}</h2>
+        <p style="margin:0;font-size:13px;color:#555;line-height:1.4">${esc(prod.description || 'Receita padronizada com insumos de alta qualidade.')}</p>
+      </div>
+    </div>
+
+    <!-- Tabelas de Insumos por Tamanho (300ml, 500ml, 700ml) -->
+    <h3 style="margin:16px 0 10px;font-size:16px;color:#4b0f6b;text-transform:uppercase;border-left:4px solid #4b0f6b;padding-left:8px">
+      Composição e Proporções por Tamanho de Copo
+    </h3>
+
+    ${recipes.map(rc => {
+      const priceObj = (prod.prices || []).find(x => x.size === rc.size) || {};
+      const venda = priceObj.price || 0;
+      const custo = priceObj.costPrice || (rc.ingredients || []).reduce((acc, ig) => acc + (ig.totalCost || 0), 0);
+      const lucro = venda - custo;
+      const margem = venda > 0 ? Math.round((lucro / venda) * 100) : 0;
+
+      return `
+        <div style="border:1.5px solid #ddd;border-radius:10px;padding:14px;margin-bottom:18px;background:#fff;page-break-inside:avoid">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;background:#f5f0fa;padding:8px 12px;border-radius:6px">
+            <div>
+              <b style="font-size:16px;color:#4b0f6b">Copo ${rc.size} ml</b>
+              <span style="font-size:12px;color:#666;margin-left:6px">(${priceObj.maxAccompaniments || 3} acompanhamentos inclusos no valor)</span>
+            </div>
+            <div style="font-size:13px">
+              Preço de Venda: <b>${R(venda)}</b> | Custo Insumos: <b>${R(custo)}</b> | Lucro Estimado: <b style="color:#166534">${R(lucro)} (${margem}%)</b>
+            </div>
+          </div>
+
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead>
+              <tr style="background:#eae3f2;text-align:left">
+                <th style="padding:6px 8px;border:1px solid #ccc">Insumo / Ingrediente</th>
+                <th style="padding:6px 8px;border:1px solid #ccc;text-align:center">Quantidade / Peso</th>
+                <th style="padding:6px 8px;border:1px solid #ccc;text-align:right">Custo Unitário</th>
+                <th style="padding:6px 8px;border:1px solid #ccc;text-align:right">Custo Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(rc.ingredients || []).map(ig => `
+                <tr>
+                  <td style="padding:6px 8px;border:1px solid #ddd"><b>${esc(ig.name)}</b></td>
+                  <td style="padding:6px 8px;border:1px solid #ddd;text-align:center">${ig.quantity} ${ig.unit}</td>
+                  <td style="padding:6px 8px;border:1px solid #ddd;text-align:right">${R(ig.unitCost)}</td>
+                  <td style="padding:6px 8px;border:1px solid #ddd;text-align:right;font-weight:bold">${R(ig.totalCost)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }).join('')}
+
+    <!-- Instruções Operacionais de Montagem -->
+    <div style="border:1px solid #e0d0eb;background:#faf7fc;padding:12px 16px;border-radius:8px;margin-top:20px;font-size:12px;color:#444">
+      <b style="color:#4b0f6b">Procedimento Padrão de Montagem e Boas Práticas:</b>
+      <ul style="margin:6px 0 0;padding-left:20px;line-height:1.5">
+        <li>Pesar a polpa em balança digital tarada para garantir a precisão das porções e evitar desperdício de insumos.</li>
+        <li>Organizar os adicionais em camadas intermediárias e superiores para proporcionar uma apresentação visual irresistível.</li>
+        <li>Manter a tampa bolha bem vedada e selar a sacola térmica para conservar a cremosidade e consistência durante o trajeto da entrega.</li>
+      </ul>
+    </div>
+  `;
+
+  document.body.classList.remove('printing-report');
+  document.body.classList.add('printing-recipe');
+  setTimeout(() => {
+    window.print();
+    setTimeout(() => {
+      document.body.classList.remove('printing-recipe');
+    }, 1000);
+  }, 150);
+};
 
 window.toggleProductPause = async function(id) {
   try {
@@ -937,12 +1136,12 @@ window.uploadProductPhoto = async function(event) {
     if (data.ok) {
       $('#p-img').value = data.filePath;
       $('#p-photo-preview').src = data.filePath;
-      alert('Foto enviada com sucesso do seu computador!');
+      adminToast('Foto enviada com sucesso do seu computador!', 'success');
     } else {
-      alert(data.error || 'Erro ao enviar foto.');
+      adminToast(data.error || 'Erro ao enviar foto.', 'danger');
     }
   } catch (e) {
-    alert('Erro de conexão no upload da imagem.');
+    adminToast('Erro de conexão no upload da imagem.', 'danger');
   }
 };
 
@@ -955,6 +1154,8 @@ window.saveProductForm = async function(e) {
   const isPromo = $('#p-is-promo').checked;
   const description = $('#p-desc').value.trim();
   const image = $('#p-img').value.trim();
+
+  if (!name) return adminToast('Informe o nome do produto.', 'danger');
 
   // Combo sub-products
   const comboCheckboxes = $$('#combo-products-checkboxes input[type="checkbox"]:checked');
@@ -1012,10 +1213,12 @@ window.saveProductForm = async function(e) {
     if (data.ok) {
       closeProductModal();
       await loadProducts();
-      alert('Produto salvo com sucesso!');
+      adminToast('Produto salvo com sucesso!', 'success');
+    } else {
+      adminToast(data.error || 'Erro ao salvar produto.', 'danger');
     }
   } catch (err) {
-    alert('Erro ao salvar produto.');
+    adminToast('Erro ao salvar produto.', 'danger');
   }
 };
 
@@ -1029,9 +1232,12 @@ window.deleteProduct = async function(id) {
     const data = await res.json();
     if (data.ok) {
       await loadProducts();
+      adminToast('Produto excluído com sucesso!', 'info');
+    } else {
+      adminToast(data.error || 'Erro ao excluir.', 'danger');
     }
   } catch (e) {
-    alert('Falha ao excluir produto.');
+    adminToast('Falha ao excluir produto.', 'danger');
   }
 };
 
@@ -1101,6 +1307,8 @@ window.saveAccompanimentForm = async function(e) {
   const costPrice = parseFloat($('#acomp-cost').value) || 0.50;
   const active = $('#acomp-active').checked;
 
+  if (!name) return adminToast('Informe o nome do acompanhamento.', 'danger');
+
   try {
     let res;
     if (id) {
@@ -1120,10 +1328,12 @@ window.saveAccompanimentForm = async function(e) {
     if (data.ok) {
       closeAccompanimentModal();
       await loadAccompaniments();
-      alert('Acompanhamento salvo com sucesso!');
+      adminToast('Acompanhamento salvo com sucesso!', 'success');
+    } else {
+      adminToast(data.error || 'Erro ao salvar acompanhamento.', 'danger');
     }
   } catch (e) {
-    alert('Erro ao salvar acompanhamento.');
+    adminToast('Erro ao salvar acompanhamento.', 'danger');
   }
 };
 
@@ -1150,13 +1360,14 @@ window.deleteAccompaniment = async function(id) {
     const data = await res.json();
     if (data.ok) {
       await loadAccompaniments();
+      adminToast('Acompanhamento excluído!', 'info');
     }
   } catch (e) {
-    alert('Falha ao excluir acompanhamento.');
+    adminToast('Falha ao excluir acompanhamento.', 'danger');
   }
 };
 
-// ==================== GESTÃO DE CATEGORIAS ====================
+// ==================== GESTÃO DE CATEGORIAS (MODAL REAL SEM ALERT) ====================
 async function loadCategories() {
   try {
     const res = await fetch(`${API_URL}/catalog/categories`, { headers: authHeaders() });
@@ -1180,7 +1391,7 @@ function renderCategoriesList() {
         <div style="font-size:12px;color:var(--mut)">Slug: ${esc(c.slug)} · Ordem: ${c.order}</div>
       </div>
       <div style="display:flex;gap:8px">
-        <button class="btn-sm btn-secondary" onclick="editCategoryModal('${c.id}')">Editar</button>
+        <button class="btn-sm btn-secondary" onclick="openEditCategoryModal('${c.id}')">Editar</button>
         <button class="btn-sm btn-danger" onclick="deleteCategory('${c.id}')">Excluir</button>
       </div>
     </div>
@@ -1193,44 +1404,63 @@ function populateCategorySelects() {
   sel.innerHTML = CATEGORIES.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
 }
 
-window.createCategory = async function() {
-  const name = prompt('Nome da nova categoria (Ex: Açaí na Tigela):');
-  if (!name) return;
-
-  try {
-    const res = await fetch(`${API_URL}/catalog/categories`, {
-      method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify({ name })
-    });
-    const data = await res.json();
-    if (data.ok) {
-      await loadCategories();
-      alert('Categoria criada com sucesso!');
-    }
-  } catch (e) {
-    alert('Erro ao criar categoria.');
-  }
+window.openNewCategoryModal = function() {
+  $('#cat-modal-title').textContent = 'Nova Categoria';
+  $('#cat-id').value = '';
+  $('#cat-name').value = '';
+  $('#cat-order').value = (CATEGORIES.length + 1);
+  $('#category-edit-modal').style.display = 'flex';
 };
 
-window.editCategoryModal = async function(id) {
+window.openEditCategoryModal = function(id) {
   const cat = CATEGORIES.find(c => c.id === id);
   if (!cat) return;
 
-  const newName = prompt('Novo nome da categoria:', cat.name);
-  if (!newName) return;
+  $('#cat-modal-title').textContent = `Editar Categoria: ${cat.name}`;
+  $('#cat-id').value = cat.id;
+  $('#cat-name').value = cat.name;
+  $('#cat-order').value = cat.order || 1;
+  $('#category-edit-modal').style.display = 'flex';
+};
+
+window.closeCategoryModal = function() {
+  $('#category-edit-modal').style.display = 'none';
+};
+
+window.saveCategoryForm = async function(e) {
+  if (e) e.preventDefault();
+  const id = $('#cat-id').value;
+  const name = $('#cat-name').value.trim();
+  const order = parseInt($('#cat-order').value) || 1;
+
+  if (!name) return adminToast('Informe o nome da categoria.', 'danger');
 
   try {
-    const res = await fetch(`${API_URL}/catalog/categories/${id}`, {
-      method: 'PUT',
-      headers: authHeaders(),
-      body: JSON.stringify({ name: newName })
-    });
+    let res;
+    if (id) {
+      res = await fetch(`${API_URL}/catalog/categories/${id}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify({ name, order })
+      });
+    } else {
+      res = await fetch(`${API_URL}/catalog/categories`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ name, order })
+      });
+    }
     const data = await res.json();
     if (data.ok) {
+      closeCategoryModal();
       await loadCategories();
+      adminToast(id ? 'Categoria atualizada com sucesso!' : 'Categoria criada com sucesso!', 'success');
+    } else {
+      adminToast(data.error || 'Erro ao salvar categoria.', 'danger');
     }
-  } catch (e) {}
+  } catch (err) {
+    adminToast('Erro de conexão ao salvar categoria.', 'danger');
+  }
 };
 
 window.deleteCategory = async function(id) {
@@ -1243,9 +1473,12 @@ window.deleteCategory = async function(id) {
     const data = await res.json();
     if (data.ok) {
       await loadCategories();
+      adminToast('Categoria excluída com sucesso!', 'info');
+    } else {
+      adminToast(data.error || 'Erro ao excluir categoria.', 'danger');
     }
   } catch (e) {
-    alert('Erro ao excluir categoria.');
+    adminToast('Erro ao excluir categoria.', 'danger');
   }
 };
 
@@ -1306,10 +1539,10 @@ window.createExtraPrompt = async function() {
     const data = await res.json();
     if (data.ok) {
       await loadExtras();
-      alert('Adicional cadastrado!');
+      adminToast('Adicional cadastrado com sucesso!', 'success');
     }
   } catch (e) {
-    alert('Erro ao cadastrar adicional.');
+    adminToast('Erro ao cadastrar adicional.', 'danger');
   }
 };
 
@@ -1318,7 +1551,10 @@ window.deleteExtra = async function(id) {
   try {
     await fetch(`${API_URL}/catalog/extras/${id}`, { method: 'DELETE', headers: authHeaders() });
     await loadExtras();
-  } catch (e) {}
+    adminToast('Adicional excluído.', 'info');
+  } catch (e) {
+    adminToast('Erro ao excluir adicional.', 'danger');
+  }
 };
 
 // ==================== GESTÃO DE CUPONS & ENVIO ====================
@@ -1355,7 +1591,7 @@ function renderCouponsList() {
 
 window.sendCouponViaChat = async function(code, value, type) {
   if (!ACTIVE_CHAT_PHONE) {
-    alert('Selecione uma conversa com um cliente na aba "Chat de Atendimento" para enviar o cupom!');
+    adminToast('Selecione uma conversa com um cliente na aba "Chat de Atendimento" para enviar o cupom!', 'danger');
     return;
   }
 
@@ -1373,9 +1609,9 @@ window.sendCouponViaChat = async function(code, value, type) {
         message: text
       })
     });
-    alert(`Cupom ${code} enviado com sucesso no chat de ${$('#active-chat-name').textContent}!`);
+    adminToast(`Cupom ${code} enviado com sucesso no chat de ${$('#active-chat-name').textContent}!`, 'success');
   } catch (e) {
-    alert('Erro ao enviar cupom no chat.');
+    adminToast('Erro ao enviar cupom no chat.', 'danger');
   }
 };
 
@@ -1383,7 +1619,7 @@ window.copyCouponText = function(code, value, type) {
   const desc = type === 'percent' ? `${value}% de desconto` : `desconto de ${R(value)}`;
   const text = `Olá! Aproveite nosso cupom especial: digite *${code}* e ganhe ${desc} no seu pedido no Explosão Açaí!`;
   navigator.clipboard.writeText(text);
-  alert('Texto do cupom copiado para a área de transferência!');
+  adminToast('Texto do cupom copiado para a área de transferência!', 'success');
 };
 
 window.createCoupon = async function() {
@@ -1404,17 +1640,25 @@ window.createCoupon = async function() {
     const data = await res.json();
     if (data.ok) {
       await loadCoupons();
-      alert('Cupom criado com sucesso!');
+      adminToast('Cupom criado com sucesso!', 'success');
     } else {
-      alert(data.error || 'Erro ao criar cupom.');
+      adminToast(data.error || 'Erro ao criar cupom.', 'danger');
     }
   } catch (e) {
-    alert('Erro de conexão ao criar cupom.');
+    adminToast('Erro de conexão ao criar cupom.', 'danger');
   }
 };
 
 window.deleteCoupon = async function(id) {
   if (!confirm('Deseja excluir este cupom?')) return;
+  try {
+    await fetch(`${API_URL}/coupons/${id}`, { method: 'DELETE', headers: authHeaders() });
+    await loadCoupons();
+    adminToast('Cupom excluído.', 'info');
+  } catch (e) {
+    adminToast('Erro ao excluir cupom.', 'danger');
+  }
+};
   try {
     await fetch(`${API_URL}/coupons/${id}`, { method: 'DELETE', headers: authHeaders() });
     await loadCoupons();

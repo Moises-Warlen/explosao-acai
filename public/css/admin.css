@@ -582,12 +582,71 @@ input:focus, select:focus, textarea:focus {
   display: none;
 }
 
+/* Toast de Notificação do Painel Administrativo */
+#admin-toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  background: var(--p2);
+  color: #fff;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  z-index: 300;
+  display: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.25s ease;
+}
+#admin-toast.show {
+  display: block;
+  animation: adminToastSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes adminToastSlide {
+  from { opacity: 0; transform: translateY(-14px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+#admin-toast.success {
+  background: #065f46;
+  border-color: #34d399;
+}
+#admin-toast.error,
+#admin-toast.danger {
+  background: #991b1b;
+  border-color: #f87171;
+}
+
 /* ÁREA DE RELATÓRIO PDF FORMATADO */
 #report-pdf-area {
   display: none;
 }
 
+/* ÁREA DE FICHA TÉCNICA / RECEITA EM PDF */
+#recipe-pdf-area {
+  display: none;
+}
+
 @media print {
+  /* Se for impressão da Ficha Técnica / Receita do Produto */
+  body.printing-recipe * {
+    visibility: hidden;
+  }
+  body.printing-recipe #recipe-pdf-area, body.printing-recipe #recipe-pdf-area * {
+    visibility: visible;
+  }
+  body.printing-recipe #recipe-pdf-area {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: #fff !important;
+    color: #000 !important;
+    padding: 15mm;
+    font-family: Arial, sans-serif;
+  }
+
   /* Se for impressão de relatório PDF */
   body.printing-report * {
     visibility: hidden;

@@ -921,6 +921,13 @@
       "costPrice": 0.5,
       "active": true,
       "allowedProductIds": []
+    },
+    {
+      "id": "acomp_16",
+      "name": "Mel",
+      "costPrice": 0.5,
+      "active": true,
+      "allowedProductIds": []
     }
   ],
   "fruits": [
@@ -1079,7 +1086,7 @@
       "minOrder": 25,
       "maxDiscount": null,
       "active": true,
-      "uses": 0,
+      "uses": 1,
       "maxUses": 200
     },
     {
@@ -1165,6 +1172,187 @@
       "deliveryTimeMinutes": null,
       "createdAt": "2026-11-08T06:00:46.005Z",
       "updatedAt": "2026-11-08T06:02:01.803Z"
+    },
+    {
+      "id": "ord_1794119452490_qi3sg",
+      "orderNo": "775348",
+      "customer": {
+        "name": "Lucas Delivery",
+        "phone": "16998887766"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Avenida Brasil",
+        "number": "500",
+        "bairro": "Centro",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 5
+      },
+      "items": [
+        {
+          "name": "Ninho com Morango 500 ml",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 30.9,
+          "costPrice": 13.5,
+          "subtotal": 30.9,
+          "accompaniments": [
+            "Morango",
+            "Ninho"
+          ],
+          "extras": [
+            "Nutella"
+          ],
+          "fruits": [],
+          "note": "Colher separada"
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": "50,00",
+        "trocoValue": 19.1
+      },
+      "coupon": {
+        "code": "PRIMEIRACOMPRA",
+        "discountValue": 5
+      },
+      "subtotal": 30.9,
+      "discount": 5,
+      "freight": 5,
+      "total": 30.9,
+      "costTotal": 13.5,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "createdAt": "2026-11-08T06:30:52.490Z",
+      "updatedAt": "2026-11-08T06:30:52.490Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794119452542_y5k1q",
+      "orderNo": "102385",
+      "customer": {
+        "name": "Ana Beatriz",
+        "phone": "16991112233"
+      },
+      "delivery": {
+        "type": "pickup"
+      },
+      "items": [
+        {
+          "name": "Combo Casal 500 ml",
+          "size": null,
+          "quantity": 1,
+          "unitPrice": 64.9,
+          "costPrice": 0,
+          "subtotal": 64.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Pix",
+        "timing": "online",
+        "status": "approved",
+        "changeFor": null,
+        "trocoValue": 0,
+        "qrCode": "00020126580014br.gov.bcb.pix01361699109886352040000530398654064.905802BR5914EXPLOSAO ACAI6006FRANCA620705031023856304ABCD",
+        "qrCodeBase64": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCI+CiAgICAgIDxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjZmZmZmZmIiByeD0iMTIiLz4KICAgICAgPCEtLSBRUiBGcmFtZSAtLT4KICAgICAgPHJlY3QgeD0iMjAiIHk9IjIwIiB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIGZpbGw9IiMyYTBhM2QiIHJ4PSI2Ii8+CiAgICAgIDxyZWN0IHg9IjMwIiB5PSIzMCIgd2lkdGg9IjMwIiBoZWlnaHQ9IjMwIiBmaWxsPSIjZmZmZmZmIiByeD0iMyIvPgogICAgICA8cmVjdCB4PSIzNiIgeT0iMzYiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgZmlsbD0iIzRiMGY2YiIgcng9IjIiLz4KICAgICAgCiAgICAgIDxyZWN0IHg9IjEzMCIgeT0iMjAiIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCIgZmlsbD0iIzJhMGEzZCIgcng9IjYiLz4KICAgICAgPHJlY3QgeD0iMTQwIiB5PSIzMCIgd2lkdGg9IjMwIiBoZWlnaHQ9IjMwIiBmaWxsPSIjZmZmZmZmIiByeD0iMyIvPgogICAgICA8cmVjdCB4PSIxNDYiIHk9IjM2IiB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIGZpbGw9IiM0YjBmNmIiIHJ4PSIyIi8+CiAgICAgIAogICAgICA8cmVjdCB4PSIyMCIgeT0iMTMwIiB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIGZpbGw9IiMyYTBhM2QiIHJ4PSI2Ii8+CiAgICAgIDxyZWN0IHg9IjMwIiB5PSIxNDAiIHdpZHRoPSIzMCIgaGVpZ2h0PSIzMCIgZmlsbD0iI2ZmZmZmZiIgcng9IjMiLz4KICAgICAgPHJlY3QgeD0iMzYiIHk9IjE0NiIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiBmaWxsPSIjNGIwZjZiIiByeD0iMiIvPgogICAgICAKICAgICAgPCEtLSBQYXR0ZXJuIGJsb2NrcyAtLT4KICAgICAgPHJlY3QgeD0iODUiIHk9IjI1IiB3aWR0aD0iMTUiIGhlaWdodD0iMTUiIGZpbGw9IiM3YjJjYmYiLz4KICAgICAgPHJlY3QgeD0iMTA1IiB5PSIzNSIgd2lkdGg9IjEyIiBoZWlnaHQ9IjEyIiBmaWxsPSIjMmEwYTNkIi8+CiAgICAgIDxyZWN0IHg9Ijg1IiB5PSI1NSIgd2lkdGg9IjIwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjMmEwYTNkIi8+CiAgICAgIDxyZWN0IHg9IjQwIiB5PSI4NSIgd2lkdGg9IjEyIiBoZWlnaHQ9IjEyIiBmaWxsPSIjN2IyY2JmIi8+CiAgICAgIDxyZWN0IHg9IjYwIiB5PSI5NSIgd2lkdGg9IjI1IiBoZWlnaHQ9IjE1IiBmaWxsPSIjNGIwZjZiIi8+CiAgICAgIDxyZWN0IHg9Ijk1IiB5PSI4NSIgd2lkdGg9IjMwIiBoZWlnaHQ9IjMwIiBmaWxsPSIjMmEwYTNkIiByeD0iNCIvPgogICAgICA8dGV4dCB4PSIxMTAiIHk9IjEwNCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iOSIgZmlsbD0iI2ZmYzgwMCIgZm9udC13ZWlnaHQ9ImJvbGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlBJWDwvdGV4dD4KICAgICAgPHJlY3QgeD0iMTM1IiB5PSI4NSIgd2lkdGg9IjE1IiBoZWlnaHQ9IjE1IiBmaWxsPSIjN2IyY2JmIi8+CiAgICAgIDxyZWN0IHg9IjE2MCIgeT0iOTUiIHdpZHRoPSIxNSIgaGVpZ2h0PSIxNSIgZmlsbD0iIzJhMGEzZCIvPgogICAgICA8cmVjdCB4PSI4NSIgeT0iMTI1IiB3aWR0aD0iMjAiIGhlaWdodD0iMTUiIGZpbGw9IiMyYTBhM2QiLz4KICAgICAgPHJlY3QgeD0iMTE1IiB5PSIxMzAiIHdpZHRoPSIxNSIgaGVpZ2h0PSIyNSIgZmlsbD0iIzRiMGY2YiIvPgogICAgICA8cmVjdCB4PSIxNDAiIHk9IjEzNSIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjN2IyY2JmIi8+CiAgICAgIDxyZWN0IHg9Ijg1IiB5PSIxNTUiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI2ZmYzgwMCIvPgogICAgICA8cmVjdCB4PSIxNjUiIHk9IjE2NSIgd2lkdGg9IjE1IiBoZWlnaHQ9IjE1IiBmaWxsPSIjMmEwYTNkIi8+CiAgICAgIDx0ZXh0IHg9IjEwMCIgeT0iMTkyIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSI4IiBmaWxsPSIjNmI1MjgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5QZWRpZG8gIzEwMjM4NTwvdGV4dD4KICAgIDwvc3ZnPg==",
+        "transactionId": "mp_pix_1794119452541",
+        "ticketUrl": "https://mercadopago.com.br/sandbox/payments/102385",
+        "isMock": true
+      },
+      "coupon": null,
+      "subtotal": 64.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 64.9,
+      "costTotal": 0,
+      "status": "preparing",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "createdAt": "2026-11-08T06:30:52.542Z",
+      "updatedAt": "2026-11-08T06:30:52.561Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794119452647_u9vsw",
+      "orderNo": "587332",
+      "customer": {
+        "name": "Mariana Costa",
+        "phone": "16993334455"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua das Palmeiras",
+        "number": "450",
+        "bairro": "Jardim Primavera",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 5.5
+      },
+      "items": [
+        {
+          "name": "Ninho com Morango 500 ml",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 30.9,
+          "costPrice": 13.5,
+          "subtotal": 30.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Cartão de crédito",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 30.9,
+      "discount": 0,
+      "freight": 5.5,
+      "total": 36.4,
+      "costTotal": 13.5,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "createdAt": "2026-11-08T06:30:52.647Z",
+      "updatedAt": "2026-11-08T06:30:52.647Z",
+      "printed": true
     }
   ],
   "chats": [
@@ -1185,6 +1373,15 @@
       "message": "oi",
       "timestamp": "2026-11-08T06:01:22.046Z",
       "read": true
+    },
+    {
+      "id": "msg_1794119452594_qn86",
+      "sender": "customer",
+      "customerPhone": "16998887766",
+      "customerName": "Lucas Delivery",
+      "message": "Olá, meu açaí já saiu para entrega?",
+      "timestamp": "2026-11-08T06:30:52.594Z",
+      "read": false
     }
   ]
 }
