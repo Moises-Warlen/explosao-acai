@@ -13,6 +13,7 @@ import { thermalPrinterService } from '../../infrastructure/printing/ThermalPrin
 import { couponService } from './CouponService.js';
 import { storeService } from './StoreService.js';
 import { wsHub } from '../../infrastructure/websockets/WebSocketHub.js';
+import { whatsAppNotificationService } from '../../infrastructure/notifications/WhatsAppNotificationService.js';
 
 export class OrderService {
   constructor() {
@@ -221,7 +222,10 @@ export class OrderService {
     // 10. Emite evento em tempo real via WebSocket para o Painel Administrativo
     wsHub.notifyNewOrder(newOrder);
 
-    // 11. REGRA DE IMPRESSÃO: Auto-impressão imediata se for Dinheiro ou Cartão na Entrega!
+    // 11. Dispara cópia do pedido no WhatsApp se Gateway configurado
+    whatsAppNotificationService.notifyNewOrder(newOrder).catch(() => {});
+
+    // 12. REGRA DE IMPRESSÃO: Auto-impressão imediata se for Dinheiro ou Cartão na Entrega!
     // Pagamentos online (Pix e Cartão Online) SÓ IMPRIMEM depois que o banco confirmar o pagamento!
     if (newOrder.canPrint().allowed) {
       this.autoPrintIfConfigured(newOrder);
@@ -268,6 +272,7 @@ export class OrderService {
 
     const updated = new Order(order);
     wsHub.notifyOrderStatus(updated);
+    whatsAppNotificationService.notifyStatusChange(updated).catch(() => {});
 
     return updated;
   }
@@ -331,6 +336,7 @@ export class OrderService {
 
     const updated = new Order(order);
     wsHub.notifyOrderStatus(updated);
+    whatsAppNotificationService.notifyStatusChange(updated).catch(() => {});
 
     return updated;
   }

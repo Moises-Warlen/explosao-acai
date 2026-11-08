@@ -602,7 +602,7 @@
       "name": "Combo Família",
       "categoryId": "cat_combos",
       "categorySlug": "combos",
-      "description": "4 copos de 500 ml: 1 Nutella · 1 Ninho com Morango · 1 Clássico · 1 Mix Fini.",
+      "description": "4 copos de açaí (tamanho à sua escolha: 300ml, 500ml ou 700ml): 1 Nutella · 1 Ninho com Morango · 1 Clássico · 1 Mix Fini.",
       "details": "Ideal para compartilhar com quem você ama!",
       "image": "imagens/combo familia.png",
       "active": true,
@@ -616,10 +616,24 @@
       ],
       "prices": [
         {
+          "size": 300,
+          "price": 79.9,
+          "promoPrice": null,
+          "costPrice": 42,
+          "maxAccompaniments": 0
+        },
+        {
           "size": 500,
           "price": 99,
           "promoPrice": null,
           "costPrice": 52.7,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 700,
+          "price": 129.9,
+          "promoPrice": null,
+          "costPrice": 68,
           "maxAccompaniments": 0
         }
       ],
@@ -630,7 +644,7 @@
       "name": "Combo Kids",
       "categoryId": "cat_combos",
       "categorySlug": "combos",
-      "description": "3 copos de 300 ml: 2 Mix Fini (cobertura Fini, confete e Ninho) · 1 Clássico.",
+      "description": "3 copos de açaí (tamanho à sua escolha: 300ml, 500ml ou 700ml): 2 Mix Fini (cobertura Fini, confete e Ninho) · 1 Clássico.",
       "details": "A alegria da criançada em cada colherada!",
       "image": "imagens/combo kids.png",
       "active": true,
@@ -648,6 +662,20 @@
           "promoPrice": null,
           "costPrice": 27.3,
           "maxAccompaniments": 0
+        },
+        {
+          "size": 500,
+          "price": 69.9,
+          "promoPrice": null,
+          "costPrice": 35,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 700,
+          "price": 89.9,
+          "promoPrice": null,
+          "costPrice": 45,
+          "maxAccompaniments": 0
         }
       ],
       "recipes": []
@@ -657,7 +685,7 @@
       "name": "Combo Casal",
       "categoryId": "cat_combos",
       "categorySlug": "combos",
-      "description": "2 copos de 500 ml: 2 Par Perfeito com brigadeiro, Ninho, Bis, morango, chocolate com avelã e chocolates em formato de coração.",
+      "description": "2 copos de açaí (tamanho à sua escolha: 300ml, 500ml ou 700ml): 2 Par Perfeito com brigadeiro, Ninho, Bis, morango, chocolate com avelã e chocolates em formato de coração.",
       "details": "O combo mais apaixonante da casa!",
       "image": "imagens/combo casal.png",
       "active": true,
@@ -669,10 +697,24 @@
       ],
       "prices": [
         {
+          "size": 300,
+          "price": 49.9,
+          "promoPrice": null,
+          "costPrice": 24,
+          "maxAccompaniments": 0
+        },
+        {
           "size": 500,
           "price": 64.9,
           "promoPrice": null,
           "costPrice": 31,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 700,
+          "price": 84.9,
+          "promoPrice": null,
+          "costPrice": 40,
           "maxAccompaniments": 0
         }
       ],
@@ -683,7 +725,7 @@
       "name": "Combo Econômico",
       "categoryId": "cat_combos",
       "categorySlug": "combos",
-      "description": "2 copos de 300 ml: Em cada copo: banana, Ninho, leite condensado e granola.",
+      "description": "2 copos de açaí (tamanho à sua escolha: 300ml, 500ml ou 700ml): Em cada copo: banana, Ninho, leite condensado e granola.",
       "details": "Saboroso e no precinho que cabe no bolso!",
       "image": "imagens/combo economico.png",
       "active": true,
@@ -696,6 +738,20 @@
           "price": 29.9,
           "promoPrice": 26.9,
           "costPrice": 14,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 500,
+          "price": 39.9,
+          "promoPrice": 35.9,
+          "costPrice": 19,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 700,
+          "price": 49.9,
+          "promoPrice": 44.9,
+          "costPrice": 24,
           "maxAccompaniments": 0
         }
       ],

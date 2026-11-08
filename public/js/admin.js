@@ -64,6 +64,17 @@ function adminToast(msg, type = 'info') {
   }, 3500);
 }
 
+function adminToastHtml(html, type = 'info', duration = 6500) {
+  const toast = $('#admin-toast');
+  if (!toast) return;
+  toast.innerHTML = html;
+  toast.className = `show ${type}`;
+  clearTimeout(window.__adminToastTimer);
+  window.__adminToastTimer = setTimeout(() => {
+    toast.className = '';
+  }, duration);
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
   if (!ADMIN_TOKEN) {
     showLoginModal();
@@ -264,6 +275,8 @@ function renderStoreSettingsForm() {
   if ($('#st-banner')) $('#st-banner').value = SETTINGS.bannerPromo || '';
   if ($('#st-wpp')) $('#st-wpp').value = SETTINGS.wpp || '';
   if ($('#st-address')) $('#st-address').value = SETTINGS.address || '';
+  if ($('#st-wpp-api-url')) $('#st-wpp-api-url').value = SETTINGS.whatsappApiUrl || '';
+  if ($('#st-wpp-api-token')) $('#st-wpp-api-token').value = SETTINGS.whatsappApiToken || '';
 }
 
 window.saveStoreSettings = async function(e) {
@@ -275,7 +288,9 @@ window.saveStoreSettings = async function(e) {
     chatSenderName: $('#st-chatsender') ? $('#st-chatsender').value.trim() || 'Delivery' : 'Delivery',
     bannerPromo: $('#st-banner').value.trim(),
     wpp: $('#st-wpp').value.trim(),
-    address: $('#st-address').value.trim()
+    address: $('#st-address').value.trim(),
+    whatsappApiUrl: $('#st-wpp-api-url') ? $('#st-wpp-api-url').value.trim() : '',
+    whatsappApiToken: $('#st-wpp-api-token') ? $('#st-wpp-api-token').value.trim() : ''
   };
 
   try {
@@ -570,6 +585,9 @@ function createOrderCardHtml(order) {
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px;font-size:11px">
           <span style="color:#a7f3d0;font-weight:600">✓ Entregue & Pago (${payMethod})</span>
           <div style="display:flex;gap:6px">
+            <button class="btn-sm" style="background:#25d366;color:#fff;font-size:10px;padding:3px 7px;font-weight:600" onclick="event.stopPropagation(); sendWppStatusNotice('${order.id}')" title="Avisar cliente no WhatsApp">
+              💬 Zap
+            </button>
             <button class="btn-sm btn-print" style="font-size:10px;padding:3px 7px" onclick="event.stopPropagation(); printOrderStation('${order.id}', 'counter')" title="Reimprimir Comanda Balcão">
               Reimprimir
             </button>
@@ -659,9 +677,14 @@ function createOrderCardHtml(order) {
 
       ${paymentBadgeHtml}
 
-      <div style="font-weight:600;font-size:14px;margin-top:6px">
-        Cliente: ${esc(order.customer.name)} 
-        <a href="https://wa.me/55${order.customer.phone}" target="_blank" style="color:var(--green);text-decoration:none;font-size:12px;margin-left:4px">WhatsApp</a>
+      <div style="font-weight:600;font-size:14px;margin-top:6px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          Cliente: ${esc(order.customer.name)} 
+          <a href="https://wa.me/55${order.customer.phone}" target="_blank" style="color:var(--green);text-decoration:none;font-size:12px;margin-left:4px" title="Abrir conversa no WhatsApp">WhatsApp</a>
+        </div>
+        <button class="btn-sm" style="background:#25d366;color:#fff;font-size:11px;padding:3px 8px;font-weight:600;display:inline-flex;align-items:center;gap:4px" onclick="sendWppStatusNotice('${order.id}')" title="Enviar atualização de status do pedido para o WhatsApp do cliente">
+          💬 Avisar no Zap
+        </button>
       </div>
 
       ${isDelivery ? `
@@ -752,6 +775,7 @@ window.confirmCancelOrder = async function(e) {
       const periodSelect = $('#report-period-select');
       loadSalesReport({ period: periodSelect ? periodSelect.value : 'today' });
       adminToast(`Pedido #${data.order.orderNo} cancelado com sucesso.`, 'info');
+      promptWppStatusNotice(data.order);
     } else {
       adminToast(data.error || 'Erro ao cancelar pedido.', 'danger');
     }
@@ -797,6 +821,7 @@ window.confirmReturnOrder = async function(e) {
       const periodSelect = $('#report-period-select');
       loadSalesReport({ period: periodSelect ? periodSelect.value : 'today' });
       adminToast(`Pedido #${data.order.orderNo} registrado como Devolvido!`, 'info');
+      promptWppStatusNotice(data.order);
     } else {
       adminToast(data.error || 'Erro ao registrar devolução.', 'danger');
     }
@@ -819,10 +844,78 @@ window.advanceOrderStatus = async function(orderId, newStatus) {
       renderKanban();
       updateOrdersBadge();
       adminToast(`Status do Pedido #${data.order.orderNo} atualizado!`, 'info');
+      promptWppStatusNotice(data.order);
     }
   } catch (e) {
     adminToast('Erro ao atualizar status.', 'danger');
   }
+};
+
+// ==================== NOTIFICAÇÃO E AVISOS WHATSAPP ====================
+window.getWppStatusMessage = function(order) {
+  const custName = order.customer?.name || 'Cliente';
+  const orderNo = order.orderNo || '';
+
+  switch (order.status) {
+    case 'received':
+      return `Olá, *${custName}*! 🍧\nSeu pedido *#${orderNo}* foi recebido com sucesso no *Explosão Açaí*!\nJá estamos na fila para prepará-lo.`;
+    case 'preparing':
+      return `Olá, *${custName}*! 🍧\nSeu pedido *#${orderNo}* no *Explosão Açaí* já começou a ser *PREPARADO* com todo capricho pela nossa cozinha!`;
+    case 'out_for_delivery':
+      return `Olá, *${custName}*! 🛵💨\nBoas notícias! Seu pedido *#${orderNo}* no *Explosão Açaí* acabou de *SAIR PARA ENTREGA* com nosso entregador! Fique atento ao portão / interfone.`;
+    case 'ready':
+      return `Olá, *${custName}*! 🛍️\nSeu pedido *#${orderNo}* no *Explosão Açaí* já está *PRONTO NO BALCÃO* aguardando sua retirada! Te esperamos na loja.`;
+    case 'delivered':
+      return `Olá, *${custName}*! ✅\nSeu pedido *#${orderNo}* foi entregue e finalizado com sucesso!\nMuito obrigado pela preferência no *Explosão Açaí* e tenha um ótimo momento! 💜`;
+    case 'returned':
+      return `Olá, *${custName}*. ↩️\nSeu pedido *#${orderNo}* retornou para a loja (${order.returnReason || 'cliente não localizado'}).\nEntre em contato conosco pelo chat ou WhatsApp para combinarmos o reenvio!`;
+    case 'cancelled':
+      return `Olá, *${custName}*. ⚠️\nInformamos que seu pedido *#${orderNo}* no *Explosão Açaí* foi cancelado (${order.cancellationReason || 'motivo operacional'}).\nEstamos à disposição para qualquer dúvida.`;
+    default:
+      return `Olá, *${custName}*! O status do seu pedido *#${orderNo}* na Explosão Açaí foi atualizado para: *${order.status}*.`;
+  }
+};
+
+window.sendWppStatusNotice = function(orderId) {
+  const order = ORDERS.find(o => o.id === orderId);
+  if (!order) {
+    adminToast('Pedido não encontrado.', 'danger');
+    return;
+  }
+  const rawPhone = order.customer?.phone ? String(order.customer.phone).replace(/\D/g, '') : '';
+  if (!rawPhone || rawPhone.length < 10) {
+    adminToast('Telefone do cliente não cadastrado ou inválido.', 'danger');
+    return;
+  }
+  const fullPhone = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
+  const msg = window.getWppStatusMessage(order);
+  const url = `https://wa.me/${fullPhone}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+};
+
+window.promptWppStatusNotice = function(order) {
+  if (!order || !order.customer?.phone) return;
+  const rawPhone = String(order.customer.phone).replace(/\D/g, '');
+  if (rawPhone.length < 10) return;
+
+  const statusLabel = {
+    received: 'Recebido',
+    preparing: 'Em Preparo',
+    out_for_delivery: 'Saiu p/ Entrega',
+    ready: 'Pronto no Balcão',
+    delivered: 'Entregue / Concluído',
+    returned: 'Devolvido',
+    cancelled: 'Cancelado'
+  }[order.status] || order.status;
+
+  adminToastHtml(`
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%">
+      <span>Status (#${order.orderNo}): <b>${statusLabel}</b></span>
+      <button class="btn-sm" style="background:#25d366;color:#fff;font-weight:700;padding:4px 10px;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;font-size:12px" onclick="sendWppStatusNotice('${order.id}')">
+        💬 Avisar no WhatsApp
+      </button>
+    </div>
+  `, 'info', 7000);
 };
 
 window.simulateBankApproval = async function(orderId) {
@@ -895,6 +988,7 @@ window.confirmOrderDeliveryAndPayment = function(orderId) {
           const periodSelect = $('#report-period-select');
           loadSalesReport({ period: periodSelect ? periodSelect.value : 'today' });
           adminToast(`Pedido #${data.order.orderNo} finalizado e pagamento confirmado!`, 'success');
+          promptWppStatusNotice(data.order);
         } else {
           adminToast(data.error || 'Erro ao confirmar entrega.', 'danger');
         }
@@ -931,6 +1025,7 @@ window.confirmPickupOrder = function(orderId) {
           const periodSelect = $('#report-period-select');
           loadSalesReport({ period: periodSelect ? periodSelect.value : 'today' });
           adminToast(`Pedido #${data.order.orderNo} retirado e pagamento concluído com sucesso!`, 'success');
+          promptWppStatusNotice(data.order);
         } else {
           adminToast(data.error || 'Erro ao concluir retirada.', 'danger');
         }

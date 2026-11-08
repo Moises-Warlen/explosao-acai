@@ -497,6 +497,23 @@
           <label>Texto do Banner Promocional do Topo</label>
           <input id="st-banner" value="Bem-vindo ao nosso delivery próprio! Peça direto por aqui e ganhe descontos." style="margin-bottom:18px">
 
+          <div style="margin-bottom:18px;padding:14px;background:#181028;border:1px solid #3b115b;border-radius:8px">
+            <h4 style="margin:0 0 6px 0;font-size:13px;color:var(--y)">Notificações Automáticas via Gateway de WhatsApp (Opcional)</h4>
+            <p style="font-size:11px;color:var(--mut);margin-bottom:10px">
+              Mesmo sem Gateway configurado, você pode enviar o comprovante e avisar status pelo WhatsApp com 1 clique direto no painel. Caso possua uma API (ex: Evolution API, Z-API, Baileys), informe abaixo para disparo automático em segundo plano:
+            </p>
+            <div class="form-grid">
+              <div>
+                <label>URL do Webhook/API WhatsApp</label>
+                <input id="st-wpp-api-url" placeholder="https://sua-api.com/message/sendText">
+              </div>
+              <div>
+                <label>Token / API Key</label>
+                <input id="st-wpp-api-token" placeholder="Bearer Token ou Chave da API">
+              </div>
+            </div>
+          </div>
+
           <button class="btn-sm btn-next" type="submit" style="padding:10px 20px;font-size:14px">Salvar Configurações</button>
         </form>
       </div>

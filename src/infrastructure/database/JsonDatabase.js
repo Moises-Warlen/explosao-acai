@@ -269,7 +269,7 @@ const INITIAL_DATA = {
       name: "Combo Família",
       categoryId: "cat_combos",
       categorySlug: "combos",
-      description: "4 copos de 500 ml: 1 Nutella · 1 Ninho com Morango · 1 Clássico · 1 Mix Fini.",
+      description: "4 copos de açaí (tamanho à sua escolha: 300ml, 500ml ou 700ml): 1 Nutella · 1 Ninho com Morango · 1 Clássico · 1 Mix Fini.",
       details: "Ideal para compartilhar com quem você ama!",
       image: "imagens/combo familia.png",
       active: true,
@@ -277,7 +277,9 @@ const INITIAL_DATA = {
       isPromo: false,
       comboProductIds: ["prod_nutella", "prod_ninhomorango", "prod_classico", "prod_mixfini"], // Itens que somam o custo automaticamente!
       prices: [
-        { size: 500, price: 99.00, promoPrice: null, costPrice: 52.70, maxAccompaniments: 0 }
+        { size: 300, price: 79.90, promoPrice: null, costPrice: 42.00, maxAccompaniments: 0 },
+        { size: 500, price: 99.00, promoPrice: null, costPrice: 52.70, maxAccompaniments: 0 },
+        { size: 700, price: 129.90, promoPrice: null, costPrice: 68.00, maxAccompaniments: 0 }
       ],
       recipes: []
     },
@@ -286,7 +288,7 @@ const INITIAL_DATA = {
       name: "Combo Kids",
       categoryId: "cat_combos",
       categorySlug: "combos",
-      description: "3 copos de 300 ml: 2 Mix Fini (cobertura Fini, confete e Ninho) · 1 Clássico.",
+      description: "3 copos de açaí (tamanho à sua escolha: 300ml, 500ml ou 700ml): 2 Mix Fini (cobertura Fini, confete e Ninho) · 1 Clássico.",
       details: "A alegria da criançada em cada colherada!",
       image: "imagens/combo kids.png",
       active: true,
@@ -294,7 +296,9 @@ const INITIAL_DATA = {
       isPromo: false,
       comboProductIds: ["prod_mixfini", "prod_mixfini", "prod_classico"],
       prices: [
-        { size: 300, price: 54.90, promoPrice: null, costPrice: 27.30, maxAccompaniments: 0 }
+        { size: 300, price: 54.90, promoPrice: null, costPrice: 27.30, maxAccompaniments: 0 },
+        { size: 500, price: 69.90, promoPrice: null, costPrice: 35.00, maxAccompaniments: 0 },
+        { size: 700, price: 89.90, promoPrice: null, costPrice: 45.00, maxAccompaniments: 0 }
       ],
       recipes: []
     },
@@ -303,7 +307,7 @@ const INITIAL_DATA = {
       name: "Combo Casal",
       categoryId: "cat_combos",
       categorySlug: "combos",
-      description: "2 copos de 500 ml: 2 Par Perfeito com brigadeiro, Ninho, Bis, morango, chocolate com avelã e chocolates em formato de coração.",
+      description: "2 copos de açaí (tamanho à sua escolha: 300ml, 500ml ou 700ml): 2 Par Perfeito com brigadeiro, Ninho, Bis, morango, chocolate com avelã e chocolates em formato de coração.",
       details: "O combo mais apaixonante da casa!",
       image: "imagens/combo casal.png",
       active: true,
@@ -311,7 +315,9 @@ const INITIAL_DATA = {
       isPromo: false,
       comboProductIds: ["prod_parperfeito", "prod_parperfeito"],
       prices: [
-        { size: 500, price: 64.90, promoPrice: null, costPrice: 31.00, maxAccompaniments: 0 }
+        { size: 300, price: 49.90, promoPrice: null, costPrice: 24.00, maxAccompaniments: 0 },
+        { size: 500, price: 64.90, promoPrice: null, costPrice: 31.00, maxAccompaniments: 0 },
+        { size: 700, price: 84.90, promoPrice: null, costPrice: 40.00, maxAccompaniments: 0 }
       ],
       recipes: []
     },
@@ -320,7 +326,7 @@ const INITIAL_DATA = {
       name: "Combo Econômico",
       categoryId: "cat_combos",
       categorySlug: "combos",
-      description: "2 copos de 300 ml: Em cada copo: banana, Ninho, leite condensado e granola.",
+      description: "2 copos de açaí (tamanho à sua escolha: 300ml, 500ml ou 700ml): Em cada copo: banana, Ninho, leite condensado e granola.",
       details: "Saboroso e no precinho que cabe no bolso!",
       image: "imagens/combo economico.png",
       active: true,
@@ -328,7 +334,9 @@ const INITIAL_DATA = {
       isPromo: true, // Marcado como Promoção
       comboProductIds: [],
       prices: [
-        { size: 300, price: 29.90, promoPrice: 26.90, costPrice: 14.00, maxAccompaniments: 0 }
+        { size: 300, price: 29.90, promoPrice: 26.90, costPrice: 14.00, maxAccompaniments: 0 },
+        { size: 500, price: 39.90, promoPrice: 35.90, costPrice: 19.00, maxAccompaniments: 0 },
+        { size: 700, price: 49.90, promoPrice: 44.90, costPrice: 24.00, maxAccompaniments: 0 }
       ],
       recipes: []
     },

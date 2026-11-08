@@ -327,16 +327,11 @@ function renderItemModal() {
     return isCombo ? e.allowInCombos : e.allowInAcai;
   });
 
-  // REGRA ESPECÍFICA: No Monte seu Açaí, tirar o "Acrescentar fruta"
-  if (isMonteSeuAcai) {
-    availableExtras = availableExtras.filter(e => !e.isFruitExtra && !e.name.toLowerCase().includes('fruta'));
-  }
-
   // Acompanhamentos disponíveis
   let availableAccompaniments = [];
   if (isMonteSeuAcai) {
-    // REGRA ESPECÍFICA: No Monte seu Açaí, permitir exclusivamente: Chantilly, Leite condensado, Ninho, Granola, Mel, Paçoca
-    const monteAllowedNames = ['chantilly', 'leite condensado', 'ninho', 'granola', 'mel', 'paçoca'];
+    // No Monte seu Açaí, permite acompanhamentos clássicos e frutas frescas
+    const monteAllowedNames = ['chantilly', 'leite condensado', 'ninho', 'granola', 'mel', 'paçoca', 'banana', 'morango', 'uva', 'kiwi', 'manga'];
     availableAccompaniments = (CATALOG.accompaniments || []).filter(ac => {
       const name = (typeof ac === 'string' ? ac : ac.name).toLowerCase().trim();
       return monteAllowedNames.some(m => name.includes(m) || m.includes(name));
@@ -366,13 +361,16 @@ function renderItemModal() {
   const unitTotal = basePrice + extrasTotal;
   const finalTotal = unitTotal * st.quantity;
 
-  const hasFruitExtra = !isMonteSeuAcai && st.extras.some(extId => {
+  const hasFruitExtra = st.extras.some(extId => {
     const e = availableExtras.find(x => x.id === extId);
     return e && e.isFruitExtra;
   });
 
   let h = `
     <button class="x" onclick="closeSheet()">×</button>
+    <button class="btn-back-home" onclick="closeSheet()" style="position:absolute;top:14px;left:14px;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.25);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px;cursor:pointer;backdrop-filter:blur(4px);z-index:10">
+      🏠 Cardápio
+    </button>
     <div class="sheet-photo-wrap">
       <img src="${prod.image || 'imagens/do seu jeitinho.png'}" alt="${esc(prod.name)}" onerror="this.src='imagens/do seu jeitinho.png'">
     </div>
@@ -451,6 +449,7 @@ function renderItemModal() {
     </div>
 
     <button class="btn" onclick="addItemToCart()">Adicionar · ${R(finalTotal)}</button>
+    <button class="btn o" style="margin-top:8px" onclick="closeSheet()">🏠 Voltar para o Cardápio (Início)</button>
   `;
 
   sheet.innerHTML = h;
@@ -671,7 +670,10 @@ function renderCartModal() {
 
   let h = `
     <button class="x" onclick="closeSheet()">×</button>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding-right:32px;margin-bottom:12px">
+    <button class="btn-back-home" onclick="closeSheet()" style="position:absolute;top:14px;left:14px;background:rgba(255,255,255,0.1);border:1px solid var(--ln);color:var(--tx);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px;cursor:pointer">
+      🏠 Cardápio
+    </button>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding-right:32px;margin-bottom:12px;margin-top:28px">
       <h3 style="margin:0">Seu Pedido</h3>
       ${CART.length > 0 ? `
         <button onclick="clearCart()" style="background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px" title="Remover todos os itens">
@@ -684,7 +686,7 @@ function renderCartModal() {
   if (CART.length === 0) {
     h += `
       <p class="mut" style="padding:24px 0;text-align:center">Seu carrinho está vazio.</p>
-      <button class="btn" onclick="closeSheet()">Ver Cardápio</button>
+      <button class="btn" onclick="closeSheet()">🏠 Voltar para o Cardápio (Início)</button>
     `;
     sheet.innerHTML = h;
     return;
@@ -736,7 +738,7 @@ function renderCartModal() {
 
     <button class="btn" onclick="openCheckoutModal()">Continuar para Entrega</button>
     <div style="display:flex;gap:10px;margin-top:8px">
-      <button class="btn o" style="flex:1" onclick="closeSheet()">Adicionar mais itens</button>
+      <button class="btn o" style="flex:1" onclick="closeSheet()">🏠 Voltar ao Cardápio</button>
       <button class="btn" style="flex:1;background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.3);font-size:13px;font-weight:600" onclick="clearCart()">🗑️ Limpar Pedido</button>
     </div>
   `;
@@ -799,7 +801,10 @@ function renderCheckoutModal() {
 
   let h = `
     <button class="x" onclick="closeSheet()">×</button>
-    <h3>Finalizar Pedido</h3>
+    <button class="btn-back-home" onclick="closeSheet()" style="position:absolute;top:14px;left:14px;background:rgba(255,255,255,0.1);border:1px solid var(--ln);color:var(--tx);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px;cursor:pointer">
+      🏠 Cardápio
+    </button>
+    <h3 style="margin-top:28px">Finalizar Pedido</h3>
 
     <h4>Forma de Recebimento</h4>
     <div class="chips">
@@ -881,7 +886,10 @@ function renderCheckoutModal() {
     <div class="tot g"><span>Total a Pagar</span><b>${R(total)}</b></div>
 
     <button class="btn g" id="btn-submit-order" onclick="submitOrder()">Enviar Pedido · ${R(total)}</button>
-    <button class="btn o" onclick="openCartModal()">← Voltar ao carrinho</button>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn o" style="flex:1" onclick="openCartModal()">← Ver carrinho</button>
+      <button class="btn o" style="flex:1" onclick="closeSheet()">🏠 Cardápio</button>
+    </div>
   `;
 
   sheet.innerHTML = h;
@@ -1074,9 +1082,33 @@ function renderOrderSuccess(order) {
   const sheet = $('#sheet');
   const isPixOnline = order.payment.method === 'Pix' && order.payment.timing === 'online';
 
+  const cleanCustPhone = String(order.customer?.phone || '').replace(/\D/g, '');
+  const itemsSummary = (order.items || []).map(it => {
+    let line = `• *${it.quantity}x* ${it.name}`;
+    if (it.accompaniments?.length) line += ` (Acomp: ${it.accompaniments.join(', ')})`;
+    if (it.extras?.length) line += ` (Extras: ${it.extras.join(', ')})`;
+    if (it.fruits?.length) line += ` (Frutas: ${it.fruits.join(', ')})`;
+    if (it.note) line += ` (Obs: ${it.note})`;
+    return line;
+  }).join('\n');
+
+  const wppReceiptMsg = encodeURIComponent(
+    `🍧 *COMPROVANTE DO MEU PEDIDO - EXPLOSÃO AÇAÍ* 🍧\n\n` +
+    `Olá, *${order.customer?.name}*!\n` +
+    `Aqui está a cópia do seu pedido *#${order.orderNo}*:\n\n` +
+    `📋 *ITENS:*\n${itemsSummary}\n\n` +
+    `💵 *Total:* ${R(order.total)} (${order.payment?.method || 'Pagamento'})\n` +
+    `📍 *Tipo:* ${order.delivery?.type === 'delivery' ? `Entrega (${order.delivery.street}, ${order.delivery.number} — ${order.delivery.bairro})` : 'Retirada no Balcão'}\n\n` +
+    `Acompanhe as atualizações do seu açaí em tempo real pelo site do delivery!`
+  );
+  const wppReceiptUrl = `https://wa.me/55${cleanCustPhone}?text=${wppReceiptMsg}`;
+
   let h = `
     <button class="x" onclick="closeSheet()">×</button>
-    <div style="text-align:center;padding:10px 0">
+    <button class="btn-back-home" onclick="closeSheet()" style="position:absolute;top:14px;left:14px;background:rgba(255,255,255,0.1);border:1px solid var(--ln);color:var(--tx);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px;cursor:pointer">
+      🏠 Cardápio
+    </button>
+    <div style="text-align:center;padding:10px 0;margin-top:20px">
       <h3 style="margin:4px 0">Pedido #${order.orderNo} Registrado</h3>
       <p class="mut" style="font-size:14px">Seu pedido foi recebido pelo sistema da Explosão Açaí.</p>
     </div>
@@ -1114,10 +1146,15 @@ function renderOrderSuccess(order) {
       </div>
     </div>
 
-    <button class="btn p" onclick="openChatModal('${order.customer.phone}', '${esc(order.customer.name)}')">
+    <a href="${wppReceiptUrl}" target="_blank" class="btn" style="background:#22c55e;color:#fff;margin-top:10px;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:700">
+      💬 Receber Cópia do Pedido no WhatsApp
+    </a>
+    <button class="btn p" style="margin-top:8px" onclick="openChatModal('${order.customer.phone}', '${esc(order.customer.name)}')">
       Abrir Chat com a Loja
     </button>
-    <button class="btn o" onclick="closeSheet()">Concluir</button>
+    <button class="btn" style="background:#4b0f6b;color:#fff;margin-top:8px;font-weight:700" onclick="closeSheet()">
+      🏠 Voltar para o Cardápio (Início)
+    </button>
   `;
 
   sheet.innerHTML = h;
