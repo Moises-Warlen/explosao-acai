@@ -48,7 +48,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   initWebSocket();
   await loadStoreStatus();
   await loadCatalog();
-  await loadBestSellers();
   renderNavigation();
   renderCatalog();
   bindEvents();
@@ -72,8 +71,11 @@ function initWebSocket() {
         if (data.event === 'ORDER_STATUS_CHANGED' && ACTIVE_ORDER && data.payload.id === ACTIVE_ORDER.id) {
           ACTIVE_ORDER = data.payload;
           toast(`Status do pedido atualizado: ${formatStatus(ACTIVE_ORDER.status)}`);
-          if ($('#sheet').classList.contains('on') && $('#tracker-box')) {
-            renderOrderTracker(ACTIVE_ORDER);
+          if (ACTIVE_ORDER.payment?.status === 'approved' && window._pixPollInterval) {
+            clearInterval(window._pixPollInterval);
+          }
+          if ($('#sheet').classList.contains('on')) {
+            renderOrderSuccess(ACTIVE_ORDER);
           }
         }
         if (data.event === 'CHAT_MESSAGE') {
@@ -140,15 +142,9 @@ async function loadCatalog() {
   }
 }
 
-// Carregar Mais Vendidos
+// Carregar Mais Vendidos (Desativado conforme solicitação: cardápio exibe apenas produtos cadastrados manualmente)
 async function loadBestSellers() {
-  try {
-    const res = await fetch(`${API_URL}/catalog/best-sellers?limit=4`);
-    const data = await res.json();
-    if (data.ok) {
-      BEST_SELLERS = data.products || [];
-    }
-  } catch (err) {}
+  BEST_SELLERS = [];
 }
 
 // Renderiza Menu de Categorias Dinâmico
@@ -160,9 +156,6 @@ function renderNavigation() {
   const promos = (CATALOG.products || []).filter(p => p.isPromo && p.active);
 
   let h = '';
-  if (BEST_SELLERS.length > 0) {
-    h += `<a href="#mais-vendidos" class="cat-pill active">Mais Vendidos</a>`;
-  }
   if (launches.length > 0) {
     h += `<a href="#lancamentos" class="cat-pill">Novidades</a>`;
   }
@@ -172,7 +165,7 @@ function renderNavigation() {
 
   (CATALOG.categories || []).forEach((cat, idx) => {
     if (cat.active && cat.slug !== 'lancamentos' && cat.slug !== 'promocoes') {
-      const isFirst = !BEST_SELLERS.length && !launches.length && !promos.length && idx === 0;
+      const isFirst = !launches.length && !promos.length && idx === 0;
       h += `<a href="#${cat.slug}" class="cat-pill ${isFirst ? 'active' : ''}">${esc(cat.name)}</a>`;
     }
   });
@@ -187,16 +180,7 @@ function renderCatalog() {
 
   let html = '';
 
-  // 1. SEÇÃO MAIS VENDIDOS
-  if (BEST_SELLERS.length > 0) {
-    html += `<section id="mais-vendidos"><h2>Mais Vendidos</h2><div class="grid">`;
-    BEST_SELLERS.forEach(p => {
-      if (p.active) html += renderProductCard(p, true);
-    });
-    html += `</div></section>`;
-  }
-
-  // 2. SEÇÃO LANÇAMENTOS / NOVIDADES
+  // 1. SEÇÃO LANÇAMENTOS / NOVIDADES
   const launches = (CATALOG.products || []).filter(p => p.isNewLaunch && p.active);
   if (launches.length > 0) {
     html += `<section id="lancamentos"><h2>Novidades & Lançamentos</h2><div class="grid">`;
@@ -206,7 +190,7 @@ function renderCatalog() {
     html += `</div></section>`;
   }
 
-  // 3. SEÇÃO PROMOÇÕES
+  // 2. SEÇÃO PROMOÇÕES
   const promos = (CATALOG.products || []).filter(p => p.isPromo && p.active);
   if (promos.length > 0) {
     html += `<section id="promocoes"><h2>Produtos em Promoção</h2><div class="grid">`;
@@ -216,7 +200,7 @@ function renderCatalog() {
     html += `</div></section>`;
   }
 
-  // 4. SEÇÕES POR CATEGORIA PADRÃO
+  // 3. SEÇÕES POR CATEGORIA PADRÃO (Apenas produtos cadastrados manualmente)
   const categories = CATALOG.categories || [];
   categories.forEach(cat => {
     if (!cat.active || cat.slug === 'lancamentos' || cat.slug === 'promocoes') return;
@@ -237,7 +221,7 @@ function renderCatalog() {
   main.innerHTML = html;
 }
 
-function renderProductCard(prod, isBestSeller = false) {
+function renderProductCard(prod) {
   const firstPriceObj = prod.prices && prod.prices.length > 0 ? prod.prices[0] : null;
   const price = firstPriceObj ? firstPriceObj.price : 0;
   const promoPrice = firstPriceObj?.promoPrice;
@@ -252,8 +236,6 @@ function renderProductCard(prod, isBestSeller = false) {
     badgeHtml = `<span class="badge-launch">Lançamento</span>`;
   } else if (isPromo) {
     badgeHtml = `<span class="badge-discount">Promoção</span>`;
-  } else if (isBestSeller) {
-    badgeHtml = `<span class="badge-best">Mais Pedido</span>`;
   }
 
   let priceHtml = `<b>a partir de ${R(minPrice)}</b>`;
@@ -1222,22 +1204,58 @@ function renderOrderSuccess(order) {
     </div>
   `;
 
-  // QR Code Pix do Mercado Pago se for online
-  if (isPixOnline && order.payment.qrCodeBase64) {
-    h += `
-      <div class="pix-box">
-        <h4 style="margin:0 0 8px;color:var(--p)">Pagamento via Mercado Pago Pix</h4>
-        <p style="font-size:12px;color:var(--mut);margin:0 0 12px">Escaneie o QR Code ou copie o código Pix abaixo. Assim que o banco confirmar, seu cupom será impresso automaticamente na cozinha!</p>
-        <img class="pix-qr" src="data:image/svg+xml;base64,${order.payment.qrCodeBase64}" alt="QR Code Pix">
-
-        <div class="copy-box">
-          <input class="copy-input" id="pix-copy-input" value="${esc(order.payment.qrCode)}" readonly>
-          <button class="copy-btn" onclick="copyPixCode()">Copiar Código</button>
+  // Bloco Pix se for online
+  if (isPixOnline) {
+    if (order.payment.status === 'approved') {
+      if (window._pixPollInterval) {
+        clearInterval(window._pixPollInterval);
+        window._pixPollInterval = null;
+      }
+      h += `
+        <div class="pix-approved-box" style="background:#ecfdf5;border:1.5px solid #10b981;border-radius:14px;padding:16px;text-align:center;margin:14px 0">
+          <div style="font-size:24px">✅</div>
+          <b style="color:#065f46;font-size:15px;display:block;margin-top:4px">Pagamento Confirmado pelo Banco!</b>
+          <span style="font-size:12px;color:#047857">Seu pedido já foi encaminhado para a produção na cozinha.</span>
         </div>
+      `;
+    } else if (order.payment.qrCodeBase64 || order.payment.qrCode) {
+      const qrSrc = (order.payment.qrCodeBase64 || '').startsWith('data:')
+        ? order.payment.qrCodeBase64
+        : `data:image/png;base64,${order.payment.qrCodeBase64}`;
 
-        <button class="btn p" style="margin-top:14px" onclick="checkPixStatus('${order.id}')">Verificar Confirmação Bancária</button>
-      </div>
-    `;
+      h += `
+        <div class="pix-box">
+          <h4 style="margin:0 0 8px;color:var(--p)">Pagamento via Pix</h4>
+          <p style="font-size:12px;color:var(--mut);margin:0 0 12px">Escaneie o QR Code ou copie o código Pix abaixo. Assim que o pagamento for concluído, esta tela atualizará automaticamente!</p>
+          ${order.payment.qrCodeBase64 ? `<img class="pix-qr" src="${qrSrc}" alt="QR Code Pix" style="max-width:220px;width:100%;height:auto;border-radius:12px;border:1px solid var(--ln);padding:8px;background:#fff;margin:0 auto;display:block">` : ''}
+
+          <div class="copy-box" style="margin-top:12px">
+            <input class="copy-input" id="pix-copy-input" value="${esc(order.payment.qrCode || '')}" readonly>
+            <button class="copy-btn" onclick="copyPixCode()">Copiar Código</button>
+          </div>
+
+          <button class="btn p" style="margin-top:14px" onclick="checkPixStatus('${order.id}')">Verificar Confirmação Bancária</button>
+        </div>
+      `;
+
+      // Inicia verificação periódica em segundo plano (reserva se webhook demorar)
+      if (window._pixPollInterval) clearInterval(window._pixPollInterval);
+      window._pixPollInterval = setInterval(async () => {
+        try {
+          const res = await fetch(`${API_URL}/orders/${order.id}`);
+          const data = await res.json();
+          if (data.ok && data.order) {
+            if (data.order.payment?.status === 'approved' || data.order.status !== 'received') {
+              clearInterval(window._pixPollInterval);
+              window._pixPollInterval = null;
+              ACTIVE_ORDER = data.order;
+              toast('Pagamento aprovado pelo banco!');
+              renderOrderSuccess(data.order);
+            }
+          }
+        } catch (e) {}
+      }, 3500);
+    }
   }
 
   // Rastreamento com status formal sem emojis informais
@@ -1533,6 +1551,10 @@ function showSheet() {
 }
 
 window.closeSheet = function() {
+  if (window._pixPollInterval) {
+    clearInterval(window._pixPollInterval);
+    window._pixPollInterval = null;
+  }
   $('#ov').classList.remove('on');
   $('#sheet').classList.remove('on');
   document.body.style.overflow = '';

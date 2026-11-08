@@ -880,26 +880,21 @@ window.advanceOrderStatus = async function(orderId, newStatus) {
 
 // ==================== NOTIFICAÇÃO E AVISOS WHATSAPP ====================
 window.getWppStatusMessage = function(order) {
-  const custName = order.customer?.name || 'Cliente';
-  const orderNo = order.orderNo || '';
+  const nome = (order.customer?.name || 'Cliente').trim();
+  const numero = order.orderNo || '';
 
   switch (order.status) {
     case 'received':
-      return `Olá, *${custName}*! 🍧\nSeu pedido *#${orderNo}* foi recebido com sucesso no *Explosão Açaí*!\nJá estamos na fila para prepará-lo.`;
+      return `✅ Olá, ${nome}! Seu pedido #${numero} na Explosão Açaí foi aceito! Já já começamos a preparar. 💜`;
     case 'preparing':
-      return `Olá, *${custName}*! 🍧\nSeu pedido *#${orderNo}* no *Explosão Açaí* já começou a ser *PREPARADO* com todo capricho pela nossa cozinha!`;
-    case 'out_for_delivery':
-      return `Olá, *${custName}*! 🛵💨\nBoas notícias! Seu pedido *#${orderNo}* no *Explosão Açaí* acabou de *SAIR PARA ENTREGA* com nosso entregador! Fique atento ao portão / interfone.`;
+      return `👩‍🍳 Seu pedido #${numero} já está sendo preparado com muito carinho! 💜`;
     case 'ready':
-      return `Olá, *${custName}*! 🛍️\nSeu pedido *#${orderNo}* no *Explosão Açaí* já está *PRONTO NO BALCÃO* aguardando sua retirada! Te esperamos na loja.`;
+    case 'out_for_delivery':
+      return `🛵 Boa notícia, ${nome}! Seu pedido #${numero} saiu para entrega e já está a caminho!`;
     case 'delivered':
-      return `Olá, *${custName}*! ✅\nSeu pedido *#${orderNo}* foi entregue e finalizado com sucesso!\nMuito obrigado pela preferência no *Explosão Açaí* e tenha um ótimo momento! 💜`;
-    case 'returned':
-      return `Olá, *${custName}*. ↩️\nSeu pedido *#${orderNo}* retornou para a loja (${order.returnReason || 'cliente não localizado'}).\nEntre em contato conosco pelo chat ou WhatsApp para combinarmos o reenvio!`;
-    case 'cancelled':
-      return `Olá, *${custName}*. ⚠️\nInformamos que seu pedido *#${orderNo}* no *Explosão Açaí* foi cancelado (${order.cancellationReason || 'motivo operacional'}).\nEstamos à disposição para qualquer dúvida.`;
+      return `💜 Obrigado por comprar com a Explosão Açaí, ${nome}! Esperamos que você curta sua explosão de sabor! Nos siga no Instagram: https://www.instagram.com/expl.osaoacai?mdxt=Zm1obWhpaTFhbmV3`;
     default:
-      return `Olá, *${custName}*! O status do seu pedido *#${orderNo}* na Explosão Açaí foi atualizado para: *${order.status}*.`;
+      return `✅ Olá, ${nome}! Seu pedido #${numero} na Explosão Açaí teve o status atualizado para: ${order.status}. 💜`;
   }
 };
 
@@ -914,7 +909,10 @@ window.sendWppStatusNotice = function(orderId) {
     adminToast('Telefone do cliente não cadastrado ou inválido.', 'danger');
     return;
   }
-  const fullPhone = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
+  let fullPhone = rawPhone;
+  if (fullPhone.length === 10 || fullPhone.length === 11) {
+    fullPhone = `55${fullPhone}`;
+  }
   const msg = window.getWppStatusMessage(order);
   const url = `https://wa.me/${fullPhone}?text=${encodeURIComponent(msg)}`;
   window.open(url, '_blank');

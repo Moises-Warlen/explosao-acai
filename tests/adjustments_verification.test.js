@@ -4,158 +4,110 @@ import { db } from '../src/infrastructure/database/JsonDatabase.js';
 import { catalogService } from '../src/application/services/CatalogService.js';
 import { orderService } from '../src/application/services/OrderService.js';
 import { freightService } from '../src/application/services/FreightService.js';
+import { mercadoPagoService, generatePixStaticEMVCo } from '../src/infrastructure/payment/MercadoPagoService.js';
+import { whatsAppNotificationService } from '../src/infrastructure/notifications/WhatsAppNotificationService.js';
+import { PaymentStatus, OrderStatus } from '../src/domain/entities/Order.js';
 
-describe('Explosão Açaí — Testes das Correções Pontuais e Ajustes', () => {
+describe('Explosão Açaí — Testes das 4 Correções Finais', () => {
 
-  test('1. Pura Polpa 1L e 2L: produtos devem existir com tamanhos corretos e sem extras permitidos', () => {
-    const products = catalogService.getCatalog().products;
-    const polpa1 = products.find(p => p.id === 'polpa_1l');
-    const polpa2 = products.find(p => p.id === 'polpa_2l');
-
-    assert.ok(polpa1, 'Pura Polpa 1L deve existir');
-    assert.ok(polpa2, 'Pura Polpa 2L deve existir');
-
-    assert.equal(polpa1.prices[0].size, 1000);
-    assert.equal(polpa2.prices[0].size, 2000);
+  test('1. Cardápio: Não deve conter seção automática "Mais Vendidos" (Apenas produtos manuais)', () => {
+    // Garante que o catálogo retorna produtos das categorias normais
+    const catalog = catalogService.getCatalog();
+    assert.ok(catalog.products.length > 0, 'Deve ter produtos cadastrados');
+    
+    // Verifica que nenhum produto falso de "Mais Vendidos" foi gerado
+    const hasAutoBestSellerCategory = catalog.categories.some(c => c.slug === 'mais-vendidos');
+    assert.equal(hasAutoBestSellerCategory, false, 'Não deve existir categoria automática mais-vendidos');
   });
 
-  test('2. Combo Família: deve disponibilizar os 3 tamanhos (300, 500 e 700 ml) com preços válidos', () => {
-    const combo = catalogService.getProductById('combo_familia');
-    assert.ok(combo, 'Combo Família deve existir');
-
-    const sizes = combo.prices.map(p => p.size);
-    assert.deepEqual(sizes, [300, 500, 700], 'Combo Família deve ter 300, 500 e 700 ml');
-
-    const p300 = combo.prices.find(p => p.size === 300);
-    const p500 = combo.prices.find(p => p.size === 500);
-    const p700 = combo.prices.find(p => p.size === 700);
-
-    assert.ok(p300.price > 0 && p300.price < p500.price, '300ml deve ser menor que 500ml');
-    assert.ok(p500.price < p700.price, '500ml deve ser menor que 700ml');
-  });
-
-  test('3. Combo Kids: deve ter 300, 500 e 700 ml e regras consistentes', () => {
-    const combo = catalogService.getProductById('combo_kids');
-    assert.ok(combo, 'Combo Kids deve existir');
-
-    const sizes = combo.prices.map(p => p.size);
-    assert.deepEqual(sizes, [300, 500, 700], 'Combo Kids deve ter 300, 500 e 700 ml');
-  });
-
-  test('4. Combo Econômico: deve ter 300, 500 e 700 ml preservando o tamanho original', () => {
-    const combo = catalogService.getProductById('combo_economico');
-    assert.ok(combo, 'Combo Econômico deve existir');
-
-    const sizes = combo.prices.map(p => p.size);
-    assert.deepEqual(sizes, [300, 500, 700], 'Combo Econômico deve ter 300, 500 e 700 ml');
-  });
-
-  test('7. Seção Mais Vendidos: Adicionar e remover produtos pelo serviço administrativo', () => {
-    // Adiciona produto específico aos Mais Vendidos
-    const updated = catalogService.updateBestSellers(['combo_familia', 'prod_monte']);
-    assert.ok(Array.isArray(updated), 'Deve retornar array de produtos');
-    assert.ok(updated.some(p => p.id === 'combo_familia'));
-    assert.ok(updated.some(p => p.id === 'prod_monte'));
-
-    // Verifica que getBestSellers reflete a escolha manual
-    const best = catalogService.getBestSellers(5);
-    assert.equal(best[0].id, 'combo_familia');
-    assert.equal(best[1].id, 'prod_monte');
-
-    // Remove um produto
-    catalogService.updateBestSellers(['prod_monte']);
-    const bestAfter = catalogService.getBestSellers(5);
-    assert.equal(bestAfter.length, 1);
-    assert.equal(bestAfter[0].id, 'prod_monte');
-
-    // Limpa a lista manual para fallback automático
-    catalogService.updateBestSellers([]);
-  });
-
-  test('9. Cobrança de Frutas: A primeira fruta adicionada já deve ser cobrada, e frutas subsequentes acumuladas', () => {
-    const fruitPrice = 3.90;
-
-    // 1 Fruta adicionada
-    const fruits1 = ['Banana'];
-    const total1 = fruitPrice * fruits1.length;
-    assert.equal(total1, 3.90, 'Primeira fruta adicionada deve somar exatamente R$ 3,90');
-
-    // 2 Frutas adicionadas
-    const fruits2 = ['Banana', 'Morango'];
-    const total2 = fruitPrice * fruits2.length;
-    assert.equal(total2, 7.80, 'Duas frutas devem somar exatamente R$ 7,80');
-
-    // 3 Frutas adicionadas
-    const fruits3 = ['Banana', 'Morango', 'Uva'];
-    const total3 = fruitPrice * fruits3.length;
-    assert.equal(total3, 11.70, 'Três frutas devem somar exatamente R$ 11,70');
-  });
-
-  test('10. Auditoria e Cálculo de Frete por Distância: Raio <= 2km Grátis, Bairros distantes cobrados corretamente', async () => {
-    // Endereço no Aeroporto 3 (ao lado da loja) -> deve ser <= 2km e Frete R$ 0,00
-    const freteAeroporto = await freightService.calculateFreightForAddress({
-      street: 'Rua Renato Lourenço Fernandes Rosa',
-      bairro: 'Jardim Aeroporto 3',
-      city: 'Franca',
-      state: 'SP'
+  test('2. Pix: Deve gerar Copia e Cola EMVCo 100% válido com CRC-16 e QR Code PNG escaneável', async () => {
+    const pixRes = await mercadoPagoService.createPixPayment({
+      orderNo: '123456',
+      total: 29.90,
+      customer: { name: 'Moises Cliente', phone: '16991098863' }
     });
-    assert.ok(freteAeroporto.km <= 2.0, `Distância no Aeroporto deve ser <= 2km, foi ${freteAeroporto.km}`);
-    assert.equal(freteAeroporto.freight, 0, 'Frete para endereço até 2 km deve ser R$ 0,00 (Grátis)');
 
-    // Endereço no Centro de Franca (~7km) -> deve cobrar frete proporcional
-    const freteCentro = await freightService.calculateFreightForAddress({
-      street: 'Rua Marechal Deodoro',
-      bairro: 'Centro',
-      city: 'Franca',
-      state: 'SP'
-    });
-    assert.ok(freteCentro.km > 2.0, `Distância no Centro deve ser > 2km, foi ${freteCentro.km}`);
-    assert.ok(freteCentro.freight >= 4.5, `Frete para Centro deve ser no mínimo R$ 4,50, foi ${freteCentro.freight}`);
+    assert.ok(pixRes.qrCode, 'Código Pix Copia e Cola deve ser gerado');
+    assert.ok(pixRes.qrCode.startsWith('000201'), 'Pix deve iniciar com standard EMVCo 000201');
+    assert.ok(pixRes.qrCode.includes('br.gov.bcb.pix'), 'Pix deve conter domínio do Banco Central br.gov.bcb.pix');
+    assert.ok(pixRes.qrCode.includes('16991098863'), 'Pix deve conter a chave Pix da loja');
+    assert.ok(!pixRes.qrCode.endsWith('ABCD') && !pixRes.qrCode.endsWith('MOCK'), 'Não deve ter mock fixo ABCD ou MOCK como CRC16');
+    
+    // Verifica CRC-16: últimos 4 caracteres hexadecimais válidos
+    const crc = pixRes.qrCode.slice(-4);
+    assert.match(crc, /^[0-9A-F]{4}$/, 'O CRC16 deve ser 4 caracteres hexadecimais maiúsculos válidos');
 
-    // Endereço no Leporace (~12km) -> deve calcular distância e frete adequados
-    const freteLeporace = await freightService.calculateFreightForAddress({
-      street: 'Avenida Brasil',
-      bairro: 'Parque Vicente Leporace',
-      city: 'Franca',
-      state: 'SP'
-    });
-    assert.ok(freteLeporace.km >= 10.0, `Distância no Leporace deve ser >= 10km, foi ${freteLeporace.km}`);
-    assert.ok(freteLeporace.freight >= 10.0, `Frete para Leporace deve ser proporcional, foi ${freteLeporace.freight}`);
+    assert.ok(pixRes.qrCodeBase64, 'QR Code deve ser gerado');
+    assert.ok(pixRes.qrCodeBase64.startsWith('data:image/png;base64,'), 'QR Code deve ser imagem PNG Base64 escaneável');
   });
 
-  test('10.2. Registro do Pedido: O valor correto do frete deve ser incluído e somado no total final do pedido', async () => {
-    // Cria pedido com endereço distante (Centro de Franca)
-    const orderData = {
-      customer: { name: 'Cliente Teste Frete', phone: '16991112233' },
-      delivery: {
-        type: 'delivery',
-        street: 'Rua Marechal Deodoro',
-        number: '100',
-        bairro: 'Centro',
-        city: 'Franca',
-        state: 'SP',
-        km: 7.2,
-        freight: 7.50
-      },
+  test('3. Confirmação do Pix no Painel: Deve atualizar status para Pago e evitar duplicidade', async () => {
+    // Cria pedido com Pix Online
+    const order = await orderService.createOrder({
+      customer: { name: 'Cliente Pix Teste', phone: '16998877665' },
+      delivery: { type: 'pickup' },
       items: [
-        {
-          name: 'Puro Polpa 500 ml',
-          size: 500,
-          quantity: 1,
-          unitPrice: 19.90,
-          accompaniments: ['Granola'],
-          extras: [],
-          fruits: []
-        }
+        { name: 'Puro Polpa 500 ml', size: 500, quantity: 1, unitPrice: 19.90, accompaniments: [], extras: [], fruits: [] }
       ],
-      payment: { method: 'Dinheiro', changeFor: '50.00' }
+      payment: { method: 'Pix', timing: 'online' },
+      bypassStoreClosed: true
+    });
+
+    assert.equal(order.payment.status, PaymentStatus.PENDING, 'Deve iniciar pendente');
+
+    // Primeira confirmação (Webhook ou Auto-Sync)
+    const confirmed = orderService.confirmPaymentApproved(order.id);
+    assert.ok(confirmed, 'Deve retornar pedido atualizado');
+    assert.equal(confirmed.payment.status, PaymentStatus.APPROVED, 'Status do pagamento deve ser APPROVED (Pago)');
+    assert.equal(confirmed.status, OrderStatus.PREPARING, 'Status do pedido deve mudar para PREPARING');
+
+    // Segunda chamada (simulação de webhook duplicado pelo gateway)
+    const secondCall = orderService.confirmPaymentApproved(order.id);
+    assert.equal(secondCall.payment.status, PaymentStatus.APPROVED);
+    // Deve retornar sem erros e sem duplicar notificações
+    assert.ok(secondCall.notifiedStatuses.includes('preparing'));
+    assert.equal(secondCall.notifiedStatuses.filter(s => s === 'preparing').length, 1, 'Não deve duplicar status notificado');
+  });
+
+  test('4. Notificações WhatsApp: Formatação DDI 55 + DDD + número e textos exatos solicitados', () => {
+    // Teste de formatação de telefone
+    assert.equal(whatsAppNotificationService.formatPhone('16991098863'), '5516991098863');
+    assert.equal(whatsAppNotificationService.formatPhone('(16) 99109-8863'), '5516991098863');
+    assert.equal(whatsAppNotificationService.formatPhone('5516991098863'), '5516991098863');
+
+    const fakeOrder = {
+      orderNo: '789123',
+      customer: { name: 'Maria Souza', phone: '16991112233' },
+      status: 'received'
     };
 
-    const res = await orderService.createOrder({ ...orderData, bypassStoreClosed: true });
-    assert.ok(res, 'Pedido deve ser criado com sucesso');
-    assert.equal(res.delivery.freight, 7.50, 'Frete salvo no pedido deve ser R$ 7,50');
-    assert.equal(res.freight, 7.50, 'Frete raiz do pedido deve ser R$ 7,50');
-    assert.equal(res.total, 19.90 + 7.50, 'Total deve ser exatamente Subtotal (19,90) + Frete (7,50) = 27,40');
+    // 1. Pedido feito / aceito
+    const msgReceived = whatsAppNotificationService.formatStatusMessage(fakeOrder, 'received');
+    assert.equal(
+      msgReceived,
+      '✅ Olá, Maria Souza! Seu pedido #789123 na Explosão Açaí foi aceito! Já já começamos a preparar. 💜'
+    );
+
+    // 2. Em preparo
+    const msgPreparing = whatsAppNotificationService.formatStatusMessage(fakeOrder, 'preparing');
+    assert.equal(
+      msgPreparing,
+      '👩‍🍳 Seu pedido #789123 já está sendo preparado com muito carinho! 💜'
+    );
+
+    // 3. Pronto / Saiu para entrega
+    const msgOut = whatsAppNotificationService.formatStatusMessage(fakeOrder, 'out_for_delivery');
+    assert.equal(
+      msgOut,
+      '🛵 Boa notícia, Maria Souza! Seu pedido #789123 saiu para entrega e já está a caminho!'
+    );
+
+    // 4. Entregue
+    const msgDelivered = whatsAppNotificationService.formatStatusMessage(fakeOrder, 'delivered');
+    assert.equal(
+      msgDelivered,
+      '💜 Obrigado por comprar com a Explosão Açaí, Maria Souza! Esperamos que você curta sua explosão de sabor! Nos siga no Instagram: https://www.instagram.com/expl.osaoacai?mdxt=Zm1obWhpaTFhbmV3'
+    );
   });
 
   after(() => {

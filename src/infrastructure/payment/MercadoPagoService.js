@@ -1,103 +1,211 @@
 import { MercadoPagoConfig, Payment, Preference } from 'mercadopago';
+import QRCode from 'qrcode';
+import { db } from '../database/JsonDatabase.js';
+
+/**
+ * Cálculo do Checksum CRC-16 CCITT (Polinômio 0x1021, valor inicial 0xFFFF)
+ * Padrão estrito exigido pelo Banco Central do Brasil para EMVCo Pix BR Code.
+ */
+function computeCRC16(payload) {
+  let crc = 0xFFFF;
+  for (let i = 0; i < payload.length; i++) {
+    crc ^= (payload.charCodeAt(i) << 8);
+    for (let j = 0; j < 8; j++) {
+      if ((crc & 0x8000) !== 0) {
+        crc = ((crc << 1) ^ 0x1021) & 0xFFFF;
+      } else {
+        crc = (crc << 1) & 0xFFFF;
+      }
+    }
+  }
+  return crc.toString(16).toUpperCase().padStart(4, '0');
+}
+
+/**
+ * Formata um campo no padrão EMVCo TLV (Tag, Length, Value)
+ */
+function formatEMVCoTag(id, value) {
+  const len = String(value.length).padStart(2, '0');
+  return `${id}${len}${value}`;
+}
+
+/**
+ * Gera string Pix Copia e Cola estática válida conforme as normas do Banco Central do Brasil (EMVCo)
+ */
+export function generatePixStaticEMVCo({ key, name, city, amount, orderNo }) {
+  const cleanName = (name || 'EXPLOSAO ACAI')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Za-z0-9 ]/g, '').toUpperCase().substring(0, 25).trim();
+  const cleanCity = (city || 'FRANCA')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Za-z0-9 ]/g, '').toUpperCase().substring(0, 15).trim();
+
+  let pixKey = String(key || '16991098863').trim();
+  // Se for celular (10 ou 11 dígitos numéricos), formata no padrão E.164 (+55)
+  if (/^\d{10,11}$/.test(pixKey)) {
+    pixKey = `+55${pixKey}`;
+  }
+
+  const amountStr = Number(amount || 0).toFixed(2);
+  const txid = String(orderNo || 'PEDIDO').replace(/[^A-Za-z0-9]/g, '').substring(0, 25) || '***';
+
+  const sub26_00 = formatEMVCoTag('00', 'br.gov.bcb.pix');
+  const sub26_01 = formatEMVCoTag('01', pixKey);
+  const tag26 = formatEMVCoTag('26', `${sub26_00}${sub26_01}`);
+
+  const sub62_05 = formatEMVCoTag('05', txid);
+  const tag62 = formatEMVCoTag('62', sub62_05);
+
+  let payload = 
+    formatEMVCoTag('00', '01') +             // Payload Format Indicator
+    formatEMVCoTag('01', '12') +             // Point of Initiation (12 = dinâmico / valor fixo)
+    tag26 +                                  // Conta Pix recebedora
+    formatEMVCoTag('52', '0000') +           // Merchant Category Code
+    formatEMVCoTag('53', '986') +            // Moeda BRL
+    formatEMVCoTag('54', amountStr) +        // Valor da cobrança
+    formatEMVCoTag('58', 'BR') +             // País
+    formatEMVCoTag('59', cleanName) +        // Nome recebedor
+    formatEMVCoTag('60', cleanCity) +        // Cidade
+    tag62 +                                  // Referência / Pedido
+    '6304';                                  // Início do Checksum CRC16
+
+  const crc = computeCRC16(payload);
+  return `${payload}${crc}`;
+}
 
 export class MercadoPagoService {
   constructor() {
-    this.accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN || '';
-    this.publicKey = process.env.MERCADO_PAGO_PUBLIC_KEY || '';
-    this.isSandbox = !this.accessToken || this.accessToken.startsWith('TEST-');
+    this.refreshClient();
+  }
 
-    if (this.accessToken && !this.isSandbox) {
+  refreshClient() {
+    const settings = db.get()?.settings || {};
+    this.accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN || settings.mercadoPagoAccessToken || '';
+    this.publicKey = process.env.MERCADO_PAGO_PUBLIC_KEY || settings.mercadoPagoPublicKey || '';
+
+    // Se o token for o placeholder de teste padrão ou vazio, opera com chave Pix direta
+    const isPlaceholder = !this.accessToken || this.accessToken === 'TEST-1234567890-abcdef-0987654321' || !this.accessToken.trim();
+
+    if (!isPlaceholder) {
       try {
         this.client = new MercadoPagoConfig({
-          accessToken: this.accessToken,
-          options: { timeout: 5000 }
+          accessToken: this.accessToken.trim(),
+          options: { timeout: 6000 }
         });
         this.paymentClient = new Payment(this.client);
         this.preferenceClient = new Preference(this.client);
       } catch (err) {
-        console.warn('Erro ao inicializar SDK Mercado Pago, usando fallback simulado:', err.message);
+        console.warn('Aviso: Não foi possível instanciar MercadoPagoConfig:', err.message);
         this.client = null;
+        this.paymentClient = null;
       }
+    } else {
+      this.client = null;
+      this.paymentClient = null;
     }
   }
 
   async createPixPayment({ orderNo, total, customer, items = [] }) {
-    // Se estiver com chave de teste ou sem SDK configurado, gera dados compatíveis para teste instantâneo
-    if (!this.client || this.isSandbox) {
-      const mockPixCode = `00020126580014br.gov.bcb.pix013616991098863520400005303986540${total.toFixed(2)}5802BR5914EXPLOSAO ACAI6006FRANCA62070503${orderNo}6304ABCD`;
-      
-      // Gerador simples de SVG QR Code para exibir de imediato no navegador sem dependências extras
-      const mockQrBase64 = this._generateMockQrSvg(orderNo, total);
+    this.refreshClient();
 
-      return {
-        id: `mp_pix_${Date.now()}`,
-        status: 'pending',
-        paymentMethod: 'Pix',
-        qrCode: mockPixCode,
-        qrCodeBase64: mockQrBase64,
-        ticketUrl: `https://mercadopago.com.br/sandbox/payments/${orderNo}`,
-        isMock: true
-      };
+    // 1. Se cliente oficial do Mercado Pago estiver disponível, tenta gerar Pix oficial
+    if (this.paymentClient) {
+      try {
+        const cleanName = (customer.name || 'Cliente').trim();
+        const [firstName, ...rest] = cleanName.split(/\s+/);
+        const lastName = rest.join(' ') || 'Delivery';
+        const cleanPhone = String(customer.phone || '').replace(/\D/g, '');
+
+        const paymentData = {
+          transaction_amount: Number(total.toFixed(2)),
+          description: `Explosão Açaí - Pedido #${orderNo}`,
+          payment_method_id: 'pix',
+          payer: {
+            email: customer.email || `${cleanPhone || 'cliente'}@explosaoacai.com.br`,
+            first_name: firstName,
+            last_name: lastName,
+            phone: {
+              area_code: cleanPhone.substring(0, 2) || '16',
+              number: cleanPhone.substring(2) || '991098863'
+            }
+          },
+          external_reference: String(orderNo)
+        };
+
+        const result = await this.paymentClient.create({ body: paymentData });
+
+        let qrCode = result.point_of_interaction?.transaction_data?.qr_code || '';
+        let qrCodeBase64 = result.point_of_interaction?.transaction_data?.qr_code_base64 || '';
+
+        // Se o MP retornou a string Pix mas não a imagem, gera o QR Code em alta resolução
+        if (qrCode && !qrCodeBase64) {
+          qrCodeBase64 = await QRCode.toDataURL(qrCode, {
+            errorCorrectionLevel: 'M',
+            margin: 2,
+            width: 300,
+            color: { dark: '#2a0a3d', light: '#ffffff' }
+          });
+        }
+
+        return {
+          id: String(result.id),
+          status: result.status || 'pending',
+          paymentMethod: 'Pix',
+          qrCode,
+          qrCodeBase64,
+          ticketUrl: result.point_of_interaction?.transaction_data?.ticket_url || '',
+          isMock: false
+        };
+      } catch (err) {
+        console.warn('Mercado Pago API indisponível ou recusou criação, utilizando Pix Direto Seguro:', err.message);
+      }
     }
 
-    try {
-      const [firstName, ...rest] = (customer.name || 'Cliente').split(' ');
-      const lastName = rest.join(' ') || 'Delivery';
-      const cleanPhone = String(customer.phone || '').replace(/\D/g, '');
-
-      const paymentData = {
-        transaction_amount: Number(total.toFixed(2)),
-        description: `Explosão Açaí - Pedido #${orderNo}`,
-        payment_method_id: 'pix',
-        payer: {
-          email: `${cleanPhone || 'cliente'}@explosaoacai.com.br`,
-          first_name: firstName,
-          last_name: lastName,
-          phone: {
-            area_code: cleanPhone.substring(0, 2) || '16',
-            number: cleanPhone.substring(2) || '991098863'
-          }
-        },
-        external_reference: String(orderNo)
-      };
-
-      const result = await this.paymentClient.create({ body: paymentData });
-
-      return {
-        id: String(result.id),
-        status: result.status,
-        paymentMethod: 'Pix',
-        qrCode: result.point_of_interaction?.transaction_data?.qr_code || '',
-        qrCodeBase64: result.point_of_interaction?.transaction_data?.qr_code_base64 || '',
-        ticketUrl: result.point_of_interaction?.transaction_data?.ticket_url || '',
-        isMock: false
-      };
-    } catch (err) {
-      console.error('Falha na API oficial do Mercado Pago, recorrendo ao mock seguro:', err.message);
-      // Fallback gracioso para nunca travar a experiência do usuário
-      return this.createPixPaymentMock({ orderNo, total });
-    }
+    // 2. Fallback de Alta Fidelidade: Gera EMVCo BR Code e QR Code 100% válido para qualquer banco
+    return await this.createPixDirect({ orderNo, total });
   }
 
-  createPixPaymentMock({ orderNo, total }) {
-    const mockPixCode = `00020126580014br.gov.bcb.pix013616991098863520400005303986540${total.toFixed(2)}5802BR5914EXPLOSAO ACAI6006FRANCA62070503${orderNo}6304MOCK`;
-    const mockQrBase64 = this._generateMockQrSvg(orderNo, total);
+  async createPixDirect({ orderNo, total }) {
+    const settings = db.get()?.settings || {};
+    const pixKey = settings.pixKey || settings.wpp || '16991098863';
+    const storeName = settings.storeName || 'Explosão Açaí';
+    const city = settings.city || 'Franca';
+
+    const pixCode = generatePixStaticEMVCo({
+      key: pixKey,
+      name: storeName,
+      city,
+      amount: total,
+      orderNo
+    });
+
+    const qrCodeDataUrl = await QRCode.toDataURL(pixCode, {
+      errorCorrectionLevel: 'M',
+      margin: 2,
+      width: 300,
+      color: {
+        dark: '#2a0a3d',
+        light: '#ffffff'
+      }
+    });
 
     return {
-      id: `mp_pix_${Date.now()}`,
+      id: `pix_${Date.now()}_${orderNo}`,
       status: 'pending',
       paymentMethod: 'Pix',
-      qrCode: mockPixCode,
-      qrCodeBase64: mockQrBase64,
+      qrCode: pixCode,
+      qrCodeBase64: qrCodeDataUrl,
       ticketUrl: '',
       isMock: true
     };
   }
 
   async processCardPayment({ orderNo, total, token, paymentMethodId, installments = 1, issuerId, customer }) {
-    if (!this.client || this.isSandbox) {
+    this.refreshClient();
+
+    if (!this.paymentClient) {
       return {
-        id: `mp_card_${Date.now()}`,
+        id: `card_${Date.now()}`,
         status: 'approved',
         statusDetail: 'accredited',
         paymentMethod: paymentMethodId || 'Cartão',
@@ -135,54 +243,19 @@ export class MercadoPagoService {
   }
 
   async getPaymentStatus(paymentId) {
-    if (!this.client || this.isSandbox || paymentId.startsWith('mp_')) {
-      return { status: 'approved', id: paymentId };
+    this.refreshClient();
+
+    if (!this.paymentClient || !paymentId || !/^\d+$/.test(String(paymentId))) {
+      return { status: 'pending', id: paymentId };
     }
 
     try {
-      const p = await this.paymentClient.get({ id: paymentId });
+      const p = await this.paymentClient.get({ id: String(paymentId) });
       return { status: p.status, id: String(p.id) };
     } catch (err) {
-      console.error('Erro ao consultar status no Mercado Pago:', err);
+      console.error('Erro ao consultar status no Mercado Pago:', err.message);
       return { status: 'pending', id: paymentId };
     }
-  }
-
-  _generateMockQrSvg(orderNo, total) {
-    // Gera um SVG inline base64 limpo representando o QR Code para exibição instantânea
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
-      <rect width="200" height="200" fill="#ffffff" rx="12"/>
-      <!-- QR Frame -->
-      <rect x="20" y="20" width="50" height="50" fill="#2a0a3d" rx="6"/>
-      <rect x="30" y="30" width="30" height="30" fill="#ffffff" rx="3"/>
-      <rect x="36" y="36" width="18" height="18" fill="#4b0f6b" rx="2"/>
-      
-      <rect x="130" y="20" width="50" height="50" fill="#2a0a3d" rx="6"/>
-      <rect x="140" y="30" width="30" height="30" fill="#ffffff" rx="3"/>
-      <rect x="146" y="36" width="18" height="18" fill="#4b0f6b" rx="2"/>
-      
-      <rect x="20" y="130" width="50" height="50" fill="#2a0a3d" rx="6"/>
-      <rect x="30" y="140" width="30" height="30" fill="#ffffff" rx="3"/>
-      <rect x="36" y="146" width="18" height="18" fill="#4b0f6b" rx="2"/>
-      
-      <!-- Pattern blocks -->
-      <rect x="85" y="25" width="15" height="15" fill="#7b2cbf"/>
-      <rect x="105" y="35" width="12" height="12" fill="#2a0a3d"/>
-      <rect x="85" y="55" width="20" height="10" fill="#2a0a3d"/>
-      <rect x="40" y="85" width="12" height="12" fill="#7b2cbf"/>
-      <rect x="60" y="95" width="25" height="15" fill="#4b0f6b"/>
-      <rect x="95" y="85" width="30" height="30" fill="#2a0a3d" rx="4"/>
-      <text x="110" y="104" font-family="sans-serif" font-size="9" fill="#ffc800" font-weight="bold" text-anchor="middle">PIX</text>
-      <rect x="135" y="85" width="15" height="15" fill="#7b2cbf"/>
-      <rect x="160" y="95" width="15" height="15" fill="#2a0a3d"/>
-      <rect x="85" y="125" width="20" height="15" fill="#2a0a3d"/>
-      <rect x="115" y="130" width="15" height="25" fill="#4b0f6b"/>
-      <rect x="140" y="135" width="20" height="20" fill="#7b2cbf"/>
-      <rect x="85" y="155" width="20" height="20" fill="#ffc800"/>
-      <rect x="165" y="165" width="15" height="15" fill="#2a0a3d"/>
-      <text x="100" y="192" font-family="sans-serif" font-size="8" fill="#6b5280" text-anchor="middle">Pedido #${orderNo}</text>
-    </svg>`;
-    return Buffer.from(svg).toString('base64');
   }
 }
 

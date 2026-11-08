@@ -1,7 +1,7 @@
 /* =========================================================================
    CONTROLLER DE WEBHOOKS — MERCADO PAGO
-   - Recebe notificações em tempo real do Mercado Pago
-   - Ao aprovar Pix ou Cartão: confirma status e libera impressão automática imediata
+   - Recebe notificações em tempo real do Mercado Pago (Webhooks & IPN)
+   - Ao aprovar Pix ou Cartão: confirma status automaticamente e libera comanda
    ========================================================================= */
 
 import { orderService } from '../../application/services/OrderService.js';
@@ -10,21 +10,31 @@ import { mercadoPagoService } from '../../infrastructure/payment/MercadoPagoServ
 export class WebhookController {
   async handleMercadoPago(req, res) {
     try {
-      const { type, data, action } = req.body;
-      console.log('Webhook recebido do Mercado Pago:', { type, action, data });
+      const body = req.body || {};
+      const query = req.query || {};
 
-      if (type === 'payment' && data?.id) {
-        const paymentInfo = await mercadoPagoService.getPaymentStatus(data.id);
+      // Extrai o ID do pagamento de qualquer formato de notificação do Mercado Pago
+      let paymentId = body?.data?.id || body?.id || query?.id || query?.['data.id'];
+      if (!paymentId && query?.resource) {
+        paymentId = String(query.resource).split('/').pop();
+      }
 
-        if (paymentInfo.status === 'approved') {
+      const externalRef = body?.external_reference || query?.external_reference;
+
+      console.log('[Webhook Mercado Pago] Notificação recebida:', { paymentId, externalRef, type: body?.type || query?.topic });
+
+      if (paymentId) {
+        const paymentInfo = await mercadoPagoService.getPaymentStatus(paymentId);
+
+        if (paymentInfo && paymentInfo.status === 'approved') {
           const orders = orderService.getOrders();
           const order = orders.find(o => 
-            o.payment?.transactionId === String(data.id) || 
-            o.orderNo === String(req.body.external_reference)
+            String(o.payment?.transactionId) === String(paymentId) || 
+            (externalRef && o.orderNo === String(externalRef))
           );
 
           if (order) {
-            console.log(`Pagamento confirmado pelo banco para o Pedido #${order.orderNo}! Liberando impressão...`);
+            console.log(`[Webhook Mercado Pago] Pagamento aprovado para o Pedido #${order.orderNo}! Confirmando pedido no sistema...`);
             orderService.confirmPaymentApproved(order.id);
           }
         }
@@ -32,14 +42,13 @@ export class WebhookController {
 
       return res.status(200).send('OK');
     } catch (err) {
-      console.error('Erro ao processar Webhook do Mercado Pago:', err);
+      console.error('[Webhook Mercado Pago] Erro ao processar:', err.message);
       return res.status(200).send('OK');
     }
   }
 
   /**
-   * Endpoint de simulação para desenvolvimento/portfólio
-   * Permite simular a confirmação bancária imediata
+   * Endpoint de simulação / confirmação administrativa imediata
    */
   async simulatePaymentApproval(req, res) {
     try {
@@ -49,7 +58,7 @@ export class WebhookController {
 
       return res.json({
         ok: true,
-        message: 'Pagamento confirmado com sucesso! Comanda enviada para impressão.',
+        message: 'Pagamento confirmado com sucesso! Pedido marcado como Pago no painel.',
         order: updated
       });
     } catch (err) {

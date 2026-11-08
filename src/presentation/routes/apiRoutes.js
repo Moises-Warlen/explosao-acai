@@ -85,6 +85,7 @@ router.put('/chat/customer-name', adminAuthMiddleware, (req, res) => chatControl
 
 // ================= GATEWAY & WEBHOOKS =================
 router.post('/webhooks/mercadopago', (req, res) => webhookController.handleMercadoPago(req, res));
+router.get('/webhooks/mercadopago', (req, res) => webhookController.handleMercadoPago(req, res));
 router.post('/test/simulate-payment/:orderId', (req, res) => webhookController.simulatePaymentApproval(req, res));
 
 // ================= AUTENTICAÇÃO DO ADMIN =================

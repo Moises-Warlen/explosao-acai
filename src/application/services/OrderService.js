@@ -19,6 +19,41 @@ import { whatsAppNotificationService } from '../../infrastructure/notifications/
 export class OrderService {
   constructor() {
     this.db = db;
+    this.startPaymentAutoSync();
+  }
+
+  /**
+   * Consulta periódica do status de pagamentos Pix pendentes no Mercado Pago como reserva
+   */
+  startPaymentAutoSync() {
+    if (this._syncTimer) return;
+    this._syncTimer = setInterval(async () => {
+      try {
+        const data = this.db.get();
+        const pendingPix = (data.orders || []).filter(o =>
+          o.payment?.method === PaymentMethod.PIX &&
+          o.payment?.timing === 'online' &&
+          o.payment?.status !== PaymentStatus.APPROVED &&
+          o.status !== OrderStatus.CANCELLED &&
+          o.status !== OrderStatus.RETURNED &&
+          o.payment?.transactionId &&
+          /^\d+$/.test(String(o.payment.transactionId))
+        );
+
+        for (const ord of pendingPix) {
+          const statusInfo = await mercadoPagoService.getPaymentStatus(ord.payment.transactionId);
+          if (statusInfo && statusInfo.status === 'approved') {
+            console.log(`[Auto-Sync Reserva] Pix aprovado para o Pedido #${ord.orderNo}`);
+            this.confirmPaymentApproved(ord.id);
+          }
+        }
+      } catch (e) {}
+    }, 8000);
+
+    // Permite que o processo Node finalize normalmente durante testes
+    if (this._syncTimer && typeof this._syncTimer.unref === 'function') {
+      this._syncTimer.unref();
+    }
   }
 
   getOrders(filters = {}) {
@@ -226,7 +261,8 @@ export class OrderService {
       freight,
       total,
       costTotal: Number(orderCostTotal.toFixed(2)),
-      status: OrderStatus.RECEIVED
+      status: OrderStatus.RECEIVED,
+      notifiedStatuses: ['received']
     });
 
     // 9. Persiste no banco de dados
@@ -237,8 +273,8 @@ export class OrderService {
     // 10. Emite evento em tempo real via WebSocket para o Painel Administrativo
     wsHub.notifyNewOrder(newOrder);
 
-    // 11. Dispara cópia do pedido no WhatsApp se Gateway configurado
-    whatsAppNotificationService.notifyNewOrder(newOrder).catch(() => {});
+    // 11. Dispara mensagem no WhatsApp do cliente: Pedido feito / aceito
+    whatsAppNotificationService.notifyStatusChange(newOrder, 'received').catch(() => {});
 
     // 12. REGRA DE IMPRESSÃO: Auto-impressão imediata se for Dinheiro ou Cartão na Entrega!
     // Pagamentos online (Pix e Cartão Online) SÓ IMPRIMEM depois que o banco confirmar o pagamento!
@@ -283,11 +319,25 @@ export class OrderService {
     order.status = newStatus;
     order.updatedAt = now.toISOString();
 
+    // Regra: Cada mensagem é enviada UMA única vez por mudança de status
+    if (!Array.isArray(order.notifiedStatuses)) {
+      order.notifiedStatuses = [];
+    }
+    const statusKey = (newStatus === OrderStatus.READY || newStatus === OrderStatus.OUT_FOR_DELIVERY) ? 'out_for_delivery' : newStatus;
+    let shouldNotifyWpp = false;
+    if (!order.notifiedStatuses.includes(statusKey)) {
+      order.notifiedStatuses.push(statusKey);
+      shouldNotifyWpp = true;
+    }
+
     this.db.save();
 
     const updated = new Order(order);
     wsHub.notifyOrderStatus(updated);
-    whatsAppNotificationService.notifyStatusChange(updated).catch(() => {});
+
+    if (shouldNotifyWpp) {
+      whatsAppNotificationService.notifyStatusChange(updated, newStatus).catch(() => {});
+    }
 
     return updated;
   }
@@ -302,23 +352,46 @@ export class OrderService {
 
   /**
    * Confirmação de Pagamento aprovado pelo Banco / Webhook
-   * Dispara a impressão térmica de imediato!
+   * Dispara a impressão térmica de imediato e atualiza o status para Pago no painel!
    */
   confirmPaymentApproved(orderId) {
     const data = this.db.get();
     const orderIndex = data.orders.findIndex(o => o.id === orderId || o.orderNo === String(orderId));
     if (orderIndex === -1) return null;
 
-    data.orders[orderIndex].payment.status = PaymentStatus.APPROVED;
-    data.orders[orderIndex].status = OrderStatus.PREPARING;
-    data.orders[orderIndex].updatedAt = new Date().toISOString();
+    const order = data.orders[orderIndex];
+
+    // Evita duplicidade: se já aprovado anteriormente, não reprocessa
+    if (order.payment?.status === PaymentStatus.APPROVED) {
+      return new Order(order);
+    }
+
+    order.payment.status = PaymentStatus.APPROVED;
+    order.payment.paidAt = new Date().toISOString();
+    order.status = OrderStatus.PREPARING;
+    order.updatedAt = new Date().toISOString();
+
+    // Notificação WhatsApp para 'Em preparo' (apenas uma única vez)
+    if (!Array.isArray(order.notifiedStatuses)) {
+      order.notifiedStatuses = [];
+    }
+    let shouldNotifyWpp = false;
+    if (!order.notifiedStatuses.includes('preparing')) {
+      order.notifiedStatuses.push('preparing');
+      shouldNotifyWpp = true;
+    }
+
     this.db.save();
 
-    const updated = new Order(data.orders[orderIndex]);
+    const updated = new Order(order);
     wsHub.notifyOrderStatus(updated);
 
     // AGORA QUE O BANCO CONFIRMOU: DISPARA A IMPRESSÃO!
     this.autoPrintIfConfigured(updated);
+
+    if (shouldNotifyWpp) {
+      whatsAppNotificationService.notifyStatusChange(updated, OrderStatus.PREPARING).catch(() => {});
+    }
 
     return updated;
   }
@@ -347,11 +420,25 @@ export class OrderService {
       order.payment.paidAt = now.toISOString();
     }
     order.updatedAt = now.toISOString();
+
+    // Notificação WhatsApp para 'Entregue' (apenas uma única vez)
+    if (!Array.isArray(order.notifiedStatuses)) {
+      order.notifiedStatuses = [];
+    }
+    let shouldNotifyWpp = false;
+    if (!order.notifiedStatuses.includes('delivered')) {
+      order.notifiedStatuses.push('delivered');
+      shouldNotifyWpp = true;
+    }
+
     this.db.save();
 
     const updated = new Order(order);
     wsHub.notifyOrderStatus(updated);
-    whatsAppNotificationService.notifyStatusChange(updated).catch(() => {});
+
+    if (shouldNotifyWpp) {
+      whatsAppNotificationService.notifyStatusChange(updated, OrderStatus.DELIVERED).catch(() => {});
+    }
 
     return updated;
   }

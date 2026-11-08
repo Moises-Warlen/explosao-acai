@@ -53,6 +53,7 @@ export class Order {
     cancelledAt = null,
     returnReason = null,
     returnedAt = null,
+    notifiedStatuses = [],
     createdAt = new Date().toISOString(),
     updatedAt = new Date().toISOString()
   }) {
@@ -70,6 +71,7 @@ export class Order {
     this.costTotal = Number(costTotal || 0); // Custo dos insumos para relatório financeiro
     this.status = status;
     this.printedStations = printedStations; // ['kitchen', 'counter']
+    this.notifiedStatuses = Array.isArray(notifiedStatuses) ? notifiedStatuses : [];
     this.preparedAt = preparedAt;
     this.deliveredAt = deliveredAt;
     this.preparationTimeMinutes = preparationTimeMinutes;

@@ -6,30 +6,43 @@ export class WhatsAppNotificationService {
   }
 
   /**
-   * Formata mensagem amigável de atualização de status do pedido
+   * Formata número de telefone para o padrão internacional do WhatsApp:
+   * DDI 55 + DDD + Número (ex: 5516991098863)
    */
-  formatStatusMessage(order) {
-    const custName = order.customer?.name || 'Cliente';
-    const orderNo = order.orderNo || '';
-    const isDelivery = order.delivery?.type === 'delivery';
+  formatPhone(raw) {
+    if (!raw) return null;
+    const digits = String(raw).replace(/\D/g, '');
+    if (digits.length < 10) return null;
+    if (digits.startsWith('55') && (digits.length === 12 || digits.length === 13)) {
+      return digits;
+    }
+    if (digits.length === 10 || digits.length === 11) {
+      return `55${digits}`;
+    }
+    return digits;
+  }
 
-    switch (order.status) {
+  /**
+   * Formata mensagem amigável de atualização de status do pedido
+   * Seguindo rigorosamente os 4 modelos solicitados
+   */
+  formatStatusMessage(order, targetStatus) {
+    const status = targetStatus || order.status;
+    const nome = (order.customer?.name || 'Cliente').trim();
+    const numero = order.orderNo || '';
+
+    switch (status) {
       case 'received':
-        return `Olá, *${custName}*! 🍧\nSeu pedido *#${orderNo}* foi recebido com sucesso no *Explosão Açaí*!\nJá estamos na fila para prepará-lo.`;
+        return `✅ Olá, ${nome}! Seu pedido #${numero} na Explosão Açaí foi aceito! Já já começamos a preparar. 💜`;
       case 'preparing':
-        return `Olá, *${custName}*! 🍧\nSeu pedido *#${orderNo}* no *Explosão Açaí* já começou a ser *PREPARADO* com todo capricho pela nossa cozinha!`;
-      case 'out_for_delivery':
-        return `Olá, *${custName}*! 🛵💨\nBoas notícias! Seu pedido *#${orderNo}* no *Explosão Açaí* acabou de *SAIR PARA ENTREGA* com nosso entregador! Fique atento ao portão / interfone.`;
+        return `👩‍🍳 Seu pedido #${numero} já está sendo preparado com muito carinho! 💜`;
       case 'ready':
-        return `Olá, *${custName}*! 🛍️\nSeu pedido *#${orderNo}* no *Explosão Açaí* já está *PRONTO NO BALCÃO* aguardando sua retirada! Te esperamos na loja.`;
+      case 'out_for_delivery':
+        return `🛵 Boa notícia, ${nome}! Seu pedido #${numero} saiu para entrega e já está a caminho!`;
       case 'delivered':
-        return `Olá, *${custName}*! ✅\nSeu pedido *#${orderNo}* foi entregue e finalizado com sucesso!\nMuito obrigado pela preferência no *Explosão Açaí* e tenha um ótimo momento! 💜`;
-      case 'returned':
-        return `Olá, *${custName}*. ↩️\nSeu pedido *#${orderNo}* retornou para a loja (${order.returnReason || 'cliente não localizado'}).\nEntre em contato conosco pelo chat ou WhatsApp para combinarmos o reenvio!`;
-      case 'cancelled':
-        return `Olá, *${custName}*. ⚠️\nInformamos que seu pedido *#${orderNo}* no *Explosão Açaí* foi cancelado (${order.cancellationReason || 'motivo operacional'}).\nEstamos à disposição para qualquer dúvida.`;
+        return `💜 Obrigado por comprar com a Explosão Açaí, ${nome}! Esperamos que você curta sua explosão de sabor! Nos siga no Instagram: https://www.instagram.com/expl.osaoacai?mdxt=Zm1obWhpaTFhbmV3`;
       default:
-        return `Olá, *${custName}*! O status do seu pedido *#${orderNo}* na Explosão Açaí foi atualizado para: *${order.status}*.`;
+        return null;
     }
   }
 
@@ -37,7 +50,7 @@ export class WhatsAppNotificationService {
    * Formata mensagem completa com cópia do pedido
    */
   formatNewOrderReceipt(order) {
-    const custName = order.customer?.name || 'Cliente';
+    const custName = (order.customer?.name || 'Cliente').trim();
     const orderNo = order.orderNo || '';
     const isDelivery = order.delivery?.type === 'delivery';
 
@@ -64,25 +77,28 @@ export class WhatsAppNotificationService {
   /**
    * Dispara notificação automática de mudança de status se houver Gateway configurado
    */
-  async notifyStatusChange(order) {
+  async notifyStatusChange(order, targetStatus = null) {
     if (!order || !order.customer?.phone) return;
     const settings = this.db.get().settings || {};
 
-    const phone = String(order.customer.phone).replace(/\D/g, '');
-    if (!phone || phone.length < 10) return;
+    const fullPhone = this.formatPhone(order.customer.phone);
+    if (!fullPhone) return;
 
-    const message = this.formatStatusMessage(order);
+    const message = this.formatStatusMessage(order, targetStatus);
+    if (!message) return;
+
+    const apiUrl = process.env.WHATSAPP_API_URL || settings.whatsappApiUrl;
+    const apiToken = process.env.WHATSAPP_API_TOKEN || settings.whatsappApiToken;
 
     // Se houver URL de Gateway de WhatsApp configurada (ex: Evolution API, Z-API, Baileys, etc.)
-    if (settings.whatsappApiUrl && settings.whatsappApiToken) {
+    if (apiUrl && apiToken) {
       try {
-        const fullPhone = phone.startsWith('55') ? phone : `55${phone}`;
-        await fetch(settings.whatsappApiUrl, {
+        await fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${settings.whatsappApiToken}`,
-            'apikey': settings.whatsappApiToken
+            'Authorization': `Bearer ${apiToken}`,
+            'apikey': apiToken
           },
           body: JSON.stringify({
             number: fullPhone,
@@ -91,9 +107,9 @@ export class WhatsAppNotificationService {
             text: message
           })
         });
-        console.log(`[WhatsApp Auto Notification] Mensagem de status enviada com sucesso para ${fullPhone}`);
+        console.log(`[WhatsApp Auto Notification] Mensagem de status (${targetStatus || order.status}) enviada com sucesso para ${fullPhone}`);
       } catch (err) {
-        console.warn(`[WhatsApp Auto Notification] Falha ao enviar para ${phone}:`, err.message);
+        console.warn(`[WhatsApp Auto Notification] Falha ao enviar para ${fullPhone}:`, err.message);
       }
     }
   }
@@ -105,20 +121,21 @@ export class WhatsAppNotificationService {
     if (!order || !order.customer?.phone) return;
     const settings = this.db.get().settings || {};
 
-    const phone = String(order.customer.phone).replace(/\D/g, '');
-    if (!phone || phone.length < 10) return;
+    const fullPhone = this.formatPhone(order.customer.phone);
+    if (!fullPhone) return;
 
     const message = this.formatNewOrderReceipt(order);
+    const apiUrl = process.env.WHATSAPP_API_URL || settings.whatsappApiUrl;
+    const apiToken = process.env.WHATSAPP_API_TOKEN || settings.whatsappApiToken;
 
-    if (settings.whatsappApiUrl && settings.whatsappApiToken) {
+    if (apiUrl && apiToken) {
       try {
-        const fullPhone = phone.startsWith('55') ? phone : `55${phone}`;
-        await fetch(settings.whatsappApiUrl, {
+        await fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${settings.whatsappApiToken}`,
-            'apikey': settings.whatsappApiToken
+            'Authorization': `Bearer ${apiToken}`,
+            'apikey': apiToken
           },
           body: JSON.stringify({
             number: fullPhone,
@@ -129,7 +146,7 @@ export class WhatsAppNotificationService {
         });
         console.log(`[WhatsApp Auto Notification] Cópia do pedido enviada com sucesso para ${fullPhone}`);
       } catch (err) {
-        console.warn(`[WhatsApp Auto Notification] Falha ao enviar cópia para ${phone}:`, err.message);
+        console.warn(`[WhatsApp Auto Notification] Falha ao enviar cópia para ${fullPhone}:`, err.message);
       }
     }
   }
