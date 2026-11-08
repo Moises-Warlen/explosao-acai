@@ -320,12 +320,23 @@ function renderItemModal() {
     else maxAcomp = 4;
   }
 
+  // Identifica produtos com regras especiais de adicionais extras
+  const isPolpa = prod.id === 'polpa_1l' || prod.id === 'polpa_2l' || prod.categorySlug === 'polpa' || (prod.name && prod.name.toLowerCase().includes('pura polpa'));
+  const isComboKids = prod.id === 'combo_kids';
+
   // Filtra adicionais permitidos para este produto (açaí vs combo)
   const isCombo = prod.categorySlug === 'combos' || prod.category === 'combos';
   let availableExtras = (CATALOG.extras || []).filter(e => {
     if (!e.active) return false;
     return isCombo ? e.allowInCombos : e.allowInAcai;
   });
+
+  // REGRA ESPECÍFICA: Remover completamente adicionais extras de Pura Polpa (1L e 2L) e Combo Kids
+  if (isPolpa || isComboKids) {
+    availableExtras = [];
+    st.extras = [];
+    st.fruits = [];
+  }
 
   // Acompanhamentos disponíveis
   let availableAccompaniments = [];
@@ -345,13 +356,14 @@ function renderItemModal() {
     });
   }
 
-  // Calcula adicionais selecionados
+  // Calcula adicionais selecionados com cobrança imediata por fruta
   let extrasTotal = 0;
   st.extras.forEach(extId => {
     const ext = availableExtras.find(e => e.id === extId);
     if (ext) {
       if (ext.isFruitExtra) {
-        extrasTotal += ext.price * Math.max(1, st.fruits.length);
+        // Cobrança de cada fruta adicionada (1 fruta = R$ 3,90, 2 frutas = R$ 7,80, etc.)
+        extrasTotal += ext.price * st.fruits.length;
       } else {
         extrasTotal += ext.price;
       }
@@ -368,8 +380,8 @@ function renderItemModal() {
 
   let h = `
     <button class="x" onclick="closeSheet()">×</button>
-    <button class="btn-back-home" onclick="closeSheet()" style="position:absolute;top:14px;left:14px;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.25);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px;cursor:pointer;backdrop-filter:blur(4px);z-index:10">
-      🏠 Cardápio
+    <button class="btn o" onclick="closeSheet()" style="position:absolute;top:14px;left:14px;padding:5px 12px;font-size:12px;font-weight:700;display:flex;align-items:center;cursor:pointer;z-index:10;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.25);color:#fff;border-radius:20px">
+      Voltar para o cardápio
     </button>
     <div class="sheet-photo-wrap">
       <img src="${prod.image || 'imagens/do seu jeitinho.png'}" alt="${esc(prod.name)}" onerror="this.src='imagens/do seu jeitinho.png'">
@@ -404,17 +416,21 @@ function renderItemModal() {
     `;
   }
 
-  // Extras
+  // Extras (Removidos de Pura Polpa e Combo Kids)
   if (availableExtras.length > 0) {
     h += `
       <h4>Adicionais Extras <small style="color:var(--mut);font-weight:normal">(opcionais)</small></h4>
       <div>
         ${availableExtras.map(ext => {
           const selected = st.extras.includes(ext.id);
+          const isFruit = ext.isFruitExtra;
+          const priceLabel = isFruit
+            ? (st.fruits.length > 0 ? `+ ${R(ext.price * st.fruits.length)} (${st.fruits.length} fruta${st.fruits.length > 1 ? 's' : ''})` : `+ ${R(ext.price)} / fruta`)
+            : `+ ${R(ext.price)}`;
           return `
             <div class="row ${selected ? 'on' : ''}" onclick="toggleExtra('${ext.id}')">
               <span>${esc(ext.name)}</span>
-              <b>+ ${R(ext.price)}</b>
+              <b>${priceLabel}</b>
             </div>
           `;
         }).join('')}
@@ -422,15 +438,17 @@ function renderItemModal() {
     `;
   }
 
-  // Frutas selecionáveis se marcou fruta extra (não aplicável ao Monte seu açaí)
+  // Frutas selecionáveis se marcou fruta extra (Cálculo e valor acumulado imediato)
   if (hasFruitExtra) {
+    const fruitCostUnit = 3.90;
+    const fruitsCostTotal = fruitCostUnit * st.fruits.length;
     h += `
       <div class="frbox">
-        <p>Frutas Adicionais <small>(R$ 3,90 por fruta selecionada)</small></p>
+        <p>Frutas Adicionais <small style="color:var(--y);font-weight:700">(${st.fruits.length} fruta${st.fruits.length === 1 ? '' : 's'} selecionada${st.fruits.length === 1 ? '' : 's'} · ${R(fruitsCostTotal)})</small></p>
         <div class="chips">
           ${CATALOG.fruits.map(fr => {
             const selected = st.fruits.includes(fr);
-            return `<div class="chip ${selected ? 'on' : ''}" onclick="toggleFruit('${esc(fr)}')">${esc(fr)}</div>`;
+            return `<div class="chip ${selected ? 'on' : ''}" onclick="toggleFruit('${esc(fr)}')">${esc(fr)} (+${R(fruitCostUnit)})</div>`;
           }).join('')}
         </div>
       </div>
@@ -449,7 +467,7 @@ function renderItemModal() {
     </div>
 
     <button class="btn" onclick="addItemToCart()">Adicionar · ${R(finalTotal)}</button>
-    <button class="btn o" style="margin-top:8px" onclick="closeSheet()">🏠 Voltar para o Cardápio (Início)</button>
+    <button class="btn o" style="margin-top:8px" onclick="closeSheet()">Voltar para o cardápio</button>
   `;
 
   sheet.innerHTML = h;
@@ -526,6 +544,10 @@ window.toggleExtra = function(extId) {
   const idx = st.extras.indexOf(extId);
   if (idx !== -1) {
     st.extras.splice(idx, 1);
+    const ext = (CATALOG.extras || []).find(e => e.id === extId);
+    if (ext && ext.isFruitExtra) {
+      st.fruits = [];
+    }
   } else {
     st.extras.push(extId);
   }
@@ -541,6 +563,10 @@ window.toggleFruit = function(fruitName) {
     st.fruits.splice(idx, 1);
   } else {
     st.fruits.push(fruitName);
+    const fruitExtra = (CATALOG.extras || []).find(e => e.isFruitExtra);
+    if (fruitExtra && !st.extras.includes(fruitExtra.id)) {
+      st.extras.push(fruitExtra.id);
+    }
   }
   renderItemModal();
 };
@@ -559,7 +585,24 @@ window.addItemToCart = function() {
   const selectedSizeObj = prod.prices[st.selectedSizeIdx] || prod.prices[0];
   const basePrice = selectedSizeObj?.promoPrice != null ? selectedSizeObj.promoPrice : (selectedSizeObj?.price || 0);
   const isCombo = prod.categorySlug === 'combos' || prod.category === 'combos';
-  const availableExtras = (CATALOG.extras || []).filter(e => isCombo ? e.allowInCombos : e.allowInAcai);
+  const isPolpa = prod.id === 'polpa_1l' || prod.id === 'polpa_2l' || prod.categorySlug === 'polpa' || (prod.name && prod.name.toLowerCase().includes('pura polpa'));
+  const isComboKids = prod.id === 'combo_kids';
+
+  let availableExtras = (CATALOG.extras || []).filter(e => isCombo ? e.allowInCombos : e.allowInAcai);
+  if (isPolpa || isComboKids) {
+    availableExtras = [];
+    st.extras = [];
+    st.fruits = [];
+  }
+
+  // Se selecionou fruta extra mas não marcou nenhuma fruta:
+  const hasFruitExtra = st.extras.some(extId => {
+    const e = availableExtras.find(x => x.id === extId);
+    return e && e.isFruitExtra;
+  });
+  if (hasFruitExtra && st.fruits.length === 0) {
+    return toast('Por favor, selecione qual fruta deseja adicionar no seu açaí ou desmarque a opção.');
+  }
 
   let extrasTotal = 0;
   const extrasNames = [];
@@ -567,8 +610,9 @@ window.addItemToCart = function() {
     const ext = availableExtras.find(e => e.id === extId);
     if (ext) {
       if (ext.isFruitExtra) {
-        extrasTotal += ext.price * Math.max(1, st.fruits.length);
-        extrasNames.push(`Frutas (+${st.fruits.join(', ')})`);
+        const cost = ext.price * st.fruits.length;
+        extrasTotal += cost;
+        extrasNames.push(`Frutas: ${st.fruits.join(', ')} (+${R(cost)})`);
       } else {
         extrasTotal += ext.price;
         extrasNames.push(ext.name);
@@ -670,8 +714,8 @@ function renderCartModal() {
 
   let h = `
     <button class="x" onclick="closeSheet()">×</button>
-    <button class="btn-back-home" onclick="closeSheet()" style="position:absolute;top:14px;left:14px;background:rgba(255,255,255,0.1);border:1px solid var(--ln);color:var(--tx);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px;cursor:pointer">
-      🏠 Cardápio
+    <button class="btn o" onclick="closeSheet()" style="position:absolute;top:14px;left:14px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">
+      Voltar para o cardápio
     </button>
     <div style="display:flex;justify-content:space-between;align-items:center;padding-right:32px;margin-bottom:12px;margin-top:28px">
       <h3 style="margin:0">Seu Pedido</h3>
@@ -686,7 +730,7 @@ function renderCartModal() {
   if (CART.length === 0) {
     h += `
       <p class="mut" style="padding:24px 0;text-align:center">Seu carrinho está vazio.</p>
-      <button class="btn" onclick="closeSheet()">🏠 Voltar para o Cardápio (Início)</button>
+      <button class="btn" onclick="closeSheet()">Voltar para o cardápio</button>
     `;
     sheet.innerHTML = h;
     return;
@@ -738,7 +782,7 @@ function renderCartModal() {
 
     <button class="btn" onclick="openCheckoutModal()">Continuar para Entrega</button>
     <div style="display:flex;gap:10px;margin-top:8px">
-      <button class="btn o" style="flex:1" onclick="closeSheet()">🏠 Voltar ao Cardápio</button>
+      <button class="btn o" style="flex:1" onclick="closeSheet()">Voltar para o cardápio</button>
       <button class="btn" style="flex:1;background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.3);font-size:13px;font-weight:600" onclick="clearCart()">🗑️ Limpar Pedido</button>
     </div>
   `;
@@ -801,8 +845,8 @@ function renderCheckoutModal() {
 
   let h = `
     <button class="x" onclick="closeSheet()">×</button>
-    <button class="btn-back-home" onclick="closeSheet()" style="position:absolute;top:14px;left:14px;background:rgba(255,255,255,0.1);border:1px solid var(--ln);color:var(--tx);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px;cursor:pointer">
-      🏠 Cardápio
+    <button class="btn o" onclick="closeSheet()" style="position:absolute;top:14px;left:14px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">
+      Voltar para o cardápio
     </button>
     <h3 style="margin-top:28px">Finalizar Pedido</h3>
 
@@ -829,15 +873,15 @@ function renderCheckoutModal() {
 
       <div class="g2">
         <label>Número
-          <input id="f_num" value="${esc(CHECKOUT_DATA.num || '')}" placeholder="Ex: 123 (ou S/N)" oninput="CHECKOUT_DATA.num = this.value" onchange="CHECKOUT_DATA.num = this.value">
+          <input id="f_num" value="${esc(CHECKOUT_DATA.num || '')}" placeholder="Ex: 123 (ou S/N)" oninput="CHECKOUT_DATA.num = this.value; calcFrete()" onchange="CHECKOUT_DATA.num = this.value; calcFrete()">
         </label>
         <label>CEP
-          <input id="f_cep" value="${esc(CHECKOUT_DATA.cep || '')}" placeholder="14400-000" onchange="buscaCep(this.value)">
+          <input id="f_cep" value="${esc(CHECKOUT_DATA.cep || '')}" placeholder="14400-000" onchange="buscaCep(this.value)" oninput="if(this.value.replace(/\\D/g,'').length===8) buscaCep(this.value)">
         </label>
       </div>
 
       <label>Bairro
-        <input id="f_bairro" value="${esc(CHECKOUT_DATA.bairro || '')}" placeholder="Ex: Aeroporto" oninput="CHECKOUT_DATA.bairro = this.value">
+        <input id="f_bairro" value="${esc(CHECKOUT_DATA.bairro || '')}" placeholder="Ex: Aeroporto" oninput="CHECKOUT_DATA.bairro = this.value; calcFrete()" onchange="CHECKOUT_DATA.bairro = this.value; calcFrete()">
       </label>
 
       <label>Ponto de Referência
@@ -880,15 +924,17 @@ function renderCheckoutModal() {
   }
 
   h += `
-    <div class="tot" style="margin-top:16px"><span>Subtotal</span><span>${R(subtotal)}</span></div>
-    ${discount > 0 ? `<div class="tot" style="color:var(--success)"><span>Desconto</span><span>-${R(discount)}</span></div>` : ''}
-    ${isDelivery ? `<div class="tot"><span>Frete</span><span style="${freight === 0 ? 'color:var(--green);font-weight:700' : ''}">${freight === 0 ? 'GRÁTIS (Até 2 km)' : R(freight)}</span></div>` : ''}
-    <div class="tot g"><span>Total a Pagar</span><b>${R(total)}</b></div>
+    <div id="checkout-totals-box">
+      <div class="tot" style="margin-top:16px"><span>Subtotal</span><span>${R(subtotal)}</span></div>
+      ${discount > 0 ? `<div class="tot" style="color:var(--success)"><span>Desconto</span><span>-${R(discount)}</span></div>` : ''}
+      ${isDelivery ? `<div class="tot"><span>Frete</span><span style="${freight === 0 ? 'color:var(--green);font-weight:700' : ''}">${freight === 0 ? 'GRÁTIS (Até 2 km)' : R(freight)}</span></div>` : ''}
+      <div class="tot g"><span>Total a Pagar</span><b>${R(total)}</b></div>
 
-    <button class="btn g" id="btn-submit-order" onclick="submitOrder()">Enviar Pedido · ${R(total)}</button>
+      <button class="btn g" id="btn-submit-order" onclick="submitOrder()">Enviar Pedido · ${R(total)}</button>
+    </div>
     <div style="display:flex;gap:8px;margin-top:8px">
       <button class="btn o" style="flex:1" onclick="openCartModal()">← Ver carrinho</button>
-      <button class="btn o" style="flex:1" onclick="closeSheet()">🏠 Cardápio</button>
+      <button class="btn o" style="flex:1" onclick="closeSheet()">Voltar para o cardápio</button>
     </div>
   `;
 
@@ -897,7 +943,7 @@ function renderCheckoutModal() {
 
 window.setDeliveryType = function(type) {
   CHECKOUT_DATA.ent = type;
-  if (type === 'd' && CHECKOUT_DATA.freight === undefined) {
+  if (type === 'e' && CHECKOUT_DATA.freight === undefined) {
     calcFrete();
   }
   renderCheckoutModal();
@@ -931,32 +977,94 @@ window.buscaCep = async function(cep) {
       CHECKOUT_DATA.cid = data.localidade || 'Franca';
       CHECKOUT_DATA.uf = data.uf || 'SP';
       CHECKOUT_DATA.cep = digits;
+      if ($('#f_rua')) $('#f_rua').value = CHECKOUT_DATA.rua;
+      if ($('#f_bairro')) $('#f_bairro').value = CHECKOUT_DATA.bairro;
       calcFrete();
-      renderCheckoutModal();
     }
   } catch (e) {}
 };
 
+let FREIGHT_DEBOUNCE_TIMER = null;
 window.calcFrete = function() {
-  const km = CHECKOUT_DATA.km !== undefined ? CHECKOUT_DATA.km : 1.8;
-  CHECKOUT_DATA.km = km;
-  const freeKm = SETTINGS.freeKmThreshold !== undefined ? Number(SETTINGS.freeKmThreshold) : 2.0;
+  clearTimeout(FREIGHT_DEBOUNCE_TIMER);
+  FREIGHT_DEBOUNCE_TIMER = setTimeout(async () => {
+    const rua = (CHECKOUT_DATA.rua || $('#f_rua')?.value || '').trim();
+    const num = (CHECKOUT_DATA.num || $('#f_num')?.value || '').trim();
+    const bairro = (CHECKOUT_DATA.bairro || $('#f_bairro')?.value || '').trim();
+    const cep = (CHECKOUT_DATA.cep || $('#f_cep')?.value || '').trim();
+    const cid = (CHECKOUT_DATA.cid || 'Franca').trim();
+    const uf = (CHECKOUT_DATA.uf || 'SP').trim();
 
-  if (km <= freeKm) {
-    CHECKOUT_DATA.freight = 0;
-  } else {
-    CHECKOUT_DATA.freight = Math.max(SETTINGS.minFreight || 4.5, Math.ceil(km * (SETTINGS.perKmRate || 1.0) * 2) / 2);
-  }
+    if (!rua && !bairro && !cep) return;
 
-  const info = $('#freight-info');
-  if (info) {
-    if (CHECKOUT_DATA.freight === 0) {
-      info.innerHTML = `<b style="color:var(--green)">Distância estimada: ${km.toFixed(1)} km · Entrega GRÁTIS (Até ${freeKm} km)!</b>`;
-    } else {
-      info.textContent = `Distância estimada: ${km.toFixed(1)} km · Frete: ${R(CHECKOUT_DATA.freight)}`;
+    const info = $('#freight-info');
+    if (info) {
+      info.innerHTML = `<span style="opacity:0.7">Calculando distância da loja...</span>`;
     }
-  }
+
+    try {
+      const res = await fetch(`${API_URL}/store/calculate-freight`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ street: rua, number: num, bairro, cep, city: cid, state: uf })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        CHECKOUT_DATA.km = data.km;
+        CHECKOUT_DATA.freight = data.freight;
+        const freeKm = data.freeKmThreshold !== undefined ? data.freeKmThreshold : 2.0;
+
+        if (info) {
+          if (data.freight === 0) {
+            info.innerHTML = `<b style="color:var(--green)">Distância estimada: ${data.km.toFixed(1)} km · Entrega GRÁTIS (Até ${freeKm} km)!</b>`;
+          } else {
+            info.innerHTML = `<span>Distância estimada: <b>${data.km.toFixed(1)} km</b> · Frete: <b style="color:var(--y)">${R(data.freight)}</b></span>`;
+          }
+        }
+
+        // Atualiza o bloco de totais sem perder o foco nos inputs
+        updateCheckoutTotalsDisplay();
+        return;
+      }
+    } catch (err) {}
+
+    // Fallback de cálculo
+    const km = CHECKOUT_DATA.km !== undefined ? CHECKOUT_DATA.km : 3.5;
+    const freeKm = SETTINGS.freeKmThreshold !== undefined ? Number(SETTINGS.freeKmThreshold) : 2.0;
+    if (km <= freeKm) {
+      CHECKOUT_DATA.freight = 0;
+    } else {
+      CHECKOUT_DATA.freight = Math.max(SETTINGS.minFreight || 4.5, Math.ceil(km * (SETTINGS.perKmRate || 1.0) * 2) / 2);
+    }
+    if (info) {
+      if (CHECKOUT_DATA.freight === 0) {
+        info.innerHTML = `<b style="color:var(--green)">Distância estimada: ${km.toFixed(1)} km · Entrega GRÁTIS (Até ${freeKm} km)!</b>`;
+      } else {
+        info.innerHTML = `<span>Distância estimada: <b>${km.toFixed(1)} km</b> · Frete: <b style="color:var(--y)">${R(CHECKOUT_DATA.freight)}</b></span>`;
+      }
+    }
+    updateCheckoutTotalsDisplay();
+  }, 400);
 };
+
+function updateCheckoutTotalsDisplay() {
+  const box = $('#checkout-totals-box');
+  if (!box) return;
+  const isDelivery = CHECKOUT_DATA.ent !== 'r';
+  const subtotal = CART.reduce((acc, it) => acc + (it.unitPrice * it.quantity), 0);
+  const discount = APPLIED_COUPON ? APPLIED_COUPON.discount : 0;
+  const freight = isDelivery && CHECKOUT_DATA.freight !== undefined ? CHECKOUT_DATA.freight : (isDelivery ? 4.50 : 0);
+  const total = Math.max(0, subtotal - discount + freight);
+
+  box.innerHTML = `
+    <div class="tot" style="margin-top:16px"><span>Subtotal</span><span>${R(subtotal)}</span></div>
+    ${discount > 0 ? `<div class="tot" style="color:var(--success)"><span>Desconto</span><span>-${R(discount)}</span></div>` : ''}
+    ${isDelivery ? `<div class="tot"><span>Frete</span><span style="${freight === 0 ? 'color:var(--green);font-weight:700' : ''}">${freight === 0 ? 'GRÁTIS (Até 2 km)' : R(freight)}</span></div>` : ''}
+    <div class="tot g"><span>Total a Pagar</span><b>${R(total)}</b></div>
+
+    <button class="btn g" id="btn-submit-order" onclick="submitOrder()">Enviar Pedido · ${R(total)}</button>
+  `;
+}
 
 // Enviar Pedido
 window.submitOrder = async function() {
@@ -1105,8 +1213,8 @@ function renderOrderSuccess(order) {
 
   let h = `
     <button class="x" onclick="closeSheet()">×</button>
-    <button class="btn-back-home" onclick="closeSheet()" style="position:absolute;top:14px;left:14px;background:rgba(255,255,255,0.1);border:1px solid var(--ln);color:var(--tx);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px;cursor:pointer">
-      🏠 Cardápio
+    <button class="btn o" onclick="closeSheet()" style="position:absolute;top:14px;left:14px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">
+      Voltar para o cardápio
     </button>
     <div style="text-align:center;padding:10px 0;margin-top:20px">
       <h3 style="margin:4px 0">Pedido #${order.orderNo} Registrado</h3>
@@ -1153,7 +1261,7 @@ function renderOrderSuccess(order) {
       Abrir Chat com a Loja
     </button>
     <button class="btn" style="background:#4b0f6b;color:#fff;margin-top:8px;font-weight:700" onclick="closeSheet()">
-      🏠 Voltar para o Cardápio (Início)
+      Voltar para o cardápio
     </button>
   `;
 

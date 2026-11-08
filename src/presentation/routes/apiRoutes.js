@@ -29,6 +29,7 @@ router.post('/orders/:id/print', adminAuthMiddleware, (req, res) => orderControl
 // ================= CARDÁPIO & PRODUTOS =================
 router.get('/catalog', (req, res) => catalogController.getCatalog(req, res));
 router.get('/catalog/best-sellers', (req, res) => catalogController.getBestSellers(req, res));
+router.put('/catalog/best-sellers', adminAuthMiddleware, (req, res) => catalogController.updateBestSellers(req, res));
 router.post('/catalog/products', adminAuthMiddleware, (req, res) => catalogController.createProduct(req, res));
 router.put('/catalog/products/:id', adminAuthMiddleware, (req, res) => catalogController.updateProduct(req, res));
 router.patch('/catalog/products/:id/toggle', adminAuthMiddleware, (req, res) => catalogController.toggleActive(req, res));
@@ -69,6 +70,7 @@ router.get('/store/status', (req, res) => storeController.getStatus(req, res));
 router.get('/store/settings', (req, res) => storeController.getSettings(req, res));
 router.put('/store/settings', adminAuthMiddleware, (req, res) => storeController.updateSettings(req, res));
 router.post('/store/toggle-status', adminAuthMiddleware, (req, res) => storeController.toggleStatus(req, res));
+router.post('/store/calculate-freight', (req, res) => storeController.calculateFreight(req, res));
 
 // ================= IMPRESSORAS DE COMANDA =================
 router.get('/printers', adminAuthMiddleware, (req, res) => printerController.getAll(req, res));

@@ -12,6 +12,7 @@ import { mercadoPagoService } from '../../infrastructure/payment/MercadoPagoServ
 import { thermalPrinterService } from '../../infrastructure/printing/ThermalPrinterService.js';
 import { couponService } from './CouponService.js';
 import { storeService } from './StoreService.js';
+import { freightService } from './FreightService.js';
 import { wsHub } from '../../infrastructure/websockets/WebSocketHub.js';
 import { whatsAppNotificationService } from '../../infrastructure/notifications/WhatsAppNotificationService.js';
 
@@ -110,20 +111,34 @@ export class OrderService {
     // 5. Calcula Frete (Regra: Até 2 km a entrega é GRÁTIS!)
     let freight = 0;
     if (delivery && delivery.type === 'delivery') {
-      const km = Number(delivery.km || 0);
       const freeKmThreshold = catalog.settings?.freeKmThreshold !== undefined ? Number(catalog.settings.freeKmThreshold) : 2.0;
+      const minFreight = catalog.settings?.minFreight !== undefined ? Number(catalog.settings.minFreight) : 4.5;
+      const perKmRate = catalog.settings?.perKmRate !== undefined ? Number(catalog.settings.perKmRate) : 1.0;
 
-      if (km > 0 && km <= freeKmThreshold) {
+      let km = Number(delivery.km || 0);
+
+      // Se km não foi fornecido ou precisa ser calculado pelo endereço:
+      if (km <= 0 && (delivery.street || delivery.bairro || delivery.cep)) {
+        const calc = await freightService.calculateFreightForAddress({
+          street: delivery.street,
+          number: delivery.number,
+          bairro: delivery.bairro,
+          cep: delivery.cep,
+          city: delivery.city,
+          state: delivery.state
+        });
+        km = calc.km;
+        delivery.km = km;
+        freight = calc.freight;
+      } else if (km > 0 && km <= freeKmThreshold) {
         freight = 0; // Entrega GRÁTIS até 2 km
       } else {
-        freight = Number(delivery.freight || 0);
-        const minFreight = catalog.settings?.minFreight || 4.5;
-        if (freight < minFreight && freight > 0) {
-          freight = minFreight;
-        } else if (freight === 0 && km > freeKmThreshold) {
-          freight = minFreight;
-        }
+        freight = delivery.freight !== undefined && Number(delivery.freight) >= minFreight
+          ? Number(delivery.freight)
+          : Math.max(minFreight, Math.ceil(km * perKmRate * 2) / 2);
       }
+      delivery.freight = freight;
+      delivery.km = km;
     }
 
     // 6. Total Geral

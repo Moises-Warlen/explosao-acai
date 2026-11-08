@@ -158,8 +158,18 @@ export class CatalogController {
   // ================= MAIS VENDIDOS =================
   async getBestSellers(req, res) {
     try {
-      const limit = parseInt(req.query.limit) || 4;
+      const limit = parseInt(req.query.limit) || 6;
       const products = catalogService.getBestSellers(limit);
+      return res.json({ ok: true, products });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  }
+
+  async updateBestSellers(req, res) {
+    try {
+      const { productIds } = req.body || {};
+      const products = catalogService.updateBestSellers(productIds);
       return res.json({ ok: true, products });
     } catch (err) {
       return res.status(500).json({ ok: false, error: err.message });

@@ -427,9 +427,32 @@ export class CatalogService {
     return { bestSellers, worstSellers };
   }
 
-  getBestSellers(limit = 4) {
+  getBestSellers(limit = 6) {
+    const data = this.db.get();
+    const settings = data.settings || {};
+    const products = data.products || [];
+
+    // Se o lojista configurou manualmente a seleção de Mais Vendidos:
+    if (Array.isArray(settings.bestSellerProductIds) && settings.bestSellerProductIds.length > 0) {
+      const manual = settings.bestSellerProductIds
+        .map(id => products.find(p => p.id === id))
+        .filter(p => p && p.active)
+        .map(p => this.enrichProductWithCosts(p, products));
+      if (manual.length > 0) {
+        return manual.slice(0, limit);
+      }
+    }
+
     const { bestSellers } = this.getProductSalesRanking();
     return bestSellers.slice(0, limit);
+  }
+
+  updateBestSellers(productIds) {
+    const data = this.db.get();
+    data.settings = data.settings || {};
+    data.settings.bestSellerProductIds = Array.isArray(productIds) ? productIds : [];
+    this.db.save();
+    return this.getBestSellers(10);
   }
 
   getWorstSellers(limit = 4) {

@@ -65,7 +65,8 @@
         "close": "23:30",
         "active": true
       }
-    ]
+    ],
+    "bestSellerProductIds": []
   },
   "categories": [
     {

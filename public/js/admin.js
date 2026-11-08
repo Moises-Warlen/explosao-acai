@@ -383,27 +383,38 @@ const KANBAN_PAGE = {
 };
 const KANBAN_PER_PAGE = 3;
 
-// Controle de Cards Minimizados na coluna de Concluídos
-const EXPANDED_DELIVERED_ORDERS = new Set();
-window.toggleDeliveredCardExpand = function(orderId) {
-  if (EXPANDED_DELIVERED_ORDERS.has(orderId)) {
-    EXPANDED_DELIVERED_ORDERS.delete(orderId);
+// Controle de Cards Minimizados em Todas as Colunas do Kanban
+const EXPANDED_ORDERS = new Set();
+window.toggleOrderCardExpand = function(orderId) {
+  if (EXPANDED_ORDERS.has(orderId)) {
+    EXPANDED_ORDERS.delete(orderId);
   } else {
-    EXPANDED_DELIVERED_ORDERS.add(orderId);
+    EXPANDED_ORDERS.add(orderId);
   }
   renderKanban();
 };
+window.toggleDeliveredCardExpand = window.toggleOrderCardExpand;
 
-window.toggleAllDeliveredCards = function() {
-  const delivered = ORDERS.filter(o => o.status === 'delivered');
-  const allExp = delivered.length > 0 && delivered.every(o => EXPANDED_DELIVERED_ORDERS.has(o.id));
+window.toggleColumnExpand = function(colKey) {
+  const colOrders = ORDERS.filter(o => {
+    if (colKey === 'received') return o.status === 'received';
+    if (colKey === 'preparing') return o.status === 'preparing';
+    if (colKey === 'ready') return o.status === 'ready' || o.status === 'out_for_delivery';
+    if (colKey === 'delivered') return o.status === 'delivered';
+    if (colKey === 'returned') return o.status === 'returned';
+    if (colKey === 'cancelled') return o.status === 'cancelled';
+    return false;
+  });
+
+  const allExp = colOrders.length > 0 && colOrders.every(o => EXPANDED_ORDERS.has(o.id));
   if (allExp) {
-    EXPANDED_DELIVERED_ORDERS.clear();
+    colOrders.forEach(o => EXPANDED_ORDERS.delete(o.id));
   } else {
-    delivered.forEach(o => EXPANDED_DELIVERED_ORDERS.add(o.id));
+    colOrders.forEach(o => EXPANDED_ORDERS.add(o.id));
   }
   renderKanban();
 };
+window.toggleAllDeliveredCards = () => window.toggleColumnExpand('delivered');
 
 window.setKanbanPage = function(column, page) {
   KANBAN_PAGE[column] = page;
@@ -471,12 +482,12 @@ function renderKanbanColumn(colKey, list, containerId, paginationId, headerId, t
   const header = $(`#${headerId}`);
 
   if (header) {
-    if (colKey === 'delivered' && list.length > 0) {
-      const allExp = list.length > 0 && list.every(o => EXPANDED_DELIVERED_ORDERS.has(o.id));
+    if (list.length > 0) {
+      const allExp = list.every(o => EXPANDED_ORDERS.has(o.id));
       header.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
           <span>${title} <span style="font-size:11px;opacity:0.85;background:rgba(255,255,255,0.12);padding:1px 7px;border-radius:99px;margin-left:4px;color:#fff">${list.length}</span></span>
-          <button class="btn-sm btn-secondary" style="font-size:10px;padding:2px 7px" onclick="toggleAllDeliveredCards()" title="${allExp ? 'Minimizar todos os pedidos concluídos' : 'Expandir todos os pedidos concluídos'}">
+          <button class="btn-sm btn-secondary" style="font-size:10px;padding:2px 7px" onclick="toggleColumnExpand('${colKey}')" title="${allExp ? 'Minimizar todos os pedidos desta coluna' : 'Expandir todos os pedidos desta coluna'}">
             ${allExp ? '▲ Minimizar' : '▼ Expandir'}
           </button>
         </div>
@@ -564,12 +575,29 @@ function createOrderCardHtml(order) {
     `;
   }
 
-  // ================= CARTÕES MINIMIZADOS PARA CONCLUÍDOS =================
-  if (order.status === 'delivered' && !EXPANDED_DELIVERED_ORDERS.has(order.id)) {
+  // ================= CARTÕES MINIMIZADOS (PADRÃO PARA TODAS AS COLUNAS) =================
+  if (!EXPANDED_ORDERS.has(order.id)) {
     const payMethod = order.payment?.method ? order.payment.method.toUpperCase() : 'PAGO';
+    let statusSummary = '';
+    if (order.status === 'received') {
+      statusSummary = `<span style="color:#fde047;font-weight:600">Novos Pedidos (Aguardando Cozinha)</span>`;
+    } else if (order.status === 'preparing') {
+      statusSummary = `<span style="color:#60a5fa;font-weight:600">Em Preparo (Cozinha)</span>`;
+    } else if (order.status === 'out_for_delivery') {
+      statusSummary = `<span style="color:#f97316;font-weight:600">🛵 Saiu p/ Entrega</span>`;
+    } else if (order.status === 'ready') {
+      statusSummary = `<span style="color:#a78bfa;font-weight:600">🛍️ Pronto no Balcão</span>`;
+    } else if (order.status === 'delivered') {
+      statusSummary = `<span style="color:#a7f3d0;font-weight:600">✓ Entregue & Pago (${payMethod})</span>`;
+    } else if (order.status === 'returned') {
+      statusSummary = `<span style="color:#fed7aa;font-weight:600">↩ Devolvido à Loja</span>`;
+    } else if (order.status === 'cancelled') {
+      statusSummary = `<span style="color:#fca5a5;font-weight:600">✕ Cancelado</span>`;
+    }
+
     return `
-      <div class="order-card delivered-card minimized" id="card-${order.id}">
-        <div class="order-card-head" style="cursor:pointer" onclick="toggleDeliveredCardExpand('${order.id}')" title="Clique para expandir os detalhes deste pedido">
+      <div class="order-card minimized" id="card-${order.id}">
+        <div class="order-card-head" style="cursor:pointer" onclick="toggleOrderCardExpand('${order.id}')" title="Clique para expandir os detalhes deste pedido">
           <div style="display:flex;align-items:center;gap:6px">
             <b style="font-size:15px;color:var(--y)">#${order.orderNo}</b>
             <span style="font-weight:700;font-size:13px;color:#fff">${esc(order.customer.name)}</span>
@@ -582,16 +610,19 @@ function createOrderCardHtml(order) {
           </div>
         </div>
 
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px;font-size:11px">
-          <span style="color:#a7f3d0;font-weight:600">✓ Entregue & Pago (${payMethod})</span>
-          <div style="display:flex;gap:6px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;font-size:11px;flex-wrap:wrap;gap:4px">
+          <div>${statusSummary}</div>
+          <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
             <button class="btn-sm" style="background:#25d366;color:#fff;font-size:10px;padding:3px 7px;font-weight:600" onclick="event.stopPropagation(); sendWppStatusNotice('${order.id}')" title="Avisar cliente no WhatsApp">
               💬 Zap
             </button>
-            <button class="btn-sm btn-print" style="font-size:10px;padding:3px 7px" onclick="event.stopPropagation(); printOrderStation('${order.id}', 'counter')" title="Reimprimir Comanda Balcão">
-              Reimprimir
-            </button>
-            <button class="btn-sm btn-secondary" style="font-size:10px;padding:3px 7px" onclick="event.stopPropagation(); toggleDeliveredCardExpand('${order.id}')" title="Ver detalhes completos do pedido">
+            ${(order.status === 'delivered' || order.status === 'returned') ? `
+              <button class="btn-sm btn-print" style="font-size:10px;padding:3px 7px" onclick="event.stopPropagation(); printOrderStation('${order.id}', 'counter')" title="Reimprimir Comanda Balcão">
+                Reimprimir
+              </button>
+            ` : ''}
+            ${nextAction ? `<span onclick="event.stopPropagation()">${nextAction}</span>` : ''}
+            <button class="btn-sm btn-secondary" style="font-size:10px;padding:3px 7px" onclick="event.stopPropagation(); toggleOrderCardExpand('${order.id}')" title="Ver detalhes completos do pedido">
               ▼ Detalhes
             </button>
           </div>
@@ -657,22 +688,20 @@ function createOrderCardHtml(order) {
     }
   }
 
-  const isDeliveredExpanded = order.status === 'delivered';
+  const isOrderExpanded = EXPANDED_ORDERS.has(order.id);
 
   return `
-    <div class="order-card ${isDeliveredExpanded ? 'delivered-card expanded' : ''}" id="card-${order.id}">
-      <div class="order-card-head" ${isDeliveredExpanded ? `style="cursor:pointer" onclick="toggleDeliveredCardExpand('${order.id}')" title="Clique para minimizar"` : ''}>
+    <div class="order-card ${isOrderExpanded ? 'expanded' : ''}" id="card-${order.id}">
+      <div class="order-card-head" style="cursor:pointer" onclick="toggleOrderCardExpand('${order.id}')" title="Clique para minimizar">
         <div style="display:flex;align-items:center;gap:6px">
           <b style="font-size:16px;color:var(--y)">#${order.orderNo}</b>
           <span class="order-badge ${order.payment?.method === 'Pix' ? 'pix' : (isMoney ? 'money' : 'card')}">
             ${order.payment?.method}
           </span>
         </div>
-        ${isDeliveredExpanded ? `
-          <button class="btn-sm btn-secondary" style="font-size:10px;padding:2px 7px" onclick="event.stopPropagation(); toggleDeliveredCardExpand('${order.id}')" title="Minimizar card">
-            ▲ Minimizar
-          </button>
-        ` : ''}
+        <button class="btn-sm btn-secondary" style="font-size:10px;padding:2px 7px" onclick="event.stopPropagation(); toggleOrderCardExpand('${order.id}')" title="Minimizar card">
+          ▲ Minimizar
+        </button>
       </div>
 
       ${paymentBadgeHtml}
@@ -723,11 +752,9 @@ function createOrderCardHtml(order) {
           </button>
         ` : ''}
         ${nextAction}
-        ${isDeliveredExpanded ? `
-          <button class="btn-sm btn-secondary" style="margin-left:auto;font-size:11px;padding:3px 8px" onclick="toggleDeliveredCardExpand('${order.id}')">
-            ▲ Minimizar
-          </button>
-        ` : ''}
+        <button class="btn-sm btn-secondary" style="margin-left:auto;font-size:11px;padding:3px 8px" onclick="toggleOrderCardExpand('${order.id}')" title="Minimizar detalhes deste pedido">
+          ▲ Minimizar
+        </button>
         ${(order.status !== 'delivered' && order.status !== 'cancelled') ? `
           <button class="btn-sm btn-danger" style="margin-left:auto;font-size:11px;padding:4px 8px" onclick="openCancelOrderModal('${order.id}', '${order.orderNo}')" title="Cancelar este pedido">
             Cancelar
@@ -1437,8 +1464,97 @@ async function loadProducts() {
     if (data.ok) {
       PRODUCTS = data.products;
       renderProductsTable();
+      renderBestSellersManager();
     }
   } catch (e) {}
+}
+
+// ================= GESTÃO DA SEÇÃO MAIS VENDIDOS =================
+function renderBestSellersManager() {
+  const container = $('#bestsellers-manager-list');
+  const select = $('#sel-add-bestseller');
+  if (!container || !select) return;
+
+  const currentIds = Array.isArray(SETTINGS.bestSellerProductIds) ? SETTINGS.bestSellerProductIds : [];
+  const currentProducts = currentIds.map(id => PRODUCTS.find(p => p.id === id)).filter(Boolean);
+
+  const availableToAdd = PRODUCTS.filter(p => p.active && !currentIds.includes(p.id));
+  select.innerHTML = availableToAdd.length === 0
+    ? `<option value="">Todos os produtos já foram adicionados</option>`
+    : `<option value="">-- Selecione para adicionar --</option>` +
+      availableToAdd.map(p => `<option value="${p.id}">${esc(p.name)} (${esc(p.categorySlug || 'Geral')})</option>`).join('');
+
+  if (currentProducts.length === 0) {
+    container.innerHTML = `
+      <div style="color:var(--mut);font-size:12px;padding:6px 0;font-style:italic">
+        Nenhum produto fixado manualmente. O cardápio exibirá automaticamente os itens mais vendidos por volume de pedidos.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = currentProducts.map((p, idx) => `
+    <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.06);border:1px solid var(--ln);padding:6px 12px;border-radius:8px">
+      <img src="${p.image || 'imagens/do seu jeitinho.png'}" style="width:34px;height:34px;border-radius:6px;object-fit:cover">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#fff">${esc(p.name)}</div>
+        <small style="font-size:10px;color:var(--y);font-weight:700">★ #${idx + 1} em Mais Vendidos</small>
+      </div>
+      <button class="btn-sm btn-danger" style="font-size:10px;padding:3px 8px;margin-left:6px" onclick="removeBestSeller('${p.id}')" title="Remover da seção Mais Vendidos">Remover ✕</button>
+    </div>
+  `).join('');
+}
+
+window.addSelectedToBestSellers = async function() {
+  const sel = $('#sel-add-bestseller');
+  if (!sel || !sel.value) {
+    adminToast('Selecione um produto para adicionar aos Mais Vendidos.', 'danger');
+    return;
+  }
+  const prodId = sel.value;
+  const currentIds = Array.isArray(SETTINGS.bestSellerProductIds) ? [...SETTINGS.bestSellerProductIds] : [];
+  if (!currentIds.includes(prodId)) {
+    currentIds.push(prodId);
+    await saveBestSellersList(currentIds);
+  }
+};
+
+window.removeBestSeller = async function(prodId) {
+  const currentIds = Array.isArray(SETTINGS.bestSellerProductIds) ? [...SETTINGS.bestSellerProductIds] : [];
+  const updated = currentIds.filter(id => id !== prodId);
+  await saveBestSellersList(updated);
+};
+
+window.toggleProductBestSeller = async function(prodId) {
+  const currentIds = Array.isArray(SETTINGS.bestSellerProductIds) ? [...SETTINGS.bestSellerProductIds] : [];
+  let updated;
+  if (currentIds.includes(prodId)) {
+    updated = currentIds.filter(id => id !== prodId);
+  } else {
+    updated = [...currentIds, prodId];
+  }
+  await saveBestSellersList(updated);
+};
+
+async function saveBestSellersList(newList) {
+  try {
+    const res = await fetch(`${API_URL}/catalog/best-sellers`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({ productIds: newList })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      SETTINGS.bestSellerProductIds = newList;
+      renderBestSellersManager();
+      renderProductsTable();
+      adminToast('Seção Mais Vendidos atualizada com sucesso!', 'success');
+    } else {
+      adminToast(data.error || 'Erro ao atualizar Mais Vendidos.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Erro de conexão ao salvar Mais Vendidos.', 'danger');
+  }
 }
 
 let PRODUCTS_PAGE = 1;
@@ -1471,6 +1587,8 @@ function renderProductsTable() {
 
   tbody.innerHTML = pageProducts.map(p => {
     let flags = [];
+    const isBest = Array.isArray(SETTINGS.bestSellerProductIds) && SETTINGS.bestSellerProductIds.includes(p.id);
+    if (isBest) flags.push('<span class="profit-badge" style="background:#f59e0b;color:#000;font-weight:700">★ Mais Vendido</span>');
     if (p.isNewLaunch) flags.push('<span class="profit-badge" style="background:var(--y);color:#000">Lançamento</span>');
     if (p.isPromo) flags.push('<span class="loss-badge" style="background:var(--danger)">Promoção</span>');
     if (p.hasAnyLoss) flags.push('<span class="loss-badge">Prejuízo</span>');
@@ -1498,6 +1616,9 @@ function renderProductsTable() {
         </td>
         <td>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn-sm" style="font-size:11px;padding:3px 7px;background:${isBest ? '#b45309' : 'transparent'};color:${isBest ? '#fff' : 'var(--tx)'};border:1px solid ${isBest ? '#f59e0b' : 'var(--ln)'}" onclick="toggleProductBestSeller('${p.id}')" title="${isBest ? 'Remover dos Mais Vendidos' : 'Destacar na seção Mais Vendidos'}">
+              ${isBest ? '★ No Topo' : '☆ + Mais Vendido'}
+            </button>
             <button class="btn-sm btn-print" onclick="openRecipeModal('${p.id}')" title="Ver ficha técnica com quantidades e exportar PDF">Receita & PDF</button>
             <button class="btn-sm btn-secondary" onclick="editProductModal('${p.id}')">Editar</button>
             <button class="btn-sm btn-danger" onclick="deleteProduct('${p.id}')">Excluir</button>

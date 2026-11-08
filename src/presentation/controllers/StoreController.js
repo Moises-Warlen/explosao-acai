@@ -1,13 +1,25 @@
 import { storeService } from '../../application/services/StoreService.js';
+import { freightService } from '../../application/services/FreightService.js';
 
 export class StoreController {
   constructor() {
     this.storeService = storeService;
+    this.freightService = freightService;
   }
   async getStatus(req, res) {
     try {
       const status = storeService.isStoreOpen();
       return res.json({ ok: true, ...status });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  }
+
+  async calculateFreight(req, res) {
+    try {
+      const { street, number, bairro, cep, city, state } = req.body || {};
+      const result = await freightService.calculateFreightForAddress({ street, number, bairro, cep, city, state });
+      return res.json({ ok: true, ...result });
     } catch (err) {
       return res.status(500).json({ ok: false, error: err.message });
     }

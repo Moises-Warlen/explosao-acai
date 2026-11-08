@@ -322,6 +322,23 @@
           <button class="btn-sm btn-next" onclick="openNewProductModal()">+ Novo Produto</button>
         </div>
 
+        <!-- Gestão da Seção Mais Vendidos -->
+        <div style="margin-bottom:20px;padding:16px;background:#181028;border:1.5px solid #4b0f6b;border-radius:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+            <div>
+              <h3 style="margin:0;color:var(--y);font-size:15px">★ Gestão da Seção "Mais Vendidos" no Cardápio</h3>
+              <p style="font-size:12px;color:var(--mut);margin:4px 0 0">
+                Selecione quais produtos serão destacados na seção "Mais Vendidos" do cardápio digital do cliente.
+              </p>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="sel-add-bestseller" style="font-size:12px;padding:6px 10px;border-radius:6px;background:var(--card);color:#fff;border:1px solid var(--ln);max-width:240px"></select>
+              <button class="btn-sm btn-next" onclick="addSelectedToBestSellers()">+ Adicionar</button>
+            </div>
+          </div>
+          <div id="bestsellers-manager-list" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+        </div>
+
         <div class="table-responsive">
           <table>
             <thead>
