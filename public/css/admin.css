@@ -905,65 +905,73 @@ input:focus, select:focus, textarea:focus {
 }
 
 @media print {
-  /* Se for impressão da Ficha Técnica / Receita do Produto */
-  body.printing-recipe * {
-    visibility: hidden;
-  }
-  body.printing-recipe #recipe-pdf-area, body.printing-recipe #recipe-pdf-area * {
-    visibility: visible;
-  }
-  body.printing-recipe #recipe-pdf-area {
-    display: block !important;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    background: #fff !important;
-    color: #000 !important;
-    padding: 15mm;
-    font-family: Arial, sans-serif;
+  @page {
+    margin: 10mm;
+    size: auto;
   }
 
-  /* Se for impressão de relatório PDF */
-  body.printing-report * {
-    visibility: hidden;
+  /* Evitar quebras de página inadequadas e eliminar folhas em branco */
+  html, body {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+    color: #000 !important;
   }
-  body.printing-report #report-pdf-area, body.printing-report #report-pdf-area * {
-    visibility: visible;
+
+  tr, .ranking-item, .kpi-card, .recipe-card {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* 1. Impressão de Relatório PDF */
+  body.printing-report > *:not(#report-pdf-area) {
+    display: none !important;
   }
   body.printing-report #report-pdf-area {
     display: block !important;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
+    position: static !important;
+    width: 100% !important;
     background: #fff !important;
     color: #000 !important;
-    padding: 20mm;
+    padding: 5mm !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
     font-family: Arial, sans-serif;
   }
 
-  /* Se for impressão térmica */
-  body:not(.printing-report):not(.printing-recipe) * {
-    visibility: hidden;
+  /* 2. Impressão de Ficha Técnica / Receita do Produto */
+  body.printing-recipe > *:not(#recipe-pdf-area) {
+    display: none !important;
   }
-  body:not(.printing-report):not(.printing-recipe) #thermal-print-area,
-  body:not(.printing-report):not(.printing-recipe) #thermal-print-area * {
-    visibility: visible !important;
+  body.printing-recipe #recipe-pdf-area {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    background: #fff !important;
+    color: #000 !important;
+    padding: 5mm !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    font-family: Arial, sans-serif;
+  }
+
+  /* 3. Impressão Térmica de Comanda (Cozinha e Balcão) */
+  body:not(.printing-report):not(.printing-recipe) > *:not(#thermal-print-area) {
+    display: none !important;
   }
   body:not(.printing-report):not(.printing-recipe) #thermal-print-area {
     display: block !important;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 80mm;
-    margin: 0;
-    padding: 4mm 2mm;
+    position: static !important;
+    width: 80mm !important;
+    margin: 0 auto !important;
+    padding: 2mm !important;
+    box-sizing: border-box !important;
     font-family: monospace;
     font-size: 12px;
     line-height: 1.35;
-    color: #000;
-    background: #fff;
+    color: #000 !important;
+    background: #fff !important;
   }
   body:not(.printing-report):not(.printing-recipe) #thermal-print-area img {
     display: block !important;

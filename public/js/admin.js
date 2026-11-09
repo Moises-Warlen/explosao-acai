@@ -76,9 +76,12 @@ function adminToastHtml(html, type = 'info', duration = 6500) {
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
+  const dash = $('#dashboard-wrapper');
   if (!ADMIN_TOKEN) {
+    if (dash) dash.style.display = 'none';
     showLoginModal();
   } else {
+    if (dash) dash.style.display = 'block';
     initDashboard();
   }
 });
@@ -103,7 +106,10 @@ window.doLogin = async function() {
     if (data.ok) {
       ADMIN_TOKEN = data.token;
       localStorage.setItem('admin_token', ADMIN_TOKEN);
+      sessionStorage.setItem('explosao_admin_token', ADMIN_TOKEN);
       $('#login-modal').style.display = 'none';
+      const dash = $('#dashboard-wrapper');
+      if (dash) dash.style.display = 'block';
       adminToast('Painel administrativo autenticado com sucesso!', 'success');
       initDashboard();
     } else {
@@ -116,7 +122,17 @@ window.doLogin = async function() {
 
 window.logout = function() {
   localStorage.removeItem('admin_token');
-  location.reload();
+  sessionStorage.removeItem('explosao_admin_token');
+  ADMIN_TOKEN = null;
+  if (ws) {
+    try { ws.close(); } catch (e) {}
+  }
+  const dash = $('#dashboard-wrapper');
+  if (dash) dash.style.display = 'none';
+  const passInput = $('#admin-pass-input');
+  if (passInput) passInput.value = '';
+  showLoginModal();
+  adminToast('Sessão encerrada com sucesso.', 'info');
 };
 
 function authHeaders() {
@@ -190,6 +206,11 @@ function initWebSocket() {
         if (data.event === 'PRINT_JOB') {
           executeBrowserPrint(data.payload.ticketText);
         }
+        if (data.event === 'CATALOG_UPDATED') {
+          await loadProducts();
+          await loadAccompaniments();
+          await loadStoreStatus();
+        }
       } catch (e) {}
     };
     WS.onclose = () => setTimeout(initWebSocket, 4000);
@@ -209,6 +230,11 @@ function bindNavigation() {
       tab.classList.add('active');
       const targetPane = $(`#${tab.dataset.tab}`);
       if (targetPane) targetPane.classList.add('active');
+
+      if (tab.dataset.tab === 'tab-reports') {
+        const period = $('#report-period-select')?.value || 'today';
+        loadSalesReport({ period });
+      }
 
       if (tab.dataset.tab === 'tab-chat') {
         loadChatConversations().then(() => {
@@ -243,6 +269,7 @@ async function loadStoreStatus() {
     if (setData.ok) {
       SETTINGS = setData.settings;
       renderStoreSettingsForm();
+      renderBestSellersManager();
     }
   } catch (e) {}
 }
@@ -318,6 +345,10 @@ window.saveNewAdminPassword = async function(e) {
 
   if (!curPass || !newPass) {
     adminToast('Preencha a senha atual e a nova senha.', 'danger');
+    return;
+  }
+  if (curPass === newPass) {
+    adminToast('A nova senha não pode ser igual à senha atual.', 'danger');
     return;
   }
   if (newPass.length < 4) {
@@ -878,23 +909,23 @@ window.advanceOrderStatus = async function(orderId, newStatus) {
   }
 };
 
-// ==================== NOTIFICAÇÃO E AVISOS WHATSAPP ====================
+// ==================== NOTIFICAÇÃO E AVISOS WHATSAPP (SEM EMOJIS / UTF-8) ====================
 window.getWppStatusMessage = function(order) {
   const nome = (order.customer?.name || 'Cliente').trim();
   const numero = order.orderNo || '';
 
   switch (order.status) {
     case 'received':
-      return `✅ Olá, ${nome}! Seu pedido #${numero} na Explosão Açaí foi aceito! Já já começamos a preparar. 💜`;
+      return `Olá, ${nome}! Seu pedido #${numero} na Explosão Açaí foi aceito! Já já começamos a preparar.`;
     case 'preparing':
-      return `👩‍🍳 Seu pedido #${numero} já está sendo preparado com muito carinho! 💜`;
+      return `Seu pedido #${numero} já está sendo preparado com muito carinho!`;
     case 'ready':
     case 'out_for_delivery':
-      return `🛵 Boa notícia, ${nome}! Seu pedido #${numero} saiu para entrega e já está a caminho!`;
+      return `Boa notícia, ${nome}! Seu pedido #${numero} saiu para entrega e já está a caminho!`;
     case 'delivered':
-      return `💜 Obrigado por comprar com a Explosão Açaí, ${nome}! Esperamos que você curta sua explosão de sabor! Nos siga no Instagram: https://www.instagram.com/expl.osaoacai?mdxt=Zm1obWhpaTFhbmV3`;
+      return `Obrigado por comprar com a Explosão Açaí, ${nome}! Esperamos que você curta sua explosão de sabor! Nos siga no Instagram: https://www.instagram.com/expl.osaoacai?mdxt=Zm1obWhpaTFhbmV3`;
     default:
-      return `✅ Olá, ${nome}! Seu pedido #${numero} na Explosão Açaí teve o status atualizado para: ${order.status}. 💜`;
+      return `Olá, ${nome}! Seu pedido #${numero} na Explosão Açaí teve o status atualizado para: ${order.status}.`;
   }
 };
 
@@ -1223,18 +1254,41 @@ function getFilteredReportOrders(orders) {
   });
 }
 
-window.applyReportTableFilters = function() {
+let REPORT_PAGE = 1;
+const REPORT_PER_PAGE = 6;
+
+window.setReportPage = function(page) {
+  REPORT_PAGE = page;
+  applyReportTableFilters(false);
+};
+
+window.applyReportTableFilters = function(resetPage = false) {
   if (!CURRENT_REPORT) return;
   const tbody = $('#report-orders-table-body');
+  const paginationBox = $('#report-orders-pagination');
   if (!tbody) return;
 
+  if (resetPage) {
+    REPORT_PAGE = 1;
+  }
+
   const filtered = getFilteredReportOrders(CURRENT_REPORT.orders || []);
-  if (filtered.length === 0) {
+  const total = filtered.length;
+
+  if (total === 0) {
     tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:18px;color:var(--mut)">Nenhum pedido encontrado para os filtros selecionados.</td></tr>`;
+    if (paginationBox) paginationBox.innerHTML = '';
     return;
   }
 
-  tbody.innerHTML = filtered.map(o => `
+  const totalPages = Math.max(1, Math.ceil(total / REPORT_PER_PAGE));
+  if (REPORT_PAGE > totalPages) REPORT_PAGE = totalPages;
+  if (REPORT_PAGE < 1) REPORT_PAGE = 1;
+
+  const start = (REPORT_PAGE - 1) * REPORT_PER_PAGE;
+  const pageOrders = filtered.slice(start, start + REPORT_PER_PAGE);
+
+  tbody.innerHTML = pageOrders.map(o => `
     <tr style="${o.isCancelled ? 'opacity:0.8;background:rgba(239,68,68,0.06)' : (o.isReturned ? 'opacity:0.85;background:rgba(245,158,11,0.06)' : '')}">
       <td><b>#${o.orderNo}</b></td>
       <td>
@@ -1264,6 +1318,28 @@ window.applyReportTableFilters = function() {
       <td>${new Date(o.createdAt).toLocaleString('pt-BR')}</td>
     </tr>
   `).join('');
+
+  if (paginationBox) {
+    let pageNumbersHtml = '';
+    for (let p = 1; p <= totalPages; p++) {
+      pageNumbersHtml += `
+        <button class="btn-sm ${p === REPORT_PAGE ? 'btn-next' : 'btn-secondary'}" 
+                style="padding:4px 9px;min-width:30px;font-size:12px;font-weight:${p === REPORT_PAGE ? 'bold' : 'normal'}" 
+                onclick="setReportPage(${p})">${p}</button>
+      `;
+    }
+
+    paginationBox.innerHTML = `
+      <div style="font-size:13px;color:var(--mut)">
+        Mostrando <b>${start + 1} - ${Math.min(start + REPORT_PER_PAGE, total)}</b> de <b>${total}</b> pedidos (6 por página)
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <button class="btn-sm btn-secondary" style="padding:4px 10px;font-size:12px" onclick="setReportPage(${REPORT_PAGE - 1})" ${REPORT_PAGE <= 1 ? 'disabled' : ''}>◀ Anterior</button>
+        <div style="display:flex;gap:4px">${pageNumbersHtml}</div>
+        <button class="btn-sm btn-secondary" style="padding:4px 10px;font-size:12px" onclick="setReportPage(${REPORT_PAGE + 1})" ${REPORT_PAGE >= totalPages ? 'disabled' : ''}>Próximo ▶</button>
+      </div>
+    `;
+  }
 };
 
 function renderRankings(bestSellers, worstSellers) {
@@ -1476,16 +1552,21 @@ function renderBestSellersManager() {
   const currentIds = Array.isArray(SETTINGS.bestSellerProductIds) ? SETTINGS.bestSellerProductIds : [];
   const currentProducts = currentIds.map(id => PRODUCTS.find(p => p.id === id)).filter(Boolean);
 
+  // Lista todos os produtos e combos ativos cadastrados que ainda não estão nos Mais Vendidos (sem repetição)
   const availableToAdd = PRODUCTS.filter(p => p.active && !currentIds.includes(p.id));
+  
   select.innerHTML = availableToAdd.length === 0
-    ? `<option value="">Todos os produtos já foram adicionados</option>`
+    ? `<option value="">Todos os itens já foram adicionados</option>`
     : `<option value="">-- Selecione para adicionar --</option>` +
-      availableToAdd.map(p => `<option value="${p.id}">${esc(p.name)} (${esc(p.categorySlug || 'Geral')})</option>`).join('');
+      availableToAdd.map(p => {
+        const cat = p.categorySlug === 'combos' ? 'Combo' : (p.categorySlug || 'Produto');
+        return `<option value="${p.id}">${esc(p.name)} [${cat}]</option>`;
+      }).join('');
 
   if (currentProducts.length === 0) {
     container.innerHTML = `
       <div style="color:var(--mut);font-size:12px;padding:6px 0;font-style:italic">
-        Nenhum produto fixado manualmente. O cardápio exibirá automaticamente os itens mais vendidos por volume de pedidos.
+        Nenhum item adicionado aos Mais Vendidos. A seção não aparecerá no cardápio até você adicionar itens aqui.
       </div>
     `;
     return;
@@ -1493,7 +1574,7 @@ function renderBestSellersManager() {
 
   container.innerHTML = currentProducts.map((p, idx) => `
     <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.06);border:1px solid var(--ln);padding:6px 12px;border-radius:8px">
-      <img src="${p.image || 'imagens/do seu jeitinho.png'}" style="width:34px;height:34px;border-radius:6px;object-fit:cover">
+      <img src="${p.image || 'imagens/do seu jeitinho.png'}" style="width:34px;height:34px;border-radius:6px;object-fit:cover" onerror="this.src='imagens/do seu jeitinho.png'">
       <div>
         <div style="font-size:12px;font-weight:700;color:#fff">${esc(p.name)}</div>
         <small style="font-size:10px;color:var(--y);font-weight:700">★ #${idx + 1} em Mais Vendidos</small>
@@ -1838,6 +1919,34 @@ window.toggleProductPause = async function(id) {
   } catch (e) {}
 };
 
+window.renderProductAccompanimentsCheckboxes = function(selectedIds = null) {
+  const box = $('#product-accompaniments-checkboxes');
+  if (!box) return;
+
+  if (!ACCOMPANIMENTS || ACCOMPANIMENTS.length === 0) {
+    box.innerHTML = `<span style="font-size:12px;color:var(--mut)">Nenhum acompanhamento cadastrado. Cadastre novos na aba "Acompanhamentos".</span>`;
+    return;
+  }
+
+  box.innerHTML = ACCOMPANIMENTS.map(ac => {
+    const isChecked = selectedIds === null || selectedIds === undefined
+      ? (ac.active !== false)
+      : (Array.isArray(selectedIds) ? selectedIds.includes(ac.id) : true);
+
+    return `
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;margin:0;color:#fff">
+        <input type="checkbox" class="prod-acomp-cb" value="${ac.id}" ${isChecked ? 'checked' : ''} style="width:auto">
+        <span>${esc(ac.name)}</span>
+      </label>
+    `;
+  }).join('');
+};
+
+window.toggleAllProductAccompaniments = function(checked) {
+  const checkboxes = $$('#product-accompaniments-checkboxes input[type="checkbox"]');
+  checkboxes.forEach(cb => { cb.checked = !!checked; });
+};
+
 window.openNewProductModal = function() {
   $('#prod-modal-title').textContent = 'Novo Produto';
   $('#p-id').value = '';
@@ -1862,6 +1971,7 @@ window.openNewProductModal = function() {
 
   $('#loss-alert-box').style.display = 'none';
   handleCategoryChange($('#p-category')?.value);
+  renderProductAccompanimentsCheckboxes(null);
   $('#product-edit-modal').style.display = 'flex';
 };
 
@@ -1896,6 +2006,7 @@ window.editProductModal = function(id) {
   $('#p-max-acomp-700').value = p700 ? p700.maxAccompaniments : '5';
 
   handleCategoryChange(prod.categoryId, prod.comboProductIds || []);
+  renderProductAccompanimentsCheckboxes(prod.allowedAccompanimentIds || null);
   checkFormPrejuizo();
   $('#product-edit-modal').style.display = 'flex';
 };
@@ -2030,6 +2141,10 @@ window.saveProductForm = async function(e) {
     prices.push({ size: 500, price: 25.00, costPrice: 10.00, maxAccompaniments: 4, promoPrice: null });
   }
 
+  // Acompanhamentos selecionados para este copo
+  const acompCheckboxes = $$('#product-accompaniments-checkboxes input[type="checkbox"]:checked');
+  const allowedAccompanimentIds = Array.from(acompCheckboxes).map(cb => cb.value);
+
   const payload = {
     name,
     categoryId,
@@ -2038,6 +2153,7 @@ window.saveProductForm = async function(e) {
     isNewLaunch,
     isPromo,
     comboProductIds,
+    allowedAccompanimentIds,
     prices,
     active: true
   };
@@ -2108,6 +2224,9 @@ async function loadAccompaniments() {
     if (data.ok) {
       ACCOMPANIMENTS = data.accompaniments || [];
       renderAccompanimentsTable();
+      if ($('#product-edit-modal')?.style.display === 'flex') {
+        renderProductAccompanimentsCheckboxes();
+      }
     }
   } catch (e) {}
 }
@@ -2990,6 +3109,10 @@ window.saveNewAdminPasswordModal = async function(e) {
 
   if (!curPass || !newPass) {
     adminToast('Preencha a senha atual e a nova senha.', 'danger');
+    return;
+  }
+  if (curPass === newPass) {
+    adminToast('A nova senha não pode ser igual à senha atual.', 'danger');
     return;
   }
   if (newPass.length < 4) {

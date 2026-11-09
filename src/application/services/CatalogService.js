@@ -10,6 +10,7 @@
    ========================================================================= */
 
 import { db } from '../../infrastructure/database/JsonDatabase.js';
+import { wsHub } from '../../infrastructure/websockets/WebSocketHub.js';
 
 export class CatalogService {
   constructor() {
@@ -112,6 +113,7 @@ export class CatalogService {
 
     dbData.accompaniments.push(newAcomp);
     this.db.save();
+    try { wsHub.broadcast('CATALOG_UPDATED', {}); } catch (e) {}
     return newAcomp;
   }
 
@@ -127,6 +129,7 @@ export class CatalogService {
     };
 
     this.db.save();
+    try { wsHub.broadcast('CATALOG_UPDATED', {}); } catch (e) {}
     return dbData.accompaniments[idx];
   }
 
@@ -137,6 +140,7 @@ export class CatalogService {
 
     const removed = dbData.accompaniments.splice(idx, 1);
     this.db.save();
+    try { wsHub.broadcast('CATALOG_UPDATED', {}); } catch (e) {}
     return removed[0];
   }
 
@@ -309,12 +313,14 @@ export class CatalogService {
       isNewLaunch: !!productData.isNewLaunch,
       isPromo: !!productData.isPromo,
       comboProductIds: Array.isArray(productData.comboProductIds) ? productData.comboProductIds : [],
+      allowedAccompanimentIds: Array.isArray(productData.allowedAccompanimentIds) ? productData.allowedAccompanimentIds : undefined,
       prices,
       recipes: productData.recipes || []
     };
 
     data.products.push(newProduct);
     this.db.save();
+    try { wsHub.broadcast('CATALOG_UPDATED', {}); } catch (e) {}
     return this.enrichProductWithCosts(newProduct, data.products);
   }
 
@@ -330,6 +336,7 @@ export class CatalogService {
     };
 
     this.db.save();
+    try { wsHub.broadcast('CATALOG_UPDATED', {}); } catch (e) {}
     return this.enrichProductWithCosts(data.products[idx], data.products);
   }
 
@@ -438,13 +445,11 @@ export class CatalogService {
         .map(id => products.find(p => p.id === id))
         .filter(p => p && p.active)
         .map(p => this.enrichProductWithCosts(p, products));
-      if (manual.length > 0) {
-        return manual.slice(0, limit);
-      }
+      return manual.slice(0, limit);
     }
 
-    const { bestSellers } = this.getProductSalesRanking();
-    return bestSellers.slice(0, limit);
+    // Regra oficial: Exibir SOMENTE os itens adicionados manualmente. Se vazio, retorna lista vazia.
+    return [];
   }
 
   updateBestSellers(productIds) {
@@ -452,7 +457,10 @@ export class CatalogService {
     data.settings = data.settings || {};
     data.settings.bestSellerProductIds = Array.isArray(productIds) ? productIds : [];
     this.db.save();
-    return this.getBestSellers(10);
+    try {
+      wsHub.broadcast('CATALOG_UPDATED', { bestSellers: data.settings.bestSellerProductIds });
+    } catch (e) {}
+    return this.getBestSellers(100);
   }
 
   getWorstSellers(limit = 4) {

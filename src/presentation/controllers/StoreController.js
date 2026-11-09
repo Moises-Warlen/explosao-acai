@@ -67,6 +67,10 @@ export class StoreController {
         return res.status(400).json({ ok: false, error: 'A senha atual informada está incorreta.' });
       }
 
+      if (currentPassword === newPassword.trim()) {
+        return res.status(400).json({ ok: false, error: 'A nova senha não pode ser igual à senha atual.' });
+      }
+
       storeService.updateSettings({ adminPassword: newPassword.trim() });
       return res.json({ ok: true, message: 'Senha administrativa atualizada com sucesso!', newToken: newPassword.trim() });
     } catch (err) {

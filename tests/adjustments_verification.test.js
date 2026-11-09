@@ -81,32 +81,32 @@ describe('Explosão Açaí — Testes das 4 Correções Finais', () => {
       status: 'received'
     };
 
-    // 1. Pedido feito / aceito
+    // 1. Pedido feito / aceito (sem emojis / UTF-8)
     const msgReceived = whatsAppNotificationService.formatStatusMessage(fakeOrder, 'received');
     assert.equal(
       msgReceived,
-      '✅ Olá, Maria Souza! Seu pedido #789123 na Explosão Açaí foi aceito! Já já começamos a preparar. 💜'
+      'Olá, Maria Souza! Seu pedido #789123 na Explosão Açaí foi aceito! Já já começamos a preparar.'
     );
 
-    // 2. Em preparo
+    // 2. Em preparo (sem emojis / UTF-8)
     const msgPreparing = whatsAppNotificationService.formatStatusMessage(fakeOrder, 'preparing');
     assert.equal(
       msgPreparing,
-      '👩‍🍳 Seu pedido #789123 já está sendo preparado com muito carinho! 💜'
+      'Seu pedido #789123 já está sendo preparado com muito carinho!'
     );
 
-    // 3. Pronto / Saiu para entrega
+    // 3. Pronto / Saiu para entrega (sem emojis / UTF-8)
     const msgOut = whatsAppNotificationService.formatStatusMessage(fakeOrder, 'out_for_delivery');
     assert.equal(
       msgOut,
-      '🛵 Boa notícia, Maria Souza! Seu pedido #789123 saiu para entrega e já está a caminho!'
+      'Boa notícia, Maria Souza! Seu pedido #789123 saiu para entrega e já está a caminho!'
     );
 
-    // 4. Entregue
+    // 4. Entregue (sem emojis / UTF-8)
     const msgDelivered = whatsAppNotificationService.formatStatusMessage(fakeOrder, 'delivered');
     assert.equal(
       msgDelivered,
-      '💜 Obrigado por comprar com a Explosão Açaí, Maria Souza! Esperamos que você curta sua explosão de sabor! Nos siga no Instagram: https://www.instagram.com/expl.osaoacai?mdxt=Zm1obWhpaTFhbmV3'
+      'Obrigado por comprar com a Explosão Açaí, Maria Souza! Esperamos que você curta sua explosão de sabor! Nos siga no Instagram: https://www.instagram.com/expl.osaoacai?mdxt=Zm1obWhpaTFhbmV3'
     );
   });
 

@@ -24,7 +24,7 @@ export class WhatsAppNotificationService {
 
   /**
    * Formata mensagem amigável de atualização de status do pedido
-   * Seguindo rigorosamente os 4 modelos solicitados
+   * Modelos oficiais sem emojis (evita caracteres corrompidos no WhatsApp)
    */
   formatStatusMessage(order, targetStatus) {
     const status = targetStatus || order.status;
@@ -33,14 +33,14 @@ export class WhatsAppNotificationService {
 
     switch (status) {
       case 'received':
-        return `✅ Olá, ${nome}! Seu pedido #${numero} na Explosão Açaí foi aceito! Já já começamos a preparar. 💜`;
+        return `Olá, ${nome}! Seu pedido #${numero} na Explosão Açaí foi aceito! Já já começamos a preparar.`;
       case 'preparing':
-        return `👩‍🍳 Seu pedido #${numero} já está sendo preparado com muito carinho! 💜`;
+        return `Seu pedido #${numero} já está sendo preparado com muito carinho!`;
       case 'ready':
       case 'out_for_delivery':
-        return `🛵 Boa notícia, ${nome}! Seu pedido #${numero} saiu para entrega e já está a caminho!`;
+        return `Boa notícia, ${nome}! Seu pedido #${numero} saiu para entrega e já está a caminho!`;
       case 'delivered':
-        return `💜 Obrigado por comprar com a Explosão Açaí, ${nome}! Esperamos que você curta sua explosão de sabor! Nos siga no Instagram: https://www.instagram.com/expl.osaoacai?mdxt=Zm1obWhpaTFhbmV3`;
+        return `Obrigado por comprar com a Explosão Açaí, ${nome}! Esperamos que você curta sua explosão de sabor! Nos siga no Instagram: https://www.instagram.com/expl.osaoacai?mdxt=Zm1obWhpaTFhbmV3`;
       default:
         return null;
     }
@@ -96,7 +96,7 @@ export class WhatsAppNotificationService {
         await fetch(apiUrl, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json; charset=utf-8',
             'Authorization': `Bearer ${apiToken}`,
             'apikey': apiToken
           },
@@ -133,7 +133,7 @@ export class WhatsAppNotificationService {
         await fetch(apiUrl, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json; charset=utf-8',
             'Authorization': `Bearer ${apiToken}`,
             'apikey': apiToken
           },

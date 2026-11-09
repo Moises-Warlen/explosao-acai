@@ -48,6 +48,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   initWebSocket();
   await loadStoreStatus();
   await loadCatalog();
+  await loadBestSellers();
   renderNavigation();
   renderCatalog();
   bindEvents();
@@ -83,6 +84,12 @@ function initWebSocket() {
         }
         if (data.event === 'CHAT_CLOSED') {
           handleChatClosed(data.payload);
+        }
+        if (data.event === 'CATALOG_UPDATED') {
+          await loadCatalog();
+          await loadBestSellers();
+          renderNavigation();
+          renderCatalog();
         }
       } catch (e) {}
     };
@@ -142,9 +149,19 @@ async function loadCatalog() {
   }
 }
 
-// Carregar Mais Vendidos (Desativado conforme solicitação: cardápio exibe apenas produtos cadastrados manualmente)
+// Carregar Mais Vendidos (Exibe SOMENTE os itens adicionados manualmente no painel)
 async function loadBestSellers() {
-  BEST_SELLERS = [];
+  try {
+    const res = await fetch(`${API_URL}/catalog/best-sellers`);
+    const data = await res.json();
+    if (data.ok && Array.isArray(data.products) && data.products.length > 0) {
+      BEST_SELLERS = data.products;
+    } else {
+      BEST_SELLERS = [];
+    }
+  } catch (e) {
+    BEST_SELLERS = [];
+  }
 }
 
 // Renderiza Menu de Categorias Dinâmico
@@ -156,16 +173,19 @@ function renderNavigation() {
   const promos = (CATALOG.products || []).filter(p => p.isPromo && p.active);
 
   let h = '';
+  if (BEST_SELLERS.length > 0) {
+    h += `<a href="#mais-vendidos" class="cat-pill active">Mais Vendidos</a>`;
+  }
   if (launches.length > 0) {
-    h += `<a href="#lancamentos" class="cat-pill">Novidades</a>`;
+    h += `<a href="#lancamentos" class="cat-pill ${!BEST_SELLERS.length ? 'active' : ''}">Novidades</a>`;
   }
   if (promos.length > 0) {
-    h += `<a href="#promocoes" class="cat-pill">Promoções</a>`;
+    h += `<a href="#promocoes" class="cat-pill ${!BEST_SELLERS.length && !launches.length ? 'active' : ''}">Promoções</a>`;
   }
 
   (CATALOG.categories || []).forEach((cat, idx) => {
     if (cat.active && cat.slug !== 'lancamentos' && cat.slug !== 'promocoes') {
-      const isFirst = !launches.length && !promos.length && idx === 0;
+      const isFirst = !BEST_SELLERS.length && !launches.length && !promos.length && idx === 0;
       h += `<a href="#${cat.slug}" class="cat-pill ${isFirst ? 'active' : ''}">${esc(cat.name)}</a>`;
     }
   });
@@ -179,6 +199,15 @@ function renderCatalog() {
   if (!main) return;
 
   let html = '';
+
+  // 0. SEÇÃO MAIS VENDIDOS (Apenas itens cadastrados manualmente pelo administrador)
+  if (BEST_SELLERS.length > 0) {
+    html += `<section id="mais-vendidos"><h2>Mais Vendidos</h2><div class="grid">`;
+    BEST_SELLERS.forEach(p => {
+      html += renderProductCard(p);
+    });
+    html += `</div></section>`;
+  }
 
   // 1. SEÇÃO LANÇAMENTOS / NOVIDADES
   const launches = (CATALOG.products || []).filter(p => p.isNewLaunch && p.active);
@@ -320,23 +349,16 @@ function renderItemModal() {
     st.fruits = [];
   }
 
-  // Acompanhamentos disponíveis
-  let availableAccompaniments = [];
-  if (isMonteSeuAcai) {
-    // No Monte seu Açaí, permite acompanhamentos clássicos e frutas frescas
-    const monteAllowedNames = ['chantilly', 'leite condensado', 'ninho', 'granola', 'mel', 'paçoca', 'banana', 'morango', 'uva', 'kiwi', 'manga'];
-    availableAccompaniments = (CATALOG.accompaniments || []).filter(ac => {
-      const name = (typeof ac === 'string' ? ac : ac.name).toLowerCase().trim();
-      return monteAllowedNames.some(m => name.includes(m) || m.includes(name));
-    });
-  } else {
-    availableAccompaniments = (CATALOG.accompaniments || []).filter(ac => {
-      if (typeof ac === 'string') return true;
-      if (ac.active === false) return false;
-      if (!ac.allowedProductIds || ac.allowedProductIds.length === 0) return true;
-      return ac.allowedProductIds.includes(prod.id);
-    });
-  }
+  // Acompanhamentos disponíveis: todos os acompanhamentos ativos cadastrados no catálogo
+  let availableAccompaniments = (CATALOG.accompaniments || []).filter(ac => {
+    if (typeof ac === 'string') return true;
+    if (ac.active === false) return false;
+    // Se o produto tiver lista específica de acompanhamentos permitidos configurada no painel, respeita:
+    if (Array.isArray(prod.allowedAccompanimentIds) && prod.allowedAccompanimentIds.length > 0) {
+      return prod.allowedAccompanimentIds.includes(ac.id);
+    }
+    return true;
+  });
 
   // Calcula adicionais selecionados com cobrança imediata por fruta
   let extrasTotal = 0;

@@ -216,9 +216,9 @@ export class ReportService {
       .sort((a, b) => a.quantitySold - b.quantitySold || a.grossRevenue - b.grossRevenue)
       .slice(0, 10);
 
-    // 5. Médias de tempo
-    const averagePreparationTimeMinutes = prepTimeCount > 0 ? Math.round(prepTimeSum / prepTimeCount) : 18;
-    const averageDeliveryTimeMinutes = deliveryTimeCount > 0 ? Math.round(deliveryTimeSum / deliveryTimeCount) : 24;
+    // 5. Médias de tempo calculadas estritamente com os horários reais dos pedidos (sem valores fixos)
+    const averagePreparationTimeMinutes = prepTimeCount > 0 ? Math.round(prepTimeSum / prepTimeCount) : 0;
+    const averageDeliveryTimeMinutes = deliveryTimeCount > 0 ? Math.round(deliveryTimeSum / deliveryTimeCount) : 0;
 
     const grossProfit = totalNetSales - totalCost;
     const profitMargin = totalNetSales > 0 ? (grossProfit / totalNetSales) * 100 : 0;
