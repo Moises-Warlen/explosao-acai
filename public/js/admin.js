@@ -124,8 +124,8 @@ window.logout = function() {
   localStorage.removeItem('admin_token');
   sessionStorage.removeItem('explosao_admin_token');
   ADMIN_TOKEN = null;
-  if (ws) {
-    try { ws.close(); } catch (e) {}
+  if (WS) {
+    try { WS.close(); } catch (e) {}
   }
   const dash = $('#dashboard-wrapper');
   if (dash) dash.style.display = 'none';
@@ -162,7 +162,7 @@ async function initDashboard() {
 function initWebSocket() {
   try {
     WS = new WebSocket(WS_URL);
-    WS.onmessage = (event) => {
+    WS.onmessage = async (event) => {
       try {
         const data = JSON.parse(event.data);
         if (data.event === 'NEW_ORDER') {

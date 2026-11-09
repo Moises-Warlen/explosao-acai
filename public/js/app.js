@@ -66,7 +66,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 function initWebSocket() {
   try {
     WS_SOCKET = new WebSocket(WS_URL);
-    WS_SOCKET.onmessage = (event) => {
+    WS_SOCKET.onmessage = async (event) => {
       try {
         const data = JSON.parse(event.data);
         if (data.event === 'ORDER_STATUS_CHANGED' && ACTIVE_ORDER && data.payload.id === ACTIVE_ORDER.id) {
