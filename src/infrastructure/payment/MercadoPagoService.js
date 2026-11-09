@@ -132,6 +132,12 @@ export class MercadoPagoService {
           external_reference: String(orderNo)
         };
 
+        // Avisa o Mercado Pago para chamar o nosso webhook assim que o Pix for pago (confirmação imediata)
+        const publicBaseUrl = String(process.env.BASE_URL || '').trim().replace(/\/+$/, '');
+        if (/^https:\/\//i.test(publicBaseUrl)) {
+          paymentData.notification_url = `${publicBaseUrl}/api/webhooks/mercadopago`;
+        }
+
         const result = await this.paymentClient.create({ body: paymentData });
 
         let qrCode = result.point_of_interaction?.transaction_data?.qr_code || '';
