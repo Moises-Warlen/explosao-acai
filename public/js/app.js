@@ -354,11 +354,17 @@ function renderItemModal() {
     if (typeof ac === 'string') return true;
     if (ac.active === false) return false;
     // Se o produto tiver lista específica de acompanhamentos permitidos configurada no painel, respeita:
-    if (Array.isArray(prod.allowedAccompanimentIds) && prod.allowedAccompanimentIds.length > 0) {
+    if (Array.isArray(prod.allowedAccompanimentIds)) {
       return prod.allowedAccompanimentIds.includes(ac.id);
     }
     return true;
   });
+
+  // Copos prontos com acompanhamentos escolhidos no painel também exibem a seleção ao cliente
+  const hasPanelAccompaniments = Array.isArray(prod.allowedAccompanimentIds)
+    && prod.allowedAccompanimentIds.length > 0
+    && !isCombo
+    && !isPolpa;
 
   // Calcula adicionais selecionados com cobrança imediata por fruta
   let extrasTotal = 0;
@@ -407,7 +413,7 @@ function renderItemModal() {
   `;
 
   // Acompanhamentos inclusos (se customizável ou monte seu açaí)
-  if (prod.isCustomizable || isMonteSeuAcai) {
+  if (prod.isCustomizable || isMonteSeuAcai || hasPanelAccompaniments) {
     h += `
       <h4>Acompanhamentos Inclusos <small style="color:var(--mut);font-weight:normal">(${st.accompaniments.length} de ${maxAcomp} inclusos no valor)</small></h4>
       <div class="chips">

@@ -112,6 +112,16 @@ export class CatalogService {
     };
 
     dbData.accompaniments.push(newAcomp);
+
+    // Produtos que já possuem lista própria de acompanhamentos passam a oferecer o novo item também
+    if (newAcomp.active && Array.isArray(dbData.products)) {
+      dbData.products.forEach(p => {
+        if (Array.isArray(p.allowedAccompanimentIds) && p.allowedAccompanimentIds.length > 0 && !p.allowedAccompanimentIds.includes(newAcomp.id)) {
+          p.allowedAccompanimentIds.push(newAcomp.id);
+        }
+      });
+    }
+
     this.db.save();
     try { wsHub.broadcast('CATALOG_UPDATED', {}); } catch (e) {}
     return newAcomp;
