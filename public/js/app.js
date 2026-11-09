@@ -1394,7 +1394,7 @@ function renderChatModal(phone, name) {
         <b>Explosão Açaí</b>
         <span>Atendimento Oficial da Loja</span>
       </div>
-      <button class="btn-sm" style="margin-left:auto;margin-right:24px;background:rgba(255,255,255,0.18);border:none;color:#fff;border-radius:8px;padding:4px 8px;font-size:11px;cursor:pointer" onclick="clearAndStartNewChat()" title="Iniciar atendimento limpo do zero">🧹 Novo Chat</button>
+      <button class="btn-sm" style="margin-left:auto;margin-right:24px;background:#7c3aed;border:1.5px solid #a855f7;color:#fff;border-radius:10px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(124,58,237,0.5)" onclick="clearAndStartNewChat()" title="Iniciar atendimento limpo do zero">🧹 Novo Chat</button>
     </div>
 
     ${isTemp ? `

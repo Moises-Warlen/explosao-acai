@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Painel Administrativo — Explosão Açaí</title>
+  <title>Explosão Açaí</title>
   <link rel="icon" href="imagens/Logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +19,7 @@
   <header class="admin-header">
     <div class="admin-brand">
       <img src="imagens/Logo.png" alt="Explosão Açaí" onerror="this.style.display='none'">
-      <h1>Explosão Açaí <span>Painel de Gestão</span></h1>
+      <h1>Explosão Açaí <span>Painel admin</span></h1>
     </div>
 
     <!-- Toggle Loja Aberta / Fechada -->
@@ -37,13 +37,10 @@
   <!-- Navegação por Abas -->
   <nav class="admin-nav">
     <button class="nav-tab" data-tab="tab-chat">
-      Chat de Atendimento
+      Chat de Atendimento <span class="badge" id="badge-unread-chat" style="display:none">0</span>
     </button>
     <button class="nav-tab active" data-tab="tab-kanban">
       Pedidos & Produção <span class="badge" id="badge-pending-orders" style="display:none">0</span>
-    </button>
-    <button class="nav-tab" data-tab="tab-reports">
-      Relatórios & Vendas
     </button>
     <button class="nav-tab" data-tab="tab-products">
       Cardápio & Ficha Técnica
@@ -51,11 +48,14 @@
     <button class="nav-tab" data-tab="tab-accompaniments">
       Acompanhamentos
     </button>
+    <button class="nav-tab" data-tab="tab-extras">
+      Adicionais & Vínculos
+    </button>
     <button class="nav-tab" data-tab="tab-categories">
       Categorias
     </button>
-    <button class="nav-tab" data-tab="tab-extras">
-      Adicionais & Vínculos
+    <button class="nav-tab" data-tab="tab-reports">
+      Relatórios & Vendas
     </button>
     <button class="nav-tab" data-tab="tab-coupons">
       Cupons de Desconto
@@ -64,7 +64,7 @@
       Impressoras de Comanda
     </button>
     <button class="nav-tab" data-tab="tab-store">
-      Configurações & Senha
+      Configuração
     </button>
   </nav>
 

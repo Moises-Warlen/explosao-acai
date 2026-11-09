@@ -396,11 +396,20 @@ async function loadOrders() {
 }
 
 function updateOrdersBadge() {
-  const pendingCount = ORDERS.filter(o => o.status === 'received').length;
+  const newOrdersCount = ORDERS.filter(o => o.status === 'received').length;
+  const activeOrdersCount = ORDERS.filter(o => o.status !== 'delivered' && o.status !== 'cancelled' && o.status !== 'returned').length;
   const badge = $('#badge-pending-orders');
   if (badge) {
-    badge.textContent = pendingCount;
-    badge.style.display = pendingCount > 0 ? 'inline-block' : 'none';
+    const count = newOrdersCount > 0 ? newOrdersCount : activeOrdersCount;
+    badge.textContent = count;
+    badge.style.display = count > 0 ? 'inline-block' : 'none';
+    if (newOrdersCount > 0) {
+      badge.style.background = 'var(--danger)';
+      badge.style.color = '#fff';
+    } else {
+      badge.style.background = 'var(--y)';
+      badge.style.color = '#000';
+    }
   }
 }
 
@@ -2855,13 +2864,31 @@ Corte Automático Ativado.
 };
 
 // ==================== CHAT AO VIVO DE ATENDIMENTO ====================
+function updateChatBadge() {
+  const badge = $('#badge-unread-chat');
+  if (!badge) return;
+  const unreadTotal = (CHAT_CONVERSATIONS || []).reduce((acc, c) => acc + (c.unreadCount || 0), 0);
+  const activeChats = (CHAT_CONVERSATIONS || []).length;
+  const count = unreadTotal > 0 ? unreadTotal : activeChats;
+  badge.textContent = count;
+  badge.style.display = count > 0 ? 'inline-block' : 'none';
+  if (unreadTotal > 0) {
+    badge.style.background = 'var(--danger)';
+    badge.style.color = '#fff';
+  } else {
+    badge.style.background = 'var(--y)';
+    badge.style.color = '#000';
+  }
+}
+
 async function loadChatConversations() {
   try {
     const res = await fetch(`${API_URL}/chat/conversations`, { headers: authHeaders() });
     const data = await res.json();
     if (data.ok) {
-      CHAT_CONVERSATIONS = data.conversations;
+      CHAT_CONVERSATIONS = data.conversations || [];
       renderChatConversationsList();
+      updateChatBadge();
       if (!ACTIVE_CHAT_PHONE && CHAT_CONVERSATIONS.length > 0) {
         selectChat(CHAT_CONVERSATIONS[0].customerPhone, CHAT_CONVERSATIONS[0].customerName);
       }
