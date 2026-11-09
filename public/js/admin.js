@@ -3170,3 +3170,270 @@ window.saveNewAdminPasswordModal = async function(e) {
     adminToast('Erro de conexão ao alterar senha.', 'danger');
   }
 };
+
+// ==================== MAPA DE ENTREGAS & OTIMIZADOR DE ROTAS ====================
+let DELIVERY_MAP = null;
+let DELIVERY_MARKERS_LAYER = null;
+let DELIVERY_ROUTE_LAYER = null;
+
+const STORE_COORDINATES = {
+  lat: -20.5904206,
+  lon: -47.3689222,
+  name: 'Explosão Açaí',
+  address: 'Rua Renato Lourenço Fernandes Rosa, 1721, Franca - SP'
+};
+
+// Coordenadas aproximadas dos bairros de Franca/SP para plotagem imediata no mapa
+const FRANCA_BAIRROS_COORDS = {
+  'aeroporto': { lat: -20.589, lon: -47.367 },
+  'jd aeroporto': { lat: -20.589, lon: -47.367 },
+  'aeroporto 1': { lat: -20.592, lon: -47.365 },
+  'aeroporto 2': { lat: -20.588, lon: -47.369 },
+  'aeroporto 3': { lat: -20.590, lon: -47.368 },
+  'aeroporto 4': { lat: -20.585, lon: -47.366 },
+  'santa cruz': { lat: -20.575, lon: -47.375 },
+  'jd santa cruz': { lat: -20.575, lon: -47.375 },
+  'aviacao': { lat: -20.581, lon: -47.371 },
+  'jd aviacao': { lat: -20.581, lon: -47.371 },
+  'esmeralda': { lat: -20.578, lon: -47.363 },
+  'pq esmeralda': { lat: -20.578, lon: -47.363 },
+  'elimar': { lat: -20.584, lon: -47.358 },
+  'recanto elimar': { lat: -20.584, lon: -47.358 },
+  'horto': { lat: -20.571, lon: -47.382 },
+  'parque do horto': { lat: -20.571, lon: -47.382 },
+  'sao sebastiao': { lat: -20.562, lon: -47.385 },
+  'vila sao sebastiao': { lat: -20.562, lon: -47.385 },
+  'progresso': { lat: -20.555, lon: -47.391 },
+  'pq progresso': { lat: -20.555, lon: -47.391 },
+  'paulistano': { lat: -20.548, lon: -47.396 },
+  'jd paulistano': { lat: -20.548, lon: -47.396 },
+  'noemia': { lat: -20.552, lon: -47.402 },
+  'jd noemia': { lat: -20.552, lon: -47.402 },
+  'formosa': { lat: -20.544, lon: -47.390 },
+  'vila formosa': { lat: -20.544, lon: -47.390 },
+  'polo club': { lat: -20.559, lon: -47.377 },
+  'hipica': { lat: -20.550, lon: -47.384 },
+  'estacao': { lat: -20.535, lon: -47.395 },
+  'vila nova': { lat: -20.540, lon: -47.410 },
+  'centro': { lat: -20.538, lon: -47.401 },
+  'cidade nova': { lat: -20.528, lon: -47.412 },
+  'sao jose': { lat: -20.522, lon: -47.405 },
+  'chico julio': { lat: -20.518, lon: -47.415 },
+  'brasilandia': { lat: -20.515, lon: -47.385 },
+  'redentor': { lat: -20.510, lon: -47.390 },
+  'guanabara': { lat: -20.525, lon: -47.382 },
+  'leporace': { lat: -20.485, lon: -47.415 },
+  'miramontes': { lat: -20.478, lon: -47.425 },
+  'vera cruz': { lat: -20.470, lon: -47.430 },
+  'santa terezinha': { lat: -20.505, lon: -47.408 },
+  'city posto': { lat: -20.501, lon: -47.420 }
+};
+
+function resolveOrderCoordinates(order, index) {
+  const bairro = (order.delivery?.bairro || '').toLowerCase().trim();
+  const foundKey = Object.keys(FRANCA_BAIRROS_COORDS).find(k => bairro.includes(k) || k.includes(bairro));
+  
+  if (foundKey) {
+    const base = FRANCA_BAIRROS_COORDS[foundKey];
+    const jitter = (index % 5) * 0.0018 - 0.0036;
+    return {
+      lat: base.lat + jitter,
+      lon: base.lon + ((index % 3) * 0.0015 - 0.0015)
+    };
+  }
+
+  const offsetLat = ((index + 1) * 0.0035) * Math.sin(index);
+  const offsetLon = ((index + 1) * 0.0035) * Math.cos(index);
+  return {
+    lat: STORE_COORDINATES.lat + offsetLat,
+    lon: STORE_COORDINATES.lon + offsetLon
+  };
+}
+
+window.openDeliveryMapModal = function() {
+  const modal = $('#delivery-map-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+
+  setTimeout(() => {
+    initLeafletDeliveryMap();
+    renderDeliveryMapMarkers();
+  }, 100);
+};
+
+window.closeDeliveryMapModal = function() {
+  const modal = $('#delivery-map-modal');
+  if (modal) modal.style.display = 'none';
+};
+
+function initLeafletDeliveryMap() {
+  if (typeof L === 'undefined') return;
+
+  if (!DELIVERY_MAP) {
+    DELIVERY_MAP = L.map('delivery-leaflet-map').setView([STORE_COORDINATES.lat, STORE_COORDINATES.lon], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    }).addTo(DELIVERY_MAP);
+
+    DELIVERY_MARKERS_LAYER = L.layerGroup().addTo(DELIVERY_MAP);
+    DELIVERY_ROUTE_LAYER = L.layerGroup().addTo(DELIVERY_MAP);
+  } else {
+    DELIVERY_MAP.invalidateSize();
+  }
+}
+
+window.renderDeliveryMapMarkers = function() {
+  if (!DELIVERY_MAP || !DELIVERY_MARKERS_LAYER) return;
+
+  DELIVERY_MARKERS_LAYER.clearLayers();
+  DELIVERY_ROUTE_LAYER.clearLayers();
+
+  const filterStatus = $('#map-status-filter')?.value || 'active';
+
+  const deliveryOrders = ORDERS.filter(o => {
+    if (o.delivery?.type !== 'delivery') return false;
+    if (o.status === 'cancelled' || o.status === 'returned') return false;
+
+    if (filterStatus === 'ready') return o.status === 'ready' || o.status === 'out_for_delivery';
+    if (filterStatus === 'preparing') return o.status === 'preparing';
+    if (filterStatus === 'received') return o.status === 'received';
+    return o.status !== 'delivered';
+  });
+
+  const storeIcon = L.divIcon({
+    className: 'custom-map-pin-store',
+    html: `
+      <div style="background:#7c3aed;color:#fff;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,0.6);border:2px solid #fff;font-size:18px">
+        🏠
+      </div>
+    `,
+    iconSize: [36, 36],
+    iconAnchor: [18, 18]
+  });
+
+  const storeMarker = L.marker([STORE_COORDINATES.lat, STORE_COORDINATES.lon], { icon: storeIcon })
+    .bindPopup(`
+      <div style="font-family:sans-serif;font-size:12px;color:#000">
+        <b style="font-size:14px;color:#6b21a8">🏠 Explosão Açaí (Loja)</b><br>
+        Rua Renato Lourenço F. Rosa, 1721 · Aeroporto 3<br>
+        <small style="color:#666">Ponto inicial e final das entregas</small>
+      </div>
+    `);
+  DELIVERY_MARKERS_LAYER.addLayer(storeMarker);
+
+  const bounds = L.latLngBounds([[STORE_COORDINATES.lat, STORE_COORDINATES.lon]]);
+  const routePoints = [[STORE_COORDINATES.lat, STORE_COORDINATES.lon]];
+
+  const counterEl = $('#map-orders-counter');
+  if (counterEl) counterEl.textContent = `${deliveryOrders.length} parada${deliveryOrders.length === 1 ? '' : 's'}`;
+
+  const stopsListEl = $('#map-stops-list');
+  const btnGoogleRoute = $('#btn-full-google-route');
+
+  if (deliveryOrders.length === 0) {
+    if (stopsListEl) {
+      stopsListEl.innerHTML = `<div style="text-align:center;padding:24px 10px;color:var(--mut);font-size:12px">Nenhum pedido de delivery para o filtro selecionado.</div>`;
+    }
+    if (btnGoogleRoute) btnGoogleRoute.style.display = 'none';
+    DELIVERY_MAP.setView([STORE_COORDINATES.lat, STORE_COORDINATES.lon], 14);
+    return;
+  }
+
+  const sortedOrders = [...deliveryOrders].sort((a, b) => (a.freight || 0) - (b.freight || 0));
+
+  let stopsHtml = '';
+  const waypoints = [];
+
+  sortedOrders.forEach((order, idx) => {
+    const coords = resolveOrderCoordinates(order, idx);
+    const stopNumber = idx + 1;
+    bounds.extend([coords.lat, coords.lon]);
+    routePoints.push([coords.lat, coords.lon]);
+
+    const del = order.delivery || {};
+    const fullAddress = `${del.street || 'Rua'}, ${del.number || 'S/N'}, ${del.bairro || 'Bairro'}, Franca - SP`;
+    waypoints.push(fullAddress);
+
+    const googleMapsSingleUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
+    const wazeSingleUrl = `https://waze.com/ul?q=${encodeURIComponent(fullAddress)}`;
+
+    const statusBadgeColor = order.status === 'ready' || order.status === 'out_for_delivery'
+      ? '#3b82f6'
+      : (order.status === 'preparing' ? '#f59e0b' : '#10b981');
+
+    const statusBadgeLabel = order.status === 'ready' || order.status === 'out_for_delivery'
+      ? 'Pronto / Em Rota'
+      : (order.status === 'preparing' ? 'Em Preparo' : 'Novo Pedido');
+
+    const orderIcon = L.divIcon({
+      className: 'custom-map-pin-order',
+      html: `
+        <div style="background:${statusBadgeColor};color:#fff;font-weight:900;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,0.5);border:2px solid #fff;font-size:13px">
+          ${stopNumber}
+        </div>
+      `,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16]
+    });
+
+    const marker = L.marker([coords.lat, coords.lon], { icon: orderIcon })
+      .bindPopup(`
+        <div style="font-family:sans-serif;font-size:12px;color:#000;min-width:200px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <b style="font-size:14px;color:#7c3aed">#${order.orderNo} · Parada ${stopNumber}</b>
+            <span style="font-size:10px;background:${statusBadgeColor};color:#fff;padding:2px 6px;border-radius:4px">${statusBadgeLabel}</span>
+          </div>
+          <b>Cliente:</b> ${esc(order.customer?.name || 'Cliente')}<br>
+          <b>Endereço:</b> ${esc(fullAddress)}<br>
+          ${del.reference ? `<b>Ref:</b> ${esc(del.reference)}<br>` : ''}
+          <b>Total:</b> ${R(order.total)} (${esc(order.payment?.method || 'Dinheiro')})<br>
+          <div style="display:flex;gap:6px;margin-top:8px">
+            <a href="${googleMapsSingleUrl}" target="_blank" style="flex:1;background:#2563eb;color:#fff;text-align:center;padding:5px 8px;border-radius:6px;text-decoration:none;font-weight:700;font-size:11px">📍 Google Maps</a>
+            <a href="${wazeSingleUrl}" target="_blank" style="flex:1;background:#059669;color:#fff;text-align:center;padding:5px 8px;border-radius:6px;text-decoration:none;font-weight:700;font-size:11px">🚗 Waze</a>
+          </div>
+        </div>
+      `);
+    DELIVERY_MARKERS_LAYER.addLayer(marker);
+
+    stopsHtml += `
+      <div style="background:rgba(255,255,255,0.05);border:1px solid var(--ln);border-radius:10px;padding:10px;transition:0.2s">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="background:${statusBadgeColor};color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:12px">
+            Parada ${stopNumber} · Pedido #${order.orderNo}
+          </span>
+          <b style="font-size:12px;color:var(--y)">${R(order.total)}</b>
+        </div>
+        <div style="font-size:12px;font-weight:700;color:#fff;margin-top:4px">${esc(order.customer?.name || 'Cliente')}</div>
+        <div style="font-size:11px;color:var(--mut);line-height:1.3;margin-top:2px">${esc(fullAddress)}</div>
+        <div style="display:flex;gap:6px;margin-top:8px">
+          <a href="${googleMapsSingleUrl}" target="_blank" style="flex:1;background:#1e40af;color:#fff;text-align:center;padding:4px 6px;border-radius:6px;text-decoration:none;font-size:11px;font-weight:700">📍 Google Maps</a>
+          <a href="${wazeSingleUrl}" target="_blank" style="flex:1;background:#047857;color:#fff;text-align:center;padding:4px 6px;border-radius:6px;text-decoration:none;font-size:11px;font-weight:700">🚗 Waze</a>
+        </div>
+      </div>
+    `;
+  });
+
+  if (stopsListEl) stopsListEl.innerHTML = stopsHtml;
+
+  if (routePoints.length > 1) {
+    const routeLine = L.polyline(routePoints, {
+      color: '#a855f7',
+      weight: 3,
+      opacity: 0.8,
+      dashArray: '8, 8'
+    });
+    DELIVERY_ROUTE_LAYER.addLayer(routeLine);
+  }
+
+  DELIVERY_MAP.fitBounds(bounds, { padding: [40, 40] });
+
+  if (btnGoogleRoute && waypoints.length > 0) {
+    const lastStop = waypoints[waypoints.length - 1];
+    const intermediate = waypoints.slice(0, waypoints.length - 1);
+    const googleRouteUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(STORE_COORDINATES.address)}&destination=${encodeURIComponent(lastStop)}${intermediate.length > 0 ? `&waypoints=${encodeURIComponent(intermediate.join('|'))}` : ''}&travelmode=driving`;
+    btnGoogleRoute.href = googleRouteUrl;
+    btnGoogleRoute.style.display = 'flex';
+  }
+};

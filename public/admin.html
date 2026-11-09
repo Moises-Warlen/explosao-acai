@@ -9,6 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 
@@ -91,6 +93,9 @@
           <option value="delivery">Cobrar na Entrega</option>
           <option value="pending">Aguardando Pagamento</option>
         </select>
+        <button type="button" class="btn-sm" style="background:#6d28d9;color:#fff;border:1.5px solid #8b5cf6;padding:8px 14px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;cursor:pointer;border-radius:10px;box-shadow:0 2px 8px rgba(109,40,217,0.4)" onclick="openDeliveryMapModal()" title="Visualizar pedidos no mapa e criar rotas de entrega">
+          🗺️ Mapa & Rotas de Entrega
+        </button>
       </div>
 
       <div class="kanban-board">
@@ -994,6 +999,63 @@
           <button type="button" class="btn-sm btn-secondary" style="padding:12px" onclick="closeAdminPasswordModal()">Cancelar</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal de Mapa de Entregas & Rotas Otimizadas -->
+  <div id="delivery-map-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:250;backdrop-filter:blur(6px)">
+    <div style="background:var(--panel);border:1.5px solid var(--ln);border-radius:20px;padding:22px;width:min(1140px,96vw);max-height:92vh;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,0.7)">
+      <!-- Cabeçalho do Modal -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--ln);flex-wrap:wrap;gap:10px">
+        <div>
+          <h2 style="margin:0;font-size:19px;display:flex;align-items:center;gap:8px">
+            <span>🗺️</span> Mapa de Entregas & Rotas Otimizadas
+          </h2>
+          <p style="margin:4px 0 0;font-size:12px;color:var(--mut)">
+            Localização de pedidos ativos em Franca/SP e geração de trajeto para o motoboy.
+          </p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="map-status-filter" style="font-size:12px;padding:6px 10px;background:var(--card);color:#fff;border:1px solid var(--ln);border-radius:8px" onchange="renderDeliveryMapMarkers()">
+            <option value="active">Todos os Pedidos Ativos</option>
+            <option value="ready">Apenas Prontos / Saiu para Entrega</option>
+            <option value="preparing">Apenas Em Preparo</option>
+            <option value="received">Apenas Novos Pedidos</option>
+          </select>
+          <button class="btn-sm btn-secondary" style="padding:6px 12px;font-size:13px" onclick="closeDeliveryMapModal()">✕ Fechar</button>
+        </div>
+      </div>
+
+      <!-- Corpo do Modal: Mapa Interativo + Painel Lateral de Rota -->
+      <div style="display:grid;grid-template-columns:1fr 350px;gap:16px;flex:1;min-height:0;overflow:hidden" id="map-modal-grid">
+        <!-- Contêiner do Mapa Leaflet -->
+        <div style="position:relative;border-radius:14px;overflow:hidden;border:1.5px solid var(--ln);background:#1a102a;min-height:400px;display:flex">
+          <div id="delivery-leaflet-map" style="width:100%;height:100%;min-height:400px;z-index:1"></div>
+        </div>
+
+        <!-- Painel Lateral: Sequência de Paradas e Ações de Rota -->
+        <div style="display:flex;flex-direction:column;background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:14px;overflow-y:auto;max-height:500px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <b style="font-size:13px;color:var(--y)">📍 Rota Sugerida de Entrega</b>
+            <span id="map-orders-counter" style="font-size:11px;color:var(--mut);background:rgba(255,255,255,0.08);padding:2px 8px;border-radius:20px">0 paradas</span>
+          </div>
+
+          <!-- Ponto de Partida: A Loja -->
+          <div style="background:rgba(124,58,237,0.18);border:1px solid rgba(124,58,237,0.45);border-radius:10px;padding:10px;margin-bottom:10px">
+            <div style="font-size:11px;font-weight:700;color:#c084fc">🏠 PONTO DE PARTIDA (LOJA)</div>
+            <div style="font-size:12px;font-weight:700;color:#fff;margin-top:2px">Explosão Açaí</div>
+            <div style="font-size:11px;color:var(--mut)">Rua Renato Lourenço F. Rosa, 1721 · Aeroporto 3</div>
+          </div>
+
+          <!-- Botão de Rota Completa no Google Maps -->
+          <a id="btn-full-google-route" href="#" target="_blank" class="btn-sm" style="display:none;align-items:center;justify-content:center;gap:6px;background:#2563eb;color:#fff;font-weight:700;padding:10px;border-radius:10px;margin-bottom:12px;text-decoration:none;font-size:12px;text-align:center">
+            🚀 Abrir Rota Completa no Google Maps
+          </a>
+
+          <!-- Lista de Paradas / Pedidos -->
+          <div id="map-stops-list" style="display:flex;flex-direction:column;gap:8px;flex:1"></div>
+        </div>
+      </div>
     </div>
   </div>
 
