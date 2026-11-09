@@ -1183,6 +1183,8 @@ window.submitOrder = async function() {
       APPLIED_COUPON = null;
       updateCartBar();
       saveClientChatData(data.order.customer?.phone, data.order.customer?.name);
+      // Limpa os dados digitados no checkout para que o próximo pedido comece com o formulário vazio
+      CHECKOUT_DATA = { ent: 'e', cid: 'Franca', uf: 'SP', pay: 'Pix', timing: 'online' };
       renderOrderSuccess(data.order);
       toast('Pedido realizado com sucesso!');
     } else {

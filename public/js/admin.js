@@ -2015,7 +2015,10 @@ window.editProductModal = function(id) {
   $('#p-max-acomp-700').value = p700 ? p700.maxAccompaniments : '5';
 
   handleCategoryChange(prod.categoryId, prod.comboProductIds || []);
-  renderProductAccompanimentsCheckboxes(prod.allowedAccompanimentIds || null);
+  // Produto que nunca teve lista salva só oferece acompanhamentos ao cliente se for o "Monte seu açaí";
+  // por isso a tela mostra desmarcado (reflete exatamente o que o cliente vê) até você marcar e salvar.
+  const isMonteProd = !!prod.isCustomizable || prod.categorySlug === 'monte' || prod.id === 'prod_monte';
+  renderProductAccompanimentsCheckboxes(prod.allowedAccompanimentIds || (isMonteProd ? null : []));
   checkFormPrejuizo();
   $('#product-edit-modal').style.display = 'flex';
 };
@@ -2234,7 +2237,9 @@ async function loadAccompaniments() {
       ACCOMPANIMENTS = data.accompaniments || [];
       renderAccompanimentsTable();
       if ($('#product-edit-modal')?.style.display === 'flex') {
-        renderProductAccompanimentsCheckboxes();
+        // Mantém as marcações atuais do modal aberto (não reseta para "todos marcados")
+        const currentlyChecked = Array.from($$('#product-accompaniments-checkboxes input[type="checkbox"]:checked')).map(cb => cb.value);
+        renderProductAccompanimentsCheckboxes(currentlyChecked);
       }
     }
   } catch (e) {}
