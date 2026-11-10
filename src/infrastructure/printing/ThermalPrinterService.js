@@ -56,9 +56,9 @@ export class ThermalPrinterService {
     lines.push(center('EXPLOSÃO AÇAÍ - DELIVERY'));
     lines.push(center('Especialidades, Copos & Combos'));
     if (isKitchen) {
-      lines.push(center('*** VIA DE PRODUÇÃO / COZINHA ***'));
+      lines.push(center('*** 1ª VIA: VIA DE PRODUÇÃO / COZINHA ***'));
     } else {
-      lines.push(center('*** VIA CLIENTE / ENTREGA ***'));
+      lines.push(center('*** 2ª VIA: VIA CLIENTE / ENTREGA ***'));
     }
     lines.push(center(`PEDIDO #${order.orderNo}`));
     lines.push(center(new Date(order.createdAt).toLocaleString('pt-BR')));

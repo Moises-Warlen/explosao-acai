@@ -849,12 +849,12 @@ function createOrderCardHtml(order, isHistory = false) {
       <div class="order-actions" style="flex-wrap:wrap;gap:6px">
         ${(!isHistory && order.status !== 'delivered' && order.status !== 'cancelled' && order.status !== 'returned' && order.status !== 'ready' && order.status !== 'out_for_delivery') ? `
           <button class="btn-sm btn-print" ${!canPrint ? 'disabled title="Impressão bloqueada até confirmação bancária do pagamento"' : ''} onclick="printOrderStation('${order.id}', 'kitchen')">
-            Imprimir Cozinha
+            Imprimir 1ª Via (Cozinha)
           </button>
         ` : ''}
         ${(!isHistory && order.status !== 'cancelled' && order.status !== 'delivered') ? `
           <button class="btn-sm btn-print" ${!canPrint ? 'disabled title="Impressão bloqueada até confirmação bancária do pagamento"' : ''} onclick="printOrderStation('${order.id}', 'counter')">
-            ${order.status === 'returned' ? 'Reimprimir Comanda' : 'Imprimir Balcão'}
+            ${order.status === 'returned' ? 'Reimprimir Comanda' : 'Imprimir 2ª Via (Balcão)'}
           </button>
         ` : ''}
         ${nextAction}
@@ -2969,18 +2969,44 @@ function renderPrintersList() {
   if (!box) return;
 
   box.innerHTML = PRINTERS.map(p => `
-    <div style="background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+    <div style="background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
       <div>
         <b style="font-size:16px">${esc(p.name)}</b>
         <div style="font-size:12px;color:var(--mut)">Destino: <b>${p.target.toUpperCase()}</b> · Bobina: <b>${p.paperWidth}mm</b></div>
-        <div style="font-size:12px;color:var(--green)">${p.autoPrintOnApproved ? 'Auto-impressão ativa ao confirmar pagamento' : 'Auto-impressão desligada'}</div>
+        <div style="font-size:13px;font-weight:600;margin-top:4px;color:${p.autoPrintOnApproved ? 'var(--green)' : 'var(--y)'}">
+          ${p.autoPrintOnApproved ? '⚡ Auto-impressão ATIVA (Sai automático)' : '✋ Auto-impressão DESLIGADA (Impressão somente manual)'}
+        </div>
       </div>
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn-sm" style="background:${p.autoPrintOnApproved ? 'rgba(239,68,68,0.2);color:#ef4444;border:1px solid #ef4444' : 'rgba(16,185,129,0.2);color:#10b981;border:1px solid #10b981'};padding:7px 12px;font-weight:700" onclick="togglePrinterAutoPrint('${p.id}')">
+          ${p.autoPrintOnApproved ? 'Desativar Auto' : 'Ativar Auto'}
+        </button>
         <button class="btn-sm btn-print" onclick="testPrinterPrint('${p.id}')">Imprimir Teste</button>
       </div>
     </div>
   `).join('');
 }
+
+window.togglePrinterAutoPrint = async function(printerId) {
+  const p = PRINTERS.find(x => x.id === printerId);
+  if (!p) return;
+  p.autoPrintOnApproved = !p.autoPrintOnApproved;
+  try {
+    const res = await fetch(`${API_URL}/printers`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({ printers: PRINTERS })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      PRINTERS = data.printers;
+      renderPrintersList();
+      adminToast(`Auto-impressão de ${p.name} ${p.autoPrintOnApproved ? 'ativada' : 'desativada'} com sucesso!`, 'success');
+    }
+  } catch (e) {
+    adminToast('Erro ao atualizar configuração de impressora.', 'danger');
+  }
+};
 
 window.testPrinterPrint = function(printerId) {
   const dummyText = `

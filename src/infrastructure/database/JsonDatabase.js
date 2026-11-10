@@ -62,7 +62,7 @@ const INITIAL_DATA = {
   printers: [
     {
       id: "prt_kitchen",
-      name: "Impressora Cozinha / Produção",
+      name: "Impressora Cozinha / Produção (1ª Via)",
       target: "kitchen",
       paperWidth: 80,
       isDefault: true,
@@ -71,11 +71,11 @@ const INITIAL_DATA = {
     },
     {
       id: "prt_counter",
-      name: "Impressora Caixa / Balcão & Entrega",
+      name: "Impressora Caixa / Balcão & Entrega (2ª Via)",
       target: "counter",
       paperWidth: 80,
       isDefault: false,
-      autoPrintOnApproved: true,
+      autoPrintOnApproved: false,
       headerText: "EXPLOSÃO AÇAÍ - VIA CLIENTE / MOTOBOY"
     }
   ],
@@ -534,6 +534,7 @@ class JsonDatabase {
         }
 
         const requiredVersion = officialCatalog?.catalogVersion || this.data?.catalogVersion || '2026-11-10-flyer-v1';
+        let needsDbSave = false;
 
         // Sincroniza o catálogo do panfleto se a versão no PostgreSQL ainda for antiga
         if (pgData.catalogVersion !== requiredVersion && officialCatalog) {
@@ -544,14 +545,33 @@ class JsonDatabase {
           if (officialCatalog.accompaniments) pgData.accompaniments = officialCatalog.accompaniments;
           if (officialCatalog.extras) pgData.extras = officialCatalog.extras;
           if (officialCatalog.fruits) pgData.fruits = officialCatalog.fruits;
+          needsDbSave = true;
+        }
 
+        // Regra de impressão: 1ª Via (Cozinha) automática, 2ª Via (Balcão) manual
+        if (Array.isArray(pgData.printers)) {
+          const counterP = pgData.printers.find(p => p.id === 'prt_counter' || p.target === 'counter');
+          if (counterP && counterP.autoPrintOnApproved !== false) {
+            counterP.autoPrintOnApproved = false;
+            counterP.name = 'Impressora Caixa / Balcão & Entrega (2ª Via)';
+            needsDbSave = true;
+          }
+          const kitchenP = pgData.printers.find(p => p.id === 'prt_kitchen' || p.target === 'kitchen');
+          if (kitchenP && (!kitchenP.autoPrintOnApproved || !kitchenP.name.includes('1ª Via'))) {
+            kitchenP.autoPrintOnApproved = true;
+            kitchenP.name = 'Impressora Cozinha / Produção (1ª Via)';
+            needsDbSave = true;
+          }
+        }
+
+        if (needsDbSave) {
           this.data = pgData;
           await this.pool.query(
             'INSERT INTO explosao_database (id, content, updated_at) VALUES ($1, $2, NOW()) ON CONFLICT (id) DO UPDATE SET content = $2, updated_at = NOW()',
             ['main', this.data]
           );
           this.saveLocal();
-          console.log(`✅ PostgreSQL atualizado com sucesso com 9 categorias e 28 produtos!`);
+          console.log(`✅ PostgreSQL atualizado com sucesso (catálogo e impressoras)!`);
         } else {
           this.data = pgData;
           this.saveLocal();
