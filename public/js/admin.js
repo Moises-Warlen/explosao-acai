@@ -75,6 +75,20 @@ function adminToastHtml(html, type = 'info', duration = 6500) {
   }, duration);
 }
 
+window.syncTopbarHeight = function() {
+  const topbar = document.getElementById('admin-topbar');
+  const spacer = document.getElementById('admin-topbar-spacer');
+  if (topbar && spacer) {
+    const h = topbar.offsetHeight;
+    if (h > 0) {
+      spacer.style.height = `${h}px`;
+      document.documentElement.style.setProperty('--admin-topbar-h', `${h}px`);
+    }
+  }
+};
+window.addEventListener('resize', () => window.syncTopbarHeight());
+window.addEventListener('orientationchange', () => setTimeout(window.syncTopbarHeight, 100));
+
 window.addEventListener('DOMContentLoaded', async () => {
   const dash = $('#dashboard-wrapper');
   if (!ADMIN_TOKEN) {
@@ -82,6 +96,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     showLoginModal();
   } else {
     if (dash) dash.style.display = 'block';
+    window.syncTopbarHeight();
     initDashboard();
   }
 });
@@ -110,6 +125,7 @@ window.doLogin = async function() {
       $('#login-modal').style.display = 'none';
       const dash = $('#dashboard-wrapper');
       if (dash) dash.style.display = 'block';
+      window.syncTopbarHeight();
       adminToast('Painel administrativo autenticado com sucesso!', 'success');
       initDashboard();
     } else {
@@ -156,6 +172,7 @@ async function initDashboard() {
   await loadSalesReport({ period: 'today' });
   await loadChatConversations();
   bindNavigation();
+  window.syncTopbarHeight();
 }
 
 // Conexão WebSocket para Atualizações em Tempo Real

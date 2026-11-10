@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/admin.css?v=2.1">
+  <link rel="stylesheet" href="css/admin.css?v=3.0">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
@@ -17,8 +17,8 @@
   <!-- Container Principal do Dashboard Administrativo -->
   <div id="dashboard-wrapper">
 
-  <!-- Topbar Fixa/Sticky: Header + Abas de Navegação Fixos ao Rolar a Página -->
-  <div class="admin-topbar-wrapper">
+  <!-- Topbar Fixa: Header + Abas de Navegação Fixos ao Rolar a Página -->
+  <div class="admin-topbar-wrapper" id="admin-topbar">
     <!-- Header Administrativo -->
     <header class="admin-header">
       <div class="admin-brand">
@@ -72,6 +72,7 @@
       </button>
     </nav>
   </div>
+  <div class="admin-topbar-spacer" id="admin-topbar-spacer"></div>
 
   <!-- Conteúdo das Abas -->
   <div class="admin-content">
@@ -1069,6 +1070,6 @@
   <div id="recipe-pdf-area"></div>
 
   <!-- Scripts -->
-  <script src="js/admin.js?v=2.9"></script>
+  <script src="js/admin.js?v=3.0"></script>
 </body>
 </html>
