@@ -603,7 +603,7 @@ function createOrderCardHtml(order) {
     } else {
       nextAction = `
         <button class="btn-sm btn-next" style="background:#10b981;color:#fff;font-weight:700" onclick="confirmPickupOrder('${order.id}')" title="Marcar como Pago e Retirado pelo Cliente no Balcão">
-          ✓ Entregar no Balcão & Confirmar
+          ✓ Liberar para retirar no balcão
         </button>
       `;
     }
@@ -653,10 +653,12 @@ function createOrderCardHtml(order) {
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;font-size:11px;flex-wrap:wrap;gap:4px">
           <div>${statusSummary}</div>
           <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+            ${order.status !== 'delivered' ? `
             <button class="btn-sm" style="background:#25d366;color:#fff;font-size:10px;padding:3px 7px;font-weight:600" onclick="event.stopPropagation(); sendWppStatusNotice('${order.id}')" title="Avisar cliente no WhatsApp">
               💬 Zap
             </button>
-            ${(order.status === 'delivered' || order.status === 'returned') ? `
+            ` : ''}
+            ${order.status === 'returned' ? `
               <button class="btn-sm btn-print" style="font-size:10px;padding:3px 7px" onclick="event.stopPropagation(); printOrderStation('${order.id}', 'counter')" title="Reimprimir Comanda Balcão">
                 Reimprimir
               </button>
@@ -751,9 +753,11 @@ function createOrderCardHtml(order) {
           Cliente: ${esc(order.customer.name)} 
           <a href="https://wa.me/55${order.customer.phone}" target="_blank" style="color:var(--green);text-decoration:none;font-size:12px;margin-left:4px" title="Abrir conversa no WhatsApp">WhatsApp</a>
         </div>
+        ${order.status !== 'delivered' ? `
         <button class="btn-sm" style="background:#25d366;color:#fff;font-size:11px;padding:3px 8px;font-weight:600;display:inline-flex;align-items:center;gap:4px" onclick="sendWppStatusNotice('${order.id}')" title="Enviar atualização de status do pedido para o WhatsApp do cliente">
           💬 Avisar no Zap
         </button>
+        ` : ''}
       </div>
 
       ${isDelivery ? `
@@ -781,12 +785,12 @@ function createOrderCardHtml(order) {
 
       <!-- Ações de Impressão e Status -->
       <div class="order-actions" style="flex-wrap:wrap;gap:6px">
-        ${(order.status !== 'delivered' && order.status !== 'cancelled' && order.status !== 'returned') ? `
+        ${(order.status !== 'delivered' && order.status !== 'cancelled' && order.status !== 'returned' && order.status !== 'ready' && order.status !== 'out_for_delivery') ? `
           <button class="btn-sm btn-print" ${!canPrint ? 'disabled title="Impressão bloqueada até confirmação bancária do pagamento"' : ''} onclick="printOrderStation('${order.id}', 'kitchen')">
             Imprimir Cozinha
           </button>
         ` : ''}
-        ${order.status !== 'cancelled' ? `
+        ${(order.status !== 'cancelled' && order.status !== 'delivered') ? `
           <button class="btn-sm btn-print" ${!canPrint ? 'disabled title="Impressão bloqueada até confirmação bancária do pagamento"' : ''} onclick="printOrderStation('${order.id}', 'counter')">
             ${(order.status === 'delivered' || order.status === 'returned') ? 'Reimprimir Comanda' : 'Imprimir Balcão'}
           </button>
@@ -930,6 +934,9 @@ window.getWppStatusMessage = function(order) {
       return `Seu pedido #${numero} já está sendo preparado com muito carinho!`;
     case 'ready':
     case 'out_for_delivery':
+      if (order.delivery?.type !== 'delivery') {
+        return `Boa notícia, ${nome}! Seu pedido #${numero} está pronto e já pode ser retirado na loja!`;
+      }
       return `Boa notícia, ${nome}! Seu pedido #${numero} saiu para entrega e já está a caminho!`;
     case 'delivered':
       return `Obrigado por comprar com a Explosão Açaí, ${nome}! Esperamos que você curta sua explosão de sabor! Nos siga no Instagram: https://www.instagram.com/expl.osaoacai?mdxt=Zm1obWhpaTFhbmV3`;
@@ -1966,17 +1973,11 @@ window.openNewProductModal = function() {
   $('#p-img').value = 'imagens/do seu jeitinho.png';
   $('#p-photo-preview').src = 'imagens/do seu jeitinho.png';
   
-  $('#p-price-300').value = '15.90';
-  $('#p-cost-300').value = '6.80';
-  $('#p-max-acomp-300').value = '3';
-
-  $('#p-price-500').value = '19.90';
-  $('#p-cost-500').value = '9.40';
-  $('#p-max-acomp-500').value = '4';
-
-  $('#p-price-700').value = '26.90';
-  $('#p-cost-700').value = '12.50';
-  $('#p-max-acomp-700').value = '5';
+  renderProductSizeRows([
+    { size: 300, price: 15.90, costPrice: 6.80, maxAccompaniments: 3, promoPrice: null },
+    { size: 500, price: 19.90, costPrice: 9.40, maxAccompaniments: 4, promoPrice: null },
+    { size: 700, price: 26.90, costPrice: 12.50, maxAccompaniments: 5, promoPrice: null }
+  ]);
 
   $('#loss-alert-box').style.display = 'none';
   handleCategoryChange($('#p-category')?.value);
@@ -1998,21 +1999,7 @@ window.editProductModal = function(id) {
   $('#p-img').value = prod.image || '';
   $('#p-photo-preview').src = prod.image || 'imagens/do seu jeitinho.png';
 
-  const p300 = prod.prices.find(x => x.size === 300);
-  const p500 = prod.prices.find(x => x.size === 500);
-  const p700 = prod.prices.find(x => x.size === 700);
-
-  $('#p-price-300').value = p300 ? p300.price : '';
-  $('#p-cost-300').value = p300 ? p300.costPrice : '';
-  $('#p-max-acomp-300').value = p300 ? p300.maxAccompaniments : '3';
-
-  $('#p-price-500').value = p500 ? p500.price : '';
-  $('#p-cost-500').value = p500 ? p500.costPrice : '';
-  $('#p-max-acomp-500').value = p500 ? p500.maxAccompaniments : '4';
-
-  $('#p-price-700').value = p700 ? p700.price : '';
-  $('#p-cost-700').value = p700 ? p700.costPrice : '';
-  $('#p-max-acomp-700').value = p700 ? p700.maxAccompaniments : '5';
+  renderProductSizeRows(prod.prices || []);
 
   handleCategoryChange(prod.categoryId, prod.comboProductIds || []);
   // Produto que nunca teve lista salva só oferece acompanhamentos ao cliente se for o "Monte seu açaí";
@@ -2060,26 +2047,102 @@ window.recalculateComboCostFromCheckboxes = function() {
   });
 
   if (totalComboCost > 0) {
-    $('#p-cost-500').value = totalComboCost.toFixed(2);
+    const rows = Array.from($$('#p-sizes-list .p-size-row'));
+    const row500 = rows.find(r => parseInt(r.querySelector('.p-size-ml').value, 10) === 500) || rows[0];
+    if (row500) row500.querySelector('.p-size-cost').value = totalComboCost.toFixed(2);
     checkFormPrejuizo();
   }
 };
 
+// ==================== TAMANHOS DO PRODUTO (LISTA DINÂMICA) ====================
+function defaultMaxAcompForSize(size) {
+  if (size <= 300) return 3;
+  if (size <= 500) return 4;
+  return 5;
+}
+
+function productSizeRowHtml(r) {
+  const val = (v) => (v === null || v === undefined || Number.isNaN(v)) ? '' : v;
+  return `
+    <div class="p-size-row" data-promo="${val(r.promoPrice)}" style="background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <b style="color:var(--y)">Tamanho do copo</b>
+        <button type="button" class="btn-sm btn-danger" style="font-size:11px;padding:2px 8px" onclick="removeProductSizeRow(this)">Remover</button>
+      </div>
+      <label style="margin-top:4px">Tamanho (ml)</label>
+      <input type="number" min="1" step="1" class="p-size-ml" value="${val(r.size)}" placeholder="Ex: 400" oninput="checkFormPrejuizo()">
+      <label style="margin-top:4px">Preço Venda (R$)</label>
+      <input type="number" min="0" step="0.01" class="p-size-price" value="${val(r.price)}" oninput="checkFormPrejuizo()">
+      <label style="margin-top:4px">Custo Insumos (R$)</label>
+      <input type="number" min="0" step="0.01" class="p-size-cost" value="${val(r.costPrice)}" oninput="checkFormPrejuizo()">
+      <label style="margin-top:4px">Acomp. Inclusos</label>
+      <input type="number" min="0" step="1" class="p-size-max" value="${val(r.maxAccompaniments)}">
+    </div>
+  `;
+}
+
+window.renderProductSizeRows = function(list) {
+  const box = $('#p-sizes-list');
+  if (!box) return;
+  const sorted = [...(list || [])].sort((a, b) => (a.size || 0) - (b.size || 0));
+  box.innerHTML = sorted.map(productSizeRowHtml).join('');
+};
+
+window.getProductSizeRows = function() {
+  return Array.from($$('#p-sizes-list .p-size-row')).map(row => {
+    const size = parseInt(row.querySelector('.p-size-ml').value, 10);
+    const price = parseFloat(row.querySelector('.p-size-price').value);
+    const cost = parseFloat(row.querySelector('.p-size-cost').value) || 0;
+    const max = parseInt(row.querySelector('.p-size-max').value, 10) || (Number.isFinite(size) ? defaultMaxAcompForSize(size) : 4);
+    const promo = parseFloat(row.dataset.promo);
+    return { size, price, cost, max, promoPrice: Number.isFinite(promo) ? promo : null };
+  });
+};
+
+window.addProductSizeRow = function() {
+  const box = $('#p-sizes-list');
+  if (!box) return;
+  const current = getProductSizeRows().filter(r => Number.isFinite(r.size));
+  const biggest = current.reduce((m, r) => Math.max(m, r.size), 0);
+  const nextSize = biggest > 0 ? biggest + 200 : 300;
+  box.insertAdjacentHTML('beforeend', productSizeRowHtml({
+    size: nextSize,
+    price: '',
+    costPrice: '',
+    maxAccompaniments: defaultMaxAcompForSize(nextSize),
+    promoPrice: null
+  }));
+  const rows = Array.from($$('#p-sizes-list .p-size-row'));
+  const last = rows[rows.length - 1];
+  if (last) {
+    last.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const priceInput = last.querySelector('.p-size-price');
+    if (priceInput) priceInput.focus();
+  }
+};
+
+window.removeProductSizeRow = function(btn) {
+  const rows = Array.from($$('#p-sizes-list .p-size-row'));
+  if (rows.length <= 1) {
+    adminToast('O produto precisa ter pelo menos um tamanho.', 'danger');
+    return;
+  }
+  const row = btn.closest('.p-size-row');
+  if (row) row.remove();
+  checkFormPrejuizo();
+};
+
 // Checagem em tempo real de prejuízo na edição do produto
 window.checkFormPrejuizo = function() {
-  const p300 = parseFloat($('#p-price-300').value) || 0;
-  const c300 = parseFloat($('#p-cost-300').value) || 0;
-  const p500 = parseFloat($('#p-price-500').value) || 0;
-  const c500 = parseFloat($('#p-cost-500').value) || 0;
-  const p700 = parseFloat($('#p-price-700').value) || 0;
-  const c700 = parseFloat($('#p-cost-700').value) || 0;
-
   const box = $('#loss-alert-box');
   const losses = [];
 
-  if (p300 > 0 && c300 > p300) losses.push(`Tamanho 300ml: Custo R$ ${c300.toFixed(2)} é MAIOR que Preço R$ ${p300.toFixed(2)} (Prejuízo de R$ ${(c300 - p300).toFixed(2)})`);
-  if (p500 > 0 && c500 > p500) losses.push(`Tamanho 500ml: Custo R$ ${c500.toFixed(2)} é MAIOR que Preço R$ ${p500.toFixed(2)} (Prejuízo de R$ ${(c500 - p500).toFixed(2)})`);
-  if (p700 > 0 && c700 > p700) losses.push(`Tamanho 700ml: Custo R$ ${c700.toFixed(2)} é MAIOR que Preço R$ ${p700.toFixed(2)} (Prejuízo de R$ ${(c700 - p700).toFixed(2)})`);
+  getProductSizeRows().forEach(r => {
+    const price = Number.isFinite(r.price) ? r.price : 0;
+    if (price > 0 && r.cost > price) {
+      losses.push(`Tamanho ${r.size || '?'}ml: Custo R$ ${r.cost.toFixed(2)} é MAIOR que Preço R$ ${price.toFixed(2)} (Prejuízo de R$ ${(r.cost - price).toFixed(2)})`);
+    }
+  });
 
   if (losses.length > 0) {
     box.style.display = 'block';
@@ -2132,26 +2195,20 @@ window.saveProductForm = async function(e) {
   const comboCheckboxes = $$('#combo-products-checkboxes input[type="checkbox"]:checked');
   const comboProductIds = Array.from(comboCheckboxes).map(cb => cb.value);
 
+  // Tamanhos do copo (lista dinâmica: adicionar / editar / remover)
+  const sizeRows = getProductSizeRows();
+  if (sizeRows.length === 0) return adminToast('Adicione pelo menos um tamanho para o produto.', 'danger');
+
   const prices = [];
-  const pr300 = parseFloat($('#p-price-300').value);
-  const cs300 = parseFloat($('#p-cost-300').value) || 0;
-  const mx300 = parseInt($('#p-max-acomp-300').value) || 3;
-
-  const pr500 = parseFloat($('#p-price-500').value);
-  const cs500 = parseFloat($('#p-cost-500').value) || 0;
-  const mx500 = parseInt($('#p-max-acomp-500').value) || 4;
-
-  const pr700 = parseFloat($('#p-price-700').value);
-  const cs700 = parseFloat($('#p-cost-700').value) || 0;
-  const mx700 = parseInt($('#p-max-acomp-700').value) || 5;
-
-  if (!isNaN(pr300)) prices.push({ size: 300, price: pr300, costPrice: cs300, maxAccompaniments: mx300, promoPrice: null });
-  if (!isNaN(pr500)) prices.push({ size: 500, price: pr500, costPrice: cs500, maxAccompaniments: mx500, promoPrice: null });
-  if (!isNaN(pr700)) prices.push({ size: 700, price: pr700, costPrice: cs700, maxAccompaniments: mx700, promoPrice: null });
-
-  if (prices.length === 0) {
-    prices.push({ size: 500, price: 25.00, costPrice: 10.00, maxAccompaniments: 4, promoPrice: null });
+  const seenSizes = new Set();
+  for (const r of sizeRows) {
+    if (!Number.isFinite(r.size) || r.size <= 0) return adminToast('Informe o tamanho em ml de todos os tamanhos.', 'danger');
+    if (seenSizes.has(r.size)) return adminToast(`O tamanho ${r.size} ml está repetido. Cada tamanho deve aparecer uma vez.`, 'danger');
+    if (!Number.isFinite(r.price) || r.price < 0) return adminToast(`Informe o preço de venda do tamanho ${r.size} ml.`, 'danger');
+    seenSizes.add(r.size);
+    prices.push({ size: r.size, price: r.price, costPrice: r.cost, maxAccompaniments: r.max, promoPrice: r.promoPrice });
   }
+  prices.sort((a, b) => a.size - b.size);
 
   // Acompanhamentos selecionados para este copo
   const acompCheckboxes = $$('#product-accompaniments-checkboxes input[type="checkbox"]:checked');

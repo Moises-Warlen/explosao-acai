@@ -323,7 +323,7 @@ function renderItemModal() {
     if (sizeMl === 300) maxAcomp = 3;
     else if (sizeMl === 500) maxAcomp = 4;
     else if (sizeMl === 700) maxAcomp = 5;
-    else maxAcomp = 4;
+    else maxAcomp = (maxAcomp === undefined || maxAcomp === null) ? 4 : maxAcomp;
   } else if (maxAcomp === undefined || maxAcomp === null) {
     if (sizeMl === 300) maxAcomp = 3;
     else if (sizeMl === 500) maxAcomp = 4;
@@ -496,7 +496,7 @@ window.selectSize = function(idx) {
     if (sizeMl === 300) maxAcomp = 3;
     else if (sizeMl === 500) maxAcomp = 4;
     else if (sizeMl === 700) maxAcomp = 5;
-    else maxAcomp = 4;
+    else maxAcomp = (maxAcomp === undefined || maxAcomp === null) ? 4 : maxAcomp;
   } else if (maxAcomp === undefined || maxAcomp === null) {
     if (sizeMl === 300) maxAcomp = 3;
     else if (sizeMl === 500) maxAcomp = 4;
@@ -527,7 +527,7 @@ window.toggleAccompaniment = function(name) {
     if (sizeMl === 300) maxAcomp = 3;
     else if (sizeMl === 500) maxAcomp = 4;
     else if (sizeMl === 700) maxAcomp = 5;
-    else maxAcomp = 4;
+    else maxAcomp = (maxAcomp === undefined || maxAcomp === null) ? 4 : maxAcomp;
   } else if (maxAcomp === undefined || maxAcomp === null) {
     if (sizeMl === 300) maxAcomp = 3;
     else if (sizeMl === 500) maxAcomp = 4;

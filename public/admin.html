@@ -681,40 +681,14 @@
         </div>
         
         <!-- Ficha Técnica, Acompanhamentos Inclusos e Preços por Tamanho -->
-        <h4 style="margin:18px 0 6px">Preços, Acompanhamentos Inclusos e Custos de Insumo</h4>
+        <h4 style="margin:18px 0 6px">Tamanhos, Preços, Acompanhamentos Inclusos e Custos de Insumo</h4>
         <div style="font-size:12px;color:var(--mut);margin-bottom:8px">
-          Configure o limite de acompanhamentos inclusos para cada tamanho (Ex: 300ml: 3, 500ml: 4, 700ml: 5):
+          Adicione, edite ou remova os tamanhos do copo. Defina preço, custo e o limite de acompanhamentos inclusos de cada um (Ex: 300ml: 3, 500ml: 4, 700ml: 5):
         </div>
 
-        <div class="form-grid">
-          <div>
-            <b style="color:var(--y)">Tamanho 300 ml</b>
-            <label style="margin-top:4px">Preço Venda (R$)</label>
-            <input type="number" step="0.1" id="p-price-300" oninput="checkFormPrejuizo()">
-            <label style="margin-top:4px">Custo Insumos (R$)</label>
-            <input type="number" step="0.1" id="p-cost-300" oninput="checkFormPrejuizo()">
-            <label style="margin-top:4px">Acomp. Inclusos</label>
-            <input type="number" id="p-max-acomp-300" value="3">
-          </div>
-          <div>
-            <b style="color:var(--y)">Tamanho 500 ml</b>
-            <label style="margin-top:4px">Preço Venda (R$)</label>
-            <input type="number" step="0.1" id="p-price-500" oninput="checkFormPrejuizo()">
-            <label style="margin-top:4px">Custo Insumos (R$)</label>
-            <input type="number" step="0.1" id="p-cost-500" oninput="checkFormPrejuizo()">
-            <label style="margin-top:4px">Acomp. Inclusos</label>
-            <input type="number" id="p-max-acomp-500" value="4">
-          </div>
-          <div>
-            <b style="color:var(--y)">Tamanho 700 ml</b>
-            <label style="margin-top:4px">Preço Venda (R$)</label>
-            <input type="number" step="0.1" id="p-price-700" oninput="checkFormPrejuizo()">
-            <label style="margin-top:4px">Custo Insumos (R$)</label>
-            <input type="number" step="0.1" id="p-cost-700" oninput="checkFormPrejuizo()">
-            <label style="margin-top:4px">Acomp. Inclusos</label>
-            <input type="number" id="p-max-acomp-700" value="5">
-          </div>
-        </div>
+        <div class="form-grid" id="p-sizes-list"></div>
+
+        <button type="button" class="btn-sm btn-secondary" style="margin-top:10px" onclick="addProductSizeRow()">+ Adicionar tamanho</button>
 
         <div style="display:flex;gap:10px;margin-top:20px">
           <button type="submit" class="btn-sm btn-next" style="flex:1;padding:12px">Salvar Produto</button>

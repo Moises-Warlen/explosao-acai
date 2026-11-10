@@ -38,6 +38,9 @@ export class WhatsAppNotificationService {
         return `Seu pedido #${numero} já está sendo preparado com muito carinho!`;
       case 'ready':
       case 'out_for_delivery':
+        if (order.delivery?.type !== 'delivery') {
+          return `Boa notícia, ${nome}! Seu pedido #${numero} está pronto e já pode ser retirado na loja!`;
+        }
         return `Boa notícia, ${nome}! Seu pedido #${numero} saiu para entrega e já está a caminho!`;
       case 'delivered':
         return `Obrigado por comprar com a Explosão Açaí, ${nome}! Esperamos que você curta sua explosão de sabor! Nos siga no Instagram: https://www.instagram.com/expl.osaoacai?mdxt=Zm1obWhpaTFhbmV3`;
