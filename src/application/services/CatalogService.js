@@ -17,6 +17,10 @@ export class CatalogService {
     this.db = db;
   }
 
+  syncOfficialCatalog() {
+    return this.db.syncOfficialCatalog();
+  }
+
   // ================= CATEGORIAS =================
   getCategories() {
     const data = this.db.get();

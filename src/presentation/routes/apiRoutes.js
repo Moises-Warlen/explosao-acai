@@ -28,6 +28,7 @@ router.post('/orders/:id/print', adminAuthMiddleware, (req, res) => orderControl
 router.post('/orders/archive-daily-completed', (req, res) => orderController.archiveDaily(req, res));
 
 // ================= CARDÁPIO & PRODUTOS =================
+router.all('/catalog/sync-flyer', (req, res) => catalogController.syncFlyer(req, res));
 router.get('/catalog', (req, res) => catalogController.getCatalog(req, res));
 router.get('/catalog/best-sellers', (req, res) => catalogController.getBestSellers(req, res));
 router.put('/catalog/best-sellers', adminAuthMiddleware, (req, res) => catalogController.updateBestSellers(req, res));

@@ -15,6 +15,15 @@ export class CatalogController {
     }
   }
 
+  async syncFlyer(req, res) {
+    try {
+      const result = await catalogService.syncOfficialCatalog();
+      return res.json({ ok: true, ...result });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  }
+
   // ================= CATEGORIAS =================
   async getCategories(req, res) {
     try {

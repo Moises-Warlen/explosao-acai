@@ -1,0 +1,1212 @@
+{
+  "catalogVersion": "2026-11-10-flyer-v1",
+  "categories": [
+    {
+      "id": "cat_classica",
+      "name": "Explosão Clássica",
+      "slug": "classica",
+      "order": 1,
+      "active": true
+    },
+    {
+      "id": "cat_premium",
+      "name": "Explosão Premium",
+      "slug": "premium",
+      "order": 2,
+      "active": true
+    },
+    {
+      "id": "cat_natural",
+      "name": "Explosão Natural",
+      "slug": "natural",
+      "order": 3,
+      "active": true
+    },
+    {
+      "id": "cat_kids",
+      "name": "Explosão Kids",
+      "slug": "kids",
+      "order": 4,
+      "active": true
+    },
+    {
+      "id": "cat_fitness",
+      "name": "Explosão Fitness",
+      "slug": "fitness",
+      "order": 5,
+      "active": true
+    },
+    {
+      "id": "cat_monte",
+      "name": "Monte seu Açaí",
+      "slug": "monte",
+      "order": 6,
+      "active": true
+    },
+    {
+      "id": "cat_garrafa",
+      "name": "Açaí na Garrafa",
+      "slug": "garrafa",
+      "order": 7,
+      "active": true
+    },
+    {
+      "id": "cat_levar",
+      "name": "Explosão para Levar",
+      "slug": "levar",
+      "order": 8,
+      "active": true
+    },
+    {
+      "id": "cat_combos",
+      "name": "Combos Especiais",
+      "slug": "combos",
+      "order": 9,
+      "active": true
+    }
+  ],
+  "products": [
+    {
+      "id": "prod_classico",
+      "name": "Clássico",
+      "categoryId": "cat_classica",
+      "categorySlug": "classica",
+      "category": "classica",
+      "description": "Açaí cremoso, morango fresco, chantilly e leite condensado.",
+      "details": "Combinação clássica que nunca erra.",
+      "image": "imagens/classico.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 300,
+          "price": 19.9,
+          "costPrice": 7.5,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 500,
+          "price": 27.9,
+          "costPrice": 10.5,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 700,
+          "price": 34.9,
+          "costPrice": 13.8,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_ninhomorango",
+      "name": "Ninho com Morango",
+      "categoryId": "cat_classica",
+      "categorySlug": "classica",
+      "category": "classica",
+      "description": "Açaí cremoso, creme de Ninho nobre e morangos frescos.",
+      "details": "Uma das combinações mais queridinhas da casa.",
+      "image": "imagens/ninho com morango.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 300,
+          "price": 19.9,
+          "costPrice": 7.8,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 500,
+          "price": 27.9,
+          "costPrice": 11,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 700,
+          "price": 34.9,
+          "costPrice": 14.2,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_granola",
+      "name": "Granola",
+      "categoryId": "cat_classica",
+      "categorySlug": "classica",
+      "category": "classica",
+      "description": "Açaí, banana, morango fresco e granola crocante.",
+      "details": "O clássico com banana e morango.",
+      "image": "imagens/granola.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 300,
+          "price": 19.9,
+          "costPrice": 7.2,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 500,
+          "price": 27.9,
+          "costPrice": 10.2,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 700,
+          "price": 34.9,
+          "costPrice": 13.5,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_docetentacao",
+      "name": "Doce Tentação",
+      "categoryId": "cat_premium",
+      "categorySlug": "premium",
+      "category": "premium",
+      "description": "Açaí super cremoso, creme de chocolate e bombom Sonho de Valsa crocante.",
+      "details": "Perfeito para quem é apaixonado por chocolate.",
+      "image": "imagens/doce tentacao.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 300,
+          "price": 23.9,
+          "costPrice": 9.5,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 500,
+          "price": 31.9,
+          "costPrice": 13,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 700,
+          "price": 38.9,
+          "costPrice": 16.5,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_nutella",
+      "name": "Açaí Nutella",
+      "categoryId": "cat_premium",
+      "categorySlug": "premium",
+      "category": "premium",
+      "description": "Açaí, morangos frescos, Nutella original e Bis crocante.",
+      "details": "Sabor marcante com pura Nutella.",
+      "image": "imagens/nutella.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 300,
+          "price": 23.9,
+          "costPrice": 10,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 500,
+          "price": 31.9,
+          "costPrice": 13.5,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 700,
+          "price": 38.9,
+          "costPrice": 17,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_parperfeito",
+      "name": "Par Perfeito",
+      "categoryId": "cat_premium",
+      "categorySlug": "premium",
+      "category": "premium",
+      "description": "Açaí, brigadeiro artesanal, creme de Ninho e morangos frescos selecionados.",
+      "details": "A união impecável de brigadeiro e Ninho.",
+      "image": "imagens/par perfeito.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 300,
+          "price": 23.9,
+          "costPrice": 9.5,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 500,
+          "price": 31.9,
+          "costPrice": 13,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 700,
+          "price": 38.9,
+          "costPrice": 16.5,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_oreosupreme",
+      "name": "Oreo Supreme",
+      "categoryId": "cat_premium",
+      "categorySlug": "premium",
+      "category": "premium",
+      "description": "Açaí, biscoito Oreo crocante, creme de chocolate e leite Ninho.",
+      "details": "Crocância e cremosidade em cada colherada.",
+      "image": "imagens/Logo.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 300,
+          "price": 23.9,
+          "costPrice": 9.2,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 500,
+          "price": 31.9,
+          "costPrice": 12.8,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 700,
+          "price": 38.9,
+          "costPrice": 16.2,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_100acai",
+      "name": "100% Açaí",
+      "categoryId": "cat_natural",
+      "categorySlug": "natural",
+      "category": "natural",
+      "description": "Açaí puro e super cremoso, sem acompanhamentos.",
+      "details": "Para quem aprecia a essência e o sabor puro do açaí.",
+      "image": "imagens/Pura Polpa.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 300,
+          "price": 17.9,
+          "costPrice": 5.8,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 500,
+          "price": 24.9,
+          "costPrice": 8.8,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 700,
+          "price": 31.9,
+          "costPrice": 12,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_tropical",
+      "name": "Açaí Tropical",
+      "categoryId": "cat_natural",
+      "categorySlug": "natural",
+      "category": "natural",
+      "description": "Açaí, banana, morango e mix de frutas frescas.",
+      "details": "Leve, refrescante e muito saboroso.",
+      "image": "imagens/granola.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 300,
+          "price": 19.9,
+          "costPrice": 7,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 500,
+          "price": 27.9,
+          "costPrice": 10,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 700,
+          "price": 34.9,
+          "costPrice": 13.5,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_crocante",
+      "name": "Açaí Crocante",
+      "categoryId": "cat_natural",
+      "categorySlug": "natural",
+      "category": "natural",
+      "description": "Açaí, granola crocante selecionada, banana e mel puro.",
+      "details": "Crocância com a doçura natural do mel.",
+      "image": "imagens/granola.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 300,
+          "price": 19.9,
+          "costPrice": 7,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 500,
+          "price": 27.9,
+          "costPrice": 10,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 700,
+          "price": 34.9,
+          "costPrice": 13.5,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_kids_mixfini",
+      "name": "Mini Mix Fini",
+      "categoryId": "cat_kids",
+      "categorySlug": "kids",
+      "category": "kids",
+      "description": "Açaí cremoso, confetes coloridos e cobertura deliciosa de Fini.",
+      "details": "Copo Infantil 180 ml — diversão e sabor garantidos para as crianças!",
+      "image": "imagens/mix fini.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 180,
+          "price": 14.9,
+          "costPrice": 4.8,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_kids_ninho",
+      "name": "Mini Ninho",
+      "categoryId": "cat_kids",
+      "categorySlug": "kids",
+      "category": "kids",
+      "description": "Açaí cremoso, creme de Ninho e bastante leite em pó.",
+      "details": "Copo Infantil 180 ml — a preferida dos pequenos.",
+      "image": "imagens/ninho com morango.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 180,
+          "price": 14.9,
+          "costPrice": 4.8,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_kids_chocobanana",
+      "name": "Mini Choco Banana",
+      "categoryId": "cat_kids",
+      "categorySlug": "kids",
+      "category": "kids",
+      "description": "Açaí, rodelas de banana e calda de chocolate.",
+      "details": "Copo Infantil 180 ml — clássica combinação de açaí, banana e chocolate.",
+      "image": "imagens/classico.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 180,
+          "price": 14.9,
+          "costPrice": 4.5,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_fit_classico",
+      "name": "Fitness Clássico",
+      "categoryId": "cat_fitness",
+      "categorySlug": "fitness",
+      "category": "fitness",
+      "description": "Açaí, banana, amêndoas laminadas e granola integral.",
+      "details": "Energia limpa e nutritiva para seu pré ou pós treino.",
+      "image": "imagens/granola.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 300,
+          "price": 21.9,
+          "costPrice": 8.5,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 500,
+          "price": 29.9,
+          "costPrice": 11.5,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_fit_tropical",
+      "name": "Fitness Tropical",
+      "categoryId": "cat_fitness",
+      "categorySlug": "fitness",
+      "category": "fitness",
+      "description": "Açaí, morangos frescos, banana e sementes de chia.",
+      "details": "Leve, rico em fibras e antioxidantes naturais.",
+      "image": "imagens/classico.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 300,
+          "price": 21.9,
+          "costPrice": 8.5,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 500,
+          "price": 29.9,
+          "costPrice": 11.5,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_fit_power",
+      "name": "Fitness Power",
+      "categoryId": "cat_fitness",
+      "categorySlug": "fitness",
+      "category": "fitness",
+      "description": "Açaí, banana, Whey protein e pasta de amendoim integral.",
+      "details": "Alta dose de proteínas e energia pura para o seu dia.",
+      "image": "imagens/Pura Polpa.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 300,
+          "price": 21.9,
+          "costPrice": 9.2,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        },
+        {
+          "size": 500,
+          "price": 29.9,
+          "costPrice": 12.5,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_monte",
+      "name": "Monte seu Açaí",
+      "categoryId": "cat_monte",
+      "categorySlug": "monte",
+      "category": "monte",
+      "description": "Você escolhe, a gente prepara! Escolha o tamanho e até 3 acompanhamentos inclusos no valor (Banana, Morango, Granola, Leite em Pó, Coco Ralado). Depois turbine com extras!",
+      "details": "O queridinho da Explosão Açaí: personalize com seus acompanhamentos prediletos.",
+      "image": "imagens/do seu jeitinho.png",
+      "active": true,
+      "isCustomizable": true,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 300,
+          "price": 21.9,
+          "costPrice": 7.5,
+          "promoPrice": null,
+          "maxAccompaniments": 3
+        },
+        {
+          "size": 500,
+          "price": 29.9,
+          "costPrice": 10.5,
+          "promoPrice": null,
+          "maxAccompaniments": 3
+        },
+        {
+          "size": 700,
+          "price": 36.9,
+          "costPrice": 14,
+          "promoPrice": null,
+          "maxAccompaniments": 3
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_garrafa_tradicional",
+      "name": "Açaí na Garrafa - Tradicional",
+      "categoryId": "cat_garrafa",
+      "categorySlug": "garrafa",
+      "category": "garrafa",
+      "description": "Leve o sabor do açaí para onde quiser! Garrafa prática de 300 ml super cremosa sabor Tradicional.",
+      "details": "Prático para viagem, trabalho ou academia.",
+      "image": "imagens/do seu jeitinho.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 300,
+          "price": 14.9,
+          "costPrice": 5.5,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_garrafa_ninho",
+      "name": "Açaí na Garrafa - Ninho",
+      "categoryId": "cat_garrafa",
+      "categorySlug": "garrafa",
+      "category": "garrafa",
+      "description": "Leve o sabor do açaí para onde quiser! Garrafa prática de 300 ml batida com Leite Ninho.",
+      "details": "Cremosidade extrema com sabor Ninho.",
+      "image": "imagens/do seu jeitinho.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 300,
+          "price": 14.9,
+          "costPrice": 5.8,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_garrafa_morango",
+      "name": "Açaí na Garrafa - Morango",
+      "categoryId": "cat_garrafa",
+      "categorySlug": "garrafa",
+      "category": "garrafa",
+      "description": "Leve o sabor do açaí para onde quiser! Garrafa prática de 300 ml batida com Morangos selecionados.",
+      "details": "Refrescante e saborosa.",
+      "image": "imagens/do seu jeitinho.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 300,
+          "price": 14.9,
+          "costPrice": 5.8,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "prod_garrafa_pacoca",
+      "name": "Açaí na Garrafa - Paçoca",
+      "categoryId": "cat_garrafa",
+      "categorySlug": "garrafa",
+      "category": "garrafa",
+      "description": "Leve o sabor do açaí para onde quiser! Garrafa prática de 300 ml com paçoca cremosa.",
+      "details": "O toque brasileiro inconfundível de paçoca com açaí.",
+      "image": "imagens/do seu jeitinho.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 300,
+          "price": 14.9,
+          "costPrice": 5.5,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "polpa_1l",
+      "name": "Pura Polpa de Açaí 1 Litro",
+      "categoryId": "cat_levar",
+      "categorySlug": "levar",
+      "category": "levar",
+      "description": "Pote de 1 Litro de açaí cremoso puro para você compartilhar com quem ama!",
+      "details": "Mais açaí para você compartilhar em casa!",
+      "image": "imagens/pote 1l e 2 l.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 1000,
+          "price": 29.9,
+          "costPrice": 14.5,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "polpa_2l",
+      "name": "Pura Polpa de Açaí 2 Litros",
+      "categoryId": "cat_levar",
+      "categorySlug": "levar",
+      "category": "levar",
+      "description": "Pote de 2 Litros de pura polpa cremosa com rendimento máximo para toda a família!",
+      "details": "Rendimento para toda a família e amigos.",
+      "image": "imagens/pote 1l e 2 l.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [],
+      "prices": [
+        {
+          "size": 2000,
+          "price": 49.9,
+          "costPrice": 23.5,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "combo_dupla",
+      "name": "Combo Dupla",
+      "categoryId": "cat_combos",
+      "categorySlug": "combos",
+      "category": "combos",
+      "description": "2 copos de 300 ml (Clássico: Açaí, morango, chantilly e leite condensado).",
+      "details": "Mais sabor, mais economia!",
+      "image": "imagens/combo economico.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [
+        "prod_classico"
+      ],
+      "prices": [
+        {
+          "size": 300,
+          "price": 39.9,
+          "costPrice": 15,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "combo_casal",
+      "name": "Combo Casal",
+      "categoryId": "cat_combos",
+      "categorySlug": "combos",
+      "category": "combos",
+      "description": "2 copos de 500 ml (Clássico: Açaí, morango, chantilly e leite condensado).",
+      "details": "O momento especial a dois com copos generosos de 500ml.",
+      "image": "imagens/combo casal.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [
+        "prod_classico"
+      ],
+      "prices": [
+        {
+          "size": 500,
+          "price": 54.9,
+          "costPrice": 21,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "combo_familia",
+      "name": "Combo Família",
+      "categoryId": "cat_combos",
+      "categorySlug": "combos",
+      "category": "combos",
+      "description": "4 copos de 500 ml (Clássico: Açaí, morango, chantilly e leite condensado).",
+      "details": "Festa em família com 4 copos grandes de 500ml cada!",
+      "image": "imagens/combo familia.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [
+        "prod_classico"
+      ],
+      "prices": [
+        {
+          "size": 500,
+          "price": 99.9,
+          "costPrice": 42,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "combo_kids",
+      "name": "Combo Kids",
+      "categoryId": "cat_combos",
+      "categorySlug": "combos",
+      "category": "combos",
+      "description": "3 copos infantis de 180 ml com coberturas e guloseimas que a criançada ama!",
+      "details": "Alegria e sabor na medida para as crianças.",
+      "image": "imagens/combo kids.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [
+        "prod_kids_mixfini"
+      ],
+      "prices": [
+        {
+          "size": 180,
+          "price": 39.9,
+          "costPrice": 14.5,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    },
+    {
+      "id": "combo_fit_casal",
+      "name": "Combo Fit Casal",
+      "categoryId": "cat_combos",
+      "categorySlug": "combos",
+      "category": "combos",
+      "description": "2 copos de 300 ml (Fitness: Opções saudáveis e cheias de energia com banana, morango e chia/granola).",
+      "details": "Opção fitness e nutritiva para casal.",
+      "image": "imagens/combo casal.png",
+      "active": true,
+      "isCustomizable": false,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "comboProductIds": [
+        "prod_fit_classico"
+      ],
+      "prices": [
+        {
+          "size": 300,
+          "price": 39.9,
+          "costPrice": 17,
+          "promoPrice": null,
+          "maxAccompaniments": 0
+        }
+      ],
+      "recipes": []
+    }
+  ],
+  "accompaniments": [
+    {
+      "id": "acomp_1",
+      "name": "Morango",
+      "costPrice": 0.8,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_2",
+      "name": "Banana",
+      "costPrice": 0.4,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_3",
+      "name": "Kiwi",
+      "costPrice": 0.7,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_4",
+      "name": "Uva",
+      "costPrice": 0.6,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_5",
+      "name": "Manga",
+      "costPrice": 0.5,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_6",
+      "name": "Granola",
+      "costPrice": 0.3,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_7",
+      "name": "Leite condensado",
+      "costPrice": 0.5,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_8",
+      "name": "Ninho",
+      "costPrice": 0.6,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_9",
+      "name": "Chantilly",
+      "costPrice": 0.4,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_10",
+      "name": "Confete",
+      "costPrice": 0.4,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_11",
+      "name": "Bis",
+      "costPrice": 0.7,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_12",
+      "name": "Ovomaltine",
+      "costPrice": 0.6,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_13",
+      "name": "Paçoca",
+      "costPrice": 0.3,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_14",
+      "name": "Sucrilhos",
+      "costPrice": 0.3,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_15",
+      "name": "Gotas de chocolate",
+      "costPrice": 0.5,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_16",
+      "name": "Mel",
+      "costPrice": 0.5,
+      "active": true,
+      "allowedProductIds": []
+    },
+    {
+      "id": "acomp_17",
+      "name": "Coco Ralado",
+      "costPrice": 0.4,
+      "active": true,
+      "allowedProductIds": []
+    }
+  ],
+  "extras": [
+    {
+      "id": "ext_nutella",
+      "name": "Nutella",
+      "price": 5.9,
+      "costPrice": 2.2,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_brigadeiro",
+      "name": "Brigadeiro",
+      "price": 4.9,
+      "costPrice": 1.5,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_chocoavela",
+      "name": "Chocolate com avelã",
+      "price": 4.9,
+      "costPrice": 1.6,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_ovomaltine",
+      "name": "Ovomaltine",
+      "price": 3.9,
+      "costPrice": 1.2,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_bis",
+      "name": "Bis",
+      "price": 4.9,
+      "costPrice": 1.4,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_sonhodevalsa",
+      "name": "Sonho de Valsa",
+      "price": 4.9,
+      "costPrice": 1.8,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_kitkat",
+      "name": "Kit Kat (picado)",
+      "price": 5.9,
+      "costPrice": 2.1,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_ninho",
+      "name": "Ninho",
+      "price": 3.9,
+      "costPrice": 0.9,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_leitecond",
+      "name": "Leite condensado",
+      "price": 2.9,
+      "costPrice": 0.8,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_chantilly",
+      "name": "Chantilly",
+      "price": 3.9,
+      "costPrice": 1.1,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_granola",
+      "name": "Granola extra",
+      "price": 2.9,
+      "costPrice": 0.7,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_pacoca",
+      "name": "Paçoca",
+      "price": 2.9,
+      "costPrice": 0.6,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_confete",
+      "name": "Confete",
+      "price": 2.9,
+      "costPrice": 0.7,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_fruta",
+      "name": "Acrescentar fruta",
+      "price": 3.9,
+      "costPrice": 1.3,
+      "isFruitExtra": true,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    }
+  ],
+  "fruits": [
+    "Banana",
+    "Morango",
+    "Uva",
+    "Manga",
+    "Kiwi"
+  ]
+}

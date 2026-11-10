@@ -520,8 +520,42 @@ class JsonDatabase {
 
       const res = await this.pool.query('SELECT content FROM explosao_database WHERE id = $1', ['main']);
       if (res.rows.length > 0 && res.rows[0].content) {
-        this.data = res.rows[0].content;
-        this.saveLocal();
+        const pgData = res.rows[0].content;
+
+        // Carrega o catálogo oficial para verificar versão
+        let officialCatalog = null;
+        try {
+          const offPath = path.join(DATA_DIR, 'official_catalog.json');
+          if (fs.existsSync(offPath)) {
+            officialCatalog = JSON.parse(fs.readFileSync(offPath, 'utf-8'));
+          }
+        } catch (e) {
+          console.error('Erro ao ler official_catalog.json:', e);
+        }
+
+        const requiredVersion = officialCatalog?.catalogVersion || this.data?.catalogVersion || '2026-11-10-flyer-v1';
+
+        // Sincroniza o catálogo do panfleto se a versão no PostgreSQL ainda for antiga
+        if (pgData.catalogVersion !== requiredVersion && officialCatalog) {
+          console.log(`🔄 Sincronizando catálogo do PostgreSQL para a versão oficial: ${requiredVersion}...`);
+          pgData.catalogVersion = requiredVersion;
+          pgData.categories = officialCatalog.categories;
+          pgData.products = officialCatalog.products;
+          if (officialCatalog.accompaniments) pgData.accompaniments = officialCatalog.accompaniments;
+          if (officialCatalog.extras) pgData.extras = officialCatalog.extras;
+          if (officialCatalog.fruits) pgData.fruits = officialCatalog.fruits;
+
+          this.data = pgData;
+          await this.pool.query(
+            'INSERT INTO explosao_database (id, content, updated_at) VALUES ($1, $2, NOW()) ON CONFLICT (id) DO UPDATE SET content = $2, updated_at = NOW()',
+            ['main', this.data]
+          );
+          this.saveLocal();
+          console.log(`✅ PostgreSQL atualizado com sucesso com 9 categorias e 28 produtos!`);
+        } else {
+          this.data = pgData;
+          this.saveLocal();
+        }
         this.isConnected = true;
         console.log('✅ Banco de dados PostgreSQL conectado e sincronizado com sucesso!');
       } else {
@@ -533,8 +567,34 @@ class JsonDatabase {
         console.log('✅ Banco de dados PostgreSQL inicializado com os dados do Explosão Açaí!');
       }
     } catch (err) {
+      console.error('Erro ao inicializar PostgreSQL:', err);
       this.isConnected = false;
     }
+  }
+
+  async syncOfficialCatalog() {
+    let officialCatalog = null;
+    const offPath = path.join(DATA_DIR, 'official_catalog.json');
+    if (fs.existsSync(offPath)) {
+      officialCatalog = JSON.parse(fs.readFileSync(offPath, 'utf-8'));
+    }
+    if (!officialCatalog) throw new Error('Arquivo official_catalog.json não encontrado.');
+
+    if (!this.data) this.ensureInitialized();
+    this.data.catalogVersion = officialCatalog.catalogVersion;
+    this.data.categories = officialCatalog.categories;
+    this.data.products = officialCatalog.products;
+    if (officialCatalog.accompaniments) this.data.accompaniments = officialCatalog.accompaniments;
+    if (officialCatalog.extras) this.data.extras = officialCatalog.extras;
+    if (officialCatalog.fruits) this.data.fruits = officialCatalog.fruits;
+
+    this.save();
+    return {
+      ok: true,
+      catalogVersion: this.data.catalogVersion,
+      categoriesCount: this.data.categories.length,
+      productsCount: this.data.products.length
+    };
   }
 
   get() {
