@@ -33,6 +33,15 @@ body {
   flex-direction: column;
 }
 
+/* Topbar Fixa/Sticky (Header + Abas de Navegação Fixos no Topo ao Rolar a Página) */
+.admin-topbar-wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--panel);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+}
+
 /* Header Admin */
 .admin-header {
   background: var(--panel);
@@ -41,9 +50,6 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  position: sticky;
-  top: 0;
-  z-index: 20;
 }
 
 .admin-brand {

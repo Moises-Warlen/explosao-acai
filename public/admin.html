@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="css/admin.css?v=2.1">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
@@ -17,58 +17,61 @@
   <!-- Container Principal do Dashboard Administrativo -->
   <div id="dashboard-wrapper">
 
-  <!-- Header Administrativo -->
-  <header class="admin-header">
-    <div class="admin-brand">
-      <img src="imagens/Logo.png?v=3" alt="Explosão Açaí" onerror="this.style.display='none'">
-      <h1>Explosão Açaí <span>Painel admin</span></h1>
-    </div>
+  <!-- Topbar Fixa/Sticky: Header + Abas de Navegação Fixos ao Rolar a Página -->
+  <div class="admin-topbar-wrapper">
+    <!-- Header Administrativo -->
+    <header class="admin-header">
+      <div class="admin-brand">
+        <img src="imagens/Logo.png?v=3" alt="Explosão Açaí" onerror="this.style.display='none'">
+        <h1>Explosão Açaí <span>Painel admin</span></h1>
+      </div>
 
-    <!-- Toggle Loja Aberta / Fechada -->
-    <div class="store-toggle-box">
-      <span id="store-toggle-label" style="font-weight:700;font-size:14px;color:var(--green)">Loja ABERTA</span>
-      <label class="switch">
-        <input type="checkbox" id="store-toggle-switch" checked onchange="toggleStoreStatus()">
-        <span class="slider"></span>
-      </label>
-      <button class="btn-sm btn-print" style="margin-left:8px;padding:6px 12px" onclick="openAdminPasswordModal()">🔒 Senha Admin</button>
-      <button class="btn-sm" style="background:#33144a;color:#fff;margin-left:6px" onclick="logout()">Sair</button>
-    </div>
-  </header>
+      <!-- Toggle Loja Aberta / Fechada -->
+      <div class="store-toggle-box">
+        <span id="store-toggle-label" style="font-weight:700;font-size:14px;color:var(--green)">Loja ABERTA</span>
+        <label class="switch">
+          <input type="checkbox" id="store-toggle-switch" checked onchange="toggleStoreStatus()">
+          <span class="slider"></span>
+        </label>
+        <button class="btn-sm btn-print" style="margin-left:8px;padding:6px 12px" onclick="openAdminPasswordModal()">🔒 Senha Admin</button>
+        <button class="btn-sm" style="background:#33144a;color:#fff;margin-left:6px" onclick="logout()">Sair</button>
+      </div>
+    </header>
 
-  <!-- Navegação por Abas -->
-  <nav class="admin-nav">
-    <button class="nav-tab" data-tab="tab-chat">
-      Chat de Atendimento <span class="badge" id="badge-unread-chat" style="display:none">0</span>
-    </button>
-    <button class="nav-tab active" data-tab="tab-kanban">
-      Pedidos & Produção <span class="badge" id="badge-pending-orders" style="display:none">0</span>
-    </button>
-    <button class="nav-tab" data-tab="tab-products">
-      Cardápio & Ficha Técnica
-    </button>
-    <button class="nav-tab" data-tab="tab-accompaniments">
-      Acompanhamentos
-    </button>
-    <button class="nav-tab" data-tab="tab-extras">
-      Adicionais & Vínculos
-    </button>
-    <button class="nav-tab" data-tab="tab-categories">
-      Categorias
-    </button>
-    <button class="nav-tab" data-tab="tab-reports">
-      Relatórios & Vendas
-    </button>
-    <button class="nav-tab" data-tab="tab-coupons">
-      Cupons de Desconto
-    </button>
-    <button class="nav-tab" data-tab="tab-printers">
-      Impressoras de Comanda
-    </button>
-    <button class="nav-tab" data-tab="tab-store">
-      Configuração
-    </button>
-  </nav>
+    <!-- Navegação por Abas -->
+    <nav class="admin-nav">
+      <button class="nav-tab" data-tab="tab-chat">
+        Chat de Atendimento <span class="badge" id="badge-unread-chat" style="display:none">0</span>
+      </button>
+      <button class="nav-tab active" data-tab="tab-kanban">
+        Pedidos & Produção <span class="badge" id="badge-pending-orders" style="display:none">0</span>
+      </button>
+      <button class="nav-tab" data-tab="tab-products">
+        Cardápio & Ficha Técnica
+      </button>
+      <button class="nav-tab" data-tab="tab-accompaniments">
+        Acompanhamentos
+      </button>
+      <button class="nav-tab" data-tab="tab-extras">
+        Adicionais & Vínculos
+      </button>
+      <button class="nav-tab" data-tab="tab-categories">
+        Categorias
+      </button>
+      <button class="nav-tab" data-tab="tab-reports">
+        Relatórios & Vendas
+      </button>
+      <button class="nav-tab" data-tab="tab-coupons">
+        Cupons de Desconto
+      </button>
+      <button class="nav-tab" data-tab="tab-printers">
+        Impressoras de Comanda
+      </button>
+      <button class="nav-tab" data-tab="tab-store">
+        Configuração
+      </button>
+    </nav>
+  </div>
 
   <!-- Conteúdo das Abas -->
   <div class="admin-content">
