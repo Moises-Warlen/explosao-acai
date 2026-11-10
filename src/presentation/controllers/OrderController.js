@@ -69,6 +69,16 @@ export class OrderController {
       return res.status(400).json({ ok: false, error: err.message });
     }
   }
+
+  async archiveDaily(req, res) {
+    try {
+      const { targetDate } = req.body || {};
+      const result = orderService.archiveDailyCompletedOrders(targetDate);
+      return res.json({ ok: true, ...result });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  }
 }
 
 export const orderController = new OrderController();

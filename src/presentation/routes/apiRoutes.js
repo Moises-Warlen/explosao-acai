@@ -25,6 +25,7 @@ router.patch('/orders/:id/status', adminAuthMiddleware, (req, res) => orderContr
 router.post('/orders/:id/confirm-delivery', (req, res) => orderController.confirmDelivery(req, res));
 router.post('/orders/:id/return', (req, res) => orderController.returnOrder(req, res));
 router.post('/orders/:id/print', adminAuthMiddleware, (req, res) => orderController.printTicket(req, res));
+router.post('/orders/archive-daily-completed', (req, res) => orderController.archiveDaily(req, res));
 
 // ================= CARDÁPIO & PRODUTOS =================
 router.get('/catalog', (req, res) => catalogController.getCatalog(req, res));

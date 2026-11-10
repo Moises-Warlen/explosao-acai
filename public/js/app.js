@@ -790,7 +790,7 @@ function renderCartModal() {
     ${discount > 0 ? `<div class="tot" style="color:var(--success)"><span>Desconto</span><span>-${R(discount)}</span></div>` : ''}
     <div class="tot g"><span>Subtotal Final</span><b>${R(finalSubtotal)}</b></div>
 
-    <button class="btn" onclick="openCheckoutModal()">Continuar para Entrega</button>
+    <button class="btn" onclick="openCheckoutModal()">Finalizar Compra</button>
     <div style="display:flex;gap:10px;margin-top:8px">
       <button class="btn o" style="flex:1" onclick="closeSheet()">Voltar para o cardápio</button>
       <button class="btn" style="flex:1;background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.3);font-size:13px;font-weight:600" onclick="clearCart()">🗑️ Limpar Pedido</button>

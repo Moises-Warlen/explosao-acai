@@ -183,6 +183,9 @@ function initWebSocket() {
           updateOrdersBadge();
           loadSalesReport({ period: $('#report-period-select')?.value || 'today' });
         }
+        if (data.event === 'ORDERS_ARCHIVED') {
+          await loadOrders();
+        }
         if (data.event === 'CHAT_MESSAGE') {
           playNotificationChime();
           loadChatConversations();
@@ -413,11 +416,23 @@ function updateOrdersBadge() {
   }
 }
 
+function getBrasiliaDateString(dateInput) {
+  const d = dateInput ? new Date(dateInput) : new Date();
+  if (isNaN(d.getTime())) return '';
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(d);
+}
+
 const KANBAN_PAGE = {
   received: 1,
   preparing: 1,
   ready: 1,
   delivered: 1,
+  history: 1,
   returned: 1,
   cancelled: 1
 };
@@ -436,11 +451,13 @@ window.toggleOrderCardExpand = function(orderId) {
 window.toggleDeliveredCardExpand = window.toggleOrderCardExpand;
 
 window.toggleColumnExpand = function(colKey) {
+  const todayBrasilia = getBrasiliaDateString(new Date());
   const colOrders = ORDERS.filter(o => {
     if (colKey === 'received') return o.status === 'received';
     if (colKey === 'preparing') return o.status === 'preparing';
     if (colKey === 'ready') return o.status === 'ready' || o.status === 'out_for_delivery';
-    if (colKey === 'delivered') return o.status === 'delivered';
+    if (colKey === 'delivered') return o.status === 'delivered' && !o.archivedToHistory && getBrasiliaDateString(o.deliveredAt || o.createdAt) === todayBrasilia;
+    if (colKey === 'history') return o.status === 'delivered' && (o.archivedToHistory || getBrasiliaDateString(o.deliveredAt || o.createdAt) < todayBrasilia);
     if (colKey === 'returned') return o.status === 'returned';
     if (colKey === 'cancelled') return o.status === 'cancelled';
     return false;
@@ -465,6 +482,7 @@ function renderKanban() {
   const colReceived = $('#cards-received');
   if (!colReceived) return;
 
+  const todayBrasilia = getBrasiliaDateString(new Date());
   const q = ($('#kanban-search')?.value || '').trim().toLowerCase();
   const stFilter = $('#kanban-status-filter')?.value || 'all';
   const payFilter = $('#kanban-pay-filter')?.value || 'all';
@@ -479,12 +497,19 @@ function renderKanban() {
       if (!matchNo && !matchName && !matchPhone && !matchReason) return false;
     }
 
+    // Identificação de pedidos concluídos hoje vs concluídos em dias anteriores (histórico permanente)
+    const isDeliveredStatus = order.status === 'delivered';
+    const orderDateBrasilia = getBrasiliaDateString(order.deliveredAt || order.createdAt);
+    const isTodayDelivered = isDeliveredStatus && !order.archivedToHistory && orderDateBrasilia === todayBrasilia;
+    const isHistoryDelivered = isDeliveredStatus && (order.archivedToHistory || orderDateBrasilia < todayBrasilia);
+
     // Filtro de status
     if (stFilter !== 'all') {
       if (stFilter === 'received' && order.status !== 'received') return false;
       if (stFilter === 'preparing' && order.status !== 'preparing') return false;
       if (stFilter === 'ready' && order.status !== 'ready' && order.status !== 'out_for_delivery') return false;
-      if (stFilter === 'delivered' && order.status !== 'delivered') return false;
+      if (stFilter === 'delivered' && !isTodayDelivered) return false;
+      if (stFilter === 'history' && !isHistoryDelivered) return false;
       if (stFilter === 'returned' && order.status !== 'returned') return false;
       if (stFilter === 'cancelled' && order.status !== 'cancelled') return false;
     }
@@ -504,19 +529,21 @@ function renderKanban() {
   const ordersReceived = filteredOrders.filter(o => o.status === 'received');
   const ordersPreparing = filteredOrders.filter(o => o.status === 'preparing');
   const ordersReady = filteredOrders.filter(o => o.status === 'ready' || o.status === 'out_for_delivery');
-  const ordersDelivered = filteredOrders.filter(o => o.status === 'delivered');
+  const ordersDelivered = filteredOrders.filter(o => o.status === 'delivered' && !o.archivedToHistory && getBrasiliaDateString(o.deliveredAt || o.createdAt) === todayBrasilia);
+  const ordersHistory = filteredOrders.filter(o => o.status === 'delivered' && (o.archivedToHistory || getBrasiliaDateString(o.deliveredAt || o.createdAt) < todayBrasilia));
   const ordersReturned = filteredOrders.filter(o => o.status === 'returned');
   const ordersCancelled = filteredOrders.filter(o => o.status === 'cancelled');
 
   renderKanbanColumn('received', ordersReceived, 'cards-received', 'cards-received-pagination', 'col-header-received', 'Novos Pedidos');
   renderKanbanColumn('preparing', ordersPreparing, 'cards-preparing', 'cards-preparing-pagination', 'col-header-preparing', 'Em Preparo (Cozinha)');
   renderKanbanColumn('ready', ordersReady, 'cards-ready', 'cards-ready-pagination', 'col-header-ready', 'Pronto / Saiu para Entrega');
-  renderKanbanColumn('delivered', ordersDelivered, 'cards-delivered', 'cards-delivered-pagination', 'col-header-delivered', 'Entregues (Concluídos)');
+  renderKanbanColumn('delivered', ordersDelivered, 'cards-delivered', 'cards-delivered-pagination', 'col-header-delivered', 'Entregues Hoje');
+  renderKanbanColumn('history', ordersHistory, 'cards-history', 'cards-history-pagination', 'col-header-history', 'Pedidos Concluídos', true);
   renderKanbanColumn('returned', ordersReturned, 'cards-returned', 'cards-returned-pagination', 'col-header-returned', 'Devolvidos à Loja');
   renderKanbanColumn('cancelled', ordersCancelled, 'cards-cancelled', 'cards-cancelled-pagination', 'col-header-cancelled', 'Cancelados');
 }
 
-function renderKanbanColumn(colKey, list, containerId, paginationId, headerId, title) {
+function renderKanbanColumn(colKey, list, containerId, paginationId, headerId, title, isHistory = false) {
   const container = $(`#${containerId}`);
   const paginationBox = $(`#${paginationId}`);
   const header = $(`#${headerId}`);
@@ -549,7 +576,7 @@ function renderKanbanColumn(colKey, list, containerId, paginationId, headerId, t
 
   container.innerHTML = pageOrders.length === 0
     ? `<div style="color:var(--mut);text-align:center;padding:24px 10px;font-size:12px">Nenhum pedido</div>`
-    : pageOrders.map(o => createOrderCardHtml(o)).join('');
+    : pageOrders.map(o => createOrderCardHtml(o, isHistory)).join('');
 
   if (paginationBox) {
     if (totalPages > 1) {
@@ -568,7 +595,7 @@ function renderKanbanColumn(colKey, list, containerId, paginationId, headerId, t
   }
 }
 
-function createOrderCardHtml(order) {
+function createOrderCardHtml(order, isHistory = false) {
   const isMoney = order.payment?.method === 'Dinheiro';
   const isDeliveryPayment = order.payment?.timing === 'delivery' || isMoney;
   const isApproved = order.payment?.status === 'approved';
@@ -577,49 +604,73 @@ function createOrderCardHtml(order) {
   const hasTroco = isMoney && order.payment?.trocoValue > 0;
   const isDelivery = order.delivery?.type === 'delivery';
 
+  // Data e hora de conclusão ou registro no fuso de Brasília
+  const orderTimeStr = new Date(order.deliveredAt || order.createdAt).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+
   let nextAction = '';
-  if (order.status === 'received') {
-    // 1. Novos Pedidos: apenas envia para a cozinha
-    nextAction = `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'preparing')">Mandar p/ Cozinha</button>`;
-  } else if (order.status === 'preparing') {
-    // 2. Em Preparo: move para a coluna de Pronto / Saiu para Entrega
-    nextAction = isDelivery 
-      ? `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'out_for_delivery')">Despachar p/ Entrega</button>`
-      : `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'ready')">Pronto no Balcão</button>`;
-  } else if (order.status === 'out_for_delivery' || order.status === 'ready') {
-    // 3. Pronto / Saiu para Entrega: confirma entrega/retirada e move para Concluídos
-    if (isDelivery) {
+  if (!isHistory) {
+    if (order.status === 'received') {
+      // 1. Novos Pedidos: apenas envia para a cozinha
+      nextAction = `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'preparing')">Mandar p/ Cozinha</button>`;
+    } else if (order.status === 'preparing') {
+      // 2. Em Preparo: move para a coluna de Pronto / Saiu para Entrega
+      nextAction = isDelivery 
+        ? `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'out_for_delivery')">Despachar p/ Entrega</button>`
+        : `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'ready')">Pronto no Balcão</button>`;
+    } else if (order.status === 'out_for_delivery' || order.status === 'ready') {
+      // 3. Pronto / Saiu para Entrega: confirma entrega/retirada e move para Concluídos
+      if (isDelivery) {
+        nextAction = `
+          <button class="btn-sm" style="background:#10b981;color:#fff;font-weight:700;font-size:11px;padding:4px 8px" onclick="confirmOrderDeliveryAndPayment('${order.id}')" title="Confirmar que o cliente recebeu e o pagamento foi concluído">
+            ✓ Entregue & Recebido
+          </button>
+          <button class="btn-sm btn-secondary" style="font-size:10px;padding:4px 6px" onclick="copyMotoboyLink('${order.id}')" title="Copiar link para o celular do entregador">
+            📱 Link Motoboy
+          </button>
+          <button class="btn-sm" style="background:#b45309;color:#fff;font-size:10px;padding:4px 6px" onclick="openReturnOrderModal('${order.id}', '${order.orderNo}')" title="Marcar como devolvido à loja se o cliente não atendeu">
+            ↩ Devolver
+          </button>
+        `;
+      } else {
+        nextAction = `
+          <button class="btn-sm btn-next" style="background:#10b981;color:#fff;font-weight:700" onclick="confirmPickupOrder('${order.id}')" title="Marcar como Pago e Retirado pelo Cliente no Balcão">
+            ✓ Liberar para retirar no balcão
+          </button>
+        `;
+      }
+    } else if (order.status === 'returned') {
       nextAction = `
-        <button class="btn-sm" style="background:#10b981;color:#fff;font-weight:700;font-size:11px;padding:4px 8px" onclick="confirmOrderDeliveryAndPayment('${order.id}')" title="Confirmar que o cliente recebeu e o pagamento foi concluído">
-          ✓ Entregue & Recebido
-        </button>
-        <button class="btn-sm btn-secondary" style="font-size:10px;padding:4px 6px" onclick="copyMotoboyLink('${order.id}')" title="Copiar link para o celular do entregador">
-          📱 Link Motoboy
-        </button>
-        <button class="btn-sm" style="background:#b45309;color:#fff;font-size:10px;padding:4px 6px" onclick="openReturnOrderModal('${order.id}', '${order.orderNo}')" title="Marcar como devolvido à loja se o cliente não atendeu">
-          ↩ Devolver
-        </button>
-      `;
-    } else {
-      nextAction = `
-        <button class="btn-sm btn-next" style="background:#10b981;color:#fff;font-weight:700" onclick="confirmPickupOrder('${order.id}')" title="Marcar como Pago e Retirado pelo Cliente no Balcão">
-          ✓ Liberar para retirar no balcão
+        <button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'preparing')" title="Reenviar este pedido para a cozinha preparar novamente">
+          Reenviar p/ Cozinha
         </button>
       `;
     }
-  } else if (order.status === 'returned') {
-    nextAction = `
-      <button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'preparing')" title="Reenviar este pedido para a cozinha preparar novamente">
-        Reenviar p/ Cozinha
-      </button>
-    `;
   }
+
+  // Regra de Cancelamento:
+  // - Retirada no balcão em Pronto/Saiu para entrega: pode cancelar!
+  // - Entrega em Pronto/Saiu para entrega: NÃO pode cancelar nessa etapa!
+  // - Novos Pedidos, Em Preparo e Devolvidos: cancelamento permitido
+  // - Entregues Hoje, Pedidos Concluídos e Cancelados: sem botão de cancelamento
+  let canCancel = false;
+  if (!isHistory) {
+    if (order.status === 'received' || order.status === 'preparing' || order.status === 'returned') {
+      canCancel = true;
+    } else if (order.status === 'ready' || order.status === 'out_for_delivery') {
+      canCancel = !isDelivery;
+    }
+  }
+
+  // Botões de WhatsApp: apenas nas colunas Novos Pedidos e Em Preparo
+  const showWppButton = !isHistory && (order.status === 'received' || order.status === 'preparing');
 
   // ================= CARTÕES MINIMIZADOS (PADRÃO PARA TODAS AS COLUNAS) =================
   if (!EXPANDED_ORDERS.has(order.id)) {
     const payMethod = order.payment?.method ? order.payment.method.toUpperCase() : 'PAGO';
     let statusSummary = '';
-    if (order.status === 'received') {
+    if (isHistory) {
+      statusSummary = `<span style="color:#34d399;font-weight:600">✓ Concluído (${payMethod})</span>`;
+    } else if (order.status === 'received') {
       statusSummary = `<span style="color:#fde047;font-weight:600">Novos Pedidos (Aguardando Cozinha)</span>`;
     } else if (order.status === 'preparing') {
       statusSummary = `<span style="color:#60a5fa;font-weight:600">Em Preparo (Cozinha)</span>`;
@@ -651,14 +702,14 @@ function createOrderCardHtml(order) {
         </div>
 
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;font-size:11px;flex-wrap:wrap;gap:4px">
-          <div>${statusSummary}</div>
+          <div>${statusSummary} ${isHistory ? `<span style="color:var(--mut);margin-left:4px">(${orderTimeStr})</span>` : ''}</div>
           <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
-            ${order.status !== 'delivered' ? `
+            ${showWppButton ? `
             <button class="btn-sm" style="background:#25d366;color:#fff;font-size:10px;padding:3px 7px;font-weight:600" onclick="event.stopPropagation(); sendWppStatusNotice('${order.id}')" title="Avisar cliente no WhatsApp">
               💬 Zap
             </button>
             ` : ''}
-            ${order.status === 'returned' ? `
+            ${(!isHistory && order.status === 'returned') ? `
               <button class="btn-sm btn-print" style="font-size:10px;padding:3px 7px" onclick="event.stopPropagation(); printOrderStation('${order.id}', 'counter')" title="Reimprimir Comanda Balcão">
                 Reimprimir
               </button>
@@ -675,7 +726,14 @@ function createOrderCardHtml(order) {
 
   // Identificação clara da forma e timing do pagamento
   let paymentBadgeHtml = '';
-  if (order.status === 'delivered') {
+  if (isHistory) {
+    const payMethod = order.payment?.method ? order.payment.method.toUpperCase() : 'PAGO';
+    paymentBadgeHtml = `
+      <div class="payment-approved" style="background:#064e3b;color:#a7f3d0;border:1px solid #10b981;font-weight:700;padding:6px 10px;border-radius:8px">
+        ✓ PEDIDO CONCLUÍDO & PAGO (${payMethod})
+      </div>
+    `;
+  } else if (order.status === 'delivered') {
     const payMethod = order.payment?.method ? order.payment.method.toUpperCase() : 'PAGO';
     paymentBadgeHtml = `
       <div class="payment-approved" style="background:#064e3b;color:#a7f3d0;border:1px solid #10b981;font-weight:700;padding:6px 10px;border-radius:8px">
@@ -748,12 +806,16 @@ function createOrderCardHtml(order) {
 
       ${paymentBadgeHtml}
 
+      <div style="font-size:12px;color:var(--mut);margin-top:4px">
+        ${isHistory ? `Concluído em: <b style="color:#fff">${orderTimeStr}</b>` : `Registrado em: ${orderTimeStr}`}
+      </div>
+
       <div style="font-weight:600;font-size:14px;margin-top:6px;display:flex;justify-content:space-between;align-items:center">
         <div>
           Cliente: ${esc(order.customer.name)} 
-          <a href="https://wa.me/55${order.customer.phone}" target="_blank" style="color:var(--green);text-decoration:none;font-size:12px;margin-left:4px" title="Abrir conversa no WhatsApp">WhatsApp</a>
+          ${!isHistory ? `<a href="https://wa.me/55${order.customer.phone}" target="_blank" style="color:var(--green);text-decoration:none;font-size:12px;margin-left:4px" title="Abrir conversa no WhatsApp">WhatsApp</a>` : ''}
         </div>
-        ${order.status !== 'delivered' ? `
+        ${showWppButton ? `
         <button class="btn-sm" style="background:#25d366;color:#fff;font-size:11px;padding:3px 8px;font-weight:600;display:inline-flex;align-items:center;gap:4px" onclick="sendWppStatusNotice('${order.id}')" title="Enviar atualização de status do pedido para o WhatsApp do cliente">
           💬 Avisar no Zap
         </button>
@@ -785,21 +847,21 @@ function createOrderCardHtml(order) {
 
       <!-- Ações de Impressão e Status -->
       <div class="order-actions" style="flex-wrap:wrap;gap:6px">
-        ${(order.status !== 'delivered' && order.status !== 'cancelled' && order.status !== 'returned' && order.status !== 'ready' && order.status !== 'out_for_delivery') ? `
+        ${(!isHistory && order.status !== 'delivered' && order.status !== 'cancelled' && order.status !== 'returned' && order.status !== 'ready' && order.status !== 'out_for_delivery') ? `
           <button class="btn-sm btn-print" ${!canPrint ? 'disabled title="Impressão bloqueada até confirmação bancária do pagamento"' : ''} onclick="printOrderStation('${order.id}', 'kitchen')">
             Imprimir Cozinha
           </button>
         ` : ''}
-        ${(order.status !== 'cancelled' && order.status !== 'delivered') ? `
+        ${(!isHistory && order.status !== 'cancelled' && order.status !== 'delivered') ? `
           <button class="btn-sm btn-print" ${!canPrint ? 'disabled title="Impressão bloqueada até confirmação bancária do pagamento"' : ''} onclick="printOrderStation('${order.id}', 'counter')">
-            ${(order.status === 'delivered' || order.status === 'returned') ? 'Reimprimir Comanda' : 'Imprimir Balcão'}
+            ${order.status === 'returned' ? 'Reimprimir Comanda' : 'Imprimir Balcão'}
           </button>
         ` : ''}
         ${nextAction}
         <button class="btn-sm btn-secondary" style="margin-left:auto;font-size:11px;padding:3px 8px" onclick="toggleOrderCardExpand('${order.id}')" title="Minimizar detalhes deste pedido">
           ▲ Minimizar
         </button>
-        ${(order.status !== 'delivered' && order.status !== 'cancelled') ? `
+        ${canCancel ? `
           <button class="btn-sm btn-danger" style="margin-left:auto;font-size:11px;padding:4px 8px" onclick="openCancelOrderModal('${order.id}', '${order.orderNo}')" title="Cancelar este pedido">
             Cancelar
           </button>
@@ -976,17 +1038,17 @@ window.sendWppStatusNotice = function(orderId) {
 
 window.promptWppStatusNotice = function(order) {
   if (!order || !order.customer?.phone) return;
+  // Apenas 'received' e 'preparing' disparam alerta de WhatsApp.
+  // Colunas 'ready', 'out_for_delivery', 'delivered', 'returned', 'cancelled' e histórico NÃO devem ter aviso no WhatsApp.
+  if (order.status !== 'received' && order.status !== 'preparing') {
+    return;
+  }
   const rawPhone = String(order.customer.phone).replace(/\D/g, '');
   if (rawPhone.length < 10) return;
 
   const statusLabel = {
     received: 'Recebido',
-    preparing: 'Em Preparo',
-    out_for_delivery: 'Saiu p/ Entrega',
-    ready: 'Pronto no Balcão',
-    delivered: 'Entregue / Concluído',
-    returned: 'Devolvido',
-    cancelled: 'Cancelado'
+    preparing: 'Em Preparo'
   }[order.status] || order.status;
 
   adminToastHtml(`

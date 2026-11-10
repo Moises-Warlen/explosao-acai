@@ -16,10 +16,24 @@ import { freightService } from './FreightService.js';
 import { wsHub } from '../../infrastructure/websockets/WebSocketHub.js';
 import { whatsAppNotificationService } from '../../infrastructure/notifications/WhatsAppNotificationService.js';
 
+export function getBrasiliaDateString(dateInput = new Date()) {
+  const d = dateInput instanceof Date ? dateInput : new Date(dateInput);
+  if (isNaN(d.getTime())) return '';
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(d);
+}
+
 export class OrderService {
   constructor() {
     this.db = db;
     this.startPaymentAutoSync();
+    this._lastArchivedBrasiliaDate = getBrasiliaDateString(new Date());
+    this.archiveDailyCompletedOrders();
+    this.startMidnightArchiveScheduler();
   }
 
   /**
@@ -64,7 +78,68 @@ export class OrderService {
     if (filters.customerPhone) {
       orders = orders.filter(o => o.customer.phone === filters.customerPhone);
     }
+    if (filters.archivedToHistory !== undefined) {
+      orders = orders.filter(o => Boolean(o.archivedToHistory) === Boolean(filters.archivedToHistory));
+    }
     return orders.map(o => new Order(o)).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+
+  /**
+   * Automação Diária: move pedidos de "Entregues Hoje" para "Pedidos Concluídos" (Histórico permanente)
+   * Processa todos os pedidos com status 'delivered' cuja data de entrega seja anterior à data atual em Brasília (America/Sao_Paulo).
+   * Também atua como rotina de recuperação caso o sistema tenha ficado offline ou reiniciado na virada do dia.
+   */
+  archiveDailyCompletedOrders(forcedTargetDate = null) {
+    const data = this.db.get();
+    if (!data.orders || !Array.isArray(data.orders)) return { count: 0, todayBrasilia: '' };
+
+    const todayBrasilia = forcedTargetDate || getBrasiliaDateString(new Date());
+    let count = 0;
+    const now = new Date();
+
+    for (const order of data.orders) {
+      if (order.status === OrderStatus.DELIVERED && !order.archivedToHistory) {
+        const orderDate = getBrasiliaDateString(order.deliveredAt || order.createdAt);
+        // Se a data de conclusão for anterior ao dia de hoje em Brasília, arquiva para o histórico permanente
+        if (orderDate && orderDate < todayBrasilia) {
+          order.archivedToHistory = true;
+          order.archivedAt = now.toISOString();
+          order.updatedAt = now.toISOString();
+          count++;
+        }
+      }
+    }
+
+    if (count > 0) {
+      this.db.save();
+      console.log(`[Automação Diária Brasília] ${count} pedido(s) concluído(s) arquivado(s) permanentemente para a coluna Pedidos Concluídos (${todayBrasilia}).`);
+      wsHub.broadcast('ORDERS_ARCHIVED', { todayBrasilia, count });
+    }
+
+    return { count, todayBrasilia };
+  }
+
+  /**
+   * Agendador contínuo para virada do dia à meia-noite (00:00) no fuso horário de Brasília (America/Sao_Paulo)
+   */
+  startMidnightArchiveScheduler() {
+    if (this._midnightTimer) return;
+    this._midnightTimer = setInterval(() => {
+      try {
+        const currentBrasiliaDate = getBrasiliaDateString(new Date());
+        if (currentBrasiliaDate && currentBrasiliaDate !== this._lastArchivedBrasiliaDate) {
+          console.log(`[Virada de Dia Brasília 00:00] Transição detectada de ${this._lastArchivedBrasiliaDate} para ${currentBrasiliaDate}. Executando arquivamento diário...`);
+          this.archiveDailyCompletedOrders(currentBrasiliaDate);
+          this._lastArchivedBrasiliaDate = currentBrasiliaDate;
+        }
+      } catch (e) {
+        console.error('[Erro Scheduler Meia-Noite]:', e.message);
+      }
+    }, 15000);
+
+    if (this._midnightTimer && typeof this._midnightTimer.unref === 'function') {
+      this._midnightTimer.unref();
+    }
   }
 
   getOrderById(id) {

@@ -1147,7 +1147,7 @@
       "minOrder": 25,
       "maxDiscount": null,
       "active": true,
-      "uses": 15,
+      "uses": 22,
       "maxUses": 200
     },
     {
@@ -1164,8 +1164,8 @@
   ],
   "orders": [
     {
-      "id": "ord_1794198251524_3x05y",
-      "orderNo": "317850",
+      "id": "ord_1794282728951_hzljw",
+      "orderNo": "678438",
       "customer": {
         "name": "Cliente Frete Grátis",
         "phone": "16999990001"
@@ -1221,6 +1221,8 @@
       "notifiedStatuses": [
         "received"
       ],
+      "archivedToHistory": false,
+      "archivedAt": null,
       "preparedAt": null,
       "deliveredAt": null,
       "preparationTimeMinutes": null,
@@ -1229,13 +1231,13 @@
       "cancelledAt": null,
       "returnReason": null,
       "returnedAt": null,
-      "createdAt": "2026-11-09T04:24:11.523Z",
-      "updatedAt": "2026-11-09T04:24:11.524Z",
+      "createdAt": "2026-11-10T03:52:08.950Z",
+      "updatedAt": "2026-11-10T03:52:08.951Z",
       "printed": true
     },
     {
-      "id": "ord_1794198251606_732sm",
-      "orderNo": "190516",
+      "id": "ord_1794282728993_54zqx",
+      "orderNo": "508994",
       "customer": {
         "name": "Cliente Frete Pago",
         "phone": "16999990002"
@@ -1291,6 +1293,8 @@
       "notifiedStatuses": [
         "received"
       ],
+      "archivedToHistory": false,
+      "archivedAt": null,
       "preparedAt": null,
       "deliveredAt": null,
       "preparationTimeMinutes": null,
@@ -1299,13 +1303,13 @@
       "cancelledAt": null,
       "returnReason": null,
       "returnedAt": null,
-      "createdAt": "2026-11-09T04:24:11.606Z",
-      "updatedAt": "2026-11-09T04:24:11.606Z",
+      "createdAt": "2026-11-10T03:52:08.993Z",
+      "updatedAt": "2026-11-10T03:52:08.993Z",
       "printed": true
     },
     {
-      "id": "ord_1794198251701_ifych",
-      "orderNo": "844562",
+      "id": "ord_1794282729063_qwexh",
+      "orderNo": "991054",
       "customer": {
         "name": "Cliente a Cancelar",
         "phone": "16999990003"
@@ -1336,9 +1340,9 @@
         "status": "pending",
         "changeFor": null,
         "trocoValue": 0,
-        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540524.905802BR5913EXPLOSAO ACAI6006FRANCA6210050684456263040C05",
-        "qrCodeBase64": "data:image/png;base64,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",
-        "transactionId": "pix_1794198251700_844562",
+        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540524.905802BR5913EXPLOSAO ACAI6006FRANCA6210050699105463040F0F",
+        "qrCodeBase64": "data:image/png;base64,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",
+        "transactionId": "pix_1794282729063_991054",
         "ticketUrl": "",
         "isMock": true
       },
@@ -1354,20 +1358,22 @@
         "received",
         "cancelled"
       ],
+      "archivedToHistory": false,
+      "archivedAt": null,
       "preparedAt": null,
       "deliveredAt": null,
       "preparationTimeMinutes": null,
       "deliveryTimeMinutes": null,
       "cancellationReason": "Desistência do cliente antes do preparo",
-      "cancelledAt": "2026-11-09T04:24:11.714Z",
+      "cancelledAt": "2026-11-10T03:52:09.073Z",
       "returnReason": null,
       "returnedAt": null,
-      "createdAt": "2026-11-09T04:24:11.701Z",
-      "updatedAt": "2026-11-09T04:24:11.714Z"
+      "createdAt": "2026-11-10T03:52:09.063Z",
+      "updatedAt": "2026-11-10T03:52:09.073Z"
     },
     {
-      "id": "ord_1794198251874_mfla3",
-      "orderNo": "848769",
+      "id": "ord_1794282729135_tpwqc",
+      "orderNo": "180376",
       "customer": {
         "name": "Lucas Motoboy Test",
         "phone": "16999995544"
@@ -1404,7 +1410,7 @@
         "status": "approved",
         "changeFor": null,
         "trocoValue": 0,
-        "paidAt": "2026-11-09T04:24:11.903Z"
+        "paidAt": "2026-11-10T03:52:09.146Z"
       },
       "coupon": null,
       "subtotal": 24.9,
@@ -1421,21 +1427,23 @@
         "received",
         "delivered"
       ],
+      "archivedToHistory": true,
+      "archivedAt": "2026-11-10T03:57:22.203Z",
       "preparedAt": null,
-      "deliveredAt": "2026-11-09T04:24:11.903Z",
+      "deliveredAt": "2026-11-10T03:52:09.146Z",
       "preparationTimeMinutes": null,
       "deliveryTimeMinutes": 1,
       "cancellationReason": null,
       "cancelledAt": null,
       "returnReason": null,
       "returnedAt": null,
-      "createdAt": "2026-11-09T04:24:11.874Z",
-      "updatedAt": "2026-11-09T04:24:11.903Z",
+      "createdAt": "2026-11-10T03:52:09.135Z",
+      "updatedAt": "2026-11-10T03:57:22.203Z",
       "printed": true
     },
     {
-      "id": "ord_1794198251998_hyfs2",
-      "orderNo": "737112",
+      "id": "ord_1794282729191_8gpmx",
+      "orderNo": "672406",
       "customer": {
         "name": "Mariana Devolução Test",
         "phone": "16988884433"
@@ -1488,6 +1496,8 @@
         "received",
         "returned"
       ],
+      "archivedToHistory": false,
+      "archivedAt": null,
       "preparedAt": null,
       "deliveredAt": null,
       "preparationTimeMinutes": null,
@@ -1495,41 +1505,4144 @@
       "cancellationReason": null,
       "cancelledAt": null,
       "returnReason": "Cliente não atendeu o interfone nem telefone",
-      "returnedAt": "2026-11-09T04:24:12.010Z",
-      "createdAt": "2026-11-09T04:24:11.998Z",
-      "updatedAt": "2026-11-09T04:24:12.010Z",
+      "returnedAt": "2026-11-10T03:52:09.200Z",
+      "createdAt": "2026-11-10T03:52:09.191Z",
+      "updatedAt": "2026-11-10T03:52:09.200Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282778984_wnm3v",
+      "orderNo": "745681",
+      "customer": {
+        "name": "Lucas Delivery",
+        "phone": "16998887766"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Avenida Brasil",
+        "number": "500",
+        "bairro": "Centro",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 5
+      },
+      "items": [
+        {
+          "name": "Ninho com Morango 500 ml",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 30.9,
+          "costPrice": 13.5,
+          "subtotal": 30.9,
+          "accompaniments": [
+            "Morango",
+            "Ninho"
+          ],
+          "extras": [
+            "Nutella"
+          ],
+          "fruits": [],
+          "note": "Colher separada"
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": "50,00",
+        "trocoValue": 19.1
+      },
+      "coupon": {
+        "code": "PRIMEIRACOMPRA",
+        "discountValue": 5
+      },
+      "subtotal": 30.9,
+      "discount": 5,
+      "freight": 5,
+      "total": 30.9,
+      "costTotal": 13.5,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:52:58.984Z",
+      "updatedAt": "2026-11-10T03:52:58.984Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282779080_7qst5",
+      "orderNo": "400159",
+      "customer": {
+        "name": "Ana Beatriz",
+        "phone": "16991112233"
+      },
+      "delivery": {
+        "type": "pickup"
+      },
+      "items": [
+        {
+          "name": "Combo Casal 500 ml",
+          "size": null,
+          "quantity": 1,
+          "unitPrice": 64.9,
+          "costPrice": 0,
+          "subtotal": 64.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Pix",
+        "timing": "online",
+        "status": "approved",
+        "changeFor": null,
+        "trocoValue": 0,
+        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540564.905802BR5913EXPLOSAO ACAI6006FRANCA6210050640015963048C1D",
+        "qrCodeBase64": "data:image/png;base64,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",
+        "transactionId": "pix_1794282779080_400159",
+        "ticketUrl": "",
+        "isMock": true,
+        "paidAt": "2026-11-10T03:52:59.097Z"
+      },
+      "coupon": null,
+      "subtotal": 64.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 64.9,
+      "costTotal": 0,
+      "status": "preparing",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "preparing"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:52:59.080Z",
+      "updatedAt": "2026-11-10T03:52:59.097Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282779164_8vbm2",
+      "orderNo": "933750",
+      "customer": {
+        "name": "Mariana Costa",
+        "phone": "16993334455"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua das Palmeiras",
+        "number": "450",
+        "bairro": "Jardim Primavera",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 5.5
+      },
+      "items": [
+        {
+          "name": "Ninho com Morango 500 ml",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 30.9,
+          "costPrice": 13.5,
+          "subtotal": 30.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Cartão de crédito",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 30.9,
+      "discount": 0,
+      "freight": 5.5,
+      "total": 36.4,
+      "costTotal": 13.5,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:52:59.164Z",
+      "updatedAt": "2026-11-10T03:52:59.164Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282779935_uvqjm",
+      "orderNo": "629602",
+      "customer": {
+        "name": "Cliente Frete Grátis",
+        "phone": "16999990001"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua das Flores",
+        "number": "123",
+        "bairro": "Centro",
+        "city": "Franca - SP",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 1.5,
+        "freight": 0
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 18.9,
+          "costPrice": 0,
+          "subtotal": 18.9,
+          "accompaniments": [
+            "Granola",
+            "Leite condensado",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 18.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 18.9,
+      "costTotal": 0,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:52:59.935Z",
+      "updatedAt": "2026-11-10T03:52:59.935Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282779984_4jb4b",
+      "orderNo": "678826",
+      "customer": {
+        "name": "Cliente Frete Pago",
+        "phone": "16999990002"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Av Brasil",
+        "number": "500",
+        "bairro": "Jardim Paulista",
+        "city": "Franca - SP",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 6,
+        "freight": 6
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 18.9,
+          "costPrice": 0,
+          "subtotal": 18.9,
+          "accompaniments": [
+            "Granola",
+            "Leite condensado",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 18.9,
+      "discount": 0,
+      "freight": 6,
+      "total": 24.9,
+      "costTotal": 0,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:52:59.984Z",
+      "updatedAt": "2026-11-10T03:52:59.984Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282780075_ic0er",
+      "orderNo": "911666",
+      "customer": {
+        "name": "Cliente a Cancelar",
+        "phone": "16999990003"
+      },
+      "delivery": {
+        "type": "pickup"
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 24.9,
+          "costPrice": 0,
+          "subtotal": 24.9,
+          "accompaniments": [
+            "Granola",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Pix",
+        "timing": "online",
+        "status": "pending",
+        "changeFor": null,
+        "trocoValue": 0,
+        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540524.905802BR5913EXPLOSAO ACAI6006FRANCA6210050691166663040DB6",
+        "qrCodeBase64": "data:image/png;base64,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",
+        "transactionId": "pix_1794282780075_911666",
+        "ticketUrl": "",
+        "isMock": true
+      },
+      "coupon": null,
+      "subtotal": 24.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 24.9,
+      "costTotal": 0,
+      "status": "cancelled",
+      "printedStations": [],
+      "notifiedStatuses": [
+        "received",
+        "cancelled"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": "Desistência do cliente antes do preparo",
+      "cancelledAt": "2026-11-10T03:53:00.087Z",
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:53:00.075Z",
+      "updatedAt": "2026-11-10T03:53:00.087Z"
+    },
+    {
+      "id": "ord_1794282780179_glt6j",
+      "orderNo": "970401",
+      "customer": {
+        "name": "Lucas Motoboy Test",
+        "phone": "16999995544"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua do Entregador",
+        "number": "100",
+        "bairro": "Centro",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 3.5,
+        "freight": 4.5
+      },
+      "items": [
+        {
+          "name": "Copo Tradicional 300ml",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 24.9,
+          "costPrice": 0,
+          "subtotal": 24.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "approved",
+        "changeFor": null,
+        "trocoValue": 0,
+        "paidAt": "2026-11-10T03:53:00.189Z"
+      },
+      "coupon": null,
+      "subtotal": 24.9,
+      "discount": 0,
+      "freight": 4.5,
+      "total": 29.4,
+      "costTotal": 0,
+      "status": "delivered",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "delivered"
+      ],
+      "archivedToHistory": true,
+      "archivedAt": "2026-11-10T03:57:22.203Z",
+      "preparedAt": null,
+      "deliveredAt": "2026-11-10T03:53:00.189Z",
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": 1,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:53:00.179Z",
+      "updatedAt": "2026-11-10T03:57:22.203Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282780237_60j5k",
+      "orderNo": "455098",
+      "customer": {
+        "name": "Mariana Devolução Test",
+        "phone": "16988884433"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua Deserta",
+        "number": "99",
+        "bairro": "Jardim Primavera",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 4.5
+      },
+      "items": [
+        {
+          "name": "Copo Tradicional 500ml",
+          "size": 500,
+          "quantity": 2,
+          "unitPrice": 29.9,
+          "costPrice": 0,
+          "subtotal": 59.8,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 59.8,
+      "discount": 0,
+      "freight": 4.5,
+      "total": 64.3,
+      "costTotal": 0,
+      "status": "returned",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "returned"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": "Cliente não atendeu o interfone nem telefone",
+      "returnedAt": "2026-11-10T03:53:00.248Z",
+      "createdAt": "2026-11-10T03:53:00.237Z",
+      "updatedAt": "2026-11-10T03:53:00.248Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282845825_jzkp2",
+      "orderNo": "964739",
+      "customer": {
+        "name": "Lucas Delivery",
+        "phone": "16998887766"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Avenida Brasil",
+        "number": "500",
+        "bairro": "Centro",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 5
+      },
+      "items": [
+        {
+          "name": "Ninho com Morango 500 ml",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 30.9,
+          "costPrice": 13.5,
+          "subtotal": 30.9,
+          "accompaniments": [
+            "Morango",
+            "Ninho"
+          ],
+          "extras": [
+            "Nutella"
+          ],
+          "fruits": [],
+          "note": "Colher separada"
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": "50,00",
+        "trocoValue": 19.1
+      },
+      "coupon": {
+        "code": "PRIMEIRACOMPRA",
+        "discountValue": 5
+      },
+      "subtotal": 30.9,
+      "discount": 5,
+      "freight": 5,
+      "total": 30.9,
+      "costTotal": 13.5,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:54:05.825Z",
+      "updatedAt": "2026-11-10T03:54:05.825Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282845914_2u52u",
+      "orderNo": "866410",
+      "customer": {
+        "name": "Ana Beatriz",
+        "phone": "16991112233"
+      },
+      "delivery": {
+        "type": "pickup"
+      },
+      "items": [
+        {
+          "name": "Combo Casal 500 ml",
+          "size": null,
+          "quantity": 1,
+          "unitPrice": 64.9,
+          "costPrice": 0,
+          "subtotal": 64.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Pix",
+        "timing": "online",
+        "status": "approved",
+        "changeFor": null,
+        "trocoValue": 0,
+        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540564.905802BR5913EXPLOSAO ACAI6006FRANCA621005068664106304665A",
+        "qrCodeBase64": "data:image/png;base64,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",
+        "transactionId": "pix_1794282845914_866410",
+        "ticketUrl": "",
+        "isMock": true,
+        "paidAt": "2026-11-10T03:54:05.937Z"
+      },
+      "coupon": null,
+      "subtotal": 64.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 64.9,
+      "costTotal": 0,
+      "status": "preparing",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "preparing"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:54:05.914Z",
+      "updatedAt": "2026-11-10T03:54:05.937Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282846048_ok4jn",
+      "orderNo": "551890",
+      "customer": {
+        "name": "Mariana Costa",
+        "phone": "16993334455"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua das Palmeiras",
+        "number": "450",
+        "bairro": "Jardim Primavera",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 5.5
+      },
+      "items": [
+        {
+          "name": "Ninho com Morango 500 ml",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 30.9,
+          "costPrice": 13.5,
+          "subtotal": 30.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Cartão de crédito",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 30.9,
+      "discount": 0,
+      "freight": 5.5,
+      "total": 36.4,
+      "costTotal": 13.5,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:54:06.048Z",
+      "updatedAt": "2026-11-10T03:54:06.048Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282847160_i3lzj",
+      "orderNo": "799062",
+      "customer": {
+        "name": "Cliente Frete Grátis",
+        "phone": "16999990001"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua das Flores",
+        "number": "123",
+        "bairro": "Centro",
+        "city": "Franca - SP",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 1.5,
+        "freight": 0
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 18.9,
+          "costPrice": 0,
+          "subtotal": 18.9,
+          "accompaniments": [
+            "Granola",
+            "Leite condensado",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 18.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 18.9,
+      "costTotal": 0,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:54:07.160Z",
+      "updatedAt": "2026-11-10T03:54:07.160Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282847209_3cv3f",
+      "orderNo": "130274",
+      "customer": {
+        "name": "Cliente Frete Pago",
+        "phone": "16999990002"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Av Brasil",
+        "number": "500",
+        "bairro": "Jardim Paulista",
+        "city": "Franca - SP",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 6,
+        "freight": 6
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 18.9,
+          "costPrice": 0,
+          "subtotal": 18.9,
+          "accompaniments": [
+            "Granola",
+            "Leite condensado",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 18.9,
+      "discount": 0,
+      "freight": 6,
+      "total": 24.9,
+      "costTotal": 0,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:54:07.209Z",
+      "updatedAt": "2026-11-10T03:54:07.209Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282847307_90ltv",
+      "orderNo": "745305",
+      "customer": {
+        "name": "Cliente a Cancelar",
+        "phone": "16999990003"
+      },
+      "delivery": {
+        "type": "pickup"
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 24.9,
+          "costPrice": 0,
+          "subtotal": 24.9,
+          "accompaniments": [
+            "Granola",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Pix",
+        "timing": "online",
+        "status": "pending",
+        "changeFor": null,
+        "trocoValue": 0,
+        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540524.905802BR5913EXPLOSAO ACAI6006FRANCA6210050674530563045677",
+        "qrCodeBase64": "data:image/png;base64,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",
+        "transactionId": "pix_1794282847307_745305",
+        "ticketUrl": "",
+        "isMock": true
+      },
+      "coupon": null,
+      "subtotal": 24.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 24.9,
+      "costTotal": 0,
+      "status": "cancelled",
+      "printedStations": [],
+      "notifiedStatuses": [
+        "received",
+        "cancelled"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": "Desistência do cliente antes do preparo",
+      "cancelledAt": "2026-11-10T03:54:07.322Z",
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:54:07.307Z",
+      "updatedAt": "2026-11-10T03:54:07.322Z"
+    },
+    {
+      "id": "ord_1794282847399_tp1ry",
+      "orderNo": "992633",
+      "customer": {
+        "name": "Lucas Motoboy Test",
+        "phone": "16999995544"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua do Entregador",
+        "number": "100",
+        "bairro": "Centro",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 3.5,
+        "freight": 4.5
+      },
+      "items": [
+        {
+          "name": "Copo Tradicional 300ml",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 24.9,
+          "costPrice": 0,
+          "subtotal": 24.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "approved",
+        "changeFor": null,
+        "trocoValue": 0,
+        "paidAt": "2026-11-10T03:54:07.413Z"
+      },
+      "coupon": null,
+      "subtotal": 24.9,
+      "discount": 0,
+      "freight": 4.5,
+      "total": 29.4,
+      "costTotal": 0,
+      "status": "delivered",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "delivered"
+      ],
+      "archivedToHistory": true,
+      "archivedAt": "2026-11-10T03:57:22.203Z",
+      "preparedAt": null,
+      "deliveredAt": "2026-11-10T03:54:07.413Z",
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": 1,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:54:07.399Z",
+      "updatedAt": "2026-11-10T03:57:22.203Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282847465_0bl25",
+      "orderNo": "537023",
+      "customer": {
+        "name": "Mariana Devolução Test",
+        "phone": "16988884433"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua Deserta",
+        "number": "99",
+        "bairro": "Jardim Primavera",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 4.5
+      },
+      "items": [
+        {
+          "name": "Copo Tradicional 500ml",
+          "size": 500,
+          "quantity": 2,
+          "unitPrice": 29.9,
+          "costPrice": 0,
+          "subtotal": 59.8,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 59.8,
+      "discount": 0,
+      "freight": 4.5,
+      "total": 64.3,
+      "costTotal": 0,
+      "status": "returned",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "returned"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": "Cliente não atendeu o interfone nem telefone",
+      "returnedAt": "2026-11-10T03:54:07.477Z",
+      "createdAt": "2026-11-10T03:54:07.465Z",
+      "updatedAt": "2026-11-10T03:54:07.477Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282908670_h35hx",
+      "orderNo": "265943",
+      "customer": {
+        "name": "Lucas Delivery",
+        "phone": "16998887766"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Avenida Brasil",
+        "number": "500",
+        "bairro": "Centro",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 5
+      },
+      "items": [
+        {
+          "name": "Ninho com Morango 500 ml",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 30.9,
+          "costPrice": 13.5,
+          "subtotal": 30.9,
+          "accompaniments": [
+            "Morango",
+            "Ninho"
+          ],
+          "extras": [
+            "Nutella"
+          ],
+          "fruits": [],
+          "note": "Colher separada"
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": "50,00",
+        "trocoValue": 19.1
+      },
+      "coupon": {
+        "code": "PRIMEIRACOMPRA",
+        "discountValue": 5
+      },
+      "subtotal": 30.9,
+      "discount": 5,
+      "freight": 5,
+      "total": 30.9,
+      "costTotal": 13.5,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:55:08.670Z",
+      "updatedAt": "2026-11-10T03:55:08.670Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282908771_q8zfy",
+      "orderNo": "391885",
+      "customer": {
+        "name": "Ana Beatriz",
+        "phone": "16991112233"
+      },
+      "delivery": {
+        "type": "pickup"
+      },
+      "items": [
+        {
+          "name": "Combo Casal 500 ml",
+          "size": null,
+          "quantity": 1,
+          "unitPrice": 64.9,
+          "costPrice": 0,
+          "subtotal": 64.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Pix",
+        "timing": "online",
+        "status": "approved",
+        "changeFor": null,
+        "trocoValue": 0,
+        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540564.905802BR5913EXPLOSAO ACAI6006FRANCA621005063918856304FB4C",
+        "qrCodeBase64": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsCAYAAAB5fY51AAAAAklEQVR4AewaftIAAA22SURBVO3B0ZXdWGxFwS2s/kMoyAHBIweEgm9ZAfDaw2eK3Zg5Vb9+/4GIyAKGiMgShojIEoaIyBKGiMgShojIEoaIyBKGiMgShojIEoaIyBKGiMgShojIEoaIyBKGiMgSX3woPNmqp3hKeHLSU9wVnrylpzgJT57UUzwpPDnpKe4KT57UU5yEJ3f1FFfCk616irsMEZElDBGRJQwRkSUMEZElDBGRJQwRkSW++At6iu8Wngj0FD9deHKlpzjpKZ7UU9wVnnyip3hDT/HdwpMnGSIiSxgiIksYIiJLGCIiSxgiIkt88aLw5Ek9xZPCkyeFJ3f1FCfhyV3hyUlPcdJTXAlPntZT3BWenPQUV8KTT/QUd4UnJz3FdwtPntRTvMEQEVnCEBFZwhARWcIQEVnCEBFZwhARWeIL+Ud6iieFJ1fCk5Oe4q7w5BPhyZPCk7t6ipOe4q6e4iQ8uaun+ER4cqWnkP+dISKyhCEisoQhIrKEISKyhCEisoQhIrLEF/KPhCd39RQnPcWV8OQT4cld4clJT3FXePKJnuKu8OSkp7gSnpz0FE8KT+4KT056CgFDRGQJQ0RkCUNEZAlDRGQJQ0RkiS9e1FNs1VM8KTy50lN8oqe4Ep6c9BR3hScnPcVJePKW8ORKT3ESnpz0FFfCkyf1FG/pKTYyRESWMEREljBERJYwRESWMEREljBERJb44i8IT/4rwpOTnuJJ4clJT/Gk8ORKT3ESnpz0FCfhyZWe4hM9xZXw5KSnOAlPrvQUJ+HJSU9xJTw56SnuCk/+bQwRkSUMEZElDBGRJQwRkSUMEZElDBGRJb74UE/xXxKe/GThyRvCk5Oe4knhySfCk7vCk7eEJ0/pKf5LDBGRJQwRkSUMEZElDBGRJQwRkSW++FB4ctJTXAlPfoKe4kpP8Zae4kp4ctJTnIQnb+gpTsKTk57ipKd4Unhypac4CU82Ck9+gp7iDYaIyBKGiMgShojIEoaIyBKGiMgShojIEr9+/8HDwpMrPcVPFp6c9BR3hScnPcWV8OQTPcUbwpOTnuIkPHlLT3ElPDnpKe4KT7bqKZ4UnlzpKZ5kiIgsYYiILGGIiCxhiIgsYYiILPHFX9BTPCk8eUNPcRKevKGnOAlPTsKTKz3FJ8KTt/QU3y08uauneEt4cqWnOAlPTsKTKz3Fk8KTk57iLkNEZAlDRGQJQ0RkCUNEZAlDRGQJQ0RkiS8+FJ48qad4Uk9xEp7c1VNcCU9OeoqT8ORJPcUbeoqT8OSkp3hSeHJXT/GJ8ORKePKJnuINPcV36ymeZIiILGGIiCxhiIgsYYiILGGIiCxhiIgs8cWLeoqT8ORJ4cld4clJT3FXeHLSU1wJTz4RnlzpKd7SU5yEJyc9xV09xV3hySd6iivhyZPCkyeFJ3f1FD+ZISKyhCEisoQhIrKEISKyhCEissSv33/wgfDkpKe4Ep6c9BQn4cmVnuJJ4clJT3FXePKknuIkPLmrp3hSePKknuIkPLmrpzgJT+7qKd4SnlzpKT4RnlzpKU7Ck5Oe4g2GiMgShojIEoaIyBKGiMgShojIEoaIyBJfvKin+ERPcVd4ctJTXOkpntRT3BWe/GThyUlPcRKePKmnOAlP7uop7gpPPtFTXAlPTnqKu8KTt4Qnd/UUdxkiIksYIiJLGCIiSxgiIksYIiJLGCIiS3zxF4Qnb+gpTnqKk/Dkrp7irvDkpKe4Kzw56SmuhCcn4clJT3FXeHLSUzwpPHlLeHJXT3FXT/GT9RTfzRARWcIQEVnCEBFZwhARWcIQEVnii7+gp7gSnpz0FCfhyZXw5N+mpzgJT07CkyeFJ/824clJT3HSU9wVnpz0FFfCk7t6ik/0FFfCk5Oe4iQ8udJTPMkQEVnCEBFZwhARWcIQEVnCEBFZwhARWeKLvyA8uSs8Oekp3hCe3BWenPQUW/UUV8KTk57iJDw56SmuhCcnPcVJeHJXeHLSUzwpPLnSUzyppzgJT57UU7zBEBFZwhARWcIQEVnCEBFZwhARWcIQEVniiw/1FCfhyZWe4hPhyZWe4iQ8OekprvQUJ+HJXeHJXT3Fk3qKk/Dkrp7iLT3FSXjyXxKeXOkpPtFT3BWePKmnuMsQEVnCEBFZwhARWcIQEVnCEBFZ4tfvP3hJePKWnuJJ4cmVnuIkPDnpKa6EJyc9xUl4cqWnOAlP7uopTsKTn6yn+ER4cqWn+G7hyUlP8Zbw5EpP8SRDRGQJQ0RkCUNEZAlDRGQJQ0RkCUNEZIkvPhSenPQUT+op7gpP3hCenPQUd/UUJ+HJSU9xJTw56Sl+gp7irvDkpKe4Ep6c9BQnPcVd4cldPcV3C09Oeoq7wpOTnuIuQ0RkCUNEZAlDRGQJQ0RkCUNEZAlDRGSJX7//4APhyUlPcVd4ctJTXAlPTnqKk/Dkrp7iSnjylp7iSeHJXT3FSXjypJ7iLeHJSU9xJTw56SlOwpO7eoq7wpO7eopPhCdXeoonGSIiSxgiIksYIiJLGCIiSxgiIksYIiJLfPEXhCd39RQn4cmVnuIkPLmrp3hLT3ElPDkJT056iivhyUlPcRKe3NVTnIQnJz3FlfDkpKc4CU/e0FOchCcnPcWV8ORJPcVJeLKRISKyhCEisoQhIrKEISKyhCEissQXP0R4cld4ctJTnIQnV8KTk57iSk/xpJ7ivyY8udJTnIQn3y08OekpTsKTKz3FSXhypaf4RE9xV3hy0lO8wRARWcIQEVnCEBFZwhARWcIQEVnCEBFZ4tfvP3hYeHKlpzgJT97SU1wJT056iivhyUlPcVd48ome4knhyZWe4iQ8+URP8aTw5EpPcRKevKWneEp48qSe4iczRESWMEREljBERJYwRESWMEREljBERJb44kPhyUlPcSU8OekpTsKTKz3FJ8KTKz3FSXjypPDkrp7iSeHJSU9xJTw56SlOwpOT8ORJPcWV8OQTPcWTwpOn9BQ/QXhypad4kiEisoQhIrKEISKyhCEisoQhIrLEr99/8LDw5K6e4q7w5C09xRvCk0/0FE8KT670FD9dePKGnuIkPDnpKa6EJ3f1FCfhyUlPcSU8+URPcSU8Oekp7jJERJYwRESWMEREljBERJYwRESWMERElvjiQ+HJSU/x3XqKJ4Unb+gpTsKTk/DkSk/xiZ7iLeHJXT3FSU9xJTz5RE/xhp7iJDx5Unhypaf4RHhypad4kiEisoQhIrKEISKyhCEisoQhIrKEISKyxBcLhCdXeoqT8OSunuJJPcWTeoonhScnPcWV8OQTPcVJT3FXeHLSU9zVU5yEJ1d6ik+EJ1d6iif1FCfhyV3hyUlP8QZDRGQJQ0RkCUNEZAlDRGQJQ0RkiV+//+AD4cmTeoqNwpOTnuIkPLmrpzgJT670FJ8IT670FJ8IT+7qKT4Rnjypp7gSnnyip7gSntzVU5yEJ0/qKU7Ck7t6irsMEZElDBGRJQwRkSUMEZElDBGRJQwRkSW++At6irvCk7f0FFfCk5Oe4kpP8Zbw5KSnuBKenPQUJz3FXeHJSU9xEp5cCU8+0VPcFZ6chCd39RQn4cmVnuIkPLmrpzgJT97QUzzJEBFZwhARWcIQEVnCEBFZwhARWcIQEVniixeFJyc9xUl4cqWn+LfpKU7CkyeFJyc9xV09xSd6iivhyUlPcRKeXOkpPtFTXAlPTsKTu8KTt/QUd4Und4UnJz3FXYaIyBKGiMgShojIEoaIyBKGiMgSX/wQ4clJT3FXeHLSU/xU4clJT3ESntzVU5yEJ1d6ipPw5C3hyV3hyb9NePKknuKkp/huhojIEoaIyBKGiMgShojIEoaIyBKGiMgSX3yop7irp3hLT/Gk8OSunuKunuIkPLmrp3hLT/GJ8ORJPcVd4clbeoor4clJT/Gk8GQjQ0RkCUNEZAlDRGQJQ0RkCUNEZIkvPhSebNVTXOkpTsKTJ/UUV8KTT/QUV8KTk55C/m/hyV09xUl48pTw5KSneFJ48qSe4i5DRGQJQ0RkCUNEZAlDRGQJQ0RkCUNEZIkv/oKe4ruFJ3eFJyc9xZXw5CQ8OekprvQUnwhPntRTvKWneEN48ome4kp4chKevKGn+Ml6iicZIiJLGCIiSxgiIksYIiJLGCIiSxgiIkt88aLw5Ek9xXfrKU7Ck5Pw5K6e4qSneFJ4cqWn+ER48pae4kpPcRKe3NVTPCk8OQlP3hCePCk8Oekp7jJERJYwRESWMEREljBERJYwRESW+EL+kfDkrp7iJDz5buHJSU/xlp7iSeHJdwtPntRTPCk8udJTnIQnd/UUTzJERJYwRESWMEREljBERJYwRESWMERElvhC/l96ipPw5EnhyUlP8Ybw5BM9xUl4cldPcVdPcRKenIQnV3qK7xaenPQU/zaGiMgShojIEoaIyBKGiMgShojIEoaIyBJfvKin+Ml6ipPw5Ek9xZPCk7t6irt6ipPw5CQ8uaunOAlPTnqKK+HJW3qKu8KTu3qKn6CneIMhIrKEISKyhCEisoQhIrKEISKyxK/ff/CB8GSrnuJKeHLSU1wJT056ireEJ1d6ireEJyc9xU8Wnny3nuKu8OQn6ymeZIiILGGIiCxhiIgsYYiILGGIiCxhiIgs8ev3H4iILGCIiCxhiIgsYYiILGGIiCxhiIgsYYiILGGIiCxhiIgsYYiILGGIiCxhiIgsYYiILPE/dZbB2VNKS9MAAAAASUVORK5CYII=",
+        "transactionId": "pix_1794282908771_391885",
+        "ticketUrl": "",
+        "isMock": true,
+        "paidAt": "2026-11-10T03:55:08.797Z"
+      },
+      "coupon": null,
+      "subtotal": 64.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 64.9,
+      "costTotal": 0,
+      "status": "preparing",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "preparing"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:55:08.771Z",
+      "updatedAt": "2026-11-10T03:55:08.797Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282908887_ailnr",
+      "orderNo": "758499",
+      "customer": {
+        "name": "Mariana Costa",
+        "phone": "16993334455"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua das Palmeiras",
+        "number": "450",
+        "bairro": "Jardim Primavera",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 5.5
+      },
+      "items": [
+        {
+          "name": "Ninho com Morango 500 ml",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 30.9,
+          "costPrice": 13.5,
+          "subtotal": 30.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Cartão de crédito",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 30.9,
+      "discount": 0,
+      "freight": 5.5,
+      "total": 36.4,
+      "costTotal": 13.5,
+      "status": "received",
+      "printedStations": [],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:55:08.887Z",
+      "updatedAt": "2026-11-10T03:55:08.887Z"
+    },
+    {
+      "id": "ord_1794282909618_wxbba",
+      "orderNo": "376117",
+      "customer": {
+        "name": "Cliente Frete Grátis",
+        "phone": "16999990001"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua das Flores",
+        "number": "123",
+        "bairro": "Centro",
+        "city": "Franca - SP",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 1.5,
+        "freight": 0
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 18.9,
+          "costPrice": 0,
+          "subtotal": 18.9,
+          "accompaniments": [
+            "Granola",
+            "Leite condensado",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 18.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 18.9,
+      "costTotal": 0,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:55:09.618Z",
+      "updatedAt": "2026-11-10T03:55:09.618Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282909671_xwq2o",
+      "orderNo": "501747",
+      "customer": {
+        "name": "Cliente Frete Pago",
+        "phone": "16999990002"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Av Brasil",
+        "number": "500",
+        "bairro": "Jardim Paulista",
+        "city": "Franca - SP",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 6,
+        "freight": 6
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 18.9,
+          "costPrice": 0,
+          "subtotal": 18.9,
+          "accompaniments": [
+            "Granola",
+            "Leite condensado",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 18.9,
+      "discount": 0,
+      "freight": 6,
+      "total": 24.9,
+      "costTotal": 0,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:55:09.671Z",
+      "updatedAt": "2026-11-10T03:55:09.671Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282909772_bgf8a",
+      "orderNo": "908611",
+      "customer": {
+        "name": "Cliente a Cancelar",
+        "phone": "16999990003"
+      },
+      "delivery": {
+        "type": "pickup"
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 24.9,
+          "costPrice": 0,
+          "subtotal": 24.9,
+          "accompaniments": [
+            "Granola",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Pix",
+        "timing": "online",
+        "status": "pending",
+        "changeFor": null,
+        "trocoValue": 0,
+        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540524.905802BR5913EXPLOSAO ACAI6006FRANCA6210050690861163041009",
+        "qrCodeBase64": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsCAYAAAB5fY51AAAAAklEQVR4AewaftIAAAwUSURBVO3BwZEdyY5FwUvY20EU6ADhoQNEwbqnFYicb0FmVYF93H/98y8BwAImAFjCBABLmABgCRMALGECgCVMALCECQCWMAHAEiYAWMIEAEuYAGAJEwAsYQKAJUwAsMRHvyE89bfoKT0JT530lE7CU096SifhqZOe0pPw1Bt6SifhqZOe0kl46klP6auFp056SrfCUyc9pSfhqb9FT+mGCQCWMAHAEiYAWMIEAEuYAGAJEwAs8dFLeko/TXjqq/WUnoSnTnpKb+gpvaGn9F8Qnvppeko/TXjqTzMBwBImAFjCBABLmABgCRMALGECgCVMALDER98kPPWGntIbekon4amTntKTntKN8NSt8NRJT+lWeOqrhadOekrfoad0Ep76auGpN/SUvpoJAJYwAcASJgBYwgQAS5gAYAkTACzxEf4n4amTntKt8NSNntKT8NRJT+kkPHWrp/SG8NRJT+kNPSX8PCYAWMIEAEuYAGAJEwAsYQKAJUwAsMRH+J/0lE7CUyc9pSc9pZPw1El46klP6SQ8ddJTehKeuhGeOukp3QpP3eopvSE8ddJTwj0TACxhAoAlTACwhAkAljABwBImAFjCBABLfPRNekqQwlMnPaWT8NR36CmdhKduhKfe0FO6FZ76W/SU/hYmAFjCBABLmABgCRMALGECgCVMALDERy8JT/1NwlMnPaWT8NSTntJJeOqkp/QkPHXSUzoJTz3pKd3oKZ2Ep570lE7CU7fCUyc9pZPw1JOe0kl46qSndCs89V9gAoAlTACwhAkAljABwBImAFjCBABL/PrnX8L/Kzz11XpKJ+GpJz2lN4Sn/rSe0pPw1ElP6SQ8tUlPCc9MALCECQCWMAHAEiYAWMIEAEuYAGAJEwAs8dFvCE+d9JSehKdu9JSehKfe0FO6EZ66FZ466Sk9CU+d9JROwlNPeko3wlMn4anv0FM6CU/d6im9ITx10lO6FZ466SmdhKdu9ZRumABgCRMALGECgCVMALCECQCWMAHAEh+9JDz10/SUTsJTb+gp3QpP3eopnYSnboWnTnpKJz2lN4SnTnpKT8JTJz2lW+Gpk57SSXhqk57SVzMBwBImAFjCBABLmABgCRMALGECgCU++oF6Sm8IT530lJ6Ep056SifhqVs9pZPw1Bt6SrfCUyc9pZPw1JOe0klP6SQ89aSndBKeOukp3QpP3eop3QhPPekpnYSnbvWU/jQTACxhAoAlTACwhAkAljABwBImAFjCBABLfPRNekon4amTntKtntJJeOpJT+kkPHXSU3oSnrrRU7oVnroVnjrpKZ2Ep056Sk/CU28IT90IT93qKd0KT93oKX2H8NRJT+mGCQCWMAHAEiYAWMIEAEuYAGAJEwAs8dFv6CndCk+d9JROwlO3wlO3wlM/SXjqSU/ppKf01XpKJ+GpWz2lk/DUk57SSXjqpKf0JDx1Ep466Sm9ITz1pKd00lO6FZ7600wAsIQJAJYwAcASJgBYwgQAS5gAYImPfkN46qSn9KSndBKeOukpPQlPnfSUvlp46lZ46qSn9Ibw1FfrKT0JT52Ep056Sj9NT+kkPPWkp3QSnroVnjrpKZ2Ep76aCQCWMAHAEiYAWMIEAEuYAGAJEwAsYQKAJT56SXjqSU/pRnjqSU/pJDx10lO6FZ661VP6auGpWz2lk/DUSU/pJDz1pKd0Ep46CU896Smd9JROwlNv6Ck9CU/d6CndCk+d9JSehKf+NBMALGECgCVMALCECQCWMAHAEiYAWOKjbxKeekN46qSndBKeekNP6VZ46qSn9B3CUyc9pZPw1ElP6VZP6afpKd0IT93qKd0KT530lE7CU1/NBABLmABgCRMALGECgCVMALCECQCW+Og39JS+WnjqVnjqVk/pDeGpk57SrfDUSU/pVnjqRk/pVnjqDT2lk/DUSU/pVnjqpKd0Kzx1q6f0hp7Sn2YCgCVMALCECQCWMAHAEiYAWMIEAEuYAGCJj75JeOqkp3TSU3oSnjrpKZ2Ep36a8NRXC0+9ITz11XpK3yE89Ybw1ElP6SQ8dSs8ddJT+momAFjCBABLmABgCRMALGECgCVMALDEr3/+pR8mPPXVekpPwlNfraf0hvDUSU/pDeGpk57Sk/DUSU8Jz8JTt3pKt8JTJz2lGyYAWMIEAEuYAGAJEwAsYQKAJUwAsMRH3yQ8ddJT+mrhqU3CU096Sic9pf+C8NSTntIbwlMnPaWfpqd0Ep661VP600wAsIQJAJYwAcASJgBYwgQAS5gAYIlf//xLLwhPPekpnYSnTnpKt8JTb+gpnYSnnvSUboSnbvWUTsJTt3pKJ+GpWz2lk/DUSU/pSXjqpKf004SnfpKe0lczAcASJgBYwgQAS5gAYAkTACxhAoAlTACwxK9//qVL4albPaU3hKdOekon4aknPaU3hKfe0FP6LwhP/TQ9pRvhqSc9pZPw1ElP6Ul46kZP6Ul46qSndMMEAEuYAGAJEwAsYQKAJUwAsIQJAJb46CU9pSfhqTf0lE7CU7fCUyc9JUjhqZOe0k/TU7oRnroVnjrpKb0hPPWkp3QSnvpJTACwhAkAljABwBImAFjCBABLmABgiY9+Q0/pJDz10/SUTsJTP01P6SQ8tUl46qv1lN7QU3oSnjrpKd0KT/0k4aknPaU/zQQAS5gAYAkTACxhAoAlTACwhAkAljABwBIf/Ybw1ElP6Ul46qSndBKeuhWeutVTuhGeuhWeekN46lZP6aSn9JOEp97QU7oVnjrpKb2hp/SGntKT8NRJT+mGCQCWMAHAEiYAWMIEAEuYAGAJEwAs8euff+kbhKe+Wk/pJDz1pKd0Ep56Q0/pJDz1pKf0hvDUSU/pJDz1hp7S3yI89R16SjfCU096Sn+aCQCWMAHAEiYAWMIEAEuYAGAJEwAs8euff+kF4aknPaWT8NStntJJeOqkp3QrPHXSU3oSnjrpKd0KT72hp/Snhae+Q0/pJDx10lO6FZ466SndCk+d9JSehKdOeko/iQkAljABwBImAFjCBABLmABgCRMALGECgCU++g3hqZOe0q2e0kl46kl46qSndBKeutVTOglP3QpPbRKeOukpvaGndBKeekN46klP6UZ46lZP6Q3hqTf0lG6YAGAJEwAsYQKAJUwAsIQJAJYwAcASH/2GntKt8NRJT+kN4amTntKT8NRJeOpWT+lGeOpWT+lWeOqkp/SGntKNntKT8NTfIjz11XpKX80EAEuYAGAJEwAsYQKAJUwAsIQJAJb46Jv0lG70lP4rwlMnPaU3hKee9JRuhKe+WnjqSU/pRnjqSXjqRk/pDeGpN4SnnvSU/jQTACxhAoAlTACwhAkAljABwBImAFjCBABLfPQbwlN/i57SrZ7SrfDUVwtPnfSU3tBT+mo9pTf0lJ6Ep94QnjrpKd3qKd0ITz0JT530lG6YAGAJEwAsYQKAJUwAsIQJAJYwAcASH72kp/TThKd+mp7SG8JTJz2lnyQ89aSn9Ibw1ElP6SQ89aSndBKeutVT+kl6Sk/CU3+aCQCWMAHAEiYAWMIEAEuYAGAJEwAs8dE3CU+9oaf0hp7SjfDUJuGpJz2lk/DUSU/ppKf0JDx10lO61VP6ScJT3yE89Yae0p9mAoAlTACwhAkAljABwBImAFjCBABLmABgiY/wPwlPnfSUbvWUTsJTJz2lJ+EpPAtPnfSU3tBTuhWeekNP6Q3hqZOe0g0TACxhAoAlTACwhAkAljABwBImAFjiI/y28NSt8NQbeko3ekpPwlNfrad0Ep466Sn9NOGpk57SdwhPnfSUTsJTT3pKf5oJAJYwAcASJgBYwgQAS5gAYAkTACzx0TfpKW3SUzoJT530lN4QnnrSU7oRnnrSUzoJT52Ep056Sk/CUyc9pZPw1JOe0kl46lZ46g09pZPw1ElP6W9hAoAlTACwhAkAljABwBImAFjCBABLmABgiY9eEp76m4SnfpKe0pPw1I2e0ht6Sl+tp3Srp3QrPHUjPHWrp3QrPHXSUzrpKT0JT530lG6YAGAJEwAsYQKAJUwAsIQJAJYwAcASv/75lwBgARMALGECgCVMALCECQCWMAHAEiYAWMIEAEuYAGAJEwAsYQKAJUwAsIQJAJYwAcAS/weVDuCErjsiZgAAAABJRU5ErkJggg==",
+        "transactionId": "pix_1794282909772_908611",
+        "ticketUrl": "",
+        "isMock": true
+      },
+      "coupon": null,
+      "subtotal": 24.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 24.9,
+      "costTotal": 0,
+      "status": "cancelled",
+      "printedStations": [],
+      "notifiedStatuses": [
+        "received",
+        "cancelled"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": "Desistência do cliente antes do preparo",
+      "cancelledAt": "2026-11-10T03:55:09.785Z",
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:55:09.772Z",
+      "updatedAt": "2026-11-10T03:55:09.785Z"
+    },
+    {
+      "id": "ord_1794282909888_mbufi",
+      "orderNo": "751623",
+      "customer": {
+        "name": "Lucas Motoboy Test",
+        "phone": "16999995544"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua do Entregador",
+        "number": "100",
+        "bairro": "Centro",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 3.5,
+        "freight": 4.5
+      },
+      "items": [
+        {
+          "name": "Copo Tradicional 300ml",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 24.9,
+          "costPrice": 0,
+          "subtotal": 24.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "approved",
+        "changeFor": null,
+        "trocoValue": 0,
+        "paidAt": "2026-11-10T03:55:09.905Z"
+      },
+      "coupon": null,
+      "subtotal": 24.9,
+      "discount": 0,
+      "freight": 4.5,
+      "total": 29.4,
+      "costTotal": 0,
+      "status": "delivered",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "delivered"
+      ],
+      "archivedToHistory": true,
+      "archivedAt": "2026-11-10T03:57:22.203Z",
+      "preparedAt": null,
+      "deliveredAt": "2026-11-10T03:55:09.905Z",
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": 1,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:55:09.888Z",
+      "updatedAt": "2026-11-10T03:57:22.203Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282909957_u8l1c",
+      "orderNo": "311987",
+      "customer": {
+        "name": "Mariana Devolução Test",
+        "phone": "16988884433"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua Deserta",
+        "number": "99",
+        "bairro": "Jardim Primavera",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 4.5
+      },
+      "items": [
+        {
+          "name": "Copo Tradicional 500ml",
+          "size": 500,
+          "quantity": 2,
+          "unitPrice": 29.9,
+          "costPrice": 0,
+          "subtotal": 59.8,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 59.8,
+      "discount": 0,
+      "freight": 4.5,
+      "total": 64.3,
+      "costTotal": 0,
+      "status": "returned",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "returned"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": "Cliente não atendeu o interfone nem telefone",
+      "returnedAt": "2026-11-10T03:55:09.970Z",
+      "createdAt": "2026-11-10T03:55:09.957Z",
+      "updatedAt": "2026-11-10T03:55:09.970Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282946743_g19ul",
+      "orderNo": "530428",
+      "customer": {
+        "name": "Lucas Delivery",
+        "phone": "16998887766"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Avenida Brasil",
+        "number": "500",
+        "bairro": "Centro",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 5
+      },
+      "items": [
+        {
+          "name": "Ninho com Morango 500 ml",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 30.9,
+          "costPrice": 13.5,
+          "subtotal": 30.9,
+          "accompaniments": [
+            "Morango",
+            "Ninho"
+          ],
+          "extras": [
+            "Nutella"
+          ],
+          "fruits": [],
+          "note": "Colher separada"
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": "50,00",
+        "trocoValue": 19.1
+      },
+      "coupon": {
+        "code": "PRIMEIRACOMPRA",
+        "discountValue": 5
+      },
+      "subtotal": 30.9,
+      "discount": 5,
+      "freight": 5,
+      "total": 30.9,
+      "costTotal": 13.5,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:55:46.743Z",
+      "updatedAt": "2026-11-10T03:55:46.743Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282946837_ak4xd",
+      "orderNo": "689105",
+      "customer": {
+        "name": "Ana Beatriz",
+        "phone": "16991112233"
+      },
+      "delivery": {
+        "type": "pickup"
+      },
+      "items": [
+        {
+          "name": "Combo Casal 500 ml",
+          "size": null,
+          "quantity": 1,
+          "unitPrice": 64.9,
+          "costPrice": 0,
+          "subtotal": 64.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Pix",
+        "timing": "online",
+        "status": "approved",
+        "changeFor": null,
+        "trocoValue": 0,
+        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540564.905802BR5913EXPLOSAO ACAI6006FRANCA621005066891056304EA4B",
+        "qrCodeBase64": "data:image/png;base64,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",
+        "transactionId": "pix_1794282946836_689105",
+        "ticketUrl": "",
+        "isMock": true,
+        "paidAt": "2026-11-10T03:55:46.854Z"
+      },
+      "coupon": null,
+      "subtotal": 64.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 64.9,
+      "costTotal": 0,
+      "status": "preparing",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "preparing"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:55:46.837Z",
+      "updatedAt": "2026-11-10T03:55:46.854Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282946931_gdcml",
+      "orderNo": "661847",
+      "customer": {
+        "name": "Mariana Costa",
+        "phone": "16993334455"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua das Palmeiras",
+        "number": "450",
+        "bairro": "Jardim Primavera",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 5.5
+      },
+      "items": [
+        {
+          "name": "Ninho com Morango 500 ml",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 30.9,
+          "costPrice": 13.5,
+          "subtotal": 30.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Cartão de crédito",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 30.9,
+      "discount": 0,
+      "freight": 5.5,
+      "total": 36.4,
+      "costTotal": 13.5,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:55:46.931Z",
+      "updatedAt": "2026-11-10T03:55:46.931Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282947687_5oxbf",
+      "orderNo": "249354",
+      "customer": {
+        "name": "Cliente Frete Grátis",
+        "phone": "16999990001"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua das Flores",
+        "number": "123",
+        "bairro": "Centro",
+        "city": "Franca - SP",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 1.5,
+        "freight": 0
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 18.9,
+          "costPrice": 0,
+          "subtotal": 18.9,
+          "accompaniments": [
+            "Granola",
+            "Leite condensado",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 18.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 18.9,
+      "costTotal": 0,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:55:47.687Z",
+      "updatedAt": "2026-11-10T03:55:47.687Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282947740_483ck",
+      "orderNo": "817183",
+      "customer": {
+        "name": "Cliente Frete Pago",
+        "phone": "16999990002"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Av Brasil",
+        "number": "500",
+        "bairro": "Jardim Paulista",
+        "city": "Franca - SP",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 6,
+        "freight": 6
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 18.9,
+          "costPrice": 0,
+          "subtotal": 18.9,
+          "accompaniments": [
+            "Granola",
+            "Leite condensado",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 18.9,
+      "discount": 0,
+      "freight": 6,
+      "total": 24.9,
+      "costTotal": 0,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:55:47.740Z",
+      "updatedAt": "2026-11-10T03:55:47.740Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282947837_4yndk",
+      "orderNo": "228460",
+      "customer": {
+        "name": "Cliente a Cancelar",
+        "phone": "16999990003"
+      },
+      "delivery": {
+        "type": "pickup"
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 24.9,
+          "costPrice": 0,
+          "subtotal": 24.9,
+          "accompaniments": [
+            "Granola",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Pix",
+        "timing": "online",
+        "status": "pending",
+        "changeFor": null,
+        "trocoValue": 0,
+        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540524.905802BR5913EXPLOSAO ACAI6006FRANCA6210050622846063042F19",
+        "qrCodeBase64": "data:image/png;base64,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",
+        "transactionId": "pix_1794282947837_228460",
+        "ticketUrl": "",
+        "isMock": true
+      },
+      "coupon": null,
+      "subtotal": 24.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 24.9,
+      "costTotal": 0,
+      "status": "cancelled",
+      "printedStations": [],
+      "notifiedStatuses": [
+        "received",
+        "cancelled"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": "Desistência do cliente antes do preparo",
+      "cancelledAt": "2026-11-10T03:55:47.849Z",
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:55:47.837Z",
+      "updatedAt": "2026-11-10T03:55:47.849Z"
+    },
+    {
+      "id": "ord_1794282947921_47177",
+      "orderNo": "738552",
+      "customer": {
+        "name": "Lucas Motoboy Test",
+        "phone": "16999995544"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua do Entregador",
+        "number": "100",
+        "bairro": "Centro",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 3.5,
+        "freight": 4.5
+      },
+      "items": [
+        {
+          "name": "Copo Tradicional 300ml",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 24.9,
+          "costPrice": 0,
+          "subtotal": 24.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "approved",
+        "changeFor": null,
+        "trocoValue": 0,
+        "paidAt": "2026-11-10T03:55:47.932Z"
+      },
+      "coupon": null,
+      "subtotal": 24.9,
+      "discount": 0,
+      "freight": 4.5,
+      "total": 29.4,
+      "costTotal": 0,
+      "status": "delivered",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "delivered"
+      ],
+      "archivedToHistory": true,
+      "archivedAt": "2026-11-10T03:57:22.203Z",
+      "preparedAt": null,
+      "deliveredAt": "2026-11-10T03:55:47.932Z",
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": 1,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:55:47.921Z",
+      "updatedAt": "2026-11-10T03:57:22.203Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282947985_owhvi",
+      "orderNo": "330809",
+      "customer": {
+        "name": "Mariana Devolução Test",
+        "phone": "16988884433"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua Deserta",
+        "number": "99",
+        "bairro": "Jardim Primavera",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 4.5
+      },
+      "items": [
+        {
+          "name": "Copo Tradicional 500ml",
+          "size": 500,
+          "quantity": 2,
+          "unitPrice": 29.9,
+          "costPrice": 0,
+          "subtotal": 59.8,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 59.8,
+      "discount": 0,
+      "freight": 4.5,
+      "total": 64.3,
+      "costTotal": 0,
+      "status": "returned",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "returned"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": "Cliente não atendeu o interfone nem telefone",
+      "returnedAt": "2026-11-10T03:55:47.996Z",
+      "createdAt": "2026-11-10T03:55:47.985Z",
+      "updatedAt": "2026-11-10T03:55:47.996Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282978059_uqzvh",
+      "orderNo": "242137",
+      "customer": {
+        "name": "Lucas Delivery",
+        "phone": "16998887766"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Avenida Brasil",
+        "number": "500",
+        "bairro": "Centro",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 5
+      },
+      "items": [
+        {
+          "name": "Ninho com Morango 500 ml",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 30.9,
+          "costPrice": 13.5,
+          "subtotal": 30.9,
+          "accompaniments": [
+            "Morango",
+            "Ninho"
+          ],
+          "extras": [
+            "Nutella"
+          ],
+          "fruits": [],
+          "note": "Colher separada"
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": "50,00",
+        "trocoValue": 19.1
+      },
+      "coupon": {
+        "code": "PRIMEIRACOMPRA",
+        "discountValue": 5
+      },
+      "subtotal": 30.9,
+      "discount": 5,
+      "freight": 5,
+      "total": 30.9,
+      "costTotal": 13.5,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:56:18.059Z",
+      "updatedAt": "2026-11-10T03:56:18.059Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282978164_ugxe8",
+      "orderNo": "531120",
+      "customer": {
+        "name": "Ana Beatriz",
+        "phone": "16991112233"
+      },
+      "delivery": {
+        "type": "pickup"
+      },
+      "items": [
+        {
+          "name": "Combo Casal 500 ml",
+          "size": null,
+          "quantity": 1,
+          "unitPrice": 64.9,
+          "costPrice": 0,
+          "subtotal": 64.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Pix",
+        "timing": "online",
+        "status": "approved",
+        "changeFor": null,
+        "trocoValue": 0,
+        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540564.905802BR5913EXPLOSAO ACAI6006FRANCA621005065311206304E9F2",
+        "qrCodeBase64": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsCAYAAAB5fY51AAAAAklEQVR4AewaftIAAA23SURBVO3BwXXlQI5Fwas8fwdT4AOMhw8wBWtNGcDs08lhUULXi/j6/gMRkQEWIiJDLEREhliIiAyxEBEZYiEiMsRCRGSIhYjIEAsRkSEWIiJDLEREhliIiAyxEBEZYiEiMsSHm9yCqaqTU27Bqepkxy24Up3suAU71ckVt2CnOtlxC65UJztuwU518iS3YKc6OeUWPKk62XELTlUnV9yCqaqTUwsRkSEWIiJDLEREhliIiAyxEBEZYiEiMsSHv6A6+WluwZOqkytuwY5bsFOdvKE6+e3cgivVyU518qTq5JRbcEd18obq5Ke5BU9aiIgMsRARGWIhIjLEQkRkiIWIyBAfXuQWPKk6eZJbsFOdnKpOTrkFO9XJjltwpTq5ozo5VZ3cUZ2ccgt2qpMrbsEd1ckpt2CnOvlpbsGTqpM3LEREhliIiAyxEBEZYiEiMsRCRGSIhYjIEB/kr3ELnuQW7FQnV9yCnepkxy24Up3suAVPqk52qpNT1cmOW3CqOrnDLbhSnch/thARGWIhIjLEQkRkiIWIyBALEZEhFiIiQ3yQ/4pbcKo6OeUW3OEWnHILdqqTt1Qnp9yCnerkiluwU508yS045RbsVCcCCxGRIRYiIkMsRESGWIiIDLEQERniw4uqk6mqkye5BVeqkye5BTvVySm3YKc62XEL3uIWXKlOdtyCnerkilvwpOrkLdXJRAsRkSEWIiJDLEREhliIiAyxEBEZYiEiMsSHv8At+Fe4BTvVyZPcgp3q5EluwZXqZMct2KlOdtyCK9XJHdXJFbdgpzrZcQuuVCc7bsFOdXLFLdipTk65Bf9rFiIiQyxERIZYiIgMsRARGWIhIjLEQkRkiA83VSf/ErfgN3ML3uAW7FQnT3IL7nALTrkFb3ELnlKd/EsWIiJDLEREhliIiAyxEBEZYiEiMsSHm9yCnerkilvwG1QnV6qTt1QnV9yCnepkxy14Q3Wy4xbsVCc71cmT3IIr1cmOWzCRW/AbVCdvWIiIDLEQERliISIyxEJEZIiFiMgQCxGRIb6+/+AlbsEd1ckVt2CnOtlxC05VJ6fcgp3q5IpbcEd18ga3YKc62XEL3lKdXHELdqqTU27BVNXJk9yCK9XJkxYiIkMsRESGWIiIDLEQERliISIyxIfBqpMdt2CnOrniFuy4BW+oTnbcgh234Ep1codb8Jbq5Ke5Baeqk7e4BVeqkx23YMctuFKdPMkt2KlOTi1ERIZYiIgMsRARGWIhIjLEQkRkiIWIyBAfbnILdqqTK9XJW6qTJ1UnV9yCnepkxy14UnXyhupkxy3YqU6e5Bacqk7ucAuuuAV3VCdPcQt2qpOfVp08aSEiMsRCRGSIhYjIEAsRkSEWIiJDLEREhvhwU3Vyyi24ozo55Rb8NLfgLW7BqerkSdXJjluwU52cqk5OuQV3VCdX3IInuQVPcgtOVSe/2UJEZIiFiMgQCxGRIRYiIkMsRESG+Pr+gxvcgidVJztuwZXq5EluwanqZMct2KlOnuQWPKk6OeUWPKk62XELTlUnO27BqerkLW7BlerkDrfgSnWy4xbsVCdvWIiIDLEQERliISIyxEJEZIiFiMgQCxGRIT78BdXJk6qTU27BTnVypTo55RbsVCc7bsGp6uRJ1ckpt2CnOtlxC55Uney4Baeqk1NuwR3VyRW3YKc6OeUWvMUtOFWdnFqIiAyxEBEZYiEiMsRCRGSIhYjIEAsRkSE+/AVuwRuqk53qZMctOFWdnHILdqqTK27BjltwqjrZcQt2qpNTbsFOdfIkt+AtbsGp6uRUdfKbVSc/bSEiMsRCRGSIhYjIEAsRkSEWIiJDfPgLqpMrbsFOdbLjFlxxC35adbLjFpyqTu5wC05VJ0+qTn4zt2CnOtmpTk65BTvVyRW34FR1ckd1csUt2KlOdtyCK9XJkxYiIkMsRESGWIiIDLEQERliISIyxEJEZIiv7z+4wS14S3XyBrdgpzp5kltwqjp5kltwqjrZcQvuqE6uuAU71cmOW/Ck6uSUW3CqOnmLW3CqOvlpCxGRIRYiIkMsRESGWIiIDLEQERliISIyxIebqpMdt+BKdXKHW3ClOtlxC3aqkyvVySm3YKc6OVWd7LgFO9XJFbfgjurkVHWy4xacqk523IJ/iVtwpTq5ozo55RY8qTo5tRARGWIhIjLEQkRkiIWIyBALEZEhvr7/4CVuwVuqkze4BXdUJ1fcgjuqk1NuwanqZMct+M2qkzvcgivVyU9zC3aqk7e4BVeqkyctRESGWIiIDLEQERliISIyxEJEZIiFiMgQH25yC3aqkydVJ6fcglPVyY5bcKo6eVJ1suMWnKpOfoPq5JRbsFOdXHELdqqTnerklFtwqjp5klvwpOrklFuwU52cWoiIDLEQERliISIyxEJEZIiFiMgQCxGRIb6+/+AlbsFOdXLKLdipTt7gFrylOnmSW3CqOtlxC55UnbzFLdipTq64BTvVyY5bcKo6OeUWnKpO7nALrlQnT1qIiAyxEBEZYiEiMsRCRGSIhYjIEAsRkSE+/AVuwZXq5A634JRbsFOd/LTq5IpbsOMW7FQnV9yCnepkxy04VZ3suAU71ckVt2CnOtlxC95Qney4BTvVyRW3QP6zhYjIEAsRkSEWIiJDLEREhliIiAzx4ZdwC3aqkye5BVeqk1PVyZOqk3+NW3ClOtlxC36aW7BTney4BVeqkx234Ep1ckd1csot2KlO3rAQERliISIyxEJEZIiFiMgQCxGRIRYiIkN8ff/BDW7BTnVyyi04VZ3suAVPqk6uuAU71ckpt+CO6uRJbsGV6mTHLbijOnmSW3ClOtlxC95SnTzFLXhSdfKbLUREhliIiAyxEBEZYiEiMsRCRGSIhYjIEB9uqk5OuQV3VCdX3IKd6uRJbsGT3IJT1cmT3IKd6uSKW7BTney4BTtuwZOqkytuwR3VyZPcgqdUJ7+BW3ClOnnSQkRkiIWIyBALEZEhFiIiQyxERIb4+v6Dl7gFd1Qnp9yCJ1Unb3AL7qhOnuQWXKlOfju34A3VyY5bsFOdXHELTlUnO27BTnVyxS24ozq54hbsVCenFiIiQyxERIZYiIgMsRARGWIhIjLEQkRkiK/vP7jBLdipTk65BU+qTnbcgt+qOtlxC05VJ7+dW3CqOjnlFtxRnZxyC3aqk1NuwZXqZMctOFWd3OEWXKlOnrQQERliISIyxEJEZIiFiMgQCxGRIRYiIkN8uKk62XELrlQnO9XJjltwyi04VZ3suAWnqpMdt+BUdfIkt2CnOrniFtxRnexUJ6fcgp3q5FR1suMWXKlO7nALrlQnT6pOdtyCU27BTnXyhoWIyBALEZEhFiIiQyxERIZYiIgM8fX9Bze4BTvVyRW3YKc6mcgtuKM6ueIW7FQnO27Blepkxy04VZ3c4Racqk7ucAueVJ1ccQvuqE6uuAWnqpMdt+BJ1cmOW3CqOjm1EBEZYiEiMsRCRGSIhYjIEAsRkSEWIiJDfHhRdbLjFrylOrniFuxUJ6eqk5/mFuxUJ09yC3aqkx234IpbcEd1csot2HELTlUnO27Blepkxy04VZ3suAVvqE6etBARGWIhIjLEQkRkiIWIyBALEZEhFiIiQ3x9/8ENbsFOdXLFLdipTnbcgivVyZPcgp3q5IpbcEd1csot+GnVyVvcgp3qZMctuFKd7LgFO9XJFbfgp1Unb3ELnlSdnFqIiAyxEBEZYiEiMsRCRGSIhYjIEB9+Cbdgpzo55RbsVCdPqU7ucAveUJ3suAU71ckpt+AtbsEpt+B/jVvwpOpkpzr5aQsRkSEWIiJDLEREhliIiAyxEBEZYiEiMsSHm6qTU9XJW6qTN7gFd1QnV9yCnerklFuwU53suAVXqpOd6uQOt+BJ1ckpt+At1ckVt2CnOnmSWzDRQkRkiIWIyBALEZEhFiIiQyxERIb4cJNbMFV1cqU62XELrlQnT6pOdtwCeZ9bcKo62XELnuIW7FQnT3ILnlSdnFqIiAyxEBEZYiEiMsRCRGSIhYjIEAsRkSE+/AXVyU9zC065BafcgidVJ3dUJ0+qTt5SnbzBLbijOrniFuy4BW+oTn6z6uRJCxGRIRYiIkMsRESGWIiIDLEQERliISIyxIcXuQVPqk5+s+pkxy34zdyCK9XJHW7BW6qTK9XJjltwqjp5kluw4xa8wS14kluwU52cWoiIDLEQERliISIyxEJEZIiFiMgQH+RXcQt2qpMnuQU71clbqpMnuQU/zS14UnXyJLfgSnWy4xacqk6etBARGWIhIjLEQkRkiIWIyBALEZEhFiIiQ3yQ/5fqZMcteJJbsFOdvMEtuKM62XELTlUnp6qTHbdgxy24Up38NLdgpzo55RbsVCc7bsEbFiIiQyxERIZYiIgMsRARGWIhIjLEQkRkiA8vqk5+s+pkxy14UnXyJLfgVHVyqjrZcQt23IJT1cmOW7BTnVxxC95SnZxyC05VJ29xC3aqkzcsRESGWIiIDLEQERliISIyxEJEZIgPf4FbMJFbsFOdXHELdqqTn1ad/AbVyZOqk1PVyY5bcMoteFJ1csot+A3cgivVyZMWIiJDLEREhliIiAyxEBEZYiEiMsRCRGSIr+8/EBEZYCEiMsRCRGSIhYjIEAsRkSEWIiJDLEREhliIiAyxEBEZYiEiMsRCRGSIhYjIEAsRkSH+D6J/01vxgpmGAAAAAElFTkSuQmCC",
+        "transactionId": "pix_1794282978164_531120",
+        "ticketUrl": "",
+        "isMock": true,
+        "paidAt": "2026-11-10T03:56:18.183Z"
+      },
+      "coupon": null,
+      "subtotal": 64.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 64.9,
+      "costTotal": 0,
+      "status": "preparing",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "preparing"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:56:18.164Z",
+      "updatedAt": "2026-11-10T03:56:18.183Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282979202_2z5o6",
+      "orderNo": "850228",
+      "customer": {
+        "name": "Cliente Frete Grátis",
+        "phone": "16999990001"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua das Flores",
+        "number": "123",
+        "bairro": "Centro",
+        "city": "Franca - SP",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 1.5,
+        "freight": 0
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 18.9,
+          "costPrice": 0,
+          "subtotal": 18.9,
+          "accompaniments": [
+            "Granola",
+            "Leite condensado",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 18.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 18.9,
+      "costTotal": 0,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:56:19.202Z",
+      "updatedAt": "2026-11-10T03:56:19.202Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282979248_ite0v",
+      "orderNo": "102286",
+      "customer": {
+        "name": "Cliente Frete Pago",
+        "phone": "16999990002"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Av Brasil",
+        "number": "500",
+        "bairro": "Jardim Paulista",
+        "city": "Franca - SP",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 6,
+        "freight": 6
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 18.9,
+          "costPrice": 0,
+          "subtotal": 18.9,
+          "accompaniments": [
+            "Granola",
+            "Leite condensado",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 18.9,
+      "discount": 0,
+      "freight": 6,
+      "total": 24.9,
+      "costTotal": 0,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:56:19.248Z",
+      "updatedAt": "2026-11-10T03:56:19.248Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282979336_ze5ok",
+      "orderNo": "369256",
+      "customer": {
+        "name": "Cliente a Cancelar",
+        "phone": "16999990003"
+      },
+      "delivery": {
+        "type": "pickup"
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 24.9,
+          "costPrice": 0,
+          "subtotal": 24.9,
+          "accompaniments": [
+            "Granola",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Pix",
+        "timing": "online",
+        "status": "pending",
+        "changeFor": null,
+        "trocoValue": 0,
+        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540524.905802BR5913EXPLOSAO ACAI6006FRANCA6210050636925663043920",
+        "qrCodeBase64": "data:image/png;base64,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",
+        "transactionId": "pix_1794282979336_369256",
+        "ticketUrl": "",
+        "isMock": true
+      },
+      "coupon": null,
+      "subtotal": 24.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 24.9,
+      "costTotal": 0,
+      "status": "cancelled",
+      "printedStations": [],
+      "notifiedStatuses": [
+        "received",
+        "cancelled"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": "Desistência do cliente antes do preparo",
+      "cancelledAt": "2026-11-10T03:56:19.350Z",
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:56:19.336Z",
+      "updatedAt": "2026-11-10T03:56:19.350Z"
+    },
+    {
+      "id": "ord_1794282979432_xyhla",
+      "orderNo": "536088",
+      "customer": {
+        "name": "Lucas Motoboy Test",
+        "phone": "16999995544"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua do Entregador",
+        "number": "100",
+        "bairro": "Centro",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 3.5,
+        "freight": 4.5
+      },
+      "items": [
+        {
+          "name": "Copo Tradicional 300ml",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 24.9,
+          "costPrice": 0,
+          "subtotal": 24.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "approved",
+        "changeFor": null,
+        "trocoValue": 0,
+        "paidAt": "2026-11-10T03:56:19.449Z"
+      },
+      "coupon": null,
+      "subtotal": 24.9,
+      "discount": 0,
+      "freight": 4.5,
+      "total": 29.4,
+      "costTotal": 0,
+      "status": "delivered",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "delivered"
+      ],
+      "archivedToHistory": true,
+      "archivedAt": "2026-11-10T03:57:22.203Z",
+      "preparedAt": null,
+      "deliveredAt": "2026-11-10T03:56:19.449Z",
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": 1,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:56:19.432Z",
+      "updatedAt": "2026-11-10T03:57:22.203Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282979505_wo7vu",
+      "orderNo": "383402",
+      "customer": {
+        "name": "Mariana Devolução Test",
+        "phone": "16988884433"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua Deserta",
+        "number": "99",
+        "bairro": "Jardim Primavera",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 4.5
+      },
+      "items": [
+        {
+          "name": "Copo Tradicional 500ml",
+          "size": 500,
+          "quantity": 2,
+          "unitPrice": 29.9,
+          "costPrice": 0,
+          "subtotal": 59.8,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 59.8,
+      "discount": 0,
+      "freight": 4.5,
+      "total": 64.3,
+      "costTotal": 0,
+      "status": "returned",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "returned"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": "Cliente não atendeu o interfone nem telefone",
+      "returnedAt": "2026-11-10T03:56:19.517Z",
+      "createdAt": "2026-11-10T03:56:19.505Z",
+      "updatedAt": "2026-11-10T03:56:19.517Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282999531_uz9dc",
+      "orderNo": "712425",
+      "customer": {
+        "name": "Lucas Delivery",
+        "phone": "16998887766"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Avenida Brasil",
+        "number": "500",
+        "bairro": "Centro",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 5
+      },
+      "items": [
+        {
+          "name": "Ninho com Morango 500 ml",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 30.9,
+          "costPrice": 13.5,
+          "subtotal": 30.9,
+          "accompaniments": [
+            "Morango",
+            "Ninho"
+          ],
+          "extras": [
+            "Nutella"
+          ],
+          "fruits": [],
+          "note": "Colher separada"
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": "50,00",
+        "trocoValue": 19.1
+      },
+      "coupon": {
+        "code": "PRIMEIRACOMPRA",
+        "discountValue": 5
+      },
+      "subtotal": 30.9,
+      "discount": 5,
+      "freight": 5,
+      "total": 30.9,
+      "costTotal": 13.5,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:56:39.531Z",
+      "updatedAt": "2026-11-10T03:56:39.531Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282999632_fygwj",
+      "orderNo": "337664",
+      "customer": {
+        "name": "Ana Beatriz",
+        "phone": "16991112233"
+      },
+      "delivery": {
+        "type": "pickup"
+      },
+      "items": [
+        {
+          "name": "Combo Casal 500 ml",
+          "size": null,
+          "quantity": 1,
+          "unitPrice": 64.9,
+          "costPrice": 0,
+          "subtotal": 64.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Pix",
+        "timing": "online",
+        "status": "approved",
+        "changeFor": null,
+        "trocoValue": 0,
+        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540564.905802BR5913EXPLOSAO ACAI6006FRANCA6210050633766463048C65",
+        "qrCodeBase64": "data:image/png;base64,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",
+        "transactionId": "pix_1794282999632_337664",
+        "ticketUrl": "",
+        "isMock": true,
+        "paidAt": "2026-11-10T03:56:39.649Z"
+      },
+      "coupon": null,
+      "subtotal": 64.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 64.9,
+      "costTotal": 0,
+      "status": "preparing",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "preparing"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:56:39.632Z",
+      "updatedAt": "2026-11-10T03:56:39.649Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794282999767_4rdik",
+      "orderNo": "795790",
+      "customer": {
+        "name": "Mariana Costa",
+        "phone": "16993334455"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua das Palmeiras",
+        "number": "450",
+        "bairro": "Jardim Primavera",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 5.5
+      },
+      "items": [
+        {
+          "name": "Ninho com Morango 500 ml",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 30.9,
+          "costPrice": 13.5,
+          "subtotal": 30.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Cartão de crédito",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 30.9,
+      "discount": 0,
+      "freight": 5.5,
+      "total": 36.4,
+      "costTotal": 13.5,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:56:39.767Z",
+      "updatedAt": "2026-11-10T03:56:39.767Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794283000728_ex6dv",
+      "orderNo": "871161",
+      "customer": {
+        "name": "Cliente Frete Grátis",
+        "phone": "16999990001"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua das Flores",
+        "number": "123",
+        "bairro": "Centro",
+        "city": "Franca - SP",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 1.5,
+        "freight": 0
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 18.9,
+          "costPrice": 0,
+          "subtotal": 18.9,
+          "accompaniments": [
+            "Granola",
+            "Leite condensado",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 18.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 18.9,
+      "costTotal": 0,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:56:40.728Z",
+      "updatedAt": "2026-11-10T03:56:40.728Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794283000775_q5fzj",
+      "orderNo": "888790",
+      "customer": {
+        "name": "Cliente Frete Pago",
+        "phone": "16999990002"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Av Brasil",
+        "number": "500",
+        "bairro": "Jardim Paulista",
+        "city": "Franca - SP",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 6,
+        "freight": 6
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 18.9,
+          "costPrice": 0,
+          "subtotal": 18.9,
+          "accompaniments": [
+            "Granola",
+            "Leite condensado",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 18.9,
+      "discount": 0,
+      "freight": 6,
+      "total": 24.9,
+      "costTotal": 0,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:56:40.775Z",
+      "updatedAt": "2026-11-10T03:56:40.775Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794283000858_iyt7w",
+      "orderNo": "294733",
+      "customer": {
+        "name": "Cliente a Cancelar",
+        "phone": "16999990003"
+      },
+      "delivery": {
+        "type": "pickup"
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 24.9,
+          "costPrice": 0,
+          "subtotal": 24.9,
+          "accompaniments": [
+            "Granola",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Pix",
+        "timing": "online",
+        "status": "pending",
+        "changeFor": null,
+        "trocoValue": 0,
+        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540524.905802BR5913EXPLOSAO ACAI6006FRANCA6210050629473363044F44",
+        "qrCodeBase64": "data:image/png;base64,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",
+        "transactionId": "pix_1794283000858_294733",
+        "ticketUrl": "",
+        "isMock": true
+      },
+      "coupon": null,
+      "subtotal": 24.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 24.9,
+      "costTotal": 0,
+      "status": "cancelled",
+      "printedStations": [],
+      "notifiedStatuses": [
+        "received",
+        "cancelled"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": "Desistência do cliente antes do preparo",
+      "cancelledAt": "2026-11-10T03:56:40.872Z",
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:56:40.858Z",
+      "updatedAt": "2026-11-10T03:56:40.872Z"
+    },
+    {
+      "id": "ord_1794283000944_mq35r",
+      "orderNo": "437677",
+      "customer": {
+        "name": "Lucas Motoboy Test",
+        "phone": "16999995544"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua do Entregador",
+        "number": "100",
+        "bairro": "Centro",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 3.5,
+        "freight": 4.5
+      },
+      "items": [
+        {
+          "name": "Copo Tradicional 300ml",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 24.9,
+          "costPrice": 0,
+          "subtotal": 24.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "approved",
+        "changeFor": null,
+        "trocoValue": 0,
+        "paidAt": "2026-11-10T03:56:40.958Z"
+      },
+      "coupon": null,
+      "subtotal": 24.9,
+      "discount": 0,
+      "freight": 4.5,
+      "total": 29.4,
+      "costTotal": 0,
+      "status": "delivered",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "delivered"
+      ],
+      "archivedToHistory": true,
+      "archivedAt": "2026-11-10T03:57:22.203Z",
+      "preparedAt": null,
+      "deliveredAt": "2026-11-10T03:56:40.958Z",
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": 1,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:56:40.944Z",
+      "updatedAt": "2026-11-10T03:57:22.203Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794283001009_av4zh",
+      "orderNo": "330419",
+      "customer": {
+        "name": "Mariana Devolução Test",
+        "phone": "16988884433"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua Deserta",
+        "number": "99",
+        "bairro": "Jardim Primavera",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 4.5
+      },
+      "items": [
+        {
+          "name": "Copo Tradicional 500ml",
+          "size": 500,
+          "quantity": 2,
+          "unitPrice": 29.9,
+          "costPrice": 0,
+          "subtotal": 59.8,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 59.8,
+      "discount": 0,
+      "freight": 4.5,
+      "total": 64.3,
+      "costTotal": 0,
+      "status": "returned",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "returned"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": "Cliente não atendeu o interfone nem telefone",
+      "returnedAt": "2026-11-10T03:56:41.026Z",
+      "createdAt": "2026-11-10T03:56:41.009Z",
+      "updatedAt": "2026-11-10T03:56:41.026Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794283042181_svacp",
+      "orderNo": "327782",
+      "customer": {
+        "name": "Cliente Teste Histórico",
+        "phone": "16999998888"
+      },
+      "delivery": {
+        "type": "pickup"
+      },
+      "items": [
+        {
+          "name": "Copo Açaí 500 ml",
+          "size": 500,
+          "quantity": 2,
+          "unitPrice": 19.9,
+          "costPrice": 0,
+          "subtotal": 39.8,
+          "accompaniments": [
+            "Banana",
+            "Leite em Pó"
+          ],
+          "extras": [
+            "Nutella"
+          ],
+          "fruits": [],
+          "note": "Caprichado"
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "approved",
+        "changeFor": "50",
+        "trocoValue": 10.2,
+        "paidAt": "2026-11-10T03:57:22.199Z"
+      },
+      "coupon": null,
+      "subtotal": 39.8,
+      "discount": 0,
+      "freight": 0,
+      "total": 39.8,
+      "costTotal": 0,
+      "status": "delivered",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "delivered"
+      ],
+      "archivedToHistory": true,
+      "archivedAt": "2026-11-10T03:57:22.203Z",
+      "preparedAt": null,
+      "deliveredAt": "2026-11-10T03:57:22.199Z",
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": 1,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:57:22.181Z",
+      "updatedAt": "2026-11-10T03:57:22.203Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794283043137_jtgx6",
+      "orderNo": "873057",
+      "customer": {
+        "name": "Lucas Delivery",
+        "phone": "16998887766"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Avenida Brasil",
+        "number": "500",
+        "bairro": "Centro",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 5
+      },
+      "items": [
+        {
+          "name": "Ninho com Morango 500 ml",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 30.9,
+          "costPrice": 13.5,
+          "subtotal": 30.9,
+          "accompaniments": [
+            "Morango",
+            "Ninho"
+          ],
+          "extras": [
+            "Nutella"
+          ],
+          "fruits": [],
+          "note": "Colher separada"
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": "50,00",
+        "trocoValue": 19.1
+      },
+      "coupon": {
+        "code": "PRIMEIRACOMPRA",
+        "discountValue": 5
+      },
+      "subtotal": 30.9,
+      "discount": 5,
+      "freight": 5,
+      "total": 30.9,
+      "costTotal": 13.5,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:57:23.137Z",
+      "updatedAt": "2026-11-10T03:57:23.137Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794283043235_pow6t",
+      "orderNo": "578645",
+      "customer": {
+        "name": "Ana Beatriz",
+        "phone": "16991112233"
+      },
+      "delivery": {
+        "type": "pickup"
+      },
+      "items": [
+        {
+          "name": "Combo Casal 500 ml",
+          "size": null,
+          "quantity": 1,
+          "unitPrice": 64.9,
+          "costPrice": 0,
+          "subtotal": 64.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Pix",
+        "timing": "online",
+        "status": "approved",
+        "changeFor": null,
+        "trocoValue": 0,
+        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540564.905802BR5913EXPLOSAO ACAI6006FRANCA6210050657864563049BE6",
+        "qrCodeBase64": "data:image/png;base64,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",
+        "transactionId": "pix_1794283043235_578645",
+        "ticketUrl": "",
+        "isMock": true,
+        "paidAt": "2026-11-10T03:57:23.255Z"
+      },
+      "coupon": null,
+      "subtotal": 64.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 64.9,
+      "costTotal": 0,
+      "status": "preparing",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "preparing"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:57:23.235Z",
+      "updatedAt": "2026-11-10T03:57:23.255Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794283043379_0yzxj",
+      "orderNo": "759963",
+      "customer": {
+        "name": "Mariana Costa",
+        "phone": "16993334455"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua das Palmeiras",
+        "number": "450",
+        "bairro": "Jardim Primavera",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 5.5
+      },
+      "items": [
+        {
+          "name": "Ninho com Morango 500 ml",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 30.9,
+          "costPrice": 13.5,
+          "subtotal": 30.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Cartão de crédito",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 30.9,
+      "discount": 0,
+      "freight": 5.5,
+      "total": 36.4,
+      "costTotal": 13.5,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:57:23.379Z",
+      "updatedAt": "2026-11-10T03:57:23.379Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794283044212_gd53v",
+      "orderNo": "639893",
+      "customer": {
+        "name": "Cliente Frete Grátis",
+        "phone": "16999990001"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua das Flores",
+        "number": "123",
+        "bairro": "Centro",
+        "city": "Franca - SP",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 1.5,
+        "freight": 0
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 18.9,
+          "costPrice": 0,
+          "subtotal": 18.9,
+          "accompaniments": [
+            "Granola",
+            "Leite condensado",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 18.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 18.9,
+      "costTotal": 0,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:57:24.211Z",
+      "updatedAt": "2026-11-10T03:57:24.212Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794283044259_39a5i",
+      "orderNo": "270371",
+      "customer": {
+        "name": "Cliente Frete Pago",
+        "phone": "16999990002"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Av Brasil",
+        "number": "500",
+        "bairro": "Jardim Paulista",
+        "city": "Franca - SP",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 6,
+        "freight": 6
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 18.9,
+          "costPrice": 0,
+          "subtotal": 18.9,
+          "accompaniments": [
+            "Granola",
+            "Leite condensado",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 18.9,
+      "discount": 0,
+      "freight": 6,
+      "total": 24.9,
+      "costTotal": 0,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:57:24.259Z",
+      "updatedAt": "2026-11-10T03:57:24.259Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794283044337_p1hn0",
+      "orderNo": "878783",
+      "customer": {
+        "name": "Cliente a Cancelar",
+        "phone": "16999990003"
+      },
+      "delivery": {
+        "type": "pickup"
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 24.9,
+          "costPrice": 0,
+          "subtotal": 24.9,
+          "accompaniments": [
+            "Granola",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Pix",
+        "timing": "online",
+        "status": "pending",
+        "changeFor": null,
+        "trocoValue": 0,
+        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540524.905802BR5913EXPLOSAO ACAI6006FRANCA6210050687878363047AE7",
+        "qrCodeBase64": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsCAYAAAB5fY51AAAAAklEQVR4AewaftIAAA2ySURBVO3Bwa0kWY5FwZNE7CgKdaDw1IGicJ2TwAC98tcYD3h5ftZcs1+//0BEZAFDRGQJQ0RkCUNEZAlDRGQJQ0RkCUNEZAlDRGQJQ0RkCUNEZAlDRGQJQ0RkCUNEZAlDRGSJD18KT7bqKa6EJyc9xZXw5KSn2Co8uaunOAlP3tJTXAlPvtFTXAlPTnqKN4QnW/UUdxkiIksYIiJLGCIiSxgiIksYIiJLGCIiS3z4B/QUf1t48pOFJ1d6ipPw5KSnuCs8Oekp7gpPTnqKv62nOAlP7uopTsKTJ/UUd/UUf1t48iRDRGQJQ0RkCUNEZAlDRGQJQ0RkiQ8vCk+e1FO8JTx5Uk9xJTw56SlOwpMnhSdPCk9Oeoq7wpOTnuJJ4cmVnuKkpzgJT670FG8JT57UU7zBEBFZwhARWcIQEVnCEBFZwhARWcIQEVnig/xHT3FXePKN8ORKT3ESnpz0FFuFJ1d6ipOe4kk9xUl4cld4cld4ctJTCBgiIksYIiJLGCIiSxgiIksYIiJLGCIiS3yQ/whP3tJTXAlPTnqKu8KTk57iJDy50lN8Izy5Kzz5Rk9xJTw56SlOeoor4clJT3ESnlzpKeS/M0REljBERJYwRESWMEREljBERJb48KKe4ifrKU7Ck7vCk7t6im+EJ1d6ipPw5KSnuBKenPQUJz3FSXjypPDkSk/xjfDkSk9xEp78ZD3FRoaIyBKGiMgShojIEoaIyBKGiMgShojIEh/+AeHJRuHJSU9xJTw56SlOwpO7wpOTnuJKeHLSU5yEJ1d6ipPw5KSnuKunOAlPTnqKK+HJSU/xlp7iSnhy0lPcFZ782xgiIksYIiJLGCIiSxgiIksYIiJLGCIiS3z4Uk/xb9NTPCk8OekproQnJz3FSXjyk4Und4UnT+opfrKe4q6e4v8TQ0RkCUNEZAlDRGQJQ0RkCUNEZIkPXwpPTnqKu8KTn6ynuKunuKun+EZP8Ybw5Bs9xUl4cqWneEt4ctJTvCE8uaun+EZ4cqWnOAlPntRT3GWIiCxhiIgsYYiILGGIiCxhiIgsYYiILPHhReHJN3qKK+HJSU/xt4UnJz3FlfDkpKc4CU/u6ilOeoor4cnTeoor4ck3eoonhSdPCk+u9BRPCk9Oeoon9RRXwpMnGSIiSxgiIksYIiJLGCIiSxgiIkt8+FJPcRKeXOkp3hKe3NVTnIQnV3qKJ/UUJ+HJXT3FSXjylvDkpKe4q6f4yXqKu8KTk57irp7iJDy50lP8ZIaIyBKGiMgShojIEoaIyBKGiMgShojIEr9+/8HDwpMrPcU3wpMrPcVPFp48qac4CU/e0FOchCc/WU9xEp6c9BR3hScnPcVd4cmVnuIkPDnpKZ4UntzVU9xliIgsYYiILGGIiCxhiIgsYYiILGGIiCzx4R/QU9wVnpz0FHeFJyc9xZXw5KSnuBKenPQUJ+HJG3qKk/DkrvDkpKc4CU/kf4UnTwlPTnqKk/BkI0NEZAlDRGQJQ0RkCUNEZAlDRGSJD18KT056iivhyUlPcRKe3NVTnIQn/zY9xV09xV3hyUl4ctJTnIQnV3qKJ4UnJz3Fk3qKk/DkSk/xk/UUJ+HJlZ7iSYaIyBKGiMgShojIEoaIyBKGiMgShojIEh/+AeHJG3qKk/Dkrp7iJDx5Uk9xJTz5RnhyV0/xlvDkpKe4Ep58o6e40lOchCcnPcWV8OQbPcVTwpO3hCd/myEisoQhIrKEISKyhCEisoQhIrKEISKyxK/ff/CF8OQtPcWTwpM39BR3hSff6CmuhCdP6ilOwpO39BQn4cldPcVJeHJXT3ESnlzpKU7Ckzf0FCfhyZN6irsMEZElDBGRJQwRkSUMEZElDBGRJT78A3qKJ4UnV3qKk/DkpKd4SnjyjfDkDT3FT9BTnIQnV3qKk/Dkrp7iJDw56SmuhCcn4ckbeoonhSdP6imeZIiILGGIiCxhiIgsYYiILGGIiCxhiIgs8ev3HzwsPLmrp7grPDnpKe4KT056irvCk5Oe4q7w5K6e4iQ8Oekp7gpPntRTPCk8OekpTsKTKz3FSXhyV09xEp78bT3FSXhyV09xlyEisoQhIrKEISKyhCEisoQhIrKEISKyxIcvhScnPcWV8OQt4cm/TU9xV3jyjfDkST3FXeHJW8KTJ/UUd4Unb+kproQnT+opnmSIiCxhiIgsYYiILGGIiCxhiIgs8eEfEJ5c6Sm+EZ7c1VOchCdPCU9OeoonhSd39RRPCk9OeoqT8OSkp3hDT3ESntwVnvxkPcWTwpOTnuINhojIEoaIyBKGiMgShojIEoaIyBKGiMgSv37/wRfCkyf1FCfhyZN6ijeEJ2/pKZ4Unrylp7grPLmrp/hGeHKlp9gqPLnSU3wjPLnSUzzJEBFZwhARWcIQEVnCEBFZwhARWcIQEVni1+8/eFh48rf1FCfhyRt6irvCkyf1FCfhyUlP8Zbw5Ek9xZPCkzf0FCfhyV09xUl4cqWneFJ4ctJT3GWIiCxhiIgsYYiILGGIiCxhiIgsYYiILPHhh+gpnhSe3NVT3BWenIQnJz3FXT3FXeHJN8KTKz3FSXjyjZ7iSeHJlZ7iJDw56SmuhCff6Cnu6inuCk+eFJ7c1VM8yRARWcIQEVnCEBFZwhARWcIQEVni1+8/+EJ48pP1FCfhyd/WUzwpPLnSU5yEJ3f1FG8JT97SU5yEJ1d6im+EJ1d6irvCk5Oe4iQ8udJTfCM8uaunuMsQEVnCEBFZwhARWcIQEVnCEBFZwhARWeLX7z94WHhypad4UnjyjZ7iSnhy0lNsFJ68pac4CU+e1FPcFZ58o6e4Kzx5Uk/xpPDkST3FlfDkpKe4yxARWcIQEVnCEBFZwhARWcIQEVnCEBFZ4tfvP/hCeHLSU1wJT056ireEJ2/oKU7Ckys9xUl4cldPcRKenPQUd4UnJz3FSXjyhp5C/rvw5Bs9xRsMEZElDBGRJQwRkSUMEZElDBGRJT58qac4CU+u9BQn4clbeoor4clJT/GknuJKeHLSU9wVnpz0FCfhyV09xZN6iieFJ9/oKe4KT57UU9wVnpz0FFd6ipPw5G8zRESWMEREljBERJYwRESWMEREljBERJb48KXw5KSnuKunuCs8OekpTsKTKz3FSXjyhp7iJDw56Sme1FPcFZ58o6e4Ep6c9BR39RTfCE+u9BTf6CmuhCdvCU+u9BRPCk9Oeoq7DBGRJQwRkSUMEZElDBGRJQwRkSUMEZElPiwQntwVnpz0FBv1FH9bePKNnmKrnuJKePKN8ORKT3FXePKWnuKunuJJhojIEoaIyBKGiMgShojIEoaIyBIf/gHhyV09xV09xZPCkyf1FCfhyZPCk7vCk7t6ipPw5C3hyZN6irt6ipPw5KSneENPcRKeXAlPTnqKv80QEVnCEBFZwhARWcIQEVnCEBFZwhARWeLDAj3FXeHJXT3Fk8KTk57iSnjyjZ7irvDkpKf4yXqKk/DkSeHJlZ7ipKc4CU+u9BQn4cld4cldPcVJePKknuIuQ0RkCUNEZAlDRGQJQ0RkCUNEZAlDRGSJX7//4AvhyV09xUl4cldP8aTw5KSneFJ4cqWnOAlPTnqKJ4UnV3qKb4QnJz3FXeHJSU9xJTzZqqd4Q3hy0lPcFZ6c9BR3GSIiSxgiIksYIiJLGCIiSxgiIkt8eFF48pbw5KSn+KnCk5Oe4q7w5KSnOOkp7gpPtuopTsKTvy08ETBERJYwRESWMEREljBERJYwRESWMERElvjwpZ7iJ+sp/rbw5KSneENPcRKe3NVTfKOnuCs8+UZ48oae4iQ8OekproQnJz3Fk8KTKz3FSXjytxkiIksYIiJLGCIiSxgiIksYIiJLfPhSeLJVT3FXeHKlpzjpKd4SntzVU7wlPDnpKa70FCfhyV09xUl4cld48o3w5CnhyUlP8aSe4iQ8eYMhIrKEISKyhCEisoQhIrKEISKyhCEissSHf0BP8beFJ0/qKa6EJyc9xUl4cqWnOAlP3hKeXOkpTnqKJ4UnJz3FSXhyV09xEp7c1VOchCdP6SneEp6c9BRXwpMnGSIiSxgiIksYIiJLGCIiSxgiIksYIiJLfHhRePKknuIt4cmVnuIbPcWV8OQbPcWV8OQkPDnpKa6EJ2/pKU7CkyeFJ08KT54UnvxtPcVJeHKlp3iSISKyhCEisoQhIrKEISKyhCEissQH+T/pKd7QU5yEJyfhyZPCkyf1FCfhyV09xV3hyUlP8ZOFJ1d6im+EJ3eFJyc9xRsMEZElDBGRJQwRkSUMEZElDBGRJQwRkSU+yH/0FCfhyV09xUl4cqWn+EZPcSU8+UZPcVd48o2e4kp4ctJT3NVTnIQnJz3FXeHJSU9xJTw56SneEJ58Izy5q6e4yxARWcIQEVnCEBFZwhARWcIQEVnCEBFZ4sOLeoqteoor4ck3eoonhSdXeoq39BRP6ilOwpOTnuKunuJJPcVdPcVJeHJXT/FvY4iILGGIiCxhiIgsYYiILGGIiCzx4R8QnmwUnpz0FD9ZT3FXeHLSU/xt4clJT3FXePKknuIkPHlST3ElPHlLT3ESnlzpKZ5kiIgsYYiILGGIiCxhiIgsYYiILGGIiCzx6/cfiIgsYIiILGGIiCxhiIgsYYiILGGIiCxhiIgsYYiILGGIiCxhiIgsYYiILGGIiCxhiIgs8T8dyMC6Il/IPQAAAABJRU5ErkJggg==",
+        "transactionId": "pix_1794283044337_878783",
+        "ticketUrl": "",
+        "isMock": true
+      },
+      "coupon": null,
+      "subtotal": 24.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 24.9,
+      "costTotal": 0,
+      "status": "cancelled",
+      "printedStations": [],
+      "notifiedStatuses": [
+        "received",
+        "cancelled"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": "Desistência do cliente antes do preparo",
+      "cancelledAt": "2026-11-10T03:57:24.347Z",
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:57:24.337Z",
+      "updatedAt": "2026-11-10T03:57:24.347Z"
+    },
+    {
+      "id": "ord_1794283044424_dzbai",
+      "orderNo": "624350",
+      "customer": {
+        "name": "Lucas Motoboy Test",
+        "phone": "16999995544"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua do Entregador",
+        "number": "100",
+        "bairro": "Centro",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 3.5,
+        "freight": 4.5
+      },
+      "items": [
+        {
+          "name": "Copo Tradicional 300ml",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 24.9,
+          "costPrice": 0,
+          "subtotal": 24.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "approved",
+        "changeFor": null,
+        "trocoValue": 0,
+        "paidAt": "2026-11-10T03:57:24.437Z"
+      },
+      "coupon": null,
+      "subtotal": 24.9,
+      "discount": 0,
+      "freight": 4.5,
+      "total": 29.4,
+      "costTotal": 0,
+      "status": "delivered",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "delivered"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": "2026-11-10T03:57:24.437Z",
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": 1,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-10T03:57:24.424Z",
+      "updatedAt": "2026-11-10T03:57:24.437Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794283044494_86jbf",
+      "orderNo": "856914",
+      "customer": {
+        "name": "Mariana Devolução Test",
+        "phone": "16988884433"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua Deserta",
+        "number": "99",
+        "bairro": "Jardim Primavera",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 4.5
+      },
+      "items": [
+        {
+          "name": "Copo Tradicional 500ml",
+          "size": 500,
+          "quantity": 2,
+          "unitPrice": 29.9,
+          "costPrice": 0,
+          "subtotal": 59.8,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 59.8,
+      "discount": 0,
+      "freight": 4.5,
+      "total": 64.3,
+      "costTotal": 0,
+      "status": "returned",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "returned"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": "Cliente não atendeu o interfone nem telefone",
+      "returnedAt": "2026-11-10T03:57:24.508Z",
+      "createdAt": "2026-11-10T03:57:24.494Z",
+      "updatedAt": "2026-11-10T03:57:24.508Z",
       "printed": true
     }
   ],
   "chats": [
     {
-      "id": "msg_1794198251799_1hsr",
+      "id": "msg_1794282729105_wj4b",
       "sender": "customer",
       "senderName": "Cliente A",
       "customerPhone": "16988880001",
       "customerName": "Cliente A",
       "message": "Mensagem confidencial do Cliente A",
-      "timestamp": "2026-11-09T04:24:11.799Z",
+      "timestamp": "2026-11-10T03:52:09.105Z",
       "read": false
     },
     {
-      "id": "msg_1794198251830_4e33",
+      "id": "msg_1794282729112_iko3",
       "sender": "customer",
       "senderName": "Cliente B",
       "customerPhone": "16988880002",
       "customerName": "Cliente B",
       "message": "Mensagem confidencial do Cliente B",
-      "timestamp": "2026-11-09T04:24:11.830Z",
+      "timestamp": "2026-11-10T03:52:09.112Z",
       "read": false
     },
     {
-      "id": "msg_1794198251971_4a5d",
+      "id": "msg_1794282779120_ntel",
+      "sender": "customer",
+      "senderName": "Lucas Delivery",
+      "customerPhone": "16998887766",
+      "customerName": "Lucas Delivery",
+      "message": "Olá, meu açaí já saiu para entrega?",
+      "timestamp": "2026-11-10T03:52:59.120Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794282780145_2wp3",
+      "sender": "customer",
+      "senderName": "Cliente A",
+      "customerPhone": "16988880001",
+      "customerName": "Cliente A",
+      "message": "Mensagem confidencial do Cliente A",
+      "timestamp": "2026-11-10T03:53:00.145Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794282780154_nhk7",
+      "sender": "customer",
+      "senderName": "Cliente B",
+      "customerPhone": "16988880002",
+      "customerName": "Cliente B",
+      "message": "Mensagem confidencial do Cliente B",
+      "timestamp": "2026-11-10T03:53:00.154Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794282845963_1hpy",
+      "sender": "customer",
+      "senderName": "Lucas Delivery",
+      "customerPhone": "16998887766",
+      "customerName": "Lucas Delivery",
+      "message": "Olá, meu açaí já saiu para entrega?",
+      "timestamp": "2026-11-10T03:54:05.963Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794282847362_yeym",
+      "sender": "customer",
+      "senderName": "Cliente A",
+      "customerPhone": "16988880001",
+      "customerName": "Cliente A",
+      "message": "Mensagem confidencial do Cliente A",
+      "timestamp": "2026-11-10T03:54:07.362Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794282847374_72xd",
+      "sender": "customer",
+      "senderName": "Cliente B",
+      "customerPhone": "16988880002",
+      "customerName": "Cliente B",
+      "message": "Mensagem confidencial do Cliente B",
+      "timestamp": "2026-11-10T03:54:07.374Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794282908828_0ohi",
+      "sender": "customer",
+      "senderName": "Lucas Delivery",
+      "customerPhone": "16998887766",
+      "customerName": "Lucas Delivery",
+      "message": "Olá, meu açaí já saiu para entrega?",
+      "timestamp": "2026-11-10T03:55:08.828Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794282909847_wgpp",
+      "sender": "customer",
+      "senderName": "Cliente A",
+      "customerPhone": "16988880001",
+      "customerName": "Cliente A",
+      "message": "Mensagem confidencial do Cliente A",
+      "timestamp": "2026-11-10T03:55:09.847Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794282909855_7dfp",
+      "sender": "customer",
+      "senderName": "Cliente B",
+      "customerPhone": "16988880002",
+      "customerName": "Cliente B",
+      "message": "Mensagem confidencial do Cliente B",
+      "timestamp": "2026-11-10T03:55:09.855Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794282946883_n46u",
+      "sender": "customer",
+      "senderName": "Lucas Delivery",
+      "customerPhone": "16998887766",
+      "customerName": "Lucas Delivery",
+      "message": "Olá, meu açaí já saiu para entrega?",
+      "timestamp": "2026-11-10T03:55:46.883Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794282947887_rtq7",
+      "sender": "customer",
+      "senderName": "Cliente A",
+      "customerPhone": "16988880001",
+      "customerName": "Cliente A",
+      "message": "Mensagem confidencial do Cliente A",
+      "timestamp": "2026-11-10T03:55:47.887Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794282947896_at8i",
+      "sender": "customer",
+      "senderName": "Cliente B",
+      "customerPhone": "16988880002",
+      "customerName": "Cliente B",
+      "message": "Mensagem confidencial do Cliente B",
+      "timestamp": "2026-11-10T03:55:47.896Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794282978209_zd8e",
+      "sender": "customer",
+      "senderName": "Lucas Delivery",
+      "customerPhone": "16998887766",
+      "customerName": "Lucas Delivery",
+      "message": "Olá, meu açaí já saiu para entrega?",
+      "timestamp": "2026-11-10T03:56:18.209Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794282979392_vfev",
+      "sender": "customer",
+      "senderName": "Cliente A",
+      "customerPhone": "16988880001",
+      "customerName": "Cliente A",
+      "message": "Mensagem confidencial do Cliente A",
+      "timestamp": "2026-11-10T03:56:19.392Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794282979402_aeju",
+      "sender": "customer",
+      "senderName": "Cliente B",
+      "customerPhone": "16988880002",
+      "customerName": "Cliente B",
+      "message": "Mensagem confidencial do Cliente B",
+      "timestamp": "2026-11-10T03:56:19.402Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794282999685_8d4v",
+      "sender": "customer",
+      "senderName": "Lucas Delivery",
+      "customerPhone": "16998887766",
+      "customerName": "Lucas Delivery",
+      "message": "Olá, meu açaí já saiu para entrega?",
+      "timestamp": "2026-11-10T03:56:39.685Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794283000912_6ibu",
+      "sender": "customer",
+      "senderName": "Cliente A",
+      "customerPhone": "16988880001",
+      "customerName": "Cliente A",
+      "message": "Mensagem confidencial do Cliente A",
+      "timestamp": "2026-11-10T03:56:40.912Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794283000920_q5qy",
+      "sender": "customer",
+      "senderName": "Cliente B",
+      "customerPhone": "16988880002",
+      "customerName": "Cliente B",
+      "message": "Mensagem confidencial do Cliente B",
+      "timestamp": "2026-11-10T03:56:40.920Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794283043282_2whd",
+      "sender": "customer",
+      "senderName": "Lucas Delivery",
+      "customerPhone": "16998887766",
+      "customerName": "Lucas Delivery",
+      "message": "Olá, meu açaí já saiu para entrega?",
+      "timestamp": "2026-11-10T03:57:23.282Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794283044386_bdnv",
+      "sender": "customer",
+      "senderName": "Cliente A",
+      "customerPhone": "16988880001",
+      "customerName": "Cliente A",
+      "message": "Mensagem confidencial do Cliente A",
+      "timestamp": "2026-11-10T03:57:24.386Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794283044394_0ebi",
+      "sender": "customer",
+      "senderName": "Cliente B",
+      "customerPhone": "16988880002",
+      "customerName": "Cliente B",
+      "message": "Mensagem confidencial do Cliente B",
+      "timestamp": "2026-11-10T03:57:24.394Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794283044483_krma",
       "sender": "customer",
       "senderName": "Carlos Silva VIP",
       "customerPhone": "16977771234",
       "customerName": "Carlos Silva VIP",
       "message": "Olá, gostaria de fazer outro pedido!",
-      "timestamp": "2026-11-09T04:24:11.971Z",
+      "timestamp": "2026-11-10T03:57:24.483Z",
       "read": false
     }
   ]

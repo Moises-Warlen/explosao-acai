@@ -54,6 +54,8 @@ export class Order {
     returnReason = null,
     returnedAt = null,
     notifiedStatuses = [],
+    archivedToHistory = false,
+    archivedAt = null,
     createdAt = new Date().toISOString(),
     updatedAt = new Date().toISOString()
   }) {
@@ -72,6 +74,8 @@ export class Order {
     this.status = status;
     this.printedStations = printedStations; // ['kitchen', 'counter']
     this.notifiedStatuses = Array.isArray(notifiedStatuses) ? notifiedStatuses : [];
+    this.archivedToHistory = Boolean(archivedToHistory);
+    this.archivedAt = archivedAt;
     this.preparedAt = preparedAt;
     this.deliveredAt = deliveredAt;
     this.preparationTimeMinutes = preparationTimeMinutes;

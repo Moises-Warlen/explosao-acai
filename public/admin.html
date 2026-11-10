@@ -83,7 +83,8 @@
           <option value="received">Novos Pedidos</option>
           <option value="preparing">Em Preparo</option>
           <option value="ready">Prontos / Em Entrega</option>
-          <option value="delivered">Concluídos</option>
+          <option value="delivered">Entregues Hoje</option>
+          <option value="history">Pedidos Concluídos</option>
           <option value="returned">Devolvidos à Loja</option>
           <option value="cancelled">Cancelados</option>
         </select>
@@ -126,13 +127,22 @@
           <div id="cards-ready-pagination"></div>
         </div>
 
-        <!-- Coluna: Concluídos -->
+        <!-- Coluna: Entregues Hoje -->
         <div class="kanban-col">
           <div class="kanban-col-header" style="color:var(--green)">
-            <span id="col-header-delivered">Entregues (Concluídos)</span>
+            <span id="col-header-delivered">Entregues Hoje</span>
           </div>
           <div class="kanban-cards" id="cards-delivered"></div>
           <div id="cards-delivered-pagination"></div>
+        </div>
+
+        <!-- Coluna: Pedidos Concluídos (Histórico) -->
+        <div class="kanban-col">
+          <div class="kanban-col-header" style="color:#34d399">
+            <span id="col-header-history">Pedidos Concluídos</span>
+          </div>
+          <div class="kanban-cards" id="cards-history"></div>
+          <div id="cards-history-pagination"></div>
         </div>
 
         <!-- Coluna: Devolvidos à Loja -->
@@ -1056,6 +1066,6 @@
   <div id="recipe-pdf-area"></div>
 
   <!-- Scripts -->
-  <script src="js/admin.js?v=2.6"></script>
+  <script src="js/admin.js?v=2.7"></script>
 </body>
 </html>
