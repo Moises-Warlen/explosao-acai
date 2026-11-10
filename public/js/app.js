@@ -319,16 +319,11 @@ function renderItemModal() {
 
   // Limite de acompanhamentos inclusos por tamanho
   let maxAcomp = selectedSizeObj?.maxAccompaniments;
-  if (isMonteSeuAcai) {
+  if (maxAcomp === undefined || maxAcomp === null) {
     if (sizeMl === 300) maxAcomp = 3;
     else if (sizeMl === 500) maxAcomp = 4;
     else if (sizeMl === 700) maxAcomp = 5;
-    else maxAcomp = (maxAcomp === undefined || maxAcomp === null) ? 4 : maxAcomp;
-  } else if (maxAcomp === undefined || maxAcomp === null) {
-    if (sizeMl === 300) maxAcomp = 3;
-    else if (sizeMl === 500) maxAcomp = 4;
-    else if (sizeMl === 700) maxAcomp = 5;
-    else maxAcomp = 4;
+    else maxAcomp = 3;
   }
 
   // Identifica produtos com regras especiais de adicionais extras
@@ -492,16 +487,11 @@ window.selectSize = function(idx) {
   const isMonte = prod.id === 'prod_monte' || prod.categorySlug === 'monte' || prod.name.toLowerCase().includes('monte seu');
 
   let maxAcomp = selectedSizeObj?.maxAccompaniments;
-  if (isMonte) {
+  if (maxAcomp === undefined || maxAcomp === null) {
     if (sizeMl === 300) maxAcomp = 3;
     else if (sizeMl === 500) maxAcomp = 4;
     else if (sizeMl === 700) maxAcomp = 5;
-    else maxAcomp = (maxAcomp === undefined || maxAcomp === null) ? 4 : maxAcomp;
-  } else if (maxAcomp === undefined || maxAcomp === null) {
-    if (sizeMl === 300) maxAcomp = 3;
-    else if (sizeMl === 500) maxAcomp = 4;
-    else if (sizeMl === 700) maxAcomp = 5;
-    else maxAcomp = 4;
+    else maxAcomp = 3;
   }
 
   // Ajusta caso o novo tamanho tenha limite menor que o selecionado
@@ -523,16 +513,11 @@ window.toggleAccompaniment = function(name) {
   const isMonte = prod.id === 'prod_monte' || prod.categorySlug === 'monte' || prod.name.toLowerCase().includes('monte seu');
 
   let maxAcomp = selectedSizeObj?.maxAccompaniments;
-  if (isMonte) {
+  if (maxAcomp === undefined || maxAcomp === null) {
     if (sizeMl === 300) maxAcomp = 3;
     else if (sizeMl === 500) maxAcomp = 4;
     else if (sizeMl === 700) maxAcomp = 5;
-    else maxAcomp = (maxAcomp === undefined || maxAcomp === null) ? 4 : maxAcomp;
-  } else if (maxAcomp === undefined || maxAcomp === null) {
-    if (sizeMl === 300) maxAcomp = 3;
-    else if (sizeMl === 500) maxAcomp = 4;
-    else if (sizeMl === 700) maxAcomp = 5;
-    else maxAcomp = 4;
+    else maxAcomp = 3;
   }
 
   const idx = st.accompaniments.indexOf(name);
