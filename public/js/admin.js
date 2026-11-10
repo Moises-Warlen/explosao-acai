@@ -933,12 +933,20 @@ window.getWppStatusMessage = function(order) {
     case 'preparing':
       return `Seu pedido #${numero} já está sendo preparado com muito carinho!`;
     case 'ready':
-      return `Boa notícia, ${nome}! Seu pedido #${numero} está pronto e já pode ser retirado na loja!`;
     case 'out_for_delivery':
-      if (order.delivery?.type === 'pickup' || order.delivery?.type === 'retirada' || (order.delivery && order.delivery.type !== 'delivery')) {
+      // Se for entrega (delivery), mensagem de entrega a caminho:
+      if (order.delivery?.type === 'delivery') {
+        return `Boa notícia, ${nome}! Seu pedido #${numero} saiu para entrega e já está a caminho!`;
+      }
+      // Se for retirada (pickup/balcão), mensagem de pronto para retirada:
+      if (order.delivery?.type === 'pickup' || order.delivery?.type === 'retirada' || order.delivery?.type === 'balcao') {
         return `Boa notícia, ${nome}! Seu pedido #${numero} está pronto e já pode ser retirado na loja!`;
       }
-      return `Boa notícia, ${nome}! Seu pedido #${numero} saiu para entrega e já está a caminho!`;
+      // Fallback quando não há delivery configurado:
+      if (order.status === 'out_for_delivery') {
+        return `Boa notícia, ${nome}! Seu pedido #${numero} saiu para entrega e já está a caminho!`;
+      }
+      return `Boa notícia, ${nome}! Seu pedido #${numero} está pronto e já pode ser retirado na loja!`;
     case 'delivered':
       return `Obrigado por comprar com a Explosão Açaí, ${nome}! Esperamos que você curta sua explosão de sabor! Nos siga no Instagram: https://www.instagram.com/expl.osaoacai?mdxt=Zm1obWhpaTFhbmV3`;
     default:
