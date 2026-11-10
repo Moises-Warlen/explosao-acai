@@ -933,8 +933,9 @@ window.getWppStatusMessage = function(order) {
     case 'preparing':
       return `Seu pedido #${numero} já está sendo preparado com muito carinho!`;
     case 'ready':
+      return `Boa notícia, ${nome}! Seu pedido #${numero} está pronto e já pode ser retirado na loja!`;
     case 'out_for_delivery':
-      if (order.delivery?.type === 'pickup') {
+      if (order.delivery?.type === 'pickup' || order.delivery?.type === 'retirada' || (order.delivery && order.delivery.type !== 'delivery')) {
         return `Boa notícia, ${nome}! Seu pedido #${numero} está pronto e já pode ser retirado na loja!`;
       }
       return `Boa notícia, ${nome}! Seu pedido #${numero} saiu para entrega e já está a caminho!`;

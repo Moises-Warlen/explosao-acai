@@ -71,7 +71,7 @@ function initWebSocket() {
         const data = JSON.parse(event.data);
         if (data.event === 'ORDER_STATUS_CHANGED' && ACTIVE_ORDER && data.payload.id === ACTIVE_ORDER.id) {
           ACTIVE_ORDER = data.payload;
-          toast(`Status do pedido atualizado: ${formatStatus(ACTIVE_ORDER.status)}`);
+          toast(`Status do pedido atualizado: ${formatStatus(ACTIVE_ORDER.status, ACTIVE_ORDER)}`);
           if (ACTIVE_ORDER.payment?.status === 'approved' && window._pixPollInterval) {
             clearInterval(window._pixPollInterval);
           }
@@ -1293,7 +1293,7 @@ function renderOrderSuccess(order) {
     <div id="tracker-box" style="background:var(--card);border:1.5px solid var(--ln);border-radius:16px;padding:16px;margin:14px 0">
       <div style="font-weight:700;font-size:14px;margin-bottom:8px">Status da Produção:</div>
       <div>
-        <b id="tracker-status" style="color:var(--p2);font-size:16px">${formatStatus(order.status)}</b>
+        <b id="tracker-status" style="color:var(--p2);font-size:16px">${formatStatus(order.status, order)}</b>
         <div style="font-size:12px;color:var(--mut);margin-top:4px">
           ${order.payment.timing === 'delivery' 
             ? `Cobrança na entrega: ${esc(order.payment.method)} ${order.payment.trocoValue > 0 ? `(Levar troco de ${R(order.payment.trocoValue)})` : ''}` 
@@ -1343,13 +1343,14 @@ window.checkPixStatus = async function(orderId) {
 };
 
 // Formatação limpa dos status operacionais
-function formatStatus(status) {
+function formatStatus(status, order = null) {
+  const isPickup = (order && (order.delivery?.type === 'pickup' || order.delivery?.type === 'retirada' || order.delivery?.type !== 'delivery')) || (status === 'ready' && (!order || order.delivery?.type !== 'delivery'));
   switch (status) {
     case 'received': return 'Recebido pela Loja';
     case 'preparing': return 'Em Preparo na Cozinha';
-    case 'ready': return 'Pronto para Entrega';
-    case 'out_for_delivery': return 'Saiu para Entrega (Em Rota)';
-    case 'delivered': return 'Entregue (Concluído)';
+    case 'ready': return isPickup ? 'Pronto para Retirada no Balcão' : 'Pronto para Entrega';
+    case 'out_for_delivery': return isPickup ? 'Pronto para Retirada no Balcão' : 'Saiu para Entrega (Em Rota)';
+    case 'delivered': return isPickup ? 'Retirado no Balcão (Concluído)' : 'Entregue (Concluído)';
     case 'cancelled': return 'Cancelado';
     default: return status;
   }
