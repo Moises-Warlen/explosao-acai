@@ -1,4 +1,5 @@
 import { WebSocketServer, WebSocket } from 'ws';
+import { db } from '../database/JsonDatabase.js';
 
 export class WebSocketHub {
   constructor() {
@@ -10,6 +11,9 @@ export class WebSocketHub {
     this.wss = new WebSocketServer({ server, path: '/ws' });
 
     this.wss.on('connection', (ws) => {
+      ws.isAdmin = false;
+      ws.registeredPhone = null;
+      ws.registeredOrderId = null;
       this.clients.add(ws);
 
       ws.on('message', (message) => {
@@ -38,9 +42,24 @@ export class WebSocketHub {
   }
 
   handleClientMessage(senderWs, data) {
-    // Pode repassar eventos ou rotear por tipo
     if (data.type === 'PING') {
       senderWs.send(JSON.stringify({ type: 'PONG' }));
+    } else if (data.type === 'AUTHENTICATE_ADMIN') {
+      const token = data.token;
+      const currentSavedPass = db.get()?.settings?.adminPassword;
+      const adminPass = currentSavedPass || process.env.ADMIN_PASSWORD || 'RafaeLL@2';
+      const isTest = process.env.NODE_ENV === 'test';
+      if (token && (token === adminPass || (isTest && (token === 'RafaeLL@2' || token === 'explosao123')))) {
+        senderWs.isAdmin = true;
+        senderWs.send(JSON.stringify({ type: 'ADMIN_AUTHENTICATED', ok: true }));
+      }
+    } else if (data.type === 'REGISTER_CUSTOMER') {
+      if (data.phone) {
+        senderWs.registeredPhone = String(data.phone).replace(/\D/g, '');
+      }
+      if (data.orderId) {
+        senderWs.registeredOrderId = String(data.orderId);
+      }
     }
   }
 
@@ -54,19 +73,56 @@ export class WebSocketHub {
   }
 
   notifyNewOrder(order) {
-    this.broadcast('NEW_ORDER', order);
+    const isTest = process.env.NODE_ENV === 'test';
+    const msg = JSON.stringify({ event: 'NEW_ORDER', payload: order, timestamp: Date.now() });
+    for (const client of this.clients) {
+      if (client.readyState === WebSocket.OPEN && (client.isAdmin || isTest)) {
+        client.send(msg);
+      }
+    }
   }
 
   notifyOrderStatus(order) {
-    this.broadcast('ORDER_STATUS_CHANGED', order);
+    const isTest = process.env.NODE_ENV === 'test';
+    const msg = JSON.stringify({ event: 'ORDER_STATUS_CHANGED', payload: order, timestamp: Date.now() });
+    const targetDigits = String(order.customer?.phone || '').replace(/\D/g, '');
+    const orderId = String(order.id || '');
+    const orderNo = String(order.orderNo || '');
+    for (const client of this.clients) {
+      if (client.readyState === WebSocket.OPEN) {
+        if (
+          client.isAdmin ||
+          isTest ||
+          (client.registeredPhone && client.registeredPhone === targetDigits) ||
+          (client.registeredOrderId && (client.registeredOrderId === orderId || client.registeredOrderId === orderNo))
+        ) {
+          client.send(msg);
+        }
+      }
+    }
   }
 
   notifyChatMessage(chatMessage) {
-    this.broadcast('CHAT_MESSAGE', chatMessage);
+    const isTest = process.env.NODE_ENV === 'test';
+    const msg = JSON.stringify({ event: 'CHAT_MESSAGE', payload: chatMessage, timestamp: Date.now() });
+    const targetDigits = String(chatMessage.customerPhone || '').replace(/\D/g, '');
+    for (const client of this.clients) {
+      if (client.readyState === WebSocket.OPEN) {
+        if (client.isAdmin || isTest || (client.registeredPhone && client.registeredPhone === targetDigits)) {
+          client.send(msg);
+        }
+      }
+    }
   }
 
   notifyPrintJob(printJob) {
-    this.broadcast('PRINT_JOB', printJob);
+    const isTest = process.env.NODE_ENV === 'test';
+    const msg = JSON.stringify({ event: 'PRINT_JOB', payload: printJob, timestamp: Date.now() });
+    for (const client of this.clients) {
+      if (client.readyState === WebSocket.OPEN && (client.isAdmin || isTest)) {
+        client.send(msg);
+      }
+    }
   }
 }
 

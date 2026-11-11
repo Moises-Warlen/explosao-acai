@@ -664,7 +664,14 @@
           "maxAccompaniments": 3
         }
       ],
-      "recipes": []
+      "recipes": [],
+      "allowedAccompanimentIds": [
+        "acomp_2",
+        "acomp_1",
+        "acomp_6",
+        "acomp_8",
+        "acomp_17"
+      ]
     },
     {
       "id": "prod_garrafa_tradicional",

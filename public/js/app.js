@@ -63,9 +63,25 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 
 // Conexão WebSocket em Tempo Real
+function registerCustomerWs() {
+  if (WS_SOCKET && WS_SOCKET.readyState === WebSocket.OPEN) {
+    try {
+      const client = typeof getClientChatData === 'function' ? getClientChatData() : null;
+      const phone = client?.phone || '';
+      const orderId = ACTIVE_ORDER?.id || '';
+      if (phone || orderId) {
+        WS_SOCKET.send(JSON.stringify({ type: 'REGISTER_CUSTOMER', phone, orderId }));
+      }
+    } catch (e) {}
+  }
+}
+
 function initWebSocket() {
   try {
     WS_SOCKET = new WebSocket(WS_URL);
+    WS_SOCKET.onopen = () => {
+      registerCustomerWs();
+    };
     WS_SOCKET.onmessage = async (event) => {
       try {
         const data = JSON.parse(event.data);

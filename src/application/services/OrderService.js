@@ -179,12 +179,51 @@ export class OrderService {
       let unitPrice = Number(item.unitPrice || 0);
       let itemCost = 0;
 
-      // Busca custo cadastrado do produto
-      const baseProduct = (catalog.products || []).find(p => item.name.includes(p.name));
-      if (baseProduct && item.size) {
-        const sizePrice = (baseProduct.prices || []).find(pr => pr.size === Number(item.size));
-        if (sizePrice && sizePrice.costPrice) {
-          itemCost += sizePrice.costPrice;
+      // Busca produto correspondente no catálogo oficial
+      const baseProduct = (catalog.products || []).find(p =>
+        (item.productId && p.id === item.productId) ||
+        (item.id && p.id === item.id) ||
+        item.name.includes(p.name) ||
+        p.name.includes(item.name)
+      );
+
+      if (baseProduct) {
+        let sizePrice = null;
+        if (item.size && Array.isArray(baseProduct.prices)) {
+          sizePrice = baseProduct.prices.find(pr => Number(pr.size) === Number(item.size));
+        }
+        if (!sizePrice && Array.isArray(baseProduct.prices) && baseProduct.prices.length > 0) {
+          sizePrice = baseProduct.prices[0];
+        }
+
+        if (sizePrice) {
+          if (sizePrice.costPrice) {
+            itemCost += sizePrice.costPrice;
+          }
+          // Preço oficial do cardápio
+          const officialBasePrice = sizePrice.promoPrice != null ? sizePrice.promoPrice : sizePrice.price;
+
+          // Adicionais extras oficiais
+          let extrasTotal = 0;
+          if (Array.isArray(item.extras) && Array.isArray(catalog.extras)) {
+            item.extras.forEach(ext => {
+              const extId = typeof ext === 'string' ? ext : ext.id;
+              const foundExt = catalog.extras.find(e => e.id === extId || e.name === extId || e.name === ext?.name);
+              if (foundExt) {
+                if (foundExt.isFruitExtra && Array.isArray(item.fruits)) {
+                  extrasTotal += Number(foundExt.price || 0) * item.fruits.length;
+                } else {
+                  extrasTotal += Number(foundExt.price || 0);
+                }
+              }
+            });
+          }
+
+          const expectedUnitPrice = officialBasePrice + extrasTotal;
+          // Proteção financeira: se o item for enviado com preço zerado ou negativo, assume o preço oficial
+          if (!unitPrice || unitPrice <= 0) {
+            unitPrice = expectedUnitPrice;
+          }
         }
       }
 
@@ -214,7 +253,6 @@ export class OrderService {
       if (check.valid) {
         discount = check.coupon.discount;
         appliedCoupon = { code: check.coupon.code, discountValue: discount };
-        couponService.incrementUsage(couponCode);
       }
     }
 
@@ -344,6 +382,11 @@ export class OrderService {
     const data = this.db.get();
     data.orders.push(newOrder);
     this.db.save();
+
+    // Incrementa cupom com segurança após pedido salvo
+    if (appliedCoupon && appliedCoupon.code) {
+      couponService.incrementUsage(appliedCoupon.code);
+    }
 
     // 10. Emite evento em tempo real via WebSocket para o Painel Administrativo
     wsHub.notifyNewOrder(newOrder);

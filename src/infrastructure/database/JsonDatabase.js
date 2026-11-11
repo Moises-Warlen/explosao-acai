@@ -587,8 +587,13 @@ class JsonDatabase {
         console.log('✅ Banco de dados PostgreSQL inicializado com os dados do Explosão Açaí!');
       }
     } catch (err) {
-      console.error('Erro ao inicializar PostgreSQL:', err);
       this.isConnected = false;
+      const isLocalHost = process.env.DATABASE_URL && (process.env.DATABASE_URL.includes('localhost') || process.env.DATABASE_URL.includes('127.0.0.1'));
+      if (isLocalHost) {
+        console.log('ℹ️ [Banco Local] PostgreSQL local indisponível. Operando via armazenamento JSON com persistência garantida.');
+      } else {
+        console.error('Erro ao conectar ao PostgreSQL em nuvem:', err.message);
+      }
     }
   }
 

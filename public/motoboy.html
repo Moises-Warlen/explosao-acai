@@ -593,7 +593,7 @@
 
     async function loadActiveOrdersList() {
       try {
-        const res = await fetch(`${API_URL}/orders`);
+        const res = await fetch(`${API_URL}/orders?motoboy=pending`);
         const data = await res.json();
         if (data.ok) {
           const openOrders = (data.orders || []).filter(o => o.status !== 'delivered' && o.status !== 'cancelled' && o.status !== 'returned' && o.delivery?.type === 'delivery');

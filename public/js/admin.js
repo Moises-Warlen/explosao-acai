@@ -122,6 +122,9 @@ window.doLogin = async function() {
       ADMIN_TOKEN = data.token;
       localStorage.setItem('admin_token', ADMIN_TOKEN);
       sessionStorage.setItem('explosao_admin_token', ADMIN_TOKEN);
+      if (WS && WS.readyState === WebSocket.OPEN) {
+        WS.send(JSON.stringify({ type: 'AUTHENTICATE_ADMIN', token: ADMIN_TOKEN }));
+      }
       $('#login-modal').style.display = 'none';
       const dash = $('#dashboard-wrapper');
       if (dash) dash.style.display = 'block';
@@ -179,6 +182,11 @@ async function initDashboard() {
 function initWebSocket() {
   try {
     WS = new WebSocket(WS_URL);
+    WS.onopen = () => {
+      if (ADMIN_TOKEN) {
+        WS.send(JSON.stringify({ type: 'AUTHENTICATE_ADMIN', token: ADMIN_TOKEN }));
+      }
+    };
     WS.onmessage = async (event) => {
       try {
         const data = JSON.parse(event.data);
@@ -389,6 +397,7 @@ window.saveNewAdminPassword = async function(e) {
     const data = await res.json();
     if (data.ok) {
       ADMIN_TOKEN = newPass;
+      localStorage.setItem('admin_token', newPass);
       sessionStorage.setItem('explosao_admin_token', newPass);
       if ($('#adm-cur-pass')) $('#adm-cur-pass').value = '';
       if ($('#adm-new-pass')) $('#adm-new-pass').value = '';
@@ -651,7 +660,7 @@ function createOrderCardHtml(order, isHistory = false) {
       } else {
         nextAction = `
           <button class="btn-sm btn-next" style="background:#10b981;color:#fff;font-weight:700" onclick="confirmPickupOrder('${order.id}')" title="Marcar como Pago e Retirado pelo Cliente no Balcão">
-            ✓ Liberar para retirar no balcão
+            ✓ Concluir Retirada (Pago)
           </button>
         `;
       }
