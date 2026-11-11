@@ -432,16 +432,27 @@
   <h2>4. Módulo 3: Central de Rotas & Painel do Entregador (<code>/motoboy.html</code>)</h2>
   <p>Projetado para eliminar gargalos logísticos no momento em que múltiplos pedidos saem simultaneamente da loja.</p>
 
-  <h3>🗺️ Mapa de Despacho & Divisão Automática de Rotas</h3>
+  <h3>🗺️ Mapa de Despacho & Divisão Flexível de Rotas</h3>
   <ul>
     <li><strong>Visualização no Mapa:</strong> todos os pedidos com status "Pronto para Entrega" são marcados no mapa interativo com seus respectivos bairros e endereços.</li>
-    <li><strong>Divisão Equilibrada entre Entregadores:</strong>
-      <br>Se você tiver 20 pedidos e 4 motoboys, basta selecionar <code>4 Motoboys</code> e clicar em <strong>Gerar Divisão</strong>. O sistema divide a lista em 4 rotas de 5 pedidos cada (<code>🛵 Rota 1</code>, <code>🛵 Rota 2</code>, etc.).
+    <li><strong>Quantidade Flexível de Motoboys (1 até quantos você tiver):</strong>
+      <br>O sistema não fica fixo em nenhum número de entregadores! Você pode escolher <strong>1 motoboy</strong> (cria rota única com todas as entregas) ou <strong>2, 3, 4, 5, 6 ou mais motoboys</strong> usando os botões <code>+</code> e <code>−</code> ou digitando o número de motoboys que vieram trabalhar no dia.
     </li>
-    <li><strong>Envio de Rota Completa no WhatsApp do Motoboy:</strong>
-      <br>O sistema formata um itinerário completo com a sequência de paradas, nome do cliente, endereço, referências, valor a cobrar, necessidade de troco e um link multi-paradas do <strong>Google Maps</strong> pronto para navegação ponto a ponto.
+    <li><strong>Divisão Equilibrada em Abas:</strong>
+      <br>Ao clicar em <strong>⚡ Gerar Rotas</strong>, o sistema calcula o equilíbrio das entregas e cria botões dedicados (<code>🛵 Rota 1</code>, <code>🛵 Rota 2</code>, etc.). Clicando em qualquer aba, o mapa e a lista filtram instantaneamente apenas as entregas daquele motoboy.
     </li>
-    <li><strong>Atualização em Lote:</strong> botão para mover todos os pedidos daquela rota para "Saiu para Entrega" com um único toque.</li>
+    <li><strong>Como a Rota é Passada para o Motoboy:</strong>
+      <br>Ao clicar em <strong>📲 Enviar Rota via WhatsApp para Entregador</strong>, a loja digita o WhatsApp do motoboy (o sistema memoriza o número para as próximas vezes) ou abre o WhatsApp Web direto para selecionar o contato. O entregador recebe:
+      <ul>
+        <li>Sequência numerada de paradas com horário de saída;</li>
+        <li>Nome do cliente, telefone e endereço completo;</li>
+        <li><strong>Ponto de referência destacado</strong> (ex: cor da casa, portão, interfone);</li>
+        <li>Instruções financeiras claras (valor exato a cobrar em dinheiro, troco a levar, maquininha ou alerta "Já Pago via Pix - Não Cobrar");</li>
+        <li>Link direto de cada entrega para ele abrir no smartphone (com botões de 1 toque no <strong>Waze</strong> e <strong>Google Maps</strong>);</li>
+        <li><strong>Link Geral Multi-Paradas do Google Maps:</strong> com apenas 1 toque, o motoboy inicia a navegação GPS com todas as paradas traçadas em sequência otimizada!</li>
+      </ul>
+    </li>
+    <li><strong>Atualização em Lote:</strong> botão <code>🛵 Marcar Rota em Entrega</code> que atualiza simultaneamente todos os pedidos daquela rota para "Saiu para Entrega" no cardápio dos clientes.</li>
   </ul>
 
   <h3>📱 Tela Mobile do Motoboy (<code>public/motoboy.html</code>)</h3>
@@ -472,6 +483,7 @@
     <li><strong>Identificação do Pedido Ativo:</strong> ao clicar no cliente na central de mensagens da loja, o cabeçalho exibe o pedido em andamento, itens e endereço.</li>
     <li><strong>Respostas Rápidas Pré-Configuradas:</strong> botões de 1 clique para agilizar o suporte (<em>Em Preparo</em>, <em>Saiu para Entrega</em>, <em>Pronto no Balcão</em>, <em>Agradecimento</em>).</li>
     <li><strong>Notificações Sonoras e Visuais:</strong> alerta auditivo e título da aba dinâmico (<code>💬 Nova mensagem de [Nome]!</code>) para a equipe nunca perder chamados.</li>
+    <li><strong>Resposta Automática com Loja Fechada:</strong> quando o cliente manda mensagem e a loja está fechada (manualmente ou fora do expediente), o sistema envia uma resposta imediata e acolhedora informando o horário de abertura e que o recado foi anotado, sem deixar o cliente sem resposta. Configurável com texto personalizado na Aba 9 de Configurações.</li>
   </ul>
 
   <!-- CAPÍTULO 6 -->

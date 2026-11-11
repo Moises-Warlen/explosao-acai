@@ -1,5 +1,6 @@
 import { db } from '../../infrastructure/database/JsonDatabase.js';
 import { wsHub } from '../../infrastructure/websockets/WebSocketHub.js';
+import { storeService } from './StoreService.js';
 
 export class ChatService {
   constructor() {
@@ -142,6 +143,61 @@ export class ChatService {
 
     // Notifica instantaneamente clientes conectados via WebSocket
     wsHub.notifyChatMessage(newMsg);
+
+    // Se a mensagem partiu do cliente, verifica se a loja está fechada para envio de auto-resposta inteligente
+    if (finalSender === 'customer') {
+      try {
+        const storeStatus = storeService.isStoreOpen();
+        const isClosed = !storeStatus.isOpen;
+        const autoReplyEnabled = data.settings?.autoReplyClosedEnabled !== false;
+
+        if (isClosed && autoReplyEnabled) {
+          // Previne repetições desnecessárias: verifica se já enviamos auto-resposta para este cliente nos últimos 20 minutos
+          const now = Date.now();
+          const customerMessages = (data.chats || []).filter(m => {
+            const mDigits = String(m.customerPhone || '').replace(/\D/g, '');
+            return cleanDigits && mDigits && cleanDigits.length >= 8 && mDigits.length >= 8
+              ? cleanDigits === mDigits
+              : String(m.customerPhone || '').toLowerCase() === raw.toLowerCase();
+          });
+
+          const lastAutoReply = customerMessages.slice().reverse().find(m => m.isAutoReply);
+          const recentlySent = lastAutoReply && (now - new Date(lastAutoReply.timestamp).getTime() < 20 * 60 * 1000);
+
+          if (!recentlySent) {
+            const customMsg = (data.settings?.autoReplyClosedMessage || '').trim();
+            const closedNotice = storeStatus.message || 'No momento a loja está fechada.';
+
+            let autoText = '';
+            if (customMsg) {
+              autoText = customMsg.replace(/{horario}/g, closedNotice).replace(/{status}/g, closedNotice);
+            } else {
+              autoText = `Olá! 🍧 Agradecemos a sua mensagem. No momento a Explosão Açaí está fechada (${closedNotice}). Seu recado foi registrado com sucesso e responderemos assim que abrirmos nosso atendimento! Agradecemos o carinho e a preferência.`;
+            }
+
+            const autoMsg = {
+              id: `msg_${Date.now()}_auto`,
+              sender: 'admin',
+              senderName: storeSenderName || 'Explosão Açaí',
+              customerPhone: cleanPhone,
+              customerName: finalCustomerName,
+              message: autoText,
+              timestamp: new Date(Date.now() + 150).toISOString(),
+              read: true,
+              isAutoReply: true
+            };
+
+            data.chats.push(autoMsg);
+            this.db.save();
+
+            // Notifica via WebSocket tanto o cardápio do cliente quanto o painel administrativo
+            wsHub.notifyChatMessage(autoMsg);
+          }
+        }
+      } catch (err) {
+        console.warn('Aviso: Falha ao avaliar auto-resposta de chat fechado:', err.message);
+      }
+    }
 
     return newMsg;
   }

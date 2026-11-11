@@ -383,6 +383,8 @@ function renderStoreSettingsForm() {
   if ($('#st-address')) $('#st-address').value = SETTINGS.address || '';
   if ($('#st-wpp-api-url')) $('#st-wpp-api-url').value = SETTINGS.whatsappApiUrl || '';
   if ($('#st-wpp-api-token')) $('#st-wpp-api-token').value = SETTINGS.whatsappApiToken || '';
+  if ($('#st-autoreply-closed-enabled')) $('#st-autoreply-closed-enabled').checked = SETTINGS.autoReplyClosedEnabled !== false;
+  if ($('#st-autoreply-closed-msg')) $('#st-autoreply-closed-msg').value = SETTINGS.autoReplyClosedMessage || '';
 }
 
 window.saveStoreSettings = async function(e) {
@@ -396,7 +398,9 @@ window.saveStoreSettings = async function(e) {
     wpp: $('#st-wpp').value.trim(),
     address: $('#st-address').value.trim(),
     whatsappApiUrl: $('#st-wpp-api-url') ? $('#st-wpp-api-url').value.trim() : '',
-    whatsappApiToken: $('#st-wpp-api-token') ? $('#st-wpp-api-token').value.trim() : ''
+    whatsappApiToken: $('#st-wpp-api-token') ? $('#st-wpp-api-token').value.trim() : '',
+    autoReplyClosedEnabled: $('#st-autoreply-closed-enabled') ? $('#st-autoreply-closed-enabled').checked : true,
+    autoReplyClosedMessage: $('#st-autoreply-closed-msg') ? $('#st-autoreply-closed-msg').value.trim() : ''
   };
 
   try {
@@ -3330,7 +3334,14 @@ async function loadChatMessages(phone) {
           `;
         }
         const isStore = m.sender === 'admin';
-        const senderLabel = isStore ? `${esc(m.senderName || SETTINGS.chatSenderName || 'Delivery')} (Loja)` : `${esc(m.customerName || 'Cliente')}`;
+        let senderLabel = '';
+        if (isStore) {
+          senderLabel = m.isAutoReply
+            ? `🤖 ${esc(m.senderName || 'Explosão Açaí')} (Auto-Resposta · Loja Fechada)`
+            : `${esc(m.senderName || SETTINGS.chatSenderName || 'Delivery')} (Loja)`;
+        } else {
+          senderLabel = `${esc(m.customerName || 'Cliente')}`;
+        }
         const timeStr = new Date(m.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
         return `
@@ -3627,6 +3638,9 @@ window.openDeliveryMapModal = function() {
   if (!modal) return;
   modal.style.display = 'flex';
 
+  const savedMotoboys = localStorage.getItem('explosao_num_motoboys') || '1';
+  if ($('#map-num-motoboys')) $('#map-num-motoboys').value = savedMotoboys;
+
   setTimeout(() => {
     initLeafletDeliveryMap();
     renderDeliveryMapMarkers();
@@ -3809,6 +3823,18 @@ window.renderDeliveryMapMarkers = function() {
 };
 
 let CURRENT_MAP_SORTED_ORDERS = [];
+let CURRENT_SELECTED_ROUTE_LABEL = 'Todas as Entregas';
+
+window.changeMotoboyCount = function(delta) {
+  const inp = $('#map-num-motoboys');
+  if (!inp) return;
+  let val = (parseInt(inp.value, 10) || 1) + delta;
+  if (val < 1) val = 1;
+  if (val > 25) val = 25;
+  inp.value = val;
+  localStorage.setItem('explosao_num_motoboys', String(val));
+  splitRoutesEqually();
+};
 
 window.getSelectedMapOrders = function() {
   const checkboxes = document.querySelectorAll('.map-stop-checkbox:checked');
@@ -3816,58 +3842,111 @@ window.getSelectedMapOrders = function() {
   return (CURRENT_MAP_SORTED_ORDERS || []).filter(o => ids.includes(o.id));
 };
 
-window.toggleSelectAllMapStops = function(isChecked) {
+window.toggleSelectAllMapStops = function(isChecked, btnEl = null) {
+  CURRENT_SELECTED_ROUTE_LABEL = 'Todas as Entregas';
   const checkboxes = document.querySelectorAll('.map-stop-checkbox');
   checkboxes.forEach(cb => cb.checked = isChecked);
+
+  if (btnEl) {
+    const allBtns = document.querySelectorAll('#map-split-routes-buttons button');
+    allBtns.forEach(b => {
+      b.style.background = b.textContent.includes('Todas') || b.textContent.includes('Todos') ? 'rgba(255,255,255,0.1)' : '#2563eb';
+      b.style.border = '1px solid transparent';
+      b.style.boxShadow = 'none';
+    });
+    btnEl.style.background = '#7c3aed';
+    btnEl.style.border = '1.5px solid #fff';
+    btnEl.style.boxShadow = '0 2px 8px rgba(124,58,237,0.5)';
+  }
+
   updateSelectedMapRoute();
 };
 
 window.splitRoutesEqually = function() {
-  const numMotoboys = parseInt($('#map-num-motoboys')?.value || '4', 10);
+  const numMotoboys = Math.max(1, parseInt($('#map-num-motoboys')?.value || '1', 10));
+  localStorage.setItem('explosao_num_motoboys', String(numMotoboys));
   const container = $('#map-split-routes-container');
   const buttonsBox = $('#map-split-routes-buttons');
   if (!container || !buttonsBox) return;
 
   const total = (CURRENT_MAP_SORTED_ORDERS || []).length;
   if (total === 0) {
-    return adminToast('Nenhum pedido disponível para dividir.', 'warning');
+    return adminToast('Nenhum pedido disponível para criar rotas.', 'warning');
   }
 
+  // Caso tenha apenas 1 motoboy disponível hoje
+  if (numMotoboys === 1) {
+    const allIds = JSON.stringify(CURRENT_MAP_SORTED_ORDERS.map(o => o.id)).replace(/"/g, '&quot;');
+    buttonsBox.innerHTML = `
+      <button type="button" class="btn-sm" style="background:#7c3aed;color:#fff;border:1.5px solid #fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(124,58,237,0.5)" onclick="selectSpecificOrdersList(${allIds}, 'Rota Única (Todas as ${total} entregas)', this)">
+        🛵 Rota Única (Todas as ${total} entregas)
+      </button>
+    `;
+    container.style.display = 'block';
+    const activeBtn = buttonsBox.querySelector('button');
+    selectSpecificOrdersList(CURRENT_MAP_SORTED_ORDERS.map(o => o.id), 'Rota Única', activeBtn);
+    adminToast(`✓ Rota única configurada com todos os ${total} pedidos!`, 'success');
+    return;
+  }
+
+  // Divisão equilibrada para múltiplos motoboys (2, 3, 4, 5... quantos tiver!)
   const chunkSize = Math.ceil(total / numMotoboys);
   const groups = [];
   for (let i = 0; i < total; i += chunkSize) {
     groups.push(CURRENT_MAP_SORTED_ORDERS.slice(i, i + chunkSize));
   }
 
-  let html = `<button type="button" class="btn-sm" style="background:rgba(255,255,255,0.1);color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap" onclick="toggleSelectAllMapStops(true)">Todos (${total})</button>`;
-
+  let html = '';
   groups.forEach((group, idx) => {
     const routeNum = idx + 1;
     const orderIds = JSON.stringify(group.map(o => o.id)).replace(/"/g, '&quot;');
+    const isFirst = idx === 0;
     html += `
-      <button type="button" class="btn-sm" style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap" onclick="selectSpecificOrdersList(${orderIds})">
-        🛵 Rota ${routeNum} (${group.length})
+      <button type="button" class="btn-sm" style="${isFirst ? 'background:#7c3aed;color:#fff;border:1.5px solid #fff;box-shadow:0 2px 8px rgba(124,58,237,0.5)' : 'background:#2563eb;color:#fff;border:1px solid transparent'};border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap" onclick="selectSpecificOrdersList(${orderIds}, 'Rota ${routeNum}', this)">
+        🛵 Rota ${routeNum} (${group.length} entrega${group.length > 1 ? 's' : ''})
       </button>
     `;
   });
+
+  html += `
+    <button type="button" class="btn-sm" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid var(--ln);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;white-space:nowrap" onclick="toggleSelectAllMapStops(true, this)">
+      Todas (${total})
+    </button>
+  `;
 
   buttonsBox.innerHTML = html;
   container.style.display = 'block';
 
   // Seleciona a Rota 1 por padrão
   if (groups.length > 0) {
-    selectSpecificOrdersList(groups[0].map(o => o.id));
-    adminToast(`✓ Pedidos divididos em ${groups.length} rotas equilibradas!`, 'success');
+    const firstBtn = buttonsBox.querySelector('button');
+    selectSpecificOrdersList(groups[0].map(o => o.id), 'Rota 1', firstBtn);
+    adminToast(`✓ Pedidos divididos em ${groups.length} rotas para ${numMotoboys} motoboy${numMotoboys > 1 ? 's' : ''}!`, 'success');
   }
 };
 
-window.selectSpecificOrdersList = function(orderIds) {
+window.selectSpecificOrdersList = function(orderIds, routeLabel = 'Rota', btnEl = null) {
+  CURRENT_SELECTED_ROUTE_LABEL = routeLabel;
   const checkboxes = document.querySelectorAll('.map-stop-checkbox');
   checkboxes.forEach(cb => {
     cb.checked = orderIds.includes(cb.dataset.orderId);
   });
   const selectAllCb = $('#map-select-all-stops');
   if (selectAllCb) selectAllCb.checked = (orderIds.length === (CURRENT_MAP_SORTED_ORDERS || []).length);
+
+  // Destaca o botão da rota selecionada
+  if (btnEl) {
+    const allBtns = document.querySelectorAll('#map-split-routes-buttons button');
+    allBtns.forEach(b => {
+      b.style.background = (b.textContent.includes('Todas') || b.textContent.includes('Todos')) ? 'rgba(255,255,255,0.1)' : '#2563eb';
+      b.style.border = '1px solid transparent';
+      b.style.boxShadow = 'none';
+    });
+    btnEl.style.background = '#7c3aed';
+    btnEl.style.border = '1.5px solid #fff';
+    btnEl.style.boxShadow = '0 2px 8px rgba(124,58,237,0.5)';
+  }
+
   updateSelectedMapRoute();
 };
 
@@ -3878,9 +3957,10 @@ window.updateSelectedMapRoute = function() {
   const btnCopyRoute = $('#btn-copy-route-text');
   const btnDispatchRoute = $('#btn-dispatch-selected-route');
   const counterEl = $('#map-orders-counter');
+  const routeLabel = CURRENT_SELECTED_ROUTE_LABEL || 'Rota';
 
   if (counterEl) {
-    counterEl.textContent = `${selected.length} de ${CURRENT_MAP_SORTED_ORDERS.length} selecionada${selected.length === 1 ? '' : 's'}`;
+    counterEl.textContent = `${selected.length} de ${CURRENT_MAP_SORTED_ORDERS.length} (${routeLabel})`;
   }
 
   if (selected.length === 0) {
@@ -3902,11 +3982,21 @@ window.updateSelectedMapRoute = function() {
 
   if (btnGoogleRoute) {
     btnGoogleRoute.href = googleRouteUrl;
+    btnGoogleRoute.innerHTML = `🚀 Abrir ${routeLabel} no Google Maps`;
     btnGoogleRoute.style.display = 'flex';
   }
-  if (btnWppRoute) btnWppRoute.style.display = 'flex';
-  if (btnCopyRoute) btnCopyRoute.style.display = 'flex';
-  if (btnDispatchRoute) btnDispatchRoute.style.display = 'flex';
+  if (btnWppRoute) {
+    btnWppRoute.innerHTML = `📲 Enviar ${routeLabel} via WhatsApp para Entregador`;
+    btnWppRoute.style.display = 'flex';
+  }
+  if (btnCopyRoute) {
+    btnCopyRoute.innerHTML = `📋 Copiar ${routeLabel}`;
+    btnCopyRoute.style.display = 'flex';
+  }
+  if (btnDispatchRoute) {
+    btnDispatchRoute.innerHTML = `🛵 Marcar ${routeLabel} em Rota`;
+    btnDispatchRoute.style.display = 'flex';
+  }
 };
 
 window.generateRouteWhatsAppText = function(selected) {
@@ -3916,8 +4006,9 @@ window.generateRouteWhatsAppText = function(selected) {
   const now = new Date();
   const dateStr = now.toLocaleDateString('pt-BR');
   const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const routeLabel = CURRENT_SELECTED_ROUTE_LABEL || 'ROTA GERAL';
 
-  let text = `🛵 *ROTA DE ENTREGA - EXPLOSÃO AÇAÍ*\n`;
+  let text = `🛵 *${routeLabel.toUpperCase()} - EXPLOSÃO AÇAÍ*\n`;
   text += `📅 ${dateStr} às ${timeStr} · *Total: ${selected.length} entrega${selected.length > 1 ? 's' : ''}*\n\n`;
 
   const waypoints = [];
@@ -3965,20 +4056,23 @@ window.openSendRouteToMotoboyModal = function() {
     return adminToast('Selecione pelo menos um pedido para a rota.', 'warning');
   }
 
+  const routeLabel = CURRENT_SELECTED_ROUTE_LABEL || 'Rota';
   const routeText = generateRouteWhatsAppText(selected);
-  const rememberedPhone = localStorage.getItem('last_motoboy_phone') || '';
-  const phone = prompt('Digite o WhatsApp do entregador (apenas DDD e número, ou deixe em branco para escolher contato no WhatsApp):', rememberedPhone);
+  const routeKey = `last_motoboy_phone_${routeLabel.replace(/\s+/g, '_')}`;
+  const rememberedPhone = localStorage.getItem(routeKey) || localStorage.getItem('last_motoboy_phone') || '';
+  const phone = prompt(`Digite o WhatsApp do entregador responsável pela [${routeLabel}] (DDD e número, ou deixe em branco para escolher no WhatsApp):`, rememberedPhone);
   if (phone === null) return;
 
   if (phone.trim()) {
     const clean = phone.replace(/\D/g, '');
+    localStorage.setItem(routeKey, clean);
     localStorage.setItem('last_motoboy_phone', clean);
     const ddiPhone = clean.startsWith('55') ? clean : '55' + clean;
     window.open(`https://wa.me/${ddiPhone}?text=${encodeURIComponent(routeText)}`, '_blank');
   } else {
     window.open(`https://wa.me/?text=${encodeURIComponent(routeText)}`, '_blank');
   }
-  adminToast('Rota gerada com sucesso!', 'success');
+  adminToast(`✓ ${routeLabel} enviada com sucesso!`, 'success');
 };
 
 window.copyFullRouteText = function() {
@@ -3989,7 +4083,7 @@ window.copyFullRouteText = function() {
   const routeText = generateRouteWhatsAppText(selected);
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(routeText).then(() => {
-      adminToast('✓ Rota completa copiada para a área de transferência!', 'success');
+      adminToast(`✓ ${CURRENT_SELECTED_ROUTE_LABEL || 'Rota'} copiada para a área de transferência!`, 'success');
     }).catch(() => {
       prompt('Copie o texto da rota abaixo:', routeText);
     });

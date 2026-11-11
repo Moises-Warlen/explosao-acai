@@ -537,6 +537,23 @@
           <label>Texto do Banner Promocional do Topo</label>
           <input id="st-banner" value="Bem-vindo ao nosso delivery próprio! Peça direto por aqui e ganhe descontos." style="margin-bottom:18px">
 
+          <!-- Card de Resposta Automática no Chat quando Loja Fechada -->
+          <div style="margin-bottom:18px;padding:14px;background:#181028;border:1.5px solid #7c3aed;border-radius:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+              <h4 style="margin:0;font-size:13px;color:var(--y)">💬 Resposta Automática no Chat (Quando a Loja Estiver Fechada)</h4>
+              <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;font-weight:700">
+                <input type="checkbox" id="st-autoreply-closed-enabled" checked>
+                <span style="color:#a78bfa">Ativar Resposta Automática</span>
+              </label>
+            </div>
+            <p style="font-size:11px;color:var(--mut);margin-bottom:10px;line-height:1.4">
+              Quando um cliente enviar mensagem no chat enquanto a loja estiver fechada (manualmente ou fora do horário de funcionamento), o sistema responderá instantaneamente para dar retorno imediato ao cliente.
+            </p>
+            <label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">Mensagem Personalizada ao Cliente:</label>
+            <textarea id="st-autoreply-closed-msg" rows="3" style="width:100%;background:var(--card);color:#fff;border:1px solid var(--ln);border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;resize:vertical" placeholder="Olá! 🍧 Agradecemos a sua mensagem. No momento a Explosão Açaí está fechada ({horario}). Seu recado foi registrado com sucesso e responderemos assim que abrirmos nosso atendimento! Agradecemos o carinho e a preferência."></textarea>
+            <small style="color:var(--mut);font-size:10px;display:block;margin-top:4px">Dica: use <code>{horario}</code> para o sistema inserir automaticamente a informação de funcionamento.</small>
+          </div>
+
           <div style="margin-bottom:18px;padding:14px;background:#181028;border:1px solid #3b115b;border-radius:8px">
             <h4 style="margin:0 0 6px 0;font-size:13px;color:var(--y)">Notificações Automáticas via Gateway de WhatsApp (Opcional)</h4>
             <p style="font-size:11px;color:var(--mut);margin-bottom:10px">
@@ -1049,25 +1066,26 @@
             <div style="font-size:11px;color:var(--mut)">Rua Renato Lourenço F. Rosa, 1721 · Aeroporto 3</div>
           </div>
 
-          <!-- Divisão Automática de Rotas por Número de Motoboys -->
-          <div style="background:rgba(255,255,255,0.04);border:1px solid var(--ln);border-radius:10px;padding:8px 10px;margin-bottom:10px">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
-              <span style="font-size:11px;font-weight:700;color:var(--y)">⚡ Dividir entre Motoboys:</span>
+          <!-- Divisão Flexível de Rotas por Quantidade de Motoboys Disponíveis -->
+          <div style="background:rgba(255,255,255,0.04);border:1px solid var(--ln);border-radius:10px;padding:10px;margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap">
+              <div style="display:flex;flex-direction:column">
+                <span style="font-size:12px;font-weight:700;color:var(--y)">🛵 Quantos Motoboys estão trabalhando?</span>
+                <small style="font-size:10px;color:var(--mut)">Use 1, 2, 3 ou quantos entregadores tiver</small>
+              </div>
               <div style="display:flex;align-items:center;gap:4px">
-                <select id="map-num-motoboys" style="background:var(--card);color:#fff;border:1px solid var(--ln);border-radius:6px;padding:3px 6px;font-size:12px;font-weight:700">
-                  <option value="2">2 Motoboys</option>
-                  <option value="3">3 Motoboys</option>
-                  <option value="4" selected>4 Motoboys</option>
-                  <option value="5">5 Motoboys</option>
-                  <option value="6">6 Motoboys</option>
-                </select>
-                <button type="button" class="btn-sm" style="background:#7c3aed;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer" onclick="splitRoutesEqually()">
-                  Gerar
+                <button type="button" class="btn-sm" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid var(--ln);border-radius:6px;padding:4px 9px;font-size:13px;font-weight:700;cursor:pointer" onclick="changeMotoboyCount(-1)" title="Diminuir motoboy">−</button>
+                <input type="number" id="map-num-motoboys" min="1" max="25" value="1" style="width:48px;text-align:center;background:var(--card);color:#fff;border:1.5px solid var(--ln);border-radius:6px;padding:4px 2px;font-size:13px;font-weight:800" onchange="splitRoutesEqually()">
+                <button type="button" class="btn-sm" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid var(--ln);border-radius:6px;padding:4px 9px;font-size:13px;font-weight:700;cursor:pointer" onclick="changeMotoboyCount(1)" title="Aumentar motoboy">+</button>
+                <button type="button" class="btn-sm" style="background:#7c3aed;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:4px;box-shadow:0 2px 8px rgba(124,58,237,0.4)" onclick="splitRoutesEqually()">
+                  ⚡ Gerar Rotas
                 </button>
               </div>
             </div>
-            <div id="map-split-routes-container" style="display:none;margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08)">
-              <div id="map-split-routes-buttons" style="display:flex;gap:4px;overflow-x:auto;padding-bottom:4px"></div>
+            <!-- Abas das Rotas Geradas -->
+            <div id="map-split-routes-container" style="display:none;margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08)">
+              <div style="font-size:11px;font-weight:600;color:var(--mut);margin-bottom:6px">Clique na rota para visualizar e enviar ao entregador:</div>
+              <div id="map-split-routes-buttons" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;flex-wrap:wrap"></div>
             </div>
           </div>
 

@@ -410,4 +410,64 @@ describe('Explosão Açaí - Testes das Novas Funcionalidades', () => {
     assert.strictEqual(returnedOrderInReport.isReturned, true);
     assert.strictEqual(returnedOrderInReport.returnReason, returnReason);
   });
+
+  test('Resposta Automática no Chat quando a Loja estiver Fechada', async () => {
+    const authHeaders = {
+      'Authorization': 'Bearer RafaeLL@2',
+      'Content-Type': 'application/json'
+    };
+
+    // 1. Força a loja a ficar FECHADA
+    const toggleCloseRes = await fetch(`${baseUrl}/api/store/toggle-status`, {
+      method: 'POST',
+      headers: authHeaders,
+      body: JSON.stringify({ forceStatus: false })
+    });
+    const toggleCloseData = await toggleCloseRes.json();
+    assert.strictEqual(toggleCloseData.isOpen, false, 'Loja deve estar fechada para o teste');
+
+    // 2. Garante que resposta automática está ativada nas configurações
+    await fetch(`${baseUrl}/api/store/settings`, {
+      method: 'PUT',
+      headers: authHeaders,
+      body: JSON.stringify({
+        autoReplyClosedEnabled: true,
+        autoReplyClosedMessage: 'Olá! A loja está fechada agora. Responderemos em breve.'
+      })
+    });
+
+    const testPhone = '16999998877';
+    // 3. Cliente envia mensagem no chat
+    const sendRes = await fetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sender: 'customer',
+        customerPhone: testPhone,
+        customerName: 'Cliente Noturno',
+        message: 'Olá, ainda estão aceitando pedidos hoje?'
+      })
+    });
+    const sendData = await sendRes.json();
+    assert.strictEqual(sendRes.status, 201);
+    assert.strictEqual(sendData.ok, true);
+
+    // 4. Consulta a conversa do cliente para verificar se recebeu a auto-resposta
+    const chatRes = await fetch(`${baseUrl}/api/chat?phone=${testPhone}`);
+    const chatData = await chatRes.json();
+    assert.strictEqual(chatData.ok, true);
+    assert.ok(chatData.messages.length >= 2, 'Deve conter a mensagem do cliente e a auto-resposta');
+
+    const autoReplyMsg = chatData.messages.find(m => m.isAutoReply === true);
+    assert.ok(autoReplyMsg, 'Deve existir uma mensagem com isAutoReply: true');
+    assert.strictEqual(autoReplyMsg.sender, 'admin');
+    assert.ok(autoReplyMsg.message.includes('fechada'), 'A mensagem deve indicar que a loja está fechada');
+
+    // 5. Reabre a loja ao final do teste
+    await fetch(`${baseUrl}/api/store/toggle-status`, {
+      method: 'POST',
+      headers: authHeaders,
+      body: JSON.stringify({ forceStatus: true })
+    });
+  });
 });

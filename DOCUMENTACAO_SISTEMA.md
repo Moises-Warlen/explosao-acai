@@ -134,13 +134,15 @@ Solução completa para despacho eficiente de entregadores e roteirização:
 
 ### 🗺️ Roteirizador Multi-Paradas (No Painel Admin)
 - **Visualização no Mapa:** todos os pedidos prontos para entrega são plotados no mapa com seus endereços e dados.
-- **Divisão Balanceada entre Motoboys:**
-  - Botão seletor `[ 2, 3, 4, 5, 6 Motoboys ]` ➔ clica em **Gerar Divisão** e o sistema fatia os pedidos igualmente entre as rotas disponíveis (`Rota 1`, `Rota 2`, etc.).
-  - Opção de **Seleção Manual** via caixas de seleção em cada parada.
-- **Disparo da Rota para o WhatsApp do Motoboy:**
-  - Gera uma mensagem estruturada com a sequência de paradas, nome do cliente, endereço completo, pontos de referência, valor a receber e troco.
-  - Link multi-paradas do **Google Maps** pronto para o motoboy iniciar o GPS de todas as entregas na sequência ideal.
-- **Atualização em Massa:** botão `🛵 Marcar em Rota` que move todos os pedidos selecionados para "Saiu para Entrega" simultaneamente.
+- **Quantidade Flexível de Motoboys (1 até quantos você tiver):**
+  - Não fica fixo em 4 motoboys: selecione **1 motoboy** (rota única com todas as entregas) ou **2, 3, 4, 5, 6 ou mais motoboys** usando os botões `+` e `−` ou digitando o número exato de entregadores disponíveis hoje.
+  - Ao clicar em **⚡ Gerar Rotas**, o sistema fatia os pedidos igualmente entre as rotas disponíveis (`Rota 1`, `Rota 2`, etc.).
+  - Opção de **Seleção Manual** via caixas de seleção em cada parada para ajustes finos.
+- **Como a Rota é Passada para o Motoboy:**
+  - Gera uma mensagem estruturada com a sequência numerada de paradas, nome do cliente, telefone, endereço completo, **ponto de referência em destaque**, valor a receber e troco.
+  - Links individuais para a tela mobile do motoboy (com navegação de 1 toque no **Waze** e **Google Maps**).
+  - **Link Multi-Paradas do Google Maps:** o motoboy clica no link e o GPS já abre com a rota completa traçada de parada em parada.
+- **Atualização em Massa:** botão `🛵 Marcar Rota em Entrega` que move todos os pedidos daquela rota para "Saiu para Entrega" simultaneamente.
 
 ### 📱 Tela Exclusiva do Motoboy (`public/motoboy.html`)
 - Interface leve e de alto contraste otimizada para uso em suporte de moto com luz solar:
@@ -164,6 +166,7 @@ Atendimento humanizado e instantâneo integrado dentro da própria aplicação:
   - `🛵 Saiu p/ Entrega` ➔ *"Seu pedido acabou de sair com nosso entregador!"*
   - `🏪 Pronto no Balcão` ➔ *"Seu pedido está pronto para retirada no balcão!"*
   - `⭐ Agradecimento` ➔ *"Agradecemos a preferência! Bom apetite!"*
+- **Resposta Automática com Loja Fechada:** quando a loja estiver fechada (manualmente ou fora do expediente), qualquer mensagem de cliente recebe uma resposta automática imediata e acolhedora com os horários e confirmação de que o recado foi anotado, sem deixar o cliente no vácuo. Configurável na Aba 9 do painel.
 - **Avisos Sonoros e Visuais:** som discreto de notificação a cada nova mensagem e piscar dinâmico no título da aba do navegador (`💬 Nova mensagem de [Cliente]!`).
 
 ---
