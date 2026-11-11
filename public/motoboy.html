@@ -287,9 +287,21 @@
         <div style="font-size:16px;font-weight:700;margin-top:4px" id="delivery-address">Carregando endereço...</div>
         <div style="font-size:13px;color:var(--mut);margin-top:2px" id="delivery-details">Bairro · Distância</div>
 
-        <a id="btn-maps" href="#" target="_blank" class="btn btn-maps">
-          📍 Abrir Rota no Google Maps / Waze
-        </a>
+        <div id="delivery-reference-box" style="display:none;background:#78350f;color:#fef08a;border:1.5px solid var(--y);border-radius:10px;padding:8px 12px;font-size:13px;font-weight:700;margin-top:8px">
+          📍 <span id="delivery-reference-text"></span>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <a id="btn-maps" href="#" target="_blank" class="btn btn-maps" style="flex:1;min-width:130px;margin-top:0">
+            📍 Google Maps
+          </a>
+          <a id="btn-waze" href="#" target="_blank" class="btn" style="flex:1;min-width:130px;background:#059669;color:#fff;margin-top:0;display:flex;align-items:center;justify-content:center;gap:6px">
+            🚗 Waze
+          </a>
+        </div>
+        <button id="btn-copy-address" type="button" class="btn" style="background:rgba(255,255,255,0.08);color:#fff;border:1px solid var(--ln);font-size:13px;padding:10px;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:6px" onclick="copyFullDeliveryAddress()">
+          📋 Copiar Endereço Completo
+        </button>
       </div>
 
       <!-- Forma de Cobrança / Pagamento -->
@@ -357,6 +369,23 @@
       t.style.background = isSuccess ? '#10b981' : '#ef4444';
       t.style.display = 'block';
       setTimeout(() => { t.style.display = 'none'; }, 4000);
+    }
+
+    function copyFullDeliveryAddress() {
+      const addr = document.getElementById('delivery-address')?.textContent || '';
+      const det = document.getElementById('delivery-details')?.textContent || '';
+      const refEl = document.getElementById('delivery-reference-text');
+      const ref = (refEl && refEl.textContent) ? ' · ' + refEl.textContent : '';
+      const textToCopy = `${addr}, ${det}${ref}`;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          showMotoboyToast('✓ Endereço copiado para a área de transferência!', true);
+        }).catch(() => {
+          showMotoboyToast('Endereço: ' + textToCopy, true);
+        });
+      } else {
+        showMotoboyToast('Endereço: ' + textToCopy, true);
+      }
     }
 
     function openMotoboyConfirmModal() {
@@ -478,9 +507,23 @@
       document.getElementById('delivery-address').textContent = fullAddr || 'Retirada no balcão';
       document.getElementById('delivery-details').textContent = `${del.bairro || ''} · ${del.km ? del.km.toFixed(1) + ' km da loja' : ''}`;
 
+      // Ponto de Referência destacado
+      const refBox = document.getElementById('delivery-reference-box');
+      const refText = document.getElementById('delivery-reference-text');
+      if (del.reference && del.reference.trim()) {
+        if (refBox) refBox.style.display = 'block';
+        if (refText) refText.textContent = `Referência: ${del.reference.trim()}`;
+      } else {
+        if (refBox) refBox.style.display = 'none';
+      }
+
       // Google Maps / Waze
       const mapsQuery = encodeURIComponent(`${fullAddr}, ${del.bairro || ''}, Franca - SP`);
       document.getElementById('btn-maps').href = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`;
+      const btnWaze = document.getElementById('btn-waze');
+      if (btnWaze) {
+        btnWaze.href = `https://waze.com/ul?q=${mapsQuery}&navigate=yes`;
+      }
 
       // Total
       document.getElementById('order-total').textContent = R(order.total);

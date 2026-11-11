@@ -603,6 +603,11 @@
                 <div style="font-size:12px;color:var(--mut)" id="active-chat-phone"></div>
               </div>
 
+              <!-- Resumo do Pedido Ativo do Cliente -->
+              <div id="chat-customer-active-order" style="display:none;background:rgba(124,58,237,0.18);border:1px solid rgba(168,85,247,0.4);border-radius:10px;padding:6px 12px;font-size:12px;color:#e9d5ff;max-width:380px;line-height:1.3">
+                <span id="chat-order-summary-text"></span>
+              </div>
+
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                 <div style="display:flex;align-items:center;gap:6px;background:var(--card);padding:4px 8px;border-radius:8px;border:1px solid var(--ln)">
                   <span style="font-size:11px;color:var(--mut)">Atendente:</span>
@@ -615,6 +620,15 @@
 
             <div id="admin-chat-messages">
               <p style="text-align:center;color:var(--mut);margin:auto">Selecione uma conversa ao lado para responder o cliente.</p>
+            </div>
+
+            <!-- Atalhos de Resposta Rápida (1 Clique) -->
+            <div id="admin-chat-quick-replies" style="display:flex;gap:6px;padding:6px 12px;background:rgba(255,255,255,0.03);border-top:1px solid var(--ln);overflow-x:auto;white-space:nowrap;align-items:center">
+              <span style="font-size:11px;color:var(--mut);flex-shrink:0">⚡ Resposta Rápida:</span>
+              <button type="button" class="btn-sm" style="background:#7c3aed;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;flex-shrink:0" onclick="insertQuickReply('🍧 Olá! Seu pedido já está sendo preparado com muito capricho.')">🍧 Em Preparo</button>
+              <button type="button" class="btn-sm" style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;flex-shrink:0" onclick="insertQuickReply('🛵 O motoboy acabou de sair para entrega! Em instantes chega até você.')">🛵 Saiu p/ Entrega</button>
+              <button type="button" class="btn-sm" style="background:#059669;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;flex-shrink:0" onclick="insertQuickReply('🏪 Seu pedido já está pronto no balcão para retirada!')">🏪 Pronto no Balcão</button>
+              <button type="button" class="btn-sm" style="background:#d97706;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;flex-shrink:0" onclick="insertQuickReply('⭐ Agradecemos a preferência! Bom apetite! 🥰')">⭐ Agradecimento</button>
             </div>
 
             <div class="admin-chat-input-row">
@@ -1035,10 +1049,30 @@
             <div style="font-size:11px;color:var(--mut)">Rua Renato Lourenço F. Rosa, 1721 · Aeroporto 3</div>
           </div>
 
-          <!-- Botão de Rota Completa no Google Maps -->
-          <a id="btn-full-google-route" href="#" target="_blank" class="btn-sm" style="display:none;align-items:center;justify-content:center;gap:6px;background:#2563eb;color:#fff;font-weight:700;padding:10px;border-radius:10px;margin-bottom:12px;text-decoration:none;font-size:12px;text-align:center">
-            🚀 Abrir Rota Completa no Google Maps
-          </a>
+          <!-- Botão de Rota Completa no Google Maps e Despacho de Rota -->
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+            <a id="btn-full-google-route" href="#" target="_blank" class="btn-sm" style="display:none;align-items:center;justify-content:center;gap:6px;background:#2563eb;color:#fff;font-weight:700;padding:10px;border-radius:10px;text-decoration:none;font-size:12px;text-align:center">
+              🚀 Abrir Trajeto no Google Maps
+            </a>
+            <button id="btn-wpp-send-route" type="button" class="btn-sm" style="display:none;align-items:center;justify-content:center;gap:6px;background:#059669;color:#fff;font-weight:700;padding:10px;border-radius:10px;border:none;cursor:pointer;font-size:12px" onclick="openSendRouteToMotoboyModal()">
+              📲 Enviar Rota via WhatsApp para Entregador
+            </button>
+            <div style="display:flex;gap:6px">
+              <button id="btn-copy-route-text" type="button" class="btn-sm" style="flex:1;display:none;align-items:center;justify-content:center;gap:4px;background:rgba(255,255,255,0.08);color:#fff;font-weight:600;padding:8px;border-radius:8px;border:1px solid var(--ln);cursor:pointer;font-size:11px" onclick="copyFullRouteText()">
+                📋 Copiar Rota
+              </button>
+              <button id="btn-dispatch-selected-route" type="button" class="btn-sm" style="flex:1;display:none;align-items:center;justify-content:center;gap:4px;background:#7c3aed;color:#fff;font-weight:600;padding:8px;border-radius:8px;border:none;cursor:pointer;font-size:11px" onclick="dispatchSelectedOrdersRoute()">
+                🛵 Marcar em Rota
+              </button>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 2px;font-size:11px;color:var(--mut)">
+              <span>Selecione as paradas da viagem:</span>
+              <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer">
+                <input type="checkbox" id="map-select-all-stops" checked onchange="toggleSelectAllMapStops(this.checked)">
+                <span>Todos</span>
+              </label>
+            </div>
+          </div>
 
           <!-- Lista de Paradas / Pedidos -->
           <div id="map-stops-list" style="display:flex;flex-direction:column;gap:8px;flex:1"></div>

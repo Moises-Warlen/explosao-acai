@@ -46,6 +46,24 @@ function playNotificationChime() {
   } catch (e) {}
 }
 
+let TITLE_FLASH_TIMER = null;
+function flashPageTitle(message) {
+  const originalTitle = 'Explosão Açaí Painel admin';
+  if (TITLE_FLASH_TIMER) clearInterval(TITLE_FLASH_TIMER);
+  let showMessage = true;
+  let count = 0;
+  TITLE_FLASH_TIMER = setInterval(() => {
+    document.title = showMessage ? message : originalTitle;
+    showMessage = !showMessage;
+    count++;
+    if (count >= 10) {
+      clearInterval(TITLE_FLASH_TIMER);
+      TITLE_FLASH_TIMER = null;
+      document.title = originalTitle;
+    }
+  }, 1000);
+}
+
 // Helpers Utilitários
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => document.querySelectorAll(s);
@@ -237,6 +255,7 @@ function initWebSocket() {
         }
         if (data.event === 'CHAT_MESSAGE') {
           playNotificationChime();
+          flashPageTitle(`💬 Nova mensagem de ${data.payload.senderName || 'Cliente'}!`);
           loadChatConversations();
           if (ACTIVE_CHAT_PHONE === data.payload.customerPhone) {
             loadChatMessages(ACTIVE_CHAT_PHONE);
@@ -914,8 +933,9 @@ function createOrderCardHtml(order, isHistory = false) {
       </div>
 
       ${isDelivery ? `
-        <div style="font-size:12px;color:var(--mut)">
-          Entrega: ${esc(order.delivery.street)}, ${esc(order.delivery.number)} — ${esc(order.delivery.bairro)} (${(order.delivery.km || 0).toFixed(1)} km)
+        <div style="font-size:12px;color:var(--mut);display:flex;align-items:center;justify-content:space-between;gap:6px">
+          <span>Entrega: ${esc(order.delivery.street)}, ${esc(order.delivery.number)} — ${esc(order.delivery.bairro)} (${(order.delivery.km || 0).toFixed(1)} km)</span>
+          <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${order.delivery.street || ''}, ${order.delivery.number || ''}, ${order.delivery.bairro || ''}, Franca - SP`)}" target="_blank" title="Abrir localização no Google Maps" style="color:#60a5fa;text-decoration:none;font-size:13px;padding:1px 5px;border-radius:4px;background:rgba(96,165,250,0.15);flex-shrink:0">📍 Mapa</a>
         </div>
       ` : `
         <div style="font-size:12px;color:var(--y);font-weight:700">📍 Retirada no Balcão da Loja</div>
@@ -3233,12 +3253,65 @@ window.selectChat = function(phone, name) {
     inp.focus();
   }
   renderChatConversationsList();
+  renderChatActiveOrderSummary(phone);
   loadChatMessages(phone);
 
   if (window.innerWidth <= 768) {
     const chatWin = $('.admin-chat-window');
     if (chatWin) chatWin.scrollIntoView({ behavior: 'smooth' });
   }
+};
+
+window.renderChatActiveOrderSummary = function(phone) {
+  const container = $('#chat-customer-active-order');
+  const textEl = $('#chat-order-summary-text');
+  if (!container || !textEl) return;
+
+  const cleanPhone = String(phone || '').replace(/\D/g, '');
+  if (!cleanPhone || cleanPhone.length < 8) {
+    container.style.display = 'none';
+    return;
+  }
+
+  // Localiza pedido recente do cliente
+  const order = (ORDERS || []).find(o => {
+    const op = String(o.customer?.phone || '').replace(/\D/g, '');
+    const isActive = o.status !== 'delivered' && o.status !== 'cancelled' && o.status !== 'returned';
+    return isActive && (op.endsWith(cleanPhone) || cleanPhone.endsWith(op));
+  }) || (ORDERS || []).find(o => {
+    const op = String(o.customer?.phone || '').replace(/\D/g, '');
+    return op && (op.endsWith(cleanPhone) || cleanPhone.endsWith(op));
+  });
+
+  if (!order) {
+    container.style.display = 'none';
+    return;
+  }
+
+  const statusMap = {
+    received: '📥 Recebido',
+    preparing: '🍧 Em Preparo',
+    ready: order.delivery?.type === 'pickup' ? '🏪 Pronto no Balcão' : '🛵 Pronto / Saiu',
+    out_for_delivery: '🛵 Saiu para Entrega',
+    delivered: '✅ Entregue',
+    cancelled: '❌ Cancelado',
+    returned: '↩ Devolvido'
+  };
+  const stText = statusMap[order.status] || order.status;
+  const itemsText = (order.items || []).map(i => `${i.quantity}x ${i.name}`).join(', ');
+
+  textEl.innerHTML = `
+    <b>Pedido #${order.orderNo}</b> (${stText}) · <b>${R(order.total)}</b><br>
+    <span style="opacity:0.85">${esc(itemsText)} · ${order.delivery?.type === 'pickup' ? 'Retirada' : esc(order.delivery?.bairro || 'Entrega')}</span>
+  `;
+  container.style.display = 'block';
+};
+
+window.insertQuickReply = function(text) {
+  const inp = $('#admin-chat-input');
+  if (!inp) return;
+  inp.value = text;
+  inp.focus();
 };
 
 async function loadChatMessages(phone) {
@@ -3641,6 +3714,7 @@ window.renderDeliveryMapMarkers = function() {
   }
 
   const sortedOrders = [...deliveryOrders].sort((a, b) => (a.freight || 0) - (b.freight || 0));
+  CURRENT_MAP_SORTED_ORDERS = sortedOrders;
 
   let stopsHtml = '';
   const waypoints = [];
@@ -3656,7 +3730,7 @@ window.renderDeliveryMapMarkers = function() {
     waypoints.push(fullAddress);
 
     const googleMapsSingleUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
-    const wazeSingleUrl = `https://waze.com/ul?q=${encodeURIComponent(fullAddress)}`;
+    const wazeSingleUrl = `https://waze.com/ul?q=${encodeURIComponent(fullAddress)}&navigate=yes`;
 
     const statusBadgeColor = order.status === 'ready' || order.status === 'out_for_delivery'
       ? '#3b82f6'
@@ -3699,13 +3773,17 @@ window.renderDeliveryMapMarkers = function() {
     stopsHtml += `
       <div style="background:rgba(255,255,255,0.05);border:1px solid var(--ln);border-radius:10px;padding:10px;transition:0.2s">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="background:${statusBadgeColor};color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:12px">
-            Parada ${stopNumber} · Pedido #${order.orderNo}
-          </span>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="checkbox" class="map-stop-checkbox" data-order-id="${order.id}" checked onchange="updateSelectedMapRoute()">
+            <span style="background:${statusBadgeColor};color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:12px">
+              Parada ${stopNumber} · Pedido #${order.orderNo}
+            </span>
+          </label>
           <b style="font-size:12px;color:var(--y)">${R(order.total)}</b>
         </div>
-        <div style="font-size:12px;font-weight:700;color:#fff;margin-top:4px">${esc(order.customer?.name || 'Cliente')}</div>
+        <div style="font-size:12px;font-weight:700;color:#fff;margin-top:6px">${esc(order.customer?.name || 'Cliente')}</div>
         <div style="font-size:11px;color:var(--mut);line-height:1.3;margin-top:2px">${esc(fullAddress)}</div>
+        ${del.reference ? `<div style="font-size:11px;color:#fef08a;margin-top:2px">Ref: ${esc(del.reference)}</div>` : ''}
         <div style="display:flex;gap:6px;margin-top:8px">
           <a href="${googleMapsSingleUrl}" target="_blank" style="flex:1;background:#1e40af;color:#fff;text-align:center;padding:4px 6px;border-radius:6px;text-decoration:none;font-size:11px;font-weight:700">📍 Google Maps</a>
           <a href="${wazeSingleUrl}" target="_blank" style="flex:1;background:#047857;color:#fff;text-align:center;padding:4px 6px;border-radius:6px;text-decoration:none;font-size:11px;font-weight:700">🚗 Waze</a>
@@ -3727,12 +3805,174 @@ window.renderDeliveryMapMarkers = function() {
   }
 
   DELIVERY_MAP.fitBounds(bounds, { padding: [40, 40] });
+  updateSelectedMapRoute();
+};
 
-  if (btnGoogleRoute && waypoints.length > 0) {
+let CURRENT_MAP_SORTED_ORDERS = [];
+
+window.getSelectedMapOrders = function() {
+  const checkboxes = document.querySelectorAll('.map-stop-checkbox:checked');
+  const ids = Array.from(checkboxes).map(cb => cb.dataset.orderId);
+  return (CURRENT_MAP_SORTED_ORDERS || []).filter(o => ids.includes(o.id));
+};
+
+window.toggleSelectAllMapStops = function(isChecked) {
+  const checkboxes = document.querySelectorAll('.map-stop-checkbox');
+  checkboxes.forEach(cb => cb.checked = isChecked);
+  updateSelectedMapRoute();
+};
+
+window.updateSelectedMapRoute = function() {
+  const selected = getSelectedMapOrders();
+  const btnGoogleRoute = $('#btn-full-google-route');
+  const btnWppRoute = $('#btn-wpp-send-route');
+  const btnCopyRoute = $('#btn-copy-route-text');
+  const btnDispatchRoute = $('#btn-dispatch-selected-route');
+  const counterEl = $('#map-orders-counter');
+
+  if (counterEl) {
+    counterEl.textContent = `${selected.length} de ${CURRENT_MAP_SORTED_ORDERS.length} selecionada${selected.length === 1 ? '' : 's'}`;
+  }
+
+  if (selected.length === 0) {
+    if (btnGoogleRoute) btnGoogleRoute.style.display = 'none';
+    if (btnWppRoute) btnWppRoute.style.display = 'none';
+    if (btnCopyRoute) btnCopyRoute.style.display = 'none';
+    if (btnDispatchRoute) btnDispatchRoute.style.display = 'none';
+    return;
+  }
+
+  const waypoints = selected.map(order => {
+    const del = order.delivery || {};
+    return `${del.street || 'Rua'}, ${del.number || 'S/N'}, ${del.bairro || 'Bairro'}, Franca - SP`;
+  });
+
+  const lastStop = waypoints[waypoints.length - 1];
+  const intermediate = waypoints.slice(0, waypoints.length - 1);
+  const googleRouteUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(STORE_COORDINATES.address)}&destination=${encodeURIComponent(lastStop)}${intermediate.length > 0 ? `&waypoints=${encodeURIComponent(intermediate.join('|'))}` : ''}&travelmode=driving`;
+
+  if (btnGoogleRoute) {
+    btnGoogleRoute.href = googleRouteUrl;
+    btnGoogleRoute.style.display = 'flex';
+  }
+  if (btnWppRoute) btnWppRoute.style.display = 'flex';
+  if (btnCopyRoute) btnCopyRoute.style.display = 'flex';
+  if (btnDispatchRoute) btnDispatchRoute.style.display = 'flex';
+};
+
+window.generateRouteWhatsAppText = function(selected) {
+  if (!selected || selected.length === 0) return '';
+
+  const originUrl = window.location.origin;
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('pt-BR');
+  const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+  let text = `🛵 *ROTA DE ENTREGA - EXPLOSÃO AÇAÍ*\n`;
+  text += `📅 ${dateStr} às ${timeStr} · *Total: ${selected.length} entrega${selected.length > 1 ? 's' : ''}*\n\n`;
+
+  const waypoints = [];
+  selected.forEach((order, idx) => {
+    const del = order.delivery || {};
+    const fullAddress = `${del.street || 'Rua'}, ${del.number || 'S/N'}${del.complement ? ' - ' + del.complement : ''}, ${del.bairro || 'Bairro'}`;
+    waypoints.push(`${fullAddress}, Franca - SP`);
+
+    const isMoney = order.payment?.method === 'Dinheiro';
+    const isDeliveryPayment = order.payment?.timing === 'delivery' || isMoney;
+    const isApproved = order.payment?.status === 'approved';
+
+    let payStr = '';
+    if (isDeliveryPayment) {
+      if (isMoney) {
+        payStr = `💵 Receber em Dinheiro: ${R(order.total)}${order.payment?.trocoValue > 0 ? ` (Levar troco de ${R(order.payment.trocoValue)})` : ''}`;
+      } else {
+        payStr = `💳 Passar na Maquininha: ${R(order.total)} (${order.payment?.method || 'Cartão'})`;
+      }
+    } else {
+      payStr = isApproved ? `✅ JÁ PAGO ONLINE (${order.payment?.method || 'PIX'}) - NÃO COBRAR` : `⏳ Cobrança: ${R(order.total)}`;
+    }
+
+    text += `${idx + 1}️⃣ *Parada ${idx + 1} · Pedido #${order.orderNo}*\n`;
+    text += `👤 *Cliente:* ${order.customer?.name || 'Cliente'}\n`;
+    text += `📍 *Endereço:* ${fullAddress}\n`;
+    if (del.reference) text += `📌 *Ref:* ${del.reference}\n`;
+    text += `💰 *Pagamento:* ${payStr}\n`;
+    text += `📲 *Link da Entrega:* ${originUrl}/motoboy?orderId=${order.id}&orderNo=${order.orderNo}&cliente=${encodeURIComponent(order.customer?.name || '')}\n\n`;
+  });
+
+  if (waypoints.length > 0) {
     const lastStop = waypoints[waypoints.length - 1];
     const intermediate = waypoints.slice(0, waypoints.length - 1);
     const googleRouteUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(STORE_COORDINATES.address)}&destination=${encodeURIComponent(lastStop)}${intermediate.length > 0 ? `&waypoints=${encodeURIComponent(intermediate.join('|'))}` : ''}&travelmode=driving`;
-    btnGoogleRoute.href = googleRouteUrl;
-    btnGoogleRoute.style.display = 'flex';
+    text += `🗺️ *ABRIR ROTA MULTI-PARADAS NO GPS:*\n${googleRouteUrl}\n`;
+  }
+
+  return text;
+};
+
+window.openSendRouteToMotoboyModal = function() {
+  const selected = getSelectedMapOrders();
+  if (selected.length === 0) {
+    return adminToast('Selecione pelo menos um pedido para a rota.', 'warning');
+  }
+
+  const routeText = generateRouteWhatsAppText(selected);
+  const rememberedPhone = localStorage.getItem('last_motoboy_phone') || '';
+  const phone = prompt('Digite o WhatsApp do entregador (apenas DDD e número, ou deixe em branco para escolher contato no WhatsApp):', rememberedPhone);
+  if (phone === null) return;
+
+  if (phone.trim()) {
+    const clean = phone.replace(/\D/g, '');
+    localStorage.setItem('last_motoboy_phone', clean);
+    const ddiPhone = clean.startsWith('55') ? clean : '55' + clean;
+    window.open(`https://wa.me/${ddiPhone}?text=${encodeURIComponent(routeText)}`, '_blank');
+  } else {
+    window.open(`https://wa.me/?text=${encodeURIComponent(routeText)}`, '_blank');
+  }
+  adminToast('Rota gerada com sucesso!', 'success');
+};
+
+window.copyFullRouteText = function() {
+  const selected = getSelectedMapOrders();
+  if (selected.length === 0) {
+    return adminToast('Nenhum pedido selecionado.', 'warning');
+  }
+  const routeText = generateRouteWhatsAppText(selected);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(routeText).then(() => {
+      adminToast('✓ Rota completa copiada para a área de transferência!', 'success');
+    }).catch(() => {
+      prompt('Copie o texto da rota abaixo:', routeText);
+    });
+  } else {
+    prompt('Copie o texto da rota abaixo:', routeText);
+  }
+};
+
+window.dispatchSelectedOrdersRoute = async function() {
+  const selected = getSelectedMapOrders();
+  if (selected.length === 0) {
+    return adminToast('Nenhum pedido selecionado.', 'warning');
+  }
+
+  const toDispatch = selected.filter(o => o.status !== 'delivered' && o.status !== 'out_for_delivery');
+  if (toDispatch.length === 0) {
+    return adminToast('Os pedidos selecionados já estão em rota ou entregues.', 'info');
+  }
+
+  try {
+    for (const order of toDispatch) {
+      await fetch(`${API_URL}/orders/${order.id}/status`, {
+        method: 'PATCH',
+        headers: authHeaders(),
+        body: JSON.stringify({ status: 'out_for_delivery' })
+      });
+      order.status = 'out_for_delivery';
+    }
+    adminToast(`✓ ${toDispatch.length} pedido(s) despachado(s) para entrega!`, 'success');
+    await loadOrders();
+    renderDeliveryMapMarkers();
+  } catch (e) {
+    adminToast('Erro ao atualizar status dos pedidos.', 'danger');
   }
 };
