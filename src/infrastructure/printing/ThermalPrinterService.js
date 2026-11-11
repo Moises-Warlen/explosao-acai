@@ -172,7 +172,7 @@ export class ThermalPrinterService {
     lines.push(center('Explosão Açaí · Delivery Oficial'));
     lines.push(center('Franca/SP · WhatsApp: (16) 99109-8863'));
     lines.push(center('Agradecemos a sua preferência!'));
-    lines.push('\n\n\n');
+    lines.push('');
 
     return lines.join('\n');
   }

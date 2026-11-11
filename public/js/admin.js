@@ -678,8 +678,37 @@ function createOrderCardHtml(order, isHistory = false) {
     }
   }
 
-  // Botões de WhatsApp: apenas nas colunas Novos Pedidos e Em Preparo
-  const showWppButton = !isHistory && (order.status === 'received' || order.status === 'preparing');
+  // Botões de WhatsApp: permitidos em Novos Pedidos, Em Preparo, Pronto/Saiu para Entrega e Entregues Hoje
+  // Bloqueados: Cancelados, Devolvidos à Loja e Histórico Concluído
+  const showWppButton = !isHistory && (
+    order.status === 'received' ||
+    order.status === 'preparing' ||
+    order.status === 'ready' ||
+    order.status === 'out_for_delivery' ||
+    order.status === 'delivered'
+  );
+
+  let wppBtnTextMin = '💬 Zap';
+  let wppBtnTitleMin = 'Avisar cliente no WhatsApp';
+  let wppBtnTextExp = '💬 Avisar no Zap';
+  let wppBtnTitleExp = 'Enviar atualização de status do pedido para o WhatsApp do cliente';
+
+  if (order.status === 'delivered') {
+    wppBtnTextMin = '💬 Agradecer';
+    wppBtnTitleMin = 'Enviar mensagem de agradecimento no WhatsApp';
+    wppBtnTextExp = '💬 Agradecer';
+    wppBtnTitleExp = 'Enviar mensagem de agradecimento no WhatsApp';
+  } else if (order.status === 'out_for_delivery' || (order.status === 'ready' && isDelivery)) {
+    wppBtnTextMin = '💬 Saiu Entrega';
+    wppBtnTitleMin = 'Avisar cliente que o pedido saiu para entrega';
+    wppBtnTextExp = '💬 Avisar Entrega';
+    wppBtnTitleExp = 'Avisar cliente que o pedido saiu para entrega';
+  } else if (order.status === 'ready' && !isDelivery) {
+    wppBtnTextMin = '💬 Pedido Pronto';
+    wppBtnTitleMin = 'Avisar cliente que o pedido está pronto para retirada';
+    wppBtnTextExp = '💬 Avisar Retirada';
+    wppBtnTitleExp = 'Avisar cliente que o pedido está pronto para retirada';
+  }
 
   // ================= CARTÕES MINIMIZADOS (PADRÃO PARA TODAS AS COLUNAS) =================
   if (!EXPANDED_ORDERS.has(order.id)) {
@@ -722,8 +751,8 @@ function createOrderCardHtml(order, isHistory = false) {
           <div>${statusSummary} ${isHistory ? `<span style="color:var(--mut);margin-left:4px">(${orderTimeStr})</span>` : ''}</div>
           <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
             ${showWppButton ? `
-            <button class="btn-sm" style="background:#25d366;color:#fff;font-size:10px;padding:3px 7px;font-weight:600" onclick="event.stopPropagation(); sendWppStatusNotice('${order.id}')" title="Avisar cliente no WhatsApp">
-              💬 Zap
+            <button class="btn-sm" style="background:#25d366;color:#fff;font-size:10px;padding:3px 7px;font-weight:600" onclick="event.stopPropagation(); sendWppStatusNotice('${order.id}')" title="${wppBtnTitleMin}">
+              ${wppBtnTextMin}
             </button>
             ` : ''}
             ${(!isHistory && order.status === 'returned') ? `
@@ -833,8 +862,8 @@ function createOrderCardHtml(order, isHistory = false) {
           ${!isHistory ? `<a href="https://wa.me/55${order.customer.phone}" target="_blank" style="color:var(--green);text-decoration:none;font-size:12px;margin-left:4px" title="Abrir conversa no WhatsApp">WhatsApp</a>` : ''}
         </div>
         ${showWppButton ? `
-        <button class="btn-sm" style="background:#25d366;color:#fff;font-size:11px;padding:3px 8px;font-weight:600;display:inline-flex;align-items:center;gap:4px" onclick="sendWppStatusNotice('${order.id}')" title="Enviar atualização de status do pedido para o WhatsApp do cliente">
-          💬 Avisar no Zap
+        <button class="btn-sm" style="background:#25d366;color:#fff;font-size:11px;padding:3px 8px;font-weight:600;display:inline-flex;align-items:center;gap:4px" onclick="sendWppStatusNotice('${order.id}')" title="${wppBtnTitleExp}">
+          ${wppBtnTextExp}
         </button>
         ` : ''}
       </div>
@@ -1055,24 +1084,38 @@ window.sendWppStatusNotice = function(orderId) {
 
 window.promptWppStatusNotice = function(order) {
   if (!order || !order.customer?.phone) return;
-  // Apenas 'received' e 'preparing' disparam alerta de WhatsApp.
-  // Colunas 'ready', 'out_for_delivery', 'delivered', 'returned', 'cancelled' e histórico NÃO devem ter aviso no WhatsApp.
-  if (order.status !== 'received' && order.status !== 'preparing') {
+  // Apenas status permitidos disparam alerta de WhatsApp.
+  // Colunas 'returned', 'cancelled' e histórico NÃO devem ter aviso no WhatsApp.
+  const allowedStatuses = ['received', 'preparing', 'ready', 'out_for_delivery', 'delivered'];
+  if (!allowedStatuses.includes(order.status)) {
     return;
   }
   const rawPhone = String(order.customer.phone).replace(/\D/g, '');
   if (rawPhone.length < 10) return;
 
-  const statusLabel = {
-    received: 'Recebido',
-    preparing: 'Em Preparo'
-  }[order.status] || order.status;
+  const isDelivery = order.delivery?.type === 'delivery';
+  let statusLabel = 'Recebido';
+  let btnLabel = '💬 Avisar no Zap';
+
+  if (order.status === 'received') {
+    statusLabel = 'Recebido';
+    btnLabel = '💬 Avisar no Zap';
+  } else if (order.status === 'preparing') {
+    statusLabel = 'Em Preparo';
+    btnLabel = '💬 Avisar no Zap';
+  } else if (order.status === 'ready' || order.status === 'out_for_delivery') {
+    statusLabel = isDelivery ? 'Saiu para Entrega' : 'Pronto para Retirada';
+    btnLabel = isDelivery ? '💬 Avisar Entrega' : '💬 Avisar Retirada';
+  } else if (order.status === 'delivered') {
+    statusLabel = 'Entregue';
+    btnLabel = '💬 Agradecer';
+  }
 
   adminToastHtml(`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%">
       <span>Status (#${order.orderNo}): <b>${statusLabel}</b></span>
       <button class="btn-sm" style="background:#25d366;color:#fff;font-weight:700;padding:4px 10px;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;font-size:12px" onclick="sendWppStatusNotice('${order.id}')">
-        💬 Avisar no WhatsApp
+        ${btnLabel}
       </button>
     </div>
   `, 'info', 7000);
@@ -1233,23 +1276,58 @@ window.printOrderStation = async function(orderId, target) {
   }
 };
 
+let LAST_PRINT_TEXT = '';
+let LAST_PRINT_TIME = 0;
+let IS_PRINTING_BUSY = false;
+
 function executeBrowserPrint(text) {
+  if (!text) return;
+
+  // Deduplicação: se o mesmo texto foi enviado nos últimos 4 segundos, ignora chamada duplicada
+  const now = Date.now();
+  if (LAST_PRINT_TEXT === text && (now - LAST_PRINT_TIME) < 4000) {
+    return;
+  }
+  LAST_PRINT_TEXT = text;
+  LAST_PRINT_TIME = now;
+
+  if (IS_PRINTING_BUSY) {
+    return;
+  }
+  IS_PRINTING_BUSY = true;
+
   document.body.classList.remove('printing-report');
   document.body.classList.remove('printing-recipe');
   const printArea = $('#thermal-print-area');
   if (printArea) {
     printArea.innerHTML = `
-      <div style="text-align:center;margin-bottom:8px">
-        <img src="imagens/Logo.png" alt="Logo" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:1.5px solid #000;display:block;margin:0 auto 4px auto" onerror="this.style.display='none'">
-        <div style="font-weight:900;font-size:15px;letter-spacing:0.5px">EXPLOSÃO AÇAÍ - DELIVERY</div>
+      <div style="text-align:center;margin-bottom:6px">
+        <img src="imagens/Logo.png" alt="Logo" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:1.5px solid #000;display:block;margin:0 auto 4px auto" onerror="this.style.display='none'">
+        <div style="font-weight:900;font-size:14px;letter-spacing:0.5px">EXPLOSÃO AÇAÍ - DELIVERY</div>
       </div>
-      <pre style="font-family:monospace;white-space:pre-wrap;margin:0;font-size:12px;line-height:1.35">${esc(text)}</pre>
+      <pre style="font-family:monospace;white-space:pre-wrap;margin:0;font-size:11px;line-height:1.3">${esc(text)}</pre>
     `;
     setTimeout(() => {
-      window.print();
-    }, 150);
+      try {
+        window.print();
+      } finally {
+        setTimeout(() => {
+          if (printArea) printArea.innerHTML = '';
+          IS_PRINTING_BUSY = false;
+        }, 1200);
+      }
+    }, 180);
+  } else {
+    IS_PRINTING_BUSY = false;
   }
 }
+
+// Limpeza garantida da área de impressão ao fechar diálogo
+window.addEventListener('afterprint', () => {
+  const printArea = $('#thermal-print-area');
+  if (printArea) printArea.innerHTML = '';
+  IS_PRINTING_BUSY = false;
+});
 
 // ==================== RELATÓRIOS GERENCIAIS & EXPORTAÇÃO PDF ====================
 window.handlePeriodSelectChange = function(val) {

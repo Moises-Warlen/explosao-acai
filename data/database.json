@@ -1317,7 +1317,7 @@
       "minOrder": 25,
       "maxDiscount": null,
       "active": true,
-      "uses": 30,
+      "uses": 31,
       "maxUses": 200
     },
     {
@@ -5490,8 +5490,8 @@
         "received",
         "delivered"
       ],
-      "archivedToHistory": false,
-      "archivedAt": null,
+      "archivedToHistory": true,
+      "archivedAt": "2026-11-11T03:00:00.331Z",
       "preparedAt": null,
       "deliveredAt": "2026-11-10T03:57:24.437Z",
       "preparationTimeMinutes": null,
@@ -5501,7 +5501,7 @@
       "returnReason": null,
       "returnedAt": null,
       "createdAt": "2026-11-10T03:57:24.424Z",
-      "updatedAt": "2026-11-10T03:57:24.437Z",
+      "updatedAt": "2026-11-11T03:00:00.331Z",
       "printed": true
     },
     {
@@ -6047,8 +6047,8 @@
         "received",
         "delivered"
       ],
-      "archivedToHistory": false,
-      "archivedAt": null,
+      "archivedToHistory": true,
+      "archivedAt": "2026-11-11T03:00:00.331Z",
       "preparedAt": null,
       "deliveredAt": "2026-11-10T04:14:09.775Z",
       "preparationTimeMinutes": null,
@@ -6058,7 +6058,7 @@
       "returnReason": null,
       "returnedAt": null,
       "createdAt": "2026-11-10T04:14:09.758Z",
-      "updatedAt": "2026-11-10T04:14:09.775Z",
+      "updatedAt": "2026-11-11T03:00:00.331Z",
       "printed": true
     },
     {
@@ -6604,8 +6604,8 @@
         "received",
         "delivered"
       ],
-      "archivedToHistory": false,
-      "archivedAt": null,
+      "archivedToHistory": true,
+      "archivedAt": "2026-11-11T03:00:00.331Z",
       "preparedAt": null,
       "deliveredAt": "2026-11-10T19:03:56.265Z",
       "preparationTimeMinutes": null,
@@ -6615,7 +6615,7 @@
       "returnReason": null,
       "returnedAt": null,
       "createdAt": "2026-11-10T19:03:56.248Z",
-      "updatedAt": "2026-11-10T19:03:56.265Z",
+      "updatedAt": "2026-11-11T03:00:00.331Z",
       "printed": true
     },
     {
@@ -7161,8 +7161,8 @@
         "received",
         "delivered"
       ],
-      "archivedToHistory": false,
-      "archivedAt": null,
+      "archivedToHistory": true,
+      "archivedAt": "2026-11-11T03:00:00.331Z",
       "preparedAt": null,
       "deliveredAt": "2026-11-10T19:05:19.713Z",
       "preparationTimeMinutes": null,
@@ -7172,7 +7172,7 @@
       "returnReason": null,
       "returnedAt": null,
       "createdAt": "2026-11-10T19:05:19.691Z",
-      "updatedAt": "2026-11-10T19:05:19.713Z",
+      "updatedAt": "2026-11-11T03:00:00.331Z",
       "printed": true
     },
     {
@@ -7718,8 +7718,8 @@
         "received",
         "delivered"
       ],
-      "archivedToHistory": false,
-      "archivedAt": null,
+      "archivedToHistory": true,
+      "archivedAt": "2026-11-11T03:00:00.331Z",
       "preparedAt": null,
       "deliveredAt": "2026-11-10T19:13:06.408Z",
       "preparationTimeMinutes": null,
@@ -7729,7 +7729,7 @@
       "returnReason": null,
       "returnedAt": null,
       "createdAt": "2026-11-10T19:13:06.391Z",
-      "updatedAt": "2026-11-10T19:13:06.408Z",
+      "updatedAt": "2026-11-11T03:00:00.331Z",
       "printed": true
     },
     {
@@ -8275,8 +8275,8 @@
         "received",
         "delivered"
       ],
-      "archivedToHistory": false,
-      "archivedAt": null,
+      "archivedToHistory": true,
+      "archivedAt": "2026-11-11T03:00:00.331Z",
       "preparedAt": null,
       "deliveredAt": "2026-11-10T19:23:43.258Z",
       "preparationTimeMinutes": null,
@@ -8286,7 +8286,7 @@
       "returnReason": null,
       "returnedAt": null,
       "createdAt": "2026-11-10T19:23:43.236Z",
-      "updatedAt": "2026-11-10T19:23:43.258Z",
+      "updatedAt": "2026-11-11T03:00:00.331Z",
       "printed": true
     },
     {
@@ -8827,8 +8827,8 @@
         "received",
         "delivered"
       ],
-      "archivedToHistory": false,
-      "archivedAt": null,
+      "archivedToHistory": true,
+      "archivedAt": "2026-11-11T03:00:00.331Z",
       "preparedAt": null,
       "deliveredAt": "2026-11-10T21:25:22.449Z",
       "preparationTimeMinutes": null,
@@ -8838,7 +8838,7 @@
       "returnReason": null,
       "returnedAt": null,
       "createdAt": "2026-11-10T21:25:22.431Z",
-      "updatedAt": "2026-11-10T21:25:22.449Z",
+      "updatedAt": "2026-11-11T03:00:00.331Z",
       "printed": true
     },
     {
@@ -8910,8 +8910,8 @@
       "printed": true
     },
     {
-      "id": "ord_1794350096935_gma1w",
-      "orderNo": "898638",
+      "id": "ord_1794369376104_nu5vl",
+      "orderNo": "525403",
       "customer": {
         "name": "Lucas Delivery",
         "phone": "16998887766"
@@ -8980,13 +8980,13 @@
       "cancelledAt": null,
       "returnReason": null,
       "returnedAt": null,
-      "createdAt": "2026-11-10T22:34:56.935Z",
-      "updatedAt": "2026-11-10T22:34:56.935Z",
+      "createdAt": "2026-11-11T03:56:16.104Z",
+      "updatedAt": "2026-11-11T03:56:16.104Z",
       "printed": true
     },
     {
-      "id": "ord_1794350097073_66krp",
-      "orderNo": "255548",
+      "id": "ord_1794369376216_7mq2r",
+      "orderNo": "557967",
       "customer": {
         "name": "Ana Beatriz",
         "phone": "16991112233"
@@ -9014,12 +9014,12 @@
         "status": "approved",
         "changeFor": null,
         "trocoValue": 0,
-        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540564.905802BR5913EXPLOSAO ACAI6006FRANCA621005062555486304EEE7",
-        "qrCodeBase64": "data:image/png;base64,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",
-        "transactionId": "pix_1794350097073_255548",
+        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540564.905802BR5913EXPLOSAO ACAI6006FRANCA621005065579676304C169",
+        "qrCodeBase64": "data:image/png;base64,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",
+        "transactionId": "pix_1794369376216_557967",
         "ticketUrl": "",
         "isMock": true,
-        "paidAt": "2026-11-10T22:34:57.116Z"
+        "paidAt": "2026-11-11T03:56:16.237Z"
       },
       "coupon": null,
       "subtotal": 64.9,
@@ -9045,13 +9045,13 @@
       "cancelledAt": null,
       "returnReason": null,
       "returnedAt": null,
-      "createdAt": "2026-11-10T22:34:57.073Z",
-      "updatedAt": "2026-11-10T22:34:57.117Z",
+      "createdAt": "2026-11-11T03:56:16.216Z",
+      "updatedAt": "2026-11-11T03:56:16.237Z",
       "printed": true
     },
     {
-      "id": "ord_1794350097209_6h5fn",
-      "orderNo": "636939",
+      "id": "ord_1794369376485_jd4v2",
+      "orderNo": "653747",
       "customer": {
         "name": "Mariana Costa",
         "phone": "16993334455"
@@ -9113,13 +9113,13 @@
       "cancelledAt": null,
       "returnReason": null,
       "returnedAt": null,
-      "createdAt": "2026-11-10T22:34:57.209Z",
-      "updatedAt": "2026-11-10T22:34:57.209Z",
+      "createdAt": "2026-11-11T03:56:16.485Z",
+      "updatedAt": "2026-11-11T03:56:16.485Z",
       "printed": true
     },
     {
-      "id": "ord_1794350098245_owezc",
-      "orderNo": "649921",
+      "id": "ord_1794369377339_7re17",
+      "orderNo": "557966",
       "customer": {
         "name": "Cliente Frete Grátis",
         "phone": "16999990001"
@@ -9184,13 +9184,13 @@
       "cancelledAt": null,
       "returnReason": null,
       "returnedAt": null,
-      "createdAt": "2026-11-10T22:34:58.244Z",
-      "updatedAt": "2026-11-10T22:34:58.245Z",
+      "createdAt": "2026-11-11T03:56:17.339Z",
+      "updatedAt": "2026-11-11T03:56:17.339Z",
       "printed": true
     },
     {
-      "id": "ord_1794350098289_xsab7",
-      "orderNo": "395846",
+      "id": "ord_1794369377386_cje23",
+      "orderNo": "130941",
       "customer": {
         "name": "Cliente Frete Pago",
         "phone": "16999990002"
@@ -9255,13 +9255,13 @@
       "cancelledAt": null,
       "returnReason": null,
       "returnedAt": null,
-      "createdAt": "2026-11-10T22:34:58.289Z",
-      "updatedAt": "2026-11-10T22:34:58.289Z",
+      "createdAt": "2026-11-11T03:56:17.386Z",
+      "updatedAt": "2026-11-11T03:56:17.386Z",
       "printed": true
     },
     {
-      "id": "ord_1794350098368_v20z9",
-      "orderNo": "970348",
+      "id": "ord_1794369377468_4yhd5",
+      "orderNo": "832309",
       "customer": {
         "name": "Cliente a Cancelar",
         "phone": "16999990003"
@@ -9292,9 +9292,9 @@
         "status": "pending",
         "changeFor": null,
         "trocoValue": 0,
-        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540524.905802BR5913EXPLOSAO ACAI6006FRANCA6210050697034863042DA2",
-        "qrCodeBase64": "data:image/png;base64,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",
-        "transactionId": "pix_1794350098368_970348",
+        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540524.905802BR5913EXPLOSAO ACAI6006FRANCA621005068323096304FD5E",
+        "qrCodeBase64": "data:image/png;base64,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",
+        "transactionId": "pix_1794369377468_832309",
         "ticketUrl": "",
         "isMock": true
       },
@@ -9317,15 +9317,15 @@
       "preparationTimeMinutes": null,
       "deliveryTimeMinutes": null,
       "cancellationReason": "Desistência do cliente antes do preparo",
-      "cancelledAt": "2026-11-10T22:34:58.382Z",
+      "cancelledAt": "2026-11-11T03:56:17.485Z",
       "returnReason": null,
       "returnedAt": null,
-      "createdAt": "2026-11-10T22:34:58.368Z",
-      "updatedAt": "2026-11-10T22:34:58.382Z"
+      "createdAt": "2026-11-11T03:56:17.468Z",
+      "updatedAt": "2026-11-11T03:56:17.485Z"
     },
     {
-      "id": "ord_1794350098464_uwba6",
-      "orderNo": "885138",
+      "id": "ord_1794369377573_t4o1c",
+      "orderNo": "355197",
       "customer": {
         "name": "Lucas Motoboy Test",
         "phone": "16999995544"
@@ -9362,7 +9362,7 @@
         "status": "approved",
         "changeFor": null,
         "trocoValue": 0,
-        "paidAt": "2026-11-10T22:34:58.478Z"
+        "paidAt": "2026-11-11T03:56:17.589Z"
       },
       "coupon": null,
       "subtotal": 24.9,
@@ -9381,20 +9381,20 @@
       "archivedToHistory": false,
       "archivedAt": null,
       "preparedAt": null,
-      "deliveredAt": "2026-11-10T22:34:58.478Z",
+      "deliveredAt": "2026-11-11T03:56:17.589Z",
       "preparationTimeMinutes": null,
       "deliveryTimeMinutes": 1,
       "cancellationReason": null,
       "cancelledAt": null,
       "returnReason": null,
       "returnedAt": null,
-      "createdAt": "2026-11-10T22:34:58.464Z",
-      "updatedAt": "2026-11-10T22:34:58.478Z",
+      "createdAt": "2026-11-11T03:56:17.573Z",
+      "updatedAt": "2026-11-11T03:56:17.589Z",
       "printed": true
     },
     {
-      "id": "ord_1794350098539_r66lf",
-      "orderNo": "130510",
+      "id": "ord_1794369377652_26l15",
+      "orderNo": "368587",
       "customer": {
         "name": "Mariana Devolução Test",
         "phone": "16988884433"
@@ -9455,14 +9455,14 @@
       "cancellationReason": null,
       "cancelledAt": null,
       "returnReason": "Cliente não atendeu o interfone nem telefone",
-      "returnedAt": "2026-11-10T22:34:58.553Z",
-      "createdAt": "2026-11-10T22:34:58.539Z",
-      "updatedAt": "2026-11-10T22:34:58.553Z",
+      "returnedAt": "2026-11-11T03:56:17.668Z",
+      "createdAt": "2026-11-11T03:56:17.652Z",
+      "updatedAt": "2026-11-11T03:56:17.668Z",
       "printed": true
     },
     {
-      "id": "ord_1794350878667_ol8e4",
-      "orderNo": "352240",
+      "id": "ord_1794369705648_5n0jw",
+      "orderNo": "484325",
       "customer": {
         "name": "Lucas Delivery",
         "phone": "16998887766"
@@ -9531,13 +9531,13 @@
       "cancelledAt": null,
       "returnReason": null,
       "returnedAt": null,
-      "createdAt": "2026-11-10T22:47:58.667Z",
-      "updatedAt": "2026-11-10T22:47:58.667Z",
+      "createdAt": "2026-11-11T04:01:45.648Z",
+      "updatedAt": "2026-11-11T04:01:45.648Z",
       "printed": true
     },
     {
-      "id": "ord_1794350878849_s0jpj",
-      "orderNo": "439638",
+      "id": "ord_1794369705769_58zsg",
+      "orderNo": "101815",
       "customer": {
         "name": "Ana Beatriz",
         "phone": "16991112233"
@@ -9565,12 +9565,12 @@
         "status": "approved",
         "changeFor": null,
         "trocoValue": 0,
-        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540564.905802BR5913EXPLOSAO ACAI6006FRANCA621005064396386304C6A4",
-        "qrCodeBase64": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsCAYAAAB5fY51AAAAAklEQVR4AewaftIAAA2VSURBVO3BwbUcyQ1Fwcs8vYMp8AHGwweYgjVFAyp1lKVi/cbMi/j1+w9ERAZYiIgMsRARGWIhIjLEQkRkiIWIyBALEZEhFiIiQyxERIZYiIgMsRARGWIhIjLEQkRkiIWIyBAfbnILpqpOTrkFp6qTHbfgDdXJHW7Bk6qTJ7kFO9XJKbfgSdXJjltwqjq54hZMVZ2cWoiIDLEQERliISIyxEJEZIiFiMgQCxGRIT78BdXJT3MLnlSdnHILnlSd7LgFb6hOnuYWXKlOdqqTJ1Unp9yCO6qTN1QnP80teNJCRGSIhYjIEAsRkSEWIiJDLEREhvjwIrfgSdXJk9yCnerkSdXJFbdgxy3YqU6eVJ28pTo55RbsVCdX3II7qpNTbsFOdfLT3IInVSdvWIiIDLEQERliISIyxEJEZIiFiMgQCxGRIT7I/8QteJJb8Aa3YKc62XELrlQnO27Bk6qTnerkVHWy4xacqk7ucAuuVCfy3y1ERIZYiIgMsRARGWIhIjLEQkRkiIWIyBAf5K+pTk65BXe4Bafcgp3q5C3VySm3YKc6ueIW7FQnT3ILTrkFO9WJwEJEZIiFiMgQCxGRIRYiIkMsRESG+PCi6mSq6uRJbsGV6uRJbsFOdXLKLdipTnbcgre4BVeqkx23YKc6ueIWPKk6eUt1MtFCRGSIhYjIEAsRkSEWIiJDLEREhliIiAzx4S9wC/4t3IKd6uRJbsFOdfIkt+BKdbLjFuxUJztuwZXq5I7q5IpbsFOd7LgFV6qTHbdgpzq54hbsVCen3IJ/moWIyBALEZEhFiIiQyxERIZYiIgMsRARGeLDTdXJv4lb8M3cgje4BTvVyZPcgjvcglNuwVvcgqdUJ/8mCxGRIRYiIkMsRESGWIiIDLEQERniw01uwU51csUt+AbVyZXq5C3VyRW3YKc62XEL3lCd7LgFO9XJTnXyJLfgSnWy4xZM5BZ8g+rkDQsRkSEWIiJDLEREhliIiAyxEBEZYiEiMsSv33/wMLfgSnWy4xacqk7ucAtOVSen3IKd6uSKW3BHdfIGt2CnOtlxC95SnVxxC3aqk1NuwVTVyZPcgivVyZMWIiJDLEREhliIiAyxEBEZYiEiMsSHm9yCnerkSdXJKbfgSW7BG6qTHbdgxy24Up3c4Ra8pTr5aW7BqerkLW7Blepkxy3YcQuuVCdPcgt2qpNTCxGRIRYiIkMsRESGWIiIDLEQERliISIyxIebqpMdt+ANbsFOdbLjFpyqTq64BTvVyY5b8KTq5A3VyY5bsFOdPMktOFWd3OEWXHEL7qhOTlUnV9yCnerkp1UnT1qIiAyxEBEZYiEiMsRCRGSIhYjIEAsRkSE+3OQW7FQnp9yCU9XJjlvw09yCt7gFV6qTt1QnO27BTnVyqjo55RbcUZ1ccQue5Bacqk523IJT1ck3W4iIDLEQERliISIyxEJEZIiFiMgQv37/wQ1uwZOqkx234FR1csotOFWd7LgFO9XJP41b8KTqZMctOFWd7LgFp6qTt7gFV6qTO9yCK9XJjluwU528YSEiMsRCRGSIhYjIEAsRkSEWIiJDLEREhvjwF1QnT6pOTrkFO9XJlepkxy14kltwpTrZcQtOVSc7bsGTqpMdt+BJ1cmOW3CqOjnlFtxRnVxxC3aqk1NuwVvcglPVyamFiMgQCxGRIRYiIkMsRESGWIiIDLEQERni1+8/uMEt+GnVyR1uwanq5Ke5BU+qTk65BXdUJ09yC05VJ3e4Baeqk5/mFpyqTr7ZQkRkiIWIyBALEZEhFiIiQyxERIb48BdUJ1fcgp3qZMctuOIWvMUt+GnVyVvcglPVyTdzC3aqk53q5JRbsFOdXHELTlUnd1QnV9yCnepkxy24Up08aSEiMsRCRGSIhYjIEAsRkSEWIiJDLEREhvj1+w9ucAveUp28wS04VZ3suAU71ckVt2CnOtlxC65UJztuwU51csotuKM6ueIW7FQnO27Bk6qTU27BqerkLW7Bqerkpy1ERIZYiIgMsRARGWIhIjLEQkRkiIWIyBAfbqpOdtyCK9XJHW7Blepkxy3YqU6uVCen3II73IIr1cmOW/DNqpMdt+BUdbLjFvybuAVXqpM7qpNTbsGTqpNTCxGRIRYiIkMsRESGWIiIDLEQERni1+8/eIlb8Jbq5Eluwanq5JRbsFOdPMktOFWd7LgF36w6ucMtuFKd/DS3YKc6eYtbcKU6edJCRGSIhYjIEAsRkSEWIiJDLEREhliIiAzx4Sa3YKc6eVJ1csotOFWd7FQnV9yCb+YW7FQn36A6OeUW7FQnV9yCnepkpzo55Racqk5+mluwU52ccgt2qpNTCxGRIRYiIkMsRESGWIiIDLEQERliISIyxK/ff3CDW7BTnZxyC55UnZxyC3aqkytuwTeoTk65Baeqkx234EnVyVvcgp3q5IpbsFOd7LgFp6qTU27BTnXyJLfgSnXypIWIyBALEZEhFiIiQyxERIZYiIgMsRARGeLDTdXJjlvwpOrklFvwzaqTK27Bk9yCnepkxy04VZ3suAU71ckVt2CnOtlxC95Qney4BTvVyRW34EnVyY5bcKU6+WYLEZEhFiIiQyxERIZYiIgMsRARGeLDTW7BTnXyJLfgVHWy4xZcqU5OVSdPqk7+bdyCK9XJjlvw09yCnepkxy24Up3suAVXqpM7qpNTbsFOdfKGhYjIEAsRkSEWIiJDLEREhliIiAyxEBEZ4tfvP/hybsGV6mTHLXhSdXLFLdipTk65BXdUJ09yC65UJztuwR3VyZPcgivVyY5b8Jbq5CluwZOqk2+2EBEZYiEiMsRCRGSIhYjIEAsRkSEWIiJDfPgL3IInVSdX3IKd6uRJbsGT3IJT1cmT3IKd6uSKW7BTney4BTtuwZOqkytuwR3VyZPcgqdUJ9/ALbhSnTxpISIyxEJEZIiFiMgQCxGRIRYiIkP8+v0HN7gFp6qTHbfgLdXJt3IL7qhOnuQWXKlOvp1b8IbqZMct2KlOrrgFp6qTHbdgpzq54hbcUZ1ccQt2qpNTCxGRIRYiIkMsRESGWIiIDLEQERliISIyxIcXuQU71cmOW3CqOtlxC75VdbLjFuy4BVeqkzuqk7e4Baeqk53q5IpbcEd18obqZMcteJJbcKU6ucMtuFKdPGkhIjLEQkRkiIWIyBALEZEhFiIiQyxERIb49fsPhnIL7qhOTrkFp6qTn+YW3FGdXHEL7qhOnuQW7FQnV9yCnepkxy24Up3suAWnqpMdt+BKdXKHW3ClOtlxC3aqkzcsRESGWIiIDLEQERliISIyxEJEZIhfv//gBrfgSdXJN3MLnlSdXHELdqqTHbfgDdXJHW7BqerkDrfgSdXJFbfgjurkiltwqjrZcQueVJ3suAWnqpNTCxGRIRYiIkMsRESGWIiIDLEQERliISIyxIe/oDo55Ra8pTq54hacqk523IJT1cmOW3CqOrnDLTjlFuxUJztuwRW34I7q5JRbsOMWnKpOdtyCK9XJjltwqjrZcQveUJ08aSEiMsRCRGSIhYjIEAsRkSEWIiJDLEREhvjwIrdgpzrZcQuuVCdvqU5OVSen3IInuQU71cmTqpM7qpMrbsFOdbLjFlypTu6oTq64BTtuwSm34C3VySm34JRbsFOdnFqIiAyxEBEZYiEiMsRCRGSIhYjIEB++hFuwU52ccgt2qpNTbsGp6mTHLbhSney4BTvVyRW3YMcteJJb8Ba34JRb8E/jFjypOtmpTn7aQkRkiIWIyBALEZEhFiIiQyxERIZYiIgM8eGm6uRUdfKW6uRJ1ckpt2CnOjlVnTypOtlxC05VJ3e4BU+qTk65BW+pTq64BTvVyZPcgokWIiJDLEREhliIiAyxEBEZYiEiMsSHm9yCqaqTK9XJk6qTHbfgVHVyqjqR/49bcKo62XELnuIW7FQnT3ILnlSdnFqIiAyxEBEZYiEiMsRCRGSIhYjIEAsRkSE+/AXVyU9zC065BTvVySm34EluwU51csUt2KlOdqqTt1Qnb3AL7qhOrrgFO27BG6qTb1adPGkhIjLEQkRkiIWIyBALEZEhFiIiQyxERIb48CK34EnVyU9zC3aqkx234EluwZXq5A634Ep1codb8Jbq5Ep1suMWnKpOnuQW7LgFb3ALnuQW7FQnpxYiIkMsRESGWIiIDLEQERliISIyxAf5n7gFV6qTb1CdnHILdqqTt1QnT3ILfppb8KTq5EluwZXqZMctOFWdPGkhIjLEQkRkiIWIyBALEZEhFiIiQyxERIb4IH+NW/BP4xbcUZ3suAWnqpNT1cmOW7DjFlypTn6aW7BTnTypOtlxC96wEBEZYiEiMsRCRGSIhYjIEAsRkSEWIiJDfHhRdfLNqpMdt+BJ1cmT3IJT1cmp6mTHLdhxC05VJztuwU51csUteEt1csotOFWdvMUt2KlO3rAQERliISIyxEJEZIiFiMgQCxGRIT78BW7BRG7BTnVyxS3YqU5+WnXyDaqTJ1Unp6qTHbfglFvwpOrklFvwlupkxy24Up08aSEiMsRCRGSIhYjIEAsRkSEWIiJDLEREhvj1+w9ERAZYiIgMsRARGWIhIjLEQkRkiIWIyBALEZEhFiIiQyxERIZYiIgMsRARGWIhIjLEQkRkiP8ArVKvs2TLHUQAAAAASUVORK5CYII=",
-        "transactionId": "pix_1794350878849_439638",
+        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540564.905802BR5913EXPLOSAO ACAI6006FRANCA621005061018156304AFF8",
+        "qrCodeBase64": "data:image/png;base64,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",
+        "transactionId": "pix_1794369705769_101815",
         "ticketUrl": "",
         "isMock": true,
-        "paidAt": "2026-11-10T22:47:58.884Z"
+        "paidAt": "2026-11-11T04:01:45.811Z"
       },
       "coupon": null,
       "subtotal": 64.9,
@@ -9596,13 +9596,13 @@
       "cancelledAt": null,
       "returnReason": null,
       "returnedAt": null,
-      "createdAt": "2026-11-10T22:47:58.849Z",
-      "updatedAt": "2026-11-10T22:47:58.884Z",
+      "createdAt": "2026-11-11T04:01:45.769Z",
+      "updatedAt": "2026-11-11T04:01:45.811Z",
       "printed": true
     },
     {
-      "id": "ord_1794350878985_fe321",
-      "orderNo": "516857",
+      "id": "ord_1794369705938_kgtrz",
+      "orderNo": "943715",
       "customer": {
         "name": "Mariana Costa",
         "phone": "16993334455"
@@ -9664,13 +9664,13 @@
       "cancelledAt": null,
       "returnReason": null,
       "returnedAt": null,
-      "createdAt": "2026-11-10T22:47:58.985Z",
-      "updatedAt": "2026-11-10T22:47:58.985Z",
+      "createdAt": "2026-11-11T04:01:45.938Z",
+      "updatedAt": "2026-11-11T04:01:45.938Z",
       "printed": true
     },
     {
-      "id": "ord_1794350880003_hi9wv",
-      "orderNo": "568379",
+      "id": "ord_1794369706852_erlxv",
+      "orderNo": "218455",
       "customer": {
         "name": "Cliente Frete Grátis",
         "phone": "16999990001"
@@ -9735,13 +9735,13 @@
       "cancelledAt": null,
       "returnReason": null,
       "returnedAt": null,
-      "createdAt": "2026-11-10T22:48:00.003Z",
-      "updatedAt": "2026-11-10T22:48:00.003Z",
+      "createdAt": "2026-11-11T04:01:46.852Z",
+      "updatedAt": "2026-11-11T04:01:46.852Z",
       "printed": true
     },
     {
-      "id": "ord_1794350880053_enb4b",
-      "orderNo": "214704",
+      "id": "ord_1794369706894_u1vvq",
+      "orderNo": "500995",
       "customer": {
         "name": "Cliente Frete Pago",
         "phone": "16999990002"
@@ -9806,13 +9806,13 @@
       "cancelledAt": null,
       "returnReason": null,
       "returnedAt": null,
-      "createdAt": "2026-11-10T22:48:00.053Z",
-      "updatedAt": "2026-11-10T22:48:00.053Z",
+      "createdAt": "2026-11-11T04:01:46.894Z",
+      "updatedAt": "2026-11-11T04:01:46.894Z",
       "printed": true
     },
     {
-      "id": "ord_1794350880130_jqcbx",
-      "orderNo": "953836",
+      "id": "ord_1794369706969_peyf9",
+      "orderNo": "690283",
       "customer": {
         "name": "Cliente a Cancelar",
         "phone": "16999990003"
@@ -9843,9 +9843,9 @@
         "status": "pending",
         "changeFor": null,
         "trocoValue": 0,
-        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540524.905802BR5913EXPLOSAO ACAI6006FRANCA6210050695383663046F76",
-        "qrCodeBase64": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsCAYAAAB5fY51AAAAAklEQVR4AewaftIAAA18SURBVO3BwW0lwY5FwaPE29EU+kDj6QNN4VrTwAB/VfmBrKkuiT034uv7D0REBliIiAyxEBEZYiEiMsRCRGSIhYjIEAsRkSEWIiJDLEREhliIiAyxEBEZYiEiMsRCRGSIhYjIEB9ucgumqk6uuAWnqpO3uAWnqpM73IKpqpMrbsEd1ckVt2CnOnmDWzBVdXJqISIyxEJEZIiFiMgQCxGRIRYiIkMsRESG+PAXVCc/zS14UnVyxS3YqU523IJT1cmOW3DFLbijOvnXVCc7bsGp6mTHLXhSdXKqOvlpbsGTFiIiQyxERIZYiIgMsRARGWIhIjLEhxe5BU+qTt7iFpxyC3aqk9/MLXhLdXLKLdipTp7kFlypTnaqkx234Ep18ha34EnVyRsWIiJDLEREhliIiAyxEBEZYiEiMsRCRGSID/If1clb3II3VCe/nVtwpTrZqU6eVJ3suAWn3IJTbsFOdSKwEBEZYiEiMsRCRGSIhYjIEAsRkSEWIiJDfJD/cAueVJ3sVCdX3IKd6uSUW7BTney4BVeqkzvcglNuwR3VyRW3YKc62alOrrgFO9XJjltwpTqR/24hIjLEQkRkiIWIyBALEZEhFiIiQ3x4UXXym1UnO27BKbfgVHVyh1twpTrZcQt2qpMrbsFOdbJTney4BU9yC65UJ3e4BVeqkx234DerTiZaiIgMsRARGWIhIjLEQkRkiIWIyBALEZEhPvwFbsFEbsFOdXLFLdipTnbcglNuwU51csUt2KlOdtyCK9XJjluwU52cqk523IKd6uSKW7BTnbylOrniFuxUJ6fcgn/NQkRkiIWIyBALEZEhFiIiQyxERIZYiIgM8eGm6uRfU508yS3YqU6uuAU71cmOW/CbuQWn3IInVSe/WXVyqjr5/2QhIjLEQkRkiIWIyBALEZEhFiIiQ3y4yS3YqU5OuQW/WXVyqjo5VZ3cUZ28wS24ozrZcQuuVCdvcQt2qpM3uAWnqpM73IIr1cmOW/Ck6uTUQkRkiIWIyBALEZEhFiIiQyxERIZYiIgM8eGXqE523IJT1clPcwt2qpMrbsFOdbLjFpyqTnaqkytuwdOqkytuwR3VyZPcgie5BVeqkye5BTvVyZOqkytuwZMWIiJDLEREhliIiAyxEBEZYiEiMsTX9x+8xC24ozq54hbcUZ1ccQtOVSdvcQtOVSc7bsFvUJ1ccQt2qpMnuQVPqk5OuQU71cmT3IIr1cmOW/Ck6uTUQkRkiIWIyBALEZEhFiIiQyxERIZYiIgM8fX9Bw9zC65UJ/+fuAVPqk523II3VCc7bsFvVp3suAU71ckpt2CnOnmDW7BTnTzJLThVnZxaiIgMsRARGWIhIjLEQkRkiIWIyBALEZEhPtzkFpxyC+6oTk65BTvVyRW3YKc6ueIW7FQnp9yCJ1UnO27BKbdgpzrZcQvkf7kFb6hOdtyCiRYiIkMsRESGWIiIDLEQERliISIyxNf3H9zgFuxUJ1fcgp3qZMctuFKd3OEWnKpOrrgFd1QnE7kFd1QnO27BlerkSW7BTnXyFrfgSnXyFrfgVHWy4xZcqU6etBARGWIhIjLEQkRkiIWIyBALEZEhFiIiQ3z4C9yCn+YWnKpOnlSd7LgFp6qTHbfgSdXJk9yCnerkiltwR3VypTrZcQt2qpMrbsEd1clT3IK3uAU/bSEiMsRCRGSIhYjIEAsRkSEWIiJDLEREhvj6/oMb3IK3VCdPcgueUp28xS3YqU5OuQWnqpMdt+At1cmOW3CqOtlxC05VJztuwZXqZMcteEN1suMWPKk6ObUQERliISIyxEJEZIiFiMgQCxGRIT78BdXJk9yCK9XJjluwU508xS24ozq54hb8i6qTHbfgSnWy4xacqk523IKd6uSKW7DjFryhOnmSW/Ck6uRJCxGRIRYiIkMsRESGWIiIDLEQERliISIyxNf3HzzMLThVnZxyC3aqk1Nuwanq5A634Ep18iS34I7q5JRb8KTq5EluwU51suMWXKlOdtyCU9XJjlvw06qTHbfgVHVyaiEiMsRCRGSIhYjIEAsRkSEWIiJDLEREhvhwk1uwU51ccQve4hY8qTq54hb8Bm7Blepkxy3YcQueVJ2ccgve4hY8qTo55Ra8pTq54hY8qTp50kJEZIiFiMgQCxGRIRYiIkMsRESG+PAXuAVXqpM73IJT1cmOW3DKLbhSney4BT/NLdipTk65BTvVyY5bsFOdvKE62XELTrkFv1l18iS3YKc6ecNCRGSIhYjIEAsRkSEWIiJDLEREhliIiAzx9f0HN7gFU1Unp9yCK9XJHW7BqerkLW7BW6qTU27BqerkDrfgSnUylVtwpTq5wy24Up08aSEiMsRCRGSIhYjIEAsRkSEWIiJDLEREhvj6/oOHuQWnqpNTbsFOdbLjFryhOjnlFuxUJztuwZXqZMct2KlO3uIWPKk6eZJb8IbqZMctOFWd/DS3YKc6ObUQERliISIyxEJEZIiFiMgQCxGRIRYiIkN8ff/BDW7Bqepkxy3YqU5OuQU71ckVt2CnOrniFtxRnVxxC3aqk1NuwZOqkx234I7q5EluwZXqZMct2KlOrrgFd1Qnb3ALdqqTU27BqerkSQsRkSEWIiJDLEREhliIiAyxEBEZ4uv7D25wC05VJ7+BW3ClOtlxC55UnTzJLbhSney4Baeqk7e4BW+pTnbcgivVyR1uwZXq5JRbcEd18iS34FR1cmohIjLEQkRkiIWIyBALEZEhFiIiQyxERIb4+v6Dh7kFV6qTO9yCn1adTOQWvKU62XELnlSdnHIL7qhOTrkFT6pOnuQWPKk6ueIW7FQnpxYiIkMsRESGWIiIDLEQERliISIyxEJEZIiv7z+4wS34adXJW9yCU9XJjltwpTrZcQtOVSc7bsFOdXLKLdipTnbcgjdUJ/LfuQV3VCdvWIiIDLEQERliISIyxEJEZIiFiMgQH/6C6uSUW7BTnVxxC95SnTypOrniFuxUJ6fcgp3qZMctOFWdPKk6eZJbcEd1csoteFJ1csot2KlOrlQnO27BT1uIiAyxEBEZYiEiMsRCRGSIhYjIEAsRkSE+3FSdPKk62XELTlUnO27BKbfgDdXJjluwU508qTo55RbcUZ1ccQt2qpNT1ckdbsGV6uSO6uSKW/AWt+BKdfIkt2CnOjm1EBEZYiEiMsRCRGSIhYjIEAsRkSEWIiJDfLjJLdipTp5UnZxyC3aqk1NuwZOqk1PVyU9zC+6oTqaqTq64BXe4BVeqk1NuwVuqk1PVyZMWIiJDLEREhliIiAyxEBEZYiEiMsSHv8AtOFWd7LgFV6qTnerklFswlVtwyi04VZ3suAVvcQueVJ2cqk523IKd6uQN1cmOW3DFLdipTn7aQkRkiIWIyBALEZEhFiIiQyxERIZYiIgM8WGA6uSUW3CqOvnN3IJT1cm/qDrZcQue5BZcqU52qpMdt+BKdbLjFpxyC05VJztuwZOqk1MLEZEhFiIiQyxERIZYiIgMsRARGWIhIjLE1/cf3OAWnKpOdtyCU9XJk9yCnerkp7kFP606ucMt2KlOTrkFO9XJFbdgqurkDW7BTnVyyi3YqU5OLUREhliIiAyxEBEZYiEiMsRCRGSIDy9yC97iFuxUJ6fcgidVJ1fcgt+gOjnlFkxVney4BT/NLRBYiIgMsRARGWIhIjLEQkRkiIWIyBALEZEhPtxUnfxm1clPq05OVSc7bsFOdXLFLbjDLbhSndxRnZxyC+5wC95Qney4BTvVyRW3YKc6eZJbcKU62XELftpCRGSIhYjIEAsRkSEWIiJDLEREhvhwk1swVXVyqjq54hbc4RY8yS24Up38Bm7BTnVypTrZcQtOVSc7bsEpt+AOt+ApbsFOdfKk6mTHLXjDQkRkiIWIyBALEZEhFiIiQyxERIZYiIgM8eEvqE5+mlvwm1UnV9yCO6qTK27BTnWy4xZcqU52qpMnuQU71cmOW3CqOtlxC05VJztuwVOqk7e4BTvVyRW34EkLEZEhFiIiQyxERIZYiIgMsRARGWIhIjLEhxe5BU+qTv411cmOW7DjFpxyC3aqkytuwVuqkx234EluwZPcgie5BT+tOtlxC65UJ09aiIgMsRARGWIhIjLEQkRkiIWIyBAf5P+kOvkXuQVPqk523IJT1ckpt2CnOvnN3IIr1ckdbsEpt2CnOnnDQkRkiIWIyBALEZEhFiIiQyxERIZYiIgM8UH+ozrZcQtOVSc7bsGV6uSO6uSKW3BHdXLKLbijOrniFuxUJ6eqkx23YKc6OeUW7FQnV9yCnerkDW7BHW7Bqerk1EJEZIiFiMgQCxGRIRYiIkMsRESGWIiIDPHhRdXJVNXJFbfgjurkSW7BlerkLdXJk6qTHbdgpzo5VZ08qTo5VZ3suAWnqpNT1ckdbsEbFiIiQyxERIZYiIgMsRARGWIhIjLEh7/ALZjILdipTn6z6uSUW7BTnfw0t2CnOjnlFjypOtlxC55UnVxxC36z6uRJCxGRIRYiIkMsRESGWIiIDLEQERliISIyxNf3H4iIDLAQERliISIyxEJEZIiFiMgQCxGRIRYiIkMsRESGWIiIDLEQERliISIyxEJEZIiFiMgQ/wOb0aR1zieQIgAAAABJRU5ErkJggg==",
-        "transactionId": "pix_1794350880130_953836",
+        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540524.905802BR5913EXPLOSAO ACAI6006FRANCA6210050669028363045719",
+        "qrCodeBase64": "data:image/png;base64,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",
+        "transactionId": "pix_1794369706969_690283",
         "ticketUrl": "",
         "isMock": true
       },
@@ -9868,15 +9868,15 @@
       "preparationTimeMinutes": null,
       "deliveryTimeMinutes": null,
       "cancellationReason": "Desistência do cliente antes do preparo",
-      "cancelledAt": "2026-11-10T22:48:00.144Z",
+      "cancelledAt": "2026-11-11T04:01:46.983Z",
       "returnReason": null,
       "returnedAt": null,
-      "createdAt": "2026-11-10T22:48:00.130Z",
-      "updatedAt": "2026-11-10T22:48:00.144Z"
+      "createdAt": "2026-11-11T04:01:46.969Z",
+      "updatedAt": "2026-11-11T04:01:46.983Z"
     },
     {
-      "id": "ord_1794350880221_y39u3",
-      "orderNo": "957582",
+      "id": "ord_1794369707058_apkmj",
+      "orderNo": "402636",
       "customer": {
         "name": "Lucas Motoboy Test",
         "phone": "16999995544"
@@ -9913,7 +9913,7 @@
         "status": "approved",
         "changeFor": null,
         "trocoValue": 0,
-        "paidAt": "2026-11-10T22:48:00.236Z"
+        "paidAt": "2026-11-11T04:01:47.074Z"
       },
       "coupon": null,
       "subtotal": 24.9,
@@ -9932,20 +9932,20 @@
       "archivedToHistory": false,
       "archivedAt": null,
       "preparedAt": null,
-      "deliveredAt": "2026-11-10T22:48:00.236Z",
+      "deliveredAt": "2026-11-11T04:01:47.074Z",
       "preparationTimeMinutes": null,
       "deliveryTimeMinutes": 1,
       "cancellationReason": null,
       "cancelledAt": null,
       "returnReason": null,
       "returnedAt": null,
-      "createdAt": "2026-11-10T22:48:00.221Z",
-      "updatedAt": "2026-11-10T22:48:00.236Z",
+      "createdAt": "2026-11-11T04:01:47.058Z",
+      "updatedAt": "2026-11-11T04:01:47.074Z",
       "printed": true
     },
     {
-      "id": "ord_1794350880296_znqxd",
-      "orderNo": "422385",
+      "id": "ord_1794369707134_0p3nl",
+      "orderNo": "501036",
       "customer": {
         "name": "Mariana Devolução Test",
         "phone": "16988884433"
@@ -10006,9 +10006,560 @@
       "cancellationReason": null,
       "cancelledAt": null,
       "returnReason": "Cliente não atendeu o interfone nem telefone",
-      "returnedAt": "2026-11-10T22:48:00.310Z",
-      "createdAt": "2026-11-10T22:48:00.296Z",
-      "updatedAt": "2026-11-10T22:48:00.310Z",
+      "returnedAt": "2026-11-11T04:01:47.150Z",
+      "createdAt": "2026-11-11T04:01:47.134Z",
+      "updatedAt": "2026-11-11T04:01:47.150Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794369749526_v9amm",
+      "orderNo": "653478",
+      "customer": {
+        "name": "Lucas Delivery",
+        "phone": "16998887766"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Avenida Brasil",
+        "number": "500",
+        "bairro": "Centro",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 5
+      },
+      "items": [
+        {
+          "name": "Ninho com Morango 500 ml",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 30.9,
+          "costPrice": 11,
+          "subtotal": 30.9,
+          "accompaniments": [
+            "Morango",
+            "Ninho"
+          ],
+          "extras": [
+            "Nutella"
+          ],
+          "fruits": [],
+          "note": "Colher separada"
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": "50,00",
+        "trocoValue": 19.1
+      },
+      "coupon": {
+        "code": "PRIMEIRACOMPRA",
+        "discountValue": 5
+      },
+      "subtotal": 30.9,
+      "discount": 5,
+      "freight": 5,
+      "total": 30.9,
+      "costTotal": 11,
+      "status": "received",
+      "printedStations": [
+        "kitchen"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-11T04:02:29.511Z",
+      "updatedAt": "2026-11-11T04:02:29.511Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794369749689_483so",
+      "orderNo": "565278",
+      "customer": {
+        "name": "Ana Beatriz",
+        "phone": "16991112233"
+      },
+      "delivery": {
+        "type": "pickup"
+      },
+      "items": [
+        {
+          "name": "Combo Casal 500 ml",
+          "size": null,
+          "quantity": 1,
+          "unitPrice": 64.9,
+          "costPrice": 0,
+          "subtotal": 64.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Pix",
+        "timing": "online",
+        "status": "approved",
+        "changeFor": null,
+        "trocoValue": 0,
+        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540564.905802BR5913EXPLOSAO ACAI6006FRANCA62100506565278630408FD",
+        "qrCodeBase64": "data:image/png;base64,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",
+        "transactionId": "pix_1794369749689_565278",
+        "ticketUrl": "",
+        "isMock": true,
+        "paidAt": "2026-11-11T04:02:29.714Z"
+      },
+      "coupon": null,
+      "subtotal": 64.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 64.9,
+      "costTotal": 0,
+      "status": "preparing",
+      "printedStations": [
+        "kitchen"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "preparing"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-11T04:02:29.689Z",
+      "updatedAt": "2026-11-11T04:02:29.714Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794369749800_0dc51",
+      "orderNo": "578351",
+      "customer": {
+        "name": "Mariana Costa",
+        "phone": "16993334455"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua das Palmeiras",
+        "number": "450",
+        "bairro": "Jardim Primavera",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 5.5
+      },
+      "items": [
+        {
+          "name": "Ninho com Morango 500 ml",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 30.9,
+          "costPrice": 11,
+          "subtotal": 30.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Cartão de crédito",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 30.9,
+      "discount": 0,
+      "freight": 5.5,
+      "total": 36.4,
+      "costTotal": 11,
+      "status": "received",
+      "printedStations": [
+        "kitchen",
+        "counter"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-11T04:02:29.800Z",
+      "updatedAt": "2026-11-11T04:02:29.800Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794369750574_m5ikc",
+      "orderNo": "842148",
+      "customer": {
+        "name": "Cliente Frete Grátis",
+        "phone": "16999990001"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua das Flores",
+        "number": "123",
+        "bairro": "Centro",
+        "city": "Franca - SP",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 1.5,
+        "freight": 0
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 18.9,
+          "costPrice": 0,
+          "subtotal": 18.9,
+          "accompaniments": [
+            "Granola",
+            "Leite condensado",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 18.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 18.9,
+      "costTotal": 0,
+      "status": "received",
+      "printedStations": [
+        "kitchen"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-11T04:02:30.574Z",
+      "updatedAt": "2026-11-11T04:02:30.574Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794369750618_ktisv",
+      "orderNo": "158069",
+      "customer": {
+        "name": "Cliente Frete Pago",
+        "phone": "16999990002"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Av Brasil",
+        "number": "500",
+        "bairro": "Jardim Paulista",
+        "city": "Franca - SP",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 6,
+        "freight": 6
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 18.9,
+          "costPrice": 0,
+          "subtotal": 18.9,
+          "accompaniments": [
+            "Granola",
+            "Leite condensado",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 18.9,
+      "discount": 0,
+      "freight": 6,
+      "total": 24.9,
+      "costTotal": 0,
+      "status": "received",
+      "printedStations": [
+        "kitchen"
+      ],
+      "notifiedStatuses": [
+        "received"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-11T04:02:30.618Z",
+      "updatedAt": "2026-11-11T04:02:30.618Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794369750694_rdh5z",
+      "orderNo": "451682",
+      "customer": {
+        "name": "Cliente a Cancelar",
+        "phone": "16999990003"
+      },
+      "delivery": {
+        "type": "pickup"
+      },
+      "items": [
+        {
+          "name": "Açaí Tradicional",
+          "size": 500,
+          "quantity": 1,
+          "unitPrice": 24.9,
+          "costPrice": 0,
+          "subtotal": 24.9,
+          "accompaniments": [
+            "Granola",
+            "Ninho"
+          ],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Pix",
+        "timing": "online",
+        "status": "pending",
+        "changeFor": null,
+        "trocoValue": 0,
+        "qrCode": "00020101021226360014br.gov.bcb.pix0114+5516991098863520400005303986540524.905802BR5913EXPLOSAO ACAI6006FRANCA62100506451682630410C7",
+        "qrCodeBase64": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsCAYAAAB5fY51AAAAAklEQVR4AewaftIAAA2ZSURBVO3Bwa0cUY5FwSOidjSFPtB4+kBTuNYIGKBX+RrIQir1OXMjfv3+AxGRBQwRkSUMEZElDBGRJQwRkSUMEZElDBGRJQwRkSUMEZElDBGRJQwRkSUMEZElDBGRJQwRkSU+fCk82aqnuBKe3NVTPCk8OekpTsKTKz3FN8KTrXqKK+HJN3qKK+HJSU/xhvBkq57iLkNEZAlDRGQJQ0RkCUNEZAlDRGQJQ0RkiQ9/QU/xr4UnbwhPTnqKfy08+UZPcVd4ctJT/Gs9xUl4cldPcRKePKmnuKun+NfCkycZIiJLGCIiSxgiIksYIiJLGCIiS3x4UXjypJ7iLT3FG3qKk/DkLeHJXT3FSXhy0lPcFZ6c9BRPCk+u9BQnPcVJeHKlp3hLePKknuINhojIEoaIyBKGiMgShojIEoaIyBKGiMgSH+Q/eoqT8OSunuIkPLnSU3yjp/jJeoqT8ORKT3HSUzyppzgJT+4KT+4KT056CgFDRGQJQ0RkCUNEZAlDRGQJQ0RkCUNEZIkP8h/hyV09xTd6iivhyUlPcVd4ctJTnIQnV3qKb4Qnd4Un3+gproQnJz3FSU9xJTw56SlOwpMrPYX8d4aIyBKGiMgShojIEoaIyBKGiMgSH17UU/xkPcVJeHIlPHlST/GN8ORKT3ESnpz0FFfCk5Oe4qSnOAlPnhSeXOkpvhGeXOkpTsKTn6yn2MgQEVnCEBFZwhARWcIQEVnCEBFZwhARWeLDXxCebBSenPQUV8KTk57iJDy5Kzw56SmuhCcnPcVJeHKlpzgJT056irt6ipPw5KSnuBKenPQUb+kproQnJz3FXeHJ/zWGiMgShojIEoaIyBKGiMgShojIEoaIyBIfvtRT/F/TUzwpPDnpKa6EJyc9xUl48pOFJ3eFJ0/qKX6ynuKunuL/E0NEZAlDRGQJQ0RkCUNEZAlDRGSJD18KT056irvCk5+sp7irp7irp/hGT/GG8OQbPcVJeHKlp3hLeHLSU7whPLmrp/hGeHKlpzgJT57UU9xliIgsYYiILGGIiCxhiIgsYYiILGGIiCzx4Us9xUl4cqWnOOkp/rXw5EnhyUlPcSU8OekpTsKTu3qKk57iSnjytJ7iSnjyjZ7iSeHJk8KTKz3Fk8KTk55iI0NEZAlDRGQJQ0RkCUNEZAlDRGSJD39BT3FXeHLSU9wVnjwpPLnSUzyppzgJT+7qKU7Ck7eEJyc9xV09xU/WU9wVnjyppzgJT670FN/oKd5giIgsYYiILGGIiCxhiIgsYYiILGGIiCzx6/cffCE8eVJPcRKeXOkpfrLw5Ek9xUl48oae4iQ8+cl6ipPw5KSnuCs8OekpnhKefKOneEN4ctJT3GWIiCxhiIgsYYiILGGIiCxhiIgsYYiILPHhSz3FXeHJSXhy0lPcFZ48qae4Ep6c9BQn4clG4clJT3ESnsj/Ck/e0FOchCcbGSIiSxgiIksYIiJLGCIiSxgiIkt8+FJ4ctJT3NVTnIQnd/UUJ+HJXeHJT9ZTvCE8OQlPTnqKk/DkSk/xpPDkpKd4Uk9xEp5c6Sl+sp7iJDy50lM8yRARWcIQEVnCEBFZwhARWcIQEVnCEBFZ4sNfEJ68oac4CU/u6ilOwpO7wpO7eoqT8OSunuIb4cmTwpOTnuJKePKNnuJKT3ESnpz0FFfCk2/0FE8JT94SnvxrhojIEoaIyBKGiMgShojIEoaIyBKGiMgSH36I8OSkp7irpzgJT66EJ3f1FN8IT57UU1wJT056ipOe4q7w5KSneFJPcRKe3NVTnIQnd/UUJ+HJlZ7iJDx5Q09xEp7cFZ6c9BR3GSIiSxgiIksYIiJLGCIiSxgiIkt8+At6iieFJ1d6ipPw5KSneEp48qTw5BvhyZWe4hvhyZWe4i09xUl4cldPcRKenPQUV8KTk/DkDT3Fk8KTJ/UUTzJERJYwRESWMEREljBERJYwRESWMERElvj1+w8eFp7c1VPcFZ6c9BR3hSdP6ilOwpO7eoonhScnPcVd4cmTeoonhScnPcVJeHKlpzgJT+7qKU7Ck3+tpzgJT+7qKe4yRESWMEREljBERJYwRESWMEREljBERJb48KXw5KSnuBKevCU8eVJPcSU8OQlPTnqKK+HJSXhy0lM8KTx5Uk9xV3jylvDkST3FXeHJW3qKK+HJk3qKJxkiIksYIiJLGCIiSxgiIksYIiJLfPgLwpMrPcU3wpO7eoqT8OSu8ORKT3ESnjypp3hST3FXeHLSU5yEJyc9xRt6ipPw5K7w5CfrKZ4Unpz0FG8wRESWMEREljBERJYwRESWMEREljBERJb49fsPvhCebNVT/GvhyRt6im+EJ2/pKe4KT+7qKb4RnlzpKX6y8OSunuIb4cmVnuJJhojIEoaIyBKGiMgShojIEoaIyBKGiMgSH17UU5yEJ0/qKU7Ckys9xUl4cqWn+EZPcSU8eUt4ctJTvCU8eVJP8Ybw5Ek9xUl4cldPcRKe3BWenPQUV8KTk57iLkNEZAlDRGQJQ0RkCUNEZAlDRGQJQ0RkiV+//+Al4cmTeoqT8ORJPcWV8OQbPcWV8OSkp7grPHlST3ESnnyjp3hSeHKlpzgJT056iivhyTd6in8tPHlDT/EkQ0RkCUNEZAlDRGQJQ0RkCUNEZIlfv//gC+HJSU9xJTz5Rk/xhvDkLT3Fk8KTKz3FSXhyV0/xlvDkLT3FSXhypaf4Rnhypae4Kzx5Uk/xjfDkrp7iLkNEZAlDRGQJQ0RkCUNEZAlDRGQJQ0RkiV+//+Bh4ckbeoqT8ORJPcVG4clbeoqT8ORJPcVd4ck3eoq7wpMn9RRPCk+e1FNcCU9Oeoq7DBGRJQwRkSUMEZElDBGRJQwRkSUMEZElfv3+g4eFJ/9aT3FXePKknuIkPLnSU5yEJ3f1FCfhyUlPcVd4ctJTnIQnb+gp5L8LT77RU7zBEBFZwhARWcIQEVnCEBFZwhARWeLDD9FTnIQnV3qKk/Dkrp7iLT3FlfDkpKe4Kzw56SlOwpO7eoon9RRPCk++0VPcFZ48qae4Kzw56Smu9BQn4cm/ZoiILGGIiCxhiIgsYYiILGGIiCxhiIgs8eEv6CmuhCcn4clJT3ElPDnpKe4KT/61nuIkPDnpKZ7UU9wVnnyjp7gSnpz0FHf1FN8IT670FN/oKa6EJ28JT670FE8KT056irsMEZElDBGRJQwRkSUMEZElDBGRJQwRkSV+/f6DL4QnT+opnhSe3NVTnIQnb+gpfrLw5Bs9xV3hyUlP8a+FJ0/qKe4KT57UU/xkhojIEoaIyBKGiMgShojIEoaIyBIf/oKe4kp48o3w5K6e4q7w5KSnuBKenPQUbwlP3tBTnIQnbwlPntRT3NVTnIQnJz3FG3qKk/DkSnhy0lP8a4aIyBKGiMgShojIEoaIyBKGiMgShojIEh/+gvDkST3FXeHJXT3FXT3FN8KTKz3FSXhyV0/xjfDkJ+spTsKTJ4UnV3qKk57iJDy50lOchCd3hSd39RQn4cmTeoq7DBGRJQwRkSUMEZElDBGRJQwRkSUMEZElfv3+gy+EJ3f1FCfhyV09xZPCk7f0FFfCk5Oe4iQ8udJTnIQnJz3Fk8KTk57irvDkpKe4Ep5s1VO8ITw56SnuCk9Oeoq7DBGRJQwRkSUMEZElDBGRJQwRkSU+vCg8eUt4ctJT3NVTXAlPvhGePKmneFJ4cqWnOAlPtuopTsKTfy08ETBERJYwRESWMEREljBERJYwRESWMERElvjwpZ7iJ+sp3tBTnIQnJz3FXeHJXT3FT9BT3BWefCM8eUNPcRKenPQUV8KTk57iSeHJlZ7iJDz51wwRkSUMEZElDBGRJQwRkSUMEZElPnwpPNmqp7grPLnSU5z0FD9ZT/GW8OSkp7jSU5yEJ3f1FCfhyV3hyTfCk6eEJyc9xZN6ipPw5A2GiMgShojIEoaIyBKGiMgShojIEoaIyBIf/oKe4l8LT94Qnnyjp7irpzgJT66EJyc9xUl4cqWnOOkpnhSenPQUJ+HJXT3FSXhyV09xEp48pad4S3hy0lNcCU+eZIiILGGIiCxhiIgsYYiILGGIiCxhiIgs8eFF4cmTeoq39BRXwpOTnuJJ4cmTwpOTnuJKePKWnuIkPHlSePKk8ORJ4cm/1lOchCdXeoonGSIiSxgiIksYIiJLGCIiSxgiIkt8ELkQnjyppzgJT+7qKe4KT056ip8sPLnSU3wjPLkSnnyjp3iDISKyhCEisoQhIrKEISKyhCEisoQhIrLEB/mPnuIkPHlSeHKlp/hGT3ElPPlGT3FXePKNnuJKeHLSU9zVU5yEJyc9xV3hyUlPcSU8Oekp/rWe4iQ8uaunuMsQEVnCEBFZwhARWcIQEVnCEBFZwhARWeLDi3qKrXqKK+HJN3qKJ4UnV3qKt/QUT+opTsKTk57irp7iST3FXT3FSXhyV09xV0/xkxkiIksYIiJLGCIiSxgiIksYIiJLfPgLwpONwpOTnuIn6ynuCk9Oeop/LTw56SnuCk+e1FOchCdP6imuhCdPCk+e1FM8yRARWcIQEVnCEBFZwhARWcIQEVnCEBFZ4tfvPxARWcAQEVnCEBFZwhARWcIQEVnCEBFZwhARWcIQEVnCEBFZwhARWcIQEVnCEBFZwhARWeJ/AIK7teqT8SROAAAAAElFTkSuQmCC",
+        "transactionId": "pix_1794369750694_451682",
+        "ticketUrl": "",
+        "isMock": true
+      },
+      "coupon": null,
+      "subtotal": 24.9,
+      "discount": 0,
+      "freight": 0,
+      "total": 24.9,
+      "costTotal": 0,
+      "status": "cancelled",
+      "printedStations": [],
+      "notifiedStatuses": [
+        "received",
+        "cancelled"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": "Desistência do cliente antes do preparo",
+      "cancelledAt": "2026-11-11T04:02:30.707Z",
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-11T04:02:30.694Z",
+      "updatedAt": "2026-11-11T04:02:30.707Z"
+    },
+    {
+      "id": "ord_1794369750784_ceplc",
+      "orderNo": "780875",
+      "customer": {
+        "name": "Lucas Motoboy Test",
+        "phone": "16999995544"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua do Entregador",
+        "number": "100",
+        "bairro": "Centro",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 3.5,
+        "freight": 4.5
+      },
+      "items": [
+        {
+          "name": "Copo Tradicional 300ml",
+          "size": 300,
+          "quantity": 1,
+          "unitPrice": 24.9,
+          "costPrice": 0,
+          "subtotal": 24.9,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "approved",
+        "changeFor": null,
+        "trocoValue": 0,
+        "paidAt": "2026-11-11T04:02:30.802Z"
+      },
+      "coupon": null,
+      "subtotal": 24.9,
+      "discount": 0,
+      "freight": 4.5,
+      "total": 29.4,
+      "costTotal": 0,
+      "status": "delivered",
+      "printedStations": [
+        "kitchen"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "delivered"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": "2026-11-11T04:02:30.802Z",
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": 1,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": null,
+      "returnedAt": null,
+      "createdAt": "2026-11-11T04:02:30.784Z",
+      "updatedAt": "2026-11-11T04:02:30.802Z",
+      "printed": true
+    },
+    {
+      "id": "ord_1794369750858_j5v8l",
+      "orderNo": "896169",
+      "customer": {
+        "name": "Mariana Devolução Test",
+        "phone": "16988884433"
+      },
+      "delivery": {
+        "type": "delivery",
+        "street": "Rua Deserta",
+        "number": "99",
+        "bairro": "Jardim Primavera",
+        "city": "Franca",
+        "state": "SP",
+        "cep": "",
+        "reference": "",
+        "km": 4,
+        "freight": 4.5
+      },
+      "items": [
+        {
+          "name": "Copo Tradicional 500ml",
+          "size": 500,
+          "quantity": 2,
+          "unitPrice": 29.9,
+          "costPrice": 0,
+          "subtotal": 59.8,
+          "accompaniments": [],
+          "extras": [],
+          "fruits": [],
+          "note": ""
+        }
+      ],
+      "payment": {
+        "method": "Dinheiro",
+        "timing": "delivery",
+        "status": "pay_on_delivery",
+        "changeFor": null,
+        "trocoValue": 0
+      },
+      "coupon": null,
+      "subtotal": 59.8,
+      "discount": 0,
+      "freight": 4.5,
+      "total": 64.3,
+      "costTotal": 0,
+      "status": "returned",
+      "printedStations": [
+        "kitchen"
+      ],
+      "notifiedStatuses": [
+        "received",
+        "returned"
+      ],
+      "archivedToHistory": false,
+      "archivedAt": null,
+      "preparedAt": null,
+      "deliveredAt": null,
+      "preparationTimeMinutes": null,
+      "deliveryTimeMinutes": null,
+      "cancellationReason": null,
+      "cancelledAt": null,
+      "returnReason": "Cliente não atendeu o interfone nem telefone",
+      "returnedAt": "2026-11-11T04:02:30.875Z",
+      "createdAt": "2026-11-11T04:02:30.858Z",
+      "updatedAt": "2026-11-11T04:02:30.875Z",
       "printed": true
     }
   ],
@@ -10424,73 +10975,103 @@
       "read": false
     },
     {
-      "id": "msg_1794350097151_vouz",
+      "id": "msg_1794369376334_id8k",
       "sender": "customer",
       "senderName": "Lucas Delivery",
       "customerPhone": "16998887766",
       "customerName": "Lucas Delivery",
       "message": "Olá, meu açaí já saiu para entrega?",
-      "timestamp": "2026-11-10T22:34:57.151Z",
+      "timestamp": "2026-11-11T03:56:16.334Z",
       "read": false
     },
     {
-      "id": "msg_1794350098424_urk9",
+      "id": "msg_1794369377536_sc15",
       "sender": "customer",
       "senderName": "Cliente A",
       "customerPhone": "16988880001",
       "customerName": "Cliente A",
       "message": "Mensagem confidencial do Cliente A",
-      "timestamp": "2026-11-10T22:34:58.424Z",
+      "timestamp": "2026-11-11T03:56:17.536Z",
       "read": false
     },
     {
-      "id": "msg_1794350098437_c6b9",
+      "id": "msg_1794369377546_3oa8",
       "sender": "customer",
       "senderName": "Cliente B",
       "customerPhone": "16988880002",
       "customerName": "Cliente B",
       "message": "Mensagem confidencial do Cliente B",
-      "timestamp": "2026-11-10T22:34:58.437Z",
+      "timestamp": "2026-11-11T03:56:17.546Z",
       "read": false
     },
     {
-      "id": "msg_1794350878920_33s6",
+      "id": "msg_1794369705873_tdyk",
       "sender": "customer",
       "senderName": "Lucas Delivery",
       "customerPhone": "16998887766",
       "customerName": "Lucas Delivery",
       "message": "Olá, meu açaí já saiu para entrega?",
-      "timestamp": "2026-11-10T22:47:58.920Z",
+      "timestamp": "2026-11-11T04:01:45.873Z",
       "read": false
     },
     {
-      "id": "msg_1794350880186_fr4w",
+      "id": "msg_1794369707022_a6do",
       "sender": "customer",
       "senderName": "Cliente A",
       "customerPhone": "16988880001",
       "customerName": "Cliente A",
       "message": "Mensagem confidencial do Cliente A",
-      "timestamp": "2026-11-10T22:48:00.186Z",
+      "timestamp": "2026-11-11T04:01:47.022Z",
       "read": false
     },
     {
-      "id": "msg_1794350880196_xjt4",
+      "id": "msg_1794369707033_03gb",
       "sender": "customer",
       "senderName": "Cliente B",
       "customerPhone": "16988880002",
       "customerName": "Cliente B",
       "message": "Mensagem confidencial do Cliente B",
-      "timestamp": "2026-11-10T22:48:00.196Z",
+      "timestamp": "2026-11-11T04:01:47.033Z",
       "read": false
     },
     {
-      "id": "msg_1794350880283_dbue",
+      "id": "msg_1794369749740_u5ic",
+      "sender": "customer",
+      "senderName": "Lucas Delivery",
+      "customerPhone": "16998887766",
+      "customerName": "Lucas Delivery",
+      "message": "Olá, meu açaí já saiu para entrega?",
+      "timestamp": "2026-11-11T04:02:29.740Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794369750747_bkfd",
+      "sender": "customer",
+      "senderName": "Cliente A",
+      "customerPhone": "16988880001",
+      "customerName": "Cliente A",
+      "message": "Mensagem confidencial do Cliente A",
+      "timestamp": "2026-11-11T04:02:30.747Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794369750757_26fu",
+      "sender": "customer",
+      "senderName": "Cliente B",
+      "customerPhone": "16988880002",
+      "customerName": "Cliente B",
+      "message": "Mensagem confidencial do Cliente B",
+      "timestamp": "2026-11-11T04:02:30.757Z",
+      "read": false
+    },
+    {
+      "id": "msg_1794369750844_ydmp",
       "sender": "customer",
       "senderName": "Carlos Silva VIP",
       "customerPhone": "16977771234",
       "customerName": "Carlos Silva VIP",
       "message": "Olá, gostaria de fazer outro pedido!",
-      "timestamp": "2026-11-10T22:48:00.283Z",
+      "timestamp": "2026-11-11T04:02:30.844Z",
       "read": false
     }
   ],

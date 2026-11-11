@@ -274,9 +274,9 @@
         </div>
 
         <div style="font-size:16px;font-weight:700" id="customer-name">Cliente</div>
-        <div style="font-size:13px;color:var(--mut)" id="customer-phone">(00) 00000-0000</div>
+        <div style="font-size:13px;color:var(--mut);display:none" id="customer-phone"></div>
 
-        <a id="btn-wpp" href="#" target="_blank" class="btn btn-wpp">
+        <a id="btn-wpp" href="#" target="_blank" class="btn btn-wpp" style="display:none">
           💬 Falar no WhatsApp com Cliente
         </a>
       </div>
@@ -442,13 +442,35 @@
       document.getElementById('order-details-box').style.display = 'flex';
       document.getElementById('order-no').textContent = '#' + order.orderNo;
       document.getElementById('customer-name').textContent = order.customer.name;
-      document.getElementById('customer-phone').textContent = order.customer.phone;
       document.title = `Entrega #${order.orderNo} (${order.customer.name}) · Explosão Açaí`;
 
-      // WhatsApp
-      const cleanPhone = (order.customer.phone || '').replace(/\D/g, '');
-      const wppLink = `https://wa.me/55${cleanPhone}?text=Ol%C3%A1%20${encodeURIComponent(order.customer.name)}!%20Sou%20o%20entregador%20da%20Explos%C3%A3o%20A%C3%A7a%C3%AD%20com%20o%20seu%20pedido%20%23${order.orderNo}.`;
-      document.getElementById('btn-wpp').href = wppLink;
+      // Regra de Privacidade e LGPD do Cliente:
+      // O número de telefone e o botão de WhatsApp só ficam visíveis enquanto o pedido estiver em trânsito/entrega.
+      // Assim que a entrega ou a devolução for finalizada, esconde o telefone e desabilita/esconde o botão!
+      const isFinished = order.status === 'delivered' || order.status === 'returned';
+      const phoneEl = document.getElementById('customer-phone');
+      const btnWpp = document.getElementById('btn-wpp');
+
+      if (isFinished) {
+        if (phoneEl) {
+          phoneEl.style.display = 'none';
+          phoneEl.textContent = '';
+        }
+        if (btnWpp) {
+          btnWpp.style.display = 'none';
+          btnWpp.removeAttribute('href');
+        }
+      } else {
+        if (phoneEl) {
+          phoneEl.style.display = 'block';
+          phoneEl.textContent = order.customer.phone || '';
+        }
+        if (btnWpp) {
+          btnWpp.style.display = 'flex';
+          const cleanPhone = (order.customer.phone || '').replace(/\D/g, '');
+          btnWpp.href = `https://wa.me/55${cleanPhone}?text=Ol%C3%A1%20${encodeURIComponent(order.customer.name)}!%20Sou%20o%20entregador%20da%20Explos%C3%A3o%20A%C3%A7a%C3%AD%20com%20o%20seu%20pedido%20%23${order.orderNo}.`;
+        }
+      }
 
       // Endereço
       const del = order.delivery || {};

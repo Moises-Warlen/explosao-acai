@@ -580,6 +580,10 @@ export class OrderService {
       for (const printer of printers) {
         if (printer.autoPrintOnApproved) {
           const target = printer.target === 'all' ? 'counter' : printer.target;
+          // Não re-imprime automaticamente se a comanda já foi impressa nesta estação
+          if (Array.isArray(order.printedStations) && order.printedStations.includes(target)) {
+            continue;
+          }
           this.printOrder(order.id, target, printer.id);
         }
       }

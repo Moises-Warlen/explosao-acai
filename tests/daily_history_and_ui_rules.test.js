@@ -114,26 +114,26 @@ describe('Explosão Açaí — Automação do Histórico Diário e Regras de UI'
     };
 
     // Helper para checar presença de botões de WhatsApp
-    const hasWpp = (html) => html.includes('💬 Zap') || html.includes('💬 Avisar no Zap') || html.includes('Avisar no WhatsApp');
+    const hasWpp = (html) => html.includes('💬 Zap') || html.includes('💬 Avisar no Zap') || html.includes('Avisar no WhatsApp') || html.includes('💬 Saiu Entrega') || html.includes('💬 Avisar Entrega') || html.includes('💬 Pedido Pronto') || html.includes('💬 Avisar Retirada') || html.includes('💬 Agradecer');
 
-    // 1. Coluna Pronto / Saiu para Entrega
+    // 1. Coluna Pronto / Saiu para Entrega (DEVE ter botão de avisar cliente)
     const readyDeliveryCard = context.createOrderCardHtml({ ...testOrderTemplate, status: 'out_for_delivery' });
-    assert.equal(hasWpp(readyDeliveryCard), false, 'Pronto / Saiu para Entrega NÃO deve ter botões de WhatsApp');
+    assert.ok(hasWpp(readyDeliveryCard), 'Pronto / Saiu para Entrega DEVE ter botão de WhatsApp');
 
-    // 2. Coluna Entregues Hoje
+    // 2. Coluna Entregues Hoje (DEVE ter botão de agradecimento)
     const deliveredCard = context.createOrderCardHtml({ ...testOrderTemplate, status: 'delivered' });
-    assert.equal(hasWpp(deliveredCard), false, 'Entregues Hoje NÃO deve ter botões de WhatsApp');
+    assert.ok(hasWpp(deliveredCard), 'Entregues Hoje DEVE ter botão de WhatsApp para agradecer');
 
-    // 3. Coluna Pedidos Concluídos (Histórico)
+    // 3. Coluna Pedidos Concluídos (Histórico permanente NÃO deve ter botão)
     const historyCard = context.createOrderCardHtml({ ...testOrderTemplate, status: 'delivered', archivedToHistory: true }, true);
     assert.equal(hasWpp(historyCard), false, 'Pedidos Concluídos NÃO deve ter botões de WhatsApp');
     assert.equal(historyCard.includes('wa.me/55'), false, 'Pedidos Concluídos NÃO deve conter link direto de WhatsApp no cliente');
 
-    // 4. Coluna Devolvidos à Loja
+    // 4. Coluna Devolvidos à Loja (NÃO deve ter botão de WhatsApp)
     const returnedCard = context.createOrderCardHtml({ ...testOrderTemplate, status: 'returned' });
     assert.equal(hasWpp(returnedCard), false, 'Devolvidos à Loja NÃO deve ter botões de WhatsApp');
 
-    // 5. Coluna Cancelados
+    // 5. Coluna Cancelados (NÃO deve ter botão de WhatsApp)
     const cancelledCard = context.createOrderCardHtml({ ...testOrderTemplate, status: 'cancelled' });
     assert.equal(hasWpp(cancelledCard), false, 'Cancelados NÃO deve ter botões de WhatsApp');
 
@@ -146,14 +146,17 @@ describe('Explosão Açaí — Automação do Histórico Diário e Regras de UI'
 
     // 7. Testar promptWppStatusNotice:
     context.promptWppStatusNotice({ ...testOrderTemplate, status: 'cancelled' });
-    context.promptWppStatusNotice({ ...testOrderTemplate, status: 'ready' });
-    context.promptWppStatusNotice({ ...testOrderTemplate, status: 'out_for_delivery' });
     context.promptWppStatusNotice({ ...testOrderTemplate, status: 'returned' });
-    context.promptWppStatusNotice({ ...testOrderTemplate, status: 'delivered' });
-    assert.equal(toasts.length, 0, 'promptWppStatusNotice NÃO deve exibir toast para cancelados, pronto/entrega, devolvidos ou entregues');
+    assert.equal(toasts.length, 0, 'promptWppStatusNotice NÃO deve exibir toast para cancelados ou devolvidos');
 
     context.promptWppStatusNotice({ ...testOrderTemplate, status: 'received' });
     assert.equal(toasts.length, 1, 'promptWppStatusNotice DEVE exibir para recebidos');
+
+    context.promptWppStatusNotice({ ...testOrderTemplate, status: 'out_for_delivery' });
+    assert.equal(toasts.length, 2, 'promptWppStatusNotice DEVE exibir para saiu para entrega');
+
+    context.promptWppStatusNotice({ ...testOrderTemplate, status: 'delivered' });
+    assert.equal(toasts.length, 3, 'promptWppStatusNotice DEVE exibir para entregues');
   });
 
   test('7 e 8: Cancelamento em Pronto/Saiu para Entrega (Retirada vs Entrega)', () => {
@@ -232,5 +235,27 @@ describe('Explosão Açaí — Automação do Histórico Diário e Regras de UI'
     assert.ok(adminHtml.includes('id="cards-history"'), 'Deve conter container cards-history');
     assert.ok(adminHtml.includes('<option value="delivered">Entregues Hoje</option>'), 'Filtro deve ter Entregues Hoje');
     assert.ok(adminHtml.includes('<option value="history">Pedidos Concluídos</option>'), 'Filtro deve ter Pedidos Concluídos');
+  });
+
+  test('Privacidade do Motoboy (public/motoboy.html) e Prevenção de Loop de Impressão', () => {
+    const motoboyHtml = fs.readFileSync(path.resolve('public/motoboy.html'), 'utf-8');
+
+    // 1. Deve verificar status delivered ou returned para ocultar telefone e botão WhatsApp
+    assert.ok(motoboyHtml.includes("order.status === 'delivered' || order.status === 'returned'"), 'Deve verificar se o pedido foi entregue ou devolvido');
+    assert.ok(motoboyHtml.includes("phoneEl.style.display = 'none'"), 'Deve ocultar telefone do cliente após finalizado');
+    assert.ok(motoboyHtml.includes("btnWpp.style.display = 'none'"), 'Deve desabilitar/ocultar botão de WhatsApp após finalizado');
+
+    // 2. Prevenção de loop de auto-impressão em OrderService
+    const orderServiceCode = fs.readFileSync(path.resolve('src/application/services/OrderService.js'), 'utf-8');
+    assert.ok(orderServiceCode.includes('order.printedStations.includes(target)'), 'OrderService deve verificar se a estação já foi impressa para evitar auto-impressão infinita');
+
+    // 3. Prevenção de loop de impressão e limpeza no admin.js
+    const adminJsCode = fs.readFileSync(path.resolve('public/js/admin.js'), 'utf-8');
+    assert.ok(adminJsCode.includes('LAST_PRINT_TEXT'), 'admin.js deve ter deduplicação de tickets de impressão');
+    assert.ok(adminJsCode.includes('afterprint'), 'admin.js deve escutar afterprint para limpeza');
+
+    // 4. Margem zero no CSS para impressoras térmicas contínuas
+    const adminCssCode = fs.readFileSync(path.resolve('public/css/admin.css'), 'utf-8');
+    assert.ok(adminCssCode.includes('margin: 0 !important;'), 'CSS @media print deve ter margem 0 para evitar estouro de bobina térmica');
   });
 });
