@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Explosão Açaí — Manual e Documentação Completa do Sistema</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    @page {
+      size: A4;
+      margin: 18mm 15mm 20mm 15mm;
+      @bottom-right {
+        content: counter(page);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #1e293b;
+      background: #ffffff;
+      line-height: 1.55;
+      font-size: 10.5pt;
+    }
+
+    .cover {
+      page-break-after: always;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 85vh;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .badge-top {
+      display: inline-block;
+      align-self: center;
+      background: #f3e8ff;
+      color: #7e22ce;
+      font-weight: 700;
+      font-size: 11pt;
+      padding: 6px 16px;
+      border-radius: 999px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    .cover h1 {
+      font-size: 32pt;
+      font-weight: 800;
+      color: #4c1d95;
+      line-height: 1.15;
+      margin-bottom: 12px;
+    }
+
+    .cover .subtitle {
+      font-size: 15pt;
+      color: #64748b;
+      margin-bottom: 36px;
+      font-weight: 500;
+    }
+
+    .cover .meta-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 500px;
+      margin: 0 auto;
+      text-align: left;
+      font-size: 10pt;
+    }
+
+    .meta-box table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .meta-box td {
+      padding: 6px 4px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .meta-box td:last-child {
+      text-align: right;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .meta-box tr:last-child td {
+      border-bottom: none;
+    }
+
+    h2 {
+      font-size: 16pt;
+      font-weight: 700;
+      color: #4c1d95;
+      border-bottom: 2px solid #e9d5ff;
+      padding-bottom: 6px;
+      margin-top: 28px;
+      margin-bottom: 14px;
+      page-break-after: avoid;
+    }
+
+    h3 {
+      font-size: 12pt;
+      font-weight: 700;
+      color: #6b21a8;
+      margin-top: 18px;
+      margin-bottom: 8px;
+      page-break-after: avoid;
+    }
+
+    p {
+      margin-bottom: 10px;
+      text-align: justify;
+    }
+
+    ul, ol {
+      margin-left: 20px;
+      margin-bottom: 12px;
+    }
+
+    li {
+      margin-bottom: 5px;
+    }
+
+    strong {
+      color: #0f172a;
+    }
+
+    .callout {
+      background: #faf5ff;
+      border-left: 4px solid #9333ea;
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 14px 0;
+      font-size: 10pt;
+    }
+
+    .callout-warning {
+      background: #fffbeb;
+      border-left: 4px solid #f59e0b;
+    }
+
+    .callout-success {
+      background: #f0fdf4;
+      border-left: 4px solid #22c55e;
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-size: 9.5pt;
+    }
+
+    table.data-table th, table.data-table td {
+      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+      text-align: left;
+    }
+
+    table.data-table th {
+      background: #f1f5f9;
+      color: #334155;
+      font-weight: 700;
+    }
+
+    table.data-table tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', Consolas, monospace;
+      font-size: 9pt;
+      background: #f1f5f9;
+      color: #9333ea;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+
+    pre {
+      font-family: 'JetBrains Mono', Consolas, monospace;
+      font-size: 8.5pt;
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 14px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 14px 0;
+      line-height: 1.45;
+      page-break-inside: avoid;
+    }
+
+    .diagram-box {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 14px;
+      margin: 16px 0;
+      font-family: 'JetBrains Mono', Consolas, monospace;
+      font-size: 8.5pt;
+      line-height: 1.4;
+      page-break-inside: avoid;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 14px 0;
+      page-break-inside: avoid;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .card h4 {
+      color: #6b21a8;
+      margin-bottom: 6px;
+      font-size: 10.5pt;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .badge-green { background: #dcfce7; color: #166534; }
+    .badge-purple { background: #f3e8ff; color: #6b21a8; }
+    .badge-blue { background: #e0f2fe; color: #0369a1; }
+    .badge-orange { background: #ffedd5; color: #9a3412; }
+
+    .page-break {
+      page-break-before: always;
+    }
+
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 8pt;
+      color: #94a3b8;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- CAPA -->
+  <div class="cover">
+    <div class="badge-top">Manual Operacional & Técnico</div>
+    <h1>Explosão Açaí</h1>
+    <div class="subtitle">Documentação Completa da Plataforma de Delivery e Gestão</div>
+
+    <div class="meta-box">
+      <table>
+        <tr>
+          <td>Versão do Sistema:</td>
+          <td>2.0 (Produção)</td>
+        </tr>
+        <tr>
+          <td>Ponto de Partida (Loja):</td>
+          <td>CEP 14404-250 (Aeroporto 3)</td>
+        </tr>
+        <tr>
+          <td>Cidade de Operação:</td>
+          <td>Franca - SP</td>
+        </tr>
+        <tr>
+          <td>Testes Automatizados:</td>
+          <td>34 Aprovados (100%)</td>
+        </tr>
+        <tr>
+          <td>Sincronização:</td>
+          <td>WebSockets em Tempo Real</td>
+        </tr>
+        <tr>
+          <td>Data do Documento:</td>
+          <td>Novembro / 2026</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- SUMÁRIO -->
+  <h2>📑 Sumário Geral</h2>
+  <ol>
+    <li><strong>Arquitetura Geral da Plataforma</strong> — Ecossistema em tempo real e sincronização</li>
+    <li><strong>Módulo 1: Cardápio Digital do Cliente (<code>/</code>)</strong> — Personalização, CEP inteligente e checkout</li>
+    <li><strong>Módulo 2: Painel Administrativo e Kanban (<code>/admin</code>)</strong> — Gestão de pedidos e loja</li>
+    <li><strong>Módulo 3: Central de Rotas & Painel do Entregador (<code>/motoboy.html</code>)</strong> — Waze, Maps e despacho</li>
+    <li><strong>Módulo 4: Central de Chat em Tempo Real</strong> — Atendimento isolado e respostas rápidas</li>
+    <li><strong>Módulo 5: Regras Comerciais, Frete e Pagamentos</strong> — Trajeto real por vias e travas antifraude</li>
+    <li><strong>Módulo 6: Automações, Impressão Térmica e Relatórios</strong> — Virada do dia e financeiro</li>
+    <li><strong>Estrutura Técnica, Testes e Deploy</strong> — Clean Architecture, testes e Render</li>
+  </ol>
+
+  <!-- CAPÍTULO 1 -->
+  <h2>1. Arquitetura Geral da Plataforma</h2>
+  <p>O <strong>Explosão Açaí</strong> é uma solução completa desenvolvida para alta performance e estabilidade operacional. O ecossistema conecta em tempo real os clientes, a cozinha, a expedição/balcão e os entregadores através de uma conexão contínua de <strong>WebSockets bidirecionais</strong>.</p>
+
+  <div class="diagram-box">
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                             EXPLOSÃO AÇAÍ                                   │
+├───────────────────────┬─────────────────────────────┬───────────────────────┤
+│    CLIENTE (WEB)      │       SERVIDOR CENTRAL      │     LOJA & ENTREGA    │
+│  - Cardápio Interativo│  - Node.js + Express        │  - Painel Kanban      │
+│  - Montagem de Açaí   │  - Hub WebSockets (/ws)     │  - Comandas Térmicas  │
+│  - Frete CEP em 2 Vias│  - Motor de Rotas e Frete   │  - Divisão de Rotas   │
+│  - Pix EMVCo / Cartão │  - Banco Atômico JSON + PG  │  - Painel do Motoboy  │
+│  - Chat ao Vivo       │  - Automações das 03:00     │  - WhatsApp 1-Clique  │
+└───────────────────────┴─────────────────────────────┴───────────────────────┘
+  </div>
+
+  <div class="callout callout-success">
+    <strong>Sincronização Instantânea:</strong> Qualquer ação executada no painel administrativo (como mudar um pedido para "Em Preparo" ou "Saiu para Entrega") reflete instantaneamente na tela do cliente e do entregador sem recarregar a página.
+  </div>
+
+  <!-- CAPÍTULO 2 -->
+  <div class="page-break"></div>
+  <h2>2. Módulo 1: Cardápio Digital do Cliente (<code>/</code>)</h2>
+  <p>A interface do cliente foi construída com foco na conversão rápida de pedidos pelo smartphone, eliminando a barreira de download de aplicativos.</p>
+
+  <h3>🍨 Personalização de Copos e Produtos</h3>
+  <ul>
+    <li><strong>Seleção de Tamanhos:</strong> fotos nítidas, descrições detalhadas e valor base do copo.</li>
+    <li><strong>Acompanhamentos Grátis com Limite Rígido:</strong> a loja define quantos acompanhamentos o cliente pode escolher sem custo (ex: até 3 grátis). Ao atingir o limite, a interface bloqueia seleções extras ou as direciona para os adicionais pagos.</li>
+    <li><strong>Adicionais Pagos Ilimitados:</strong> o cliente pode adicionar quantos itens extras desejar, calculando os acréscimos automaticamente.</li>
+    <li><strong>Frutas e Caldas:</strong> organização em abas para que o cliente monte o açaí em etapas claras.</li>
+    <li><strong>Observações Especiais:</strong> campo aberto para instruções específicas de preparo.</li>
+  </ul>
+
+  <h3>📍 Cálculo de Frete Inteligente em Duas Vias</h3>
+  <div class="callout">
+    <strong>Origem Fixa da Loja:</strong> O cálculo tem como ponto de partida oficial o CEP <strong>14404-250</strong> (<em>Rua Renato Lourenço Fernandes Rosa, 1721 · Aeroporto 3, Franca/SP</em>).
+  </div>
+  <ul>
+    <li><strong>Digitando o CEP (8 dígitos):</strong> consulta automática ao ViaCEP, preenchimento instantâneo da Rua e Bairro e cálculo imediato do valor de entrega.</li>
+    <li><strong>Digitando o Nome da Rua (a partir de 3 caracteres):</strong> pesquisa no catálogo de logradouros oficiais de Franca/SP, preenchendo automaticamente o CEP e o Bairro correspondentes.</li>
+    <li><strong>Regra do Frete Grátis:</strong> pedidos com raio real de até <strong>2 km</strong> da loja recebem <strong>Frete Grátis (R$ 0,00)</strong>.</li>
+  </ul>
+
+  <h3>💳 Formas de Pagamento no Checkout</h3>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Forma</th>
+        <th>Funcionamento</th>
+        <th>Regra de Segurança da Loja</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Pix Instantâneo</strong></td>
+        <td>Gera o Copia e Cola EMVCo oficial e QR Code PNG escaneável na hora.</td>
+        <td>A comanda da cozinha <strong>só imprime</strong> após a loja conferir o valor e confirmar "Pago".</td>
+      </tr>
+      <tr>
+        <td><strong>Cartão na Entrega</strong></td>
+        <td>Cliente seleciona Débito ou Crédito para levar a maquininha.</td>
+        <td>Impressão imediata liberada na cozinha.</td>
+      </tr>
+      <tr>
+        <td><strong>Dinheiro</strong></td>
+        <td>Cliente informa se precisa de troco e para quanto.</td>
+        <td>Calcula o troco exato para a comanda e painel do motoboy. Impressão imediata liberada.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- CAPÍTULO 3 -->
+  <div class="page-break"></div>
+  <h2>3. Módulo 2: Painel Administrativo e Kanban (<code>/admin</code>)</h2>
+  <p>Área de controle total da operação, protegida por senha de segurança (<code>RafaeLL@2</code>).</p>
+
+  <div class="diagram-box">
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 📥 Novos   │ 🍧 Em Preparo │ 🛵 Saiu/Pronto │ 📦 Entregues Hoje │ 🗄️ Pedidos Concluídos     │
+│ (Aguardando│ (Na bancada de│ (Em rota ou no │ (Concluídos no dia│ (Histórico arquivado      │
+│  aceite)   │  montagem)    │  balcão)       │  atual)           │  permanentemente)         │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
+  </div>
+
+  <h3>📋 Fluxo das Colunas do Kanban</h3>
+  <ul>
+    <li><strong>📥 Novos Pedidos:</strong> recebe novos pedidos com alerta sonoro estridente contínuo até o operador aceitar.</li>
+    <li><strong>🍧 Em Preparo:</strong> pedidos que estão sendo produzidos na cozinha.</li>
+    <li><strong>🛵 Pronto para Entrega / Balcão:</strong> pedidos prontos aguardando despacho de motoboy ou retirada pelo cliente.</li>
+    <li><strong>📦 Entregues Hoje:</strong> pedidos finalizados no expediente de hoje, permitindo conferência rápida do caixa diário.</li>
+    <li><strong>🗄️ Pedidos Concluídos:</strong> histórico permanente de vendas anteriores, arquivado de forma segura.</li>
+    <li><strong>↩️ Devolvidos à Loja:</strong> registro de pedidos que saíram para entrega mas retornaram (cliente ausente, interfone quebrado), exigindo preenchimento de justificativa.</li>
+    <li><strong>❌ Cancelados:</strong> pedidos cancelados com estorno dos insumos e motivo registrado.</li>
+  </ul>
+
+  <h3>📲 Notificações de WhatsApp em 1 Clique</h3>
+  <p>Cada pedido possui botões dedicados que abrem o WhatsApp Web ou aplicativo com mensagens pré-formatadas contendo o primeiro nome do cliente, itens e situação:</p>
+  <ul>
+    <li><code>Confirmar & Preparar</code> ➔ <em>"Olá [Nome], seu pedido #X foi confirmado e já está sendo preparado!"</em></li>
+    <li><code>Saiu para Entrega</code> ➔ <em>"Olá [Nome], seu pedido #X acabou de sair com o nosso entregador!"</em> (acompanha chave Pix caso o pagamento seja na entrega).</li>
+    <li><code>Pronto no Balcão</code> ➔ <em>"Olá [Nome], seu pedido #X já está pronto e embalado no balcão!"</em></li>
+  </ul>
+
+  <h3>🏪 Controle de Expediente da Loja</h3>
+  <ul>
+    <li><strong>Botão Liga/Desliga Instantâneo:</strong> fecha a loja no cardápio imediatamente com 1 clique.</li>
+    <li><strong>Agendamento Automático por Dia:</strong> configure horários de abertura e fechamento para cada dia da semana (ex: Domingo das 13h às 23h; Segunda fechado; Sexta até 23h30).</li>
+  </ul>
+
+  <!-- CAPÍTULO 4 -->
+  <div class="page-break"></div>
+  <h2>4. Módulo 3: Central de Rotas & Painel do Entregador (<code>/motoboy.html</code>)</h2>
+  <p>Projetado para eliminar gargalos logísticos no momento em que múltiplos pedidos saem simultaneamente da loja.</p>
+
+  <h3>🗺️ Mapa de Despacho & Divisão Automática de Rotas</h3>
+  <ul>
+    <li><strong>Visualização no Mapa:</strong> todos os pedidos com status "Pronto para Entrega" são marcados no mapa interativo com seus respectivos bairros e endereços.</li>
+    <li><strong>Divisão Equilibrada entre Entregadores:</strong>
+      <br>Se você tiver 20 pedidos e 4 motoboys, basta selecionar <code>4 Motoboys</code> e clicar em <strong>Gerar Divisão</strong>. O sistema divide a lista em 4 rotas de 5 pedidos cada (<code>🛵 Rota 1</code>, <code>🛵 Rota 2</code>, etc.).
+    </li>
+    <li><strong>Envio de Rota Completa no WhatsApp do Motoboy:</strong>
+      <br>O sistema formata um itinerário completo com a sequência de paradas, nome do cliente, endereço, referências, valor a cobrar, necessidade de troco e um link multi-paradas do <strong>Google Maps</strong> pronto para navegação ponto a ponto.
+    </li>
+    <li><strong>Atualização em Lote:</strong> botão para mover todos os pedidos daquela rota para "Saiu para Entrega" com um único toque.</li>
+  </ul>
+
+  <h3>📱 Tela Mobile do Motoboy (<code>public/motoboy.html</code>)</h3>
+  <div class="grid-2">
+    <div class="card">
+      <h4>🚗 Botões de Navegação Direta</h4>
+      <p>1 toque para abrir o destino direto no <strong>Waze</strong> ou no <strong>Google Maps</strong> sem precisar digitar o endereço.</p>
+    </div>
+    <div class="card">
+      <h4>📍 Destaque de Ponto de Referência</h4>
+      <p>Caixa amarela de alta visibilidade com as observações do cliente (ex: <em>"casa de esquina portão preto"</em>).</p>
+    </div>
+    <div class="card">
+      <h4>💵 Resumo Financeiro</h4>
+      <p>Indica claramente se o pedido já está pago via Pix ou se deve receber em dinheiro/cartão com o troco exato.</p>
+    </div>
+    <div class="card">
+      <h4>✅ Confirmação pelo Celular</h4>
+      <p>O próprio entregador confirma a entrega no celular dele, atualizando o painel da loja em tempo real.</p>
+    </div>
+  </div>
+
+  <!-- CAPÍTULO 5 -->
+  <h2>5. Módulo 4: Central de Chat em Tempo Real</h2>
+  <p>Sistema de atendimento multiconversa integrado diretamente na plataforma, eliminando a dependência do WhatsApp para suporte imediato.</p>
+  <ul>
+    <li><strong>Isolamento Absoluto de Mensagens:</strong> cada cliente conversa exclusivamente em sua própria sala autenticada; é tecnicamente impossível um cliente visualizar mensagens de outro.</li>
+    <li><strong>Identificação do Pedido Ativo:</strong> ao clicar no cliente na central de mensagens da loja, o cabeçalho exibe o pedido em andamento, itens e endereço.</li>
+    <li><strong>Respostas Rápidas Pré-Configuradas:</strong> botões de 1 clique para agilizar o suporte (<em>Em Preparo</em>, <em>Saiu para Entrega</em>, <em>Pronto no Balcão</em>, <em>Agradecimento</em>).</li>
+    <li><strong>Notificações Sonoras e Visuais:</strong> alerta auditivo e título da aba dinâmico (<code>💬 Nova mensagem de [Nome]!</code>) para a equipe nunca perder chamados.</li>
+  </ul>
+
+  <!-- CAPÍTULO 6 -->
+  <div class="page-break"></div>
+  <h2>6. Módulo 5: Regras Comerciais, Frete e Pagamentos</h2>
+
+  <h3>📐 Calibração Geográfica em Franca/SP (Saída: CEP 14404-250)</h3>
+  <p>A taxa de entrega é baseada no trajeto real por vias públicas partindo do Jardim Aeroporto 3:</p>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Região / Bairro de Destino</th>
+        <th>Distância Real de Trajeto</th>
+        <th>Valor Comercial do Frete</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Jd. Aeroporto 1, 2, 3, 4, Mundo Novo, Universitário</td>
+        <td>0,5 km a 1,5 km</td>
+        <td><span class="badge badge-green">Grátis (R$ 0,00)</span></td>
+      </tr>
+      <tr>
+        <td>Jd. Santa Cruz</td>
+        <td>3,5 km</td>
+        <td>R$ 4,50</td>
+      </tr>
+      <tr>
+        <td>Jd. Elimar, Santa Lúcia, Recanto Elimar</td>
+        <td>4,5 km</td>
+        <td>R$ 4,50</td>
+      </tr>
+      <tr>
+        <td>Parque Progresso</td>
+        <td>5,0 km</td>
+        <td>R$ 5,00</td>
+      </tr>
+      <tr>
+        <td>Vila São Sebastião</td>
+        <td>5,2 km</td>
+        <td>R$ 5,50</td>
+      </tr>
+      <tr>
+        <td>Jd. Paulistano / Paulista</td>
+        <td>6,0 km</td>
+        <td>R$ 6,00</td>
+      </tr>
+      <tr>
+        <td>Vila Formosa / Jd. Noêmia</td>
+        <td>6,5 km a 6,8 km</td>
+        <td>R$ 6,50 a R$ 7,00</td>
+      </tr>
+      <tr>
+        <td>Centro / Bairro Estação</td>
+        <td>8,0 km a 8,5 km</td>
+        <td>R$ 8,00 a R$ 8,50</td>
+      </tr>
+      <tr>
+        <td>Cidade Nova / Consolação</td>
+        <td>9,8 km</td>
+        <td>R$ 10,00</td>
+      </tr>
+      <tr>
+        <td>Parque Vicente Leporace 1 e 2</td>
+        <td>14,2 km a 17,0 km</td>
+        <td>R$ 14,50 a R$ 17,00</td>
+      </tr>
+      <tr>
+        <td>Jd. Vera Cruz / Miramontes / Petrópolis</td>
+        <td>15,0 km a 16,0 km</td>
+        <td>R$ 15,00 a R$ 16,00</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>🛡️ Trava de Segurança Contra Golpes do Pix</h3>
+  <div class="callout callout-warning">
+    <strong>Proteção de Caixa:</strong> Pedidos com forma de pagamento "Pix" entram com a bandeira de pagamento pendente. O sistema <strong>bloqueia a impressão térmica e o envio para a cozinha</strong> até que o operador da loja confira o extrato do banco e clique em <em>Confirmar Pix</em> no painel.
+  </div>
+
+  <!-- CAPÍTULO 7 -->
+  <h2>7. Módulo 6: Automações, Impressão Térmica e Relatórios</h2>
+
+  <h3>🖨️ Impressão Térmica Inteligente (58mm / 80mm)</h3>
+  <ul>
+    <li><strong>Comanda de Cozinha:</strong> exibe apenas o essencial para a montagem: número do pedido, tamanho do copo, complementos grátis, adicionais pagos e observações da receita.</li>
+    <li><strong>Comanda de Balcão / Entrega:</strong> exibe nome do cliente, telefone, endereço completo, pontos de referência, forma de pagamento e valor de troco.</li>
+  </ul>
+
+  <h3>🌙 Automação da Virada do Dia (03:00 de Brasília)</h3>
+  <p>O sistema possui um agendador interno (cron) que é acionado pontualmente às <strong>03:00 da madrugada no horário de Brasília</strong>:</p>
+  <ul>
+    <li>Os pedidos concluídos do expediente anterior são arquivados permanentemente na coluna <code>Pedidos Concluídos</code>.</li>
+    <li>A coluna <code>Entregues Hoje</code> é zerada para iniciar o novo dia de trabalho de forma limpa.</li>
+    <li>Nenhum dado é perdido: todo o histórico continua acessível nos relatórios financeiros.</li>
+  </ul>
+
+  <h3>📊 Relatórios Gerenciais & DRE</h3>
+  <ul>
+    <li>Faturamento total bruto e líquido;</li>
+    <li>Ticket médio por pedido;</li>
+    <li>Total de taxas de entrega arrecadadas para controle de motoboys;</li>
+    <li>Faturamento discriminado por forma de pagamento (Pix, Cartão, Dinheiro);</li>
+    <li>Ficha técnica por produto com cálculo de margem de lucro e alerta visual de prejuízo caso o custo de insumos ultrapasse a margem de segurança.</li>
+  </ul>
+
+  <!-- CAPÍTULO 8 -->
+  <div class="page-break"></div>
+  <h2>8. Estrutura Técnica, Testes e Deploy</h2>
+
+  <h3>🧱 Arquitetura em Camadas (Clean Architecture)</h3>
+  <p>O código foi desenvolvido de forma modular, separando as regras de negócio da infraestrutura:</p>
+  <ul>
+    <li><code>src/domain/entities/</code>: Entidades puras de negócio (<code>Order</code>, <code>Product</code>, <code>Coupon</code>) com regras de troco, descontos e validações.</li>
+    <li><code>src/application/services/</code>: Serviços especializados (<code>FreightService</code>, <code>OrderService</code>, <code>CatalogService</code>, <code>ChatService</code>, <code>ReportService</code>).</li>
+    <li><code>src/infrastructure/</code>: Conectores de banco de dados (JSON atômico e PostgreSQL), WebSockets, impressão térmica e geração de Pix.</li>
+    <li><code>src/presentation/</code>: Rotas da API REST, controladores e middlewares de autenticação.</li>
+  </ul>
+
+  <h3>🧪 Suíte de Testes Automatizados (34 Testes)</h3>
+  <p>Todos os cenários críticos são verificados antes de qualquer atualização:</p>
+  <pre>
+> node --test tests/**/*.test.js
+
+✔ Explosão Açaí — Testes das 4 Correções Finais (4 testes)
+✔ Explosão Açaí — Testes de Integração da API (8 testes)
+✔ Explosão Açaí — Automação do Histórico Diário e Regras de UI (7 testes)
+✔ Explosão Açaí — Testes de Domínio e Regras de Negócio (7 testes)
+✔ Explosão Açaí — Testes das Novas Funcionalidades (8 testes)
+
+TOTAL: 34 testes aprovados (0 falhas) — 100% de cobertura nos fluxos críticos.
+  </pre>
+
+  <h3>🚀 Infraestrutura & Deploy em Produção</h3>
+  <ul>
+    <li><strong>Repositório GitHub:</strong> integrado com branches <code>master</code> e <code>main</code>.</li>
+    <li><strong>Hospedagem Render:</strong> deploy contínuo automático com monitoramento de integridade e SSL ativo.</li>
+    <li><strong>Persistência Garantida:</strong> banco de dados atômico com gravação segura contra quedas de energia.</li>
+  </ul>
+
+  <div style="margin-top: 40px; text-align: center; border-top: 1px solid #cbd5e1; padding-top: 20px; color: #64748b; font-size: 9pt;">
+    <strong>Explosão Açaí Delivery</strong> • Sistema Proprietário de Gestão e Cardápio Online<br>
+    Franca - SP • Documentação Atualizada para Produção
+  </div>
+
+</body>
+</html>
