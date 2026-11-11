@@ -879,7 +879,8 @@ function renderCheckoutModal() {
   if (isDelivery) {
     h += `
       <label>Rua ou Avenida
-        <input id="f_rua" value="${esc(CHECKOUT_DATA.rua || '')}" placeholder="Ex: Avenida Brasil" oninput="CHECKOUT_DATA.rua = this.value; calcFrete()" onchange="CHECKOUT_DATA.rua = this.value; calcFrete()">
+        <input id="f_rua" value="${esc(CHECKOUT_DATA.rua || '')}" placeholder="Ex: Avenida Brasil" list="rua-suggestions" autocomplete="off" oninput="handleRuaInput(this.value)" onchange="handleRuaChange(this.value)">
+        <datalist id="rua-suggestions"></datalist>
       </label>
 
       <div class="g2">
@@ -975,6 +976,73 @@ window.setPaymentTiming = function(timing) {
   renderCheckoutModal();
 };
 
+function applyAddressFromLookup(item) {
+  if (!item) return;
+  if (item.logradouro && $('#f_rua') && $('#f_rua').value !== item.logradouro) {
+    $('#f_rua').value = item.logradouro;
+    CHECKOUT_DATA.rua = item.logradouro;
+  }
+  if (item.cep) {
+    const cleanCep = String(item.cep).replace(/\D/g, '');
+    CHECKOUT_DATA.cep = cleanCep;
+    if ($('#f_cep')) $('#f_cep').value = item.cep;
+  }
+  if (item.bairro) {
+    CHECKOUT_DATA.bairro = item.bairro;
+    if ($('#f_bairro')) $('#f_bairro').value = item.bairro;
+  }
+  CHECKOUT_DATA.cid = item.localidade || 'Franca';
+  CHECKOUT_DATA.uf = item.uf || 'SP';
+  calcFrete();
+}
+
+let RUA_SEARCH_TIMER = null;
+window.handleRuaInput = function(val) {
+  CHECKOUT_DATA.rua = val;
+  calcFrete();
+
+  clearTimeout(RUA_SEARCH_TIMER);
+  const clean = val.trim();
+  if (clean.length < 3) return;
+
+  RUA_SEARCH_TIMER = setTimeout(async () => {
+    try {
+      const query = encodeURIComponent(clean);
+      const res = await fetch(`https://viacep.com.br/ws/SP/Franca/${query}/json/`);
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        const dl = $('#rua-suggestions');
+        if (dl) {
+          dl.innerHTML = data.slice(0, 8).map(d => `<option value="${d.logradouro}">${d.bairro} · CEP: ${d.cep}</option>`).join('');
+        }
+        const exact = data.find(d => d.logradouro.toLowerCase() === clean.toLowerCase()) || (data.length === 1 ? data[0] : null);
+        if (exact) {
+          applyAddressFromLookup(exact);
+        }
+      }
+    } catch (e) {}
+  }, 450);
+};
+
+window.handleRuaChange = async function(val) {
+  CHECKOUT_DATA.rua = val;
+  const clean = val.trim();
+  if (clean.length < 3) return;
+
+  try {
+    const query = encodeURIComponent(clean);
+    const res = await fetch(`https://viacep.com.br/ws/SP/Franca/${query}/json/`);
+    const data = await res.json();
+    if (Array.isArray(data) && data.length > 0) {
+      const match = data.find(d => d.logradouro.toLowerCase().includes(clean.toLowerCase())) || data[0];
+      if (match) {
+        applyAddressFromLookup(match);
+      }
+    }
+  } catch (e) {}
+  calcFrete();
+};
+
 window.buscaCep = async function(cep) {
   const digits = String(cep || '').replace(/\D/g, '');
   if (digits.length !== 8) return;
@@ -983,14 +1051,7 @@ window.buscaCep = async function(cep) {
     const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
     const data = await res.json();
     if (!data.erro) {
-      CHECKOUT_DATA.rua = data.logradouro || CHECKOUT_DATA.rua;
-      CHECKOUT_DATA.bairro = data.bairro || CHECKOUT_DATA.bairro;
-      CHECKOUT_DATA.cid = data.localidade || 'Franca';
-      CHECKOUT_DATA.uf = data.uf || 'SP';
-      CHECKOUT_DATA.cep = digits;
-      if ($('#f_rua')) $('#f_rua').value = CHECKOUT_DATA.rua;
-      if ($('#f_bairro')) $('#f_bairro').value = CHECKOUT_DATA.bairro;
-      calcFrete();
+      applyAddressFromLookup(data);
     }
   } catch (e) {}
 };

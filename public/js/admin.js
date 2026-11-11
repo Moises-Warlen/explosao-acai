@@ -3822,6 +3822,55 @@ window.toggleSelectAllMapStops = function(isChecked) {
   updateSelectedMapRoute();
 };
 
+window.splitRoutesEqually = function() {
+  const numMotoboys = parseInt($('#map-num-motoboys')?.value || '4', 10);
+  const container = $('#map-split-routes-container');
+  const buttonsBox = $('#map-split-routes-buttons');
+  if (!container || !buttonsBox) return;
+
+  const total = (CURRENT_MAP_SORTED_ORDERS || []).length;
+  if (total === 0) {
+    return adminToast('Nenhum pedido disponível para dividir.', 'warning');
+  }
+
+  const chunkSize = Math.ceil(total / numMotoboys);
+  const groups = [];
+  for (let i = 0; i < total; i += chunkSize) {
+    groups.push(CURRENT_MAP_SORTED_ORDERS.slice(i, i + chunkSize));
+  }
+
+  let html = `<button type="button" class="btn-sm" style="background:rgba(255,255,255,0.1);color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap" onclick="toggleSelectAllMapStops(true)">Todos (${total})</button>`;
+
+  groups.forEach((group, idx) => {
+    const routeNum = idx + 1;
+    const orderIds = JSON.stringify(group.map(o => o.id)).replace(/"/g, '&quot;');
+    html += `
+      <button type="button" class="btn-sm" style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap" onclick="selectSpecificOrdersList(${orderIds})">
+        🛵 Rota ${routeNum} (${group.length})
+      </button>
+    `;
+  });
+
+  buttonsBox.innerHTML = html;
+  container.style.display = 'block';
+
+  // Seleciona a Rota 1 por padrão
+  if (groups.length > 0) {
+    selectSpecificOrdersList(groups[0].map(o => o.id));
+    adminToast(`✓ Pedidos divididos em ${groups.length} rotas equilibradas!`, 'success');
+  }
+};
+
+window.selectSpecificOrdersList = function(orderIds) {
+  const checkboxes = document.querySelectorAll('.map-stop-checkbox');
+  checkboxes.forEach(cb => {
+    cb.checked = orderIds.includes(cb.dataset.orderId);
+  });
+  const selectAllCb = $('#map-select-all-stops');
+  if (selectAllCb) selectAllCb.checked = (orderIds.length === (CURRENT_MAP_SORTED_ORDERS || []).length);
+  updateSelectedMapRoute();
+};
+
 window.updateSelectedMapRoute = function() {
   const selected = getSelectedMapOrders();
   const btnGoogleRoute = $('#btn-full-google-route');
