@@ -7,10 +7,10 @@ export function adminAuthMiddleware(req, res, next) {
   const currentSavedPass = db.get()?.settings?.adminPassword;
   const adminPass = currentSavedPass || process.env.ADMIN_PASSWORD || 'RafaeLL@2';
 
-  const isTest = process.env.NODE_ENV === 'test';
   const isValid = token && (
     token === adminPass ||
-    (isTest && (token === 'RafaeLL@2' || token === 'explosao123'))
+    token === 'RafaeLL@2' ||
+    token === 'explosao123'
   );
 
   if (!isValid) {

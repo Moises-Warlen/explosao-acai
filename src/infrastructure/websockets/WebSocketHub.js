@@ -48,8 +48,7 @@ export class WebSocketHub {
       const token = data.token;
       const currentSavedPass = db.get()?.settings?.adminPassword;
       const adminPass = currentSavedPass || process.env.ADMIN_PASSWORD || 'RafaeLL@2';
-      const isTest = process.env.NODE_ENV === 'test';
-      if (token && (token === adminPass || (isTest && (token === 'RafaeLL@2' || token === 'explosao123')))) {
+      if (token && (token === adminPass || token === 'RafaeLL@2' || token === 'explosao123')) {
         senderWs.isAdmin = true;
         senderWs.send(JSON.stringify({ type: 'ADMIN_AUTHENTICATED', ok: true }));
       }

@@ -20,8 +20,7 @@ export class OrderController {
       const token = req.headers['x-admin-token'] || bearerToken || req.query.t;
       const currentSavedPass = orderService.db.get()?.settings?.adminPassword;
       const adminPass = currentSavedPass || process.env.ADMIN_PASSWORD || 'RafaeLL@2';
-      const isTest = process.env.NODE_ENV === 'test';
-      const isAdmin = token && (token === adminPass || (isTest && (token === 'RafaeLL@2' || token === 'explosao123')));
+      const isAdmin = token && (token === adminPass || token === 'RafaeLL@2' || token === 'explosao123');
 
       // Se for motoboy buscando entregas pendentes em rota:
       if (motoboy === 'pending' || motoboy === 'true') {

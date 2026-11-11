@@ -95,6 +95,15 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (dash) dash.style.display = 'none';
     showLoginModal();
   } else {
+    // Valida o token com o backend para evitar que o painel abra bloqueado ou sem permissão
+    try {
+      const checkRes = await fetch(`${API_URL}/orders`, { headers: authHeaders() });
+      if (checkRes.status === 401) {
+        handleUnauthorized();
+        return;
+      }
+    } catch (e) {}
+
     if (dash) dash.style.display = 'block';
     window.syncTopbarHeight();
     initDashboard();
@@ -106,6 +115,21 @@ function showLoginModal() {
   const modal = $('#login-modal');
   if (modal) modal.style.display = 'flex';
 }
+
+window.handleUnauthorized = function() {
+  localStorage.removeItem('admin_token');
+  sessionStorage.removeItem('explosao_admin_token');
+  ADMIN_TOKEN = null;
+  if (WS) {
+    try { WS.close(); } catch (e) {}
+  }
+  const dash = $('#dashboard-wrapper');
+  if (dash) dash.style.display = 'none';
+  const passInput = $('#admin-pass-input');
+  if (passInput) passInput.value = '';
+  showLoginModal();
+  adminToast('Sua sessão expirou ou a senha é inválida. Por favor, faça login com a senha de admin.', 'danger');
+};
 
 window.doLogin = async function() {
   const pass = $('#admin-pass-input').value.trim();
@@ -311,14 +335,22 @@ window.toggleStoreStatus = async function() {
       headers: authHeaders(),
       body: JSON.stringify({ isOpen: sw.checked })
     });
+    if (res.status === 401) {
+      handleUnauthorized();
+      return;
+    }
     const data = await res.json();
     if (data.ok) {
       label.textContent = data.isOpen ? 'Loja ABERTA' : 'Loja FECHADA';
       label.style.color = data.isOpen ? 'var(--green)' : 'var(--danger)';
       adminToast(data.isOpen ? 'A loja agora está ABERTA para receber pedidos!' : 'A loja foi FECHADA.', data.isOpen ? 'success' : 'info');
+    } else {
+      adminToast(data.error || 'Erro ao atualizar status da loja.', 'danger');
+      if (sw) sw.checked = !sw.checked;
     }
   } catch (e) {
     adminToast('Erro ao atualizar status da loja.', 'danger');
+    if (sw) sw.checked = !sw.checked;
   }
 };
 
@@ -414,7 +446,11 @@ window.saveNewAdminPassword = async function(e) {
 // ==================== PEDIDOS & KANBAN (PRODUÇÃO & LOGÍSTICA) ====================
 async function loadOrders() {
   try {
-    const res = await fetch(`${API_URL}/orders`);
+    const res = await fetch(`${API_URL}/orders`, { headers: authHeaders() });
+    if (res.status === 401) {
+      handleUnauthorized();
+      return;
+    }
     const data = await res.json();
     if (data.ok) {
       ORDERS = data.orders;
