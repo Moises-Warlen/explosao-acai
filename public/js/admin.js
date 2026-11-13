@@ -206,6 +206,8 @@ function authHeaders() {
 // Inicialização Geral do Painel
 async function initDashboard() {
   initWebSocket();
+  startRealtimeClock();
+  setKanbanViewMode('live');
   await loadStoreStatus();
   await loadOrders();
   await loadCategories();
@@ -217,6 +219,7 @@ async function initDashboard() {
   await loadSalesReport({ period: 'today' });
   await loadChatConversations();
   bindNavigation();
+  updateHeaderKPIs();
   window.syncTopbarHeight();
 }
 
@@ -302,6 +305,11 @@ function bindNavigation() {
       const targetPane = $(`#${tab.dataset.tab}`);
       if (targetPane) targetPane.classList.add('active');
 
+      // Sincroniza active state no dock lateral esquerdo
+      $$('.dock-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-tab-target') === tab.dataset.tab);
+      });
+
       if (tab.dataset.tab === 'tab-reports') {
         const period = $('#report-period-select')?.value || 'today';
         loadSalesReport({ period });
@@ -328,10 +336,14 @@ async function loadStoreStatus() {
     if (data.ok) {
       const sw = $('#store-toggle-switch');
       const label = $('#store-toggle-label');
+      const glowBtn = $('#store-status-glow-btn');
       if (sw) sw.checked = data.isOpen;
+      if (glowBtn) {
+        glowBtn.className = `store-glow-pill ${data.isOpen ? 'open' : 'closed'}`;
+      }
       if (label) {
-        label.textContent = data.isOpen ? 'Loja ABERTA' : 'Loja FECHADA';
-        label.style.color = data.isOpen ? 'var(--green)' : 'var(--danger)';
+        label.textContent = data.isOpen ? 'LOJA ABERTA' : 'LOJA FECHADA';
+        label.style.color = data.isOpen ? '#34d399' : '#f87171';
       }
     }
 
@@ -348,11 +360,13 @@ async function loadStoreStatus() {
 window.toggleStoreStatus = async function() {
   const sw = $('#store-toggle-switch');
   const label = $('#store-toggle-label');
+  const glowBtn = $('#store-status-glow-btn');
+  const nextState = sw ? !sw.checked : (glowBtn ? !glowBtn.classList.contains('open') : true);
   try {
     const res = await fetch(`${API_URL}/store/toggle-status`, {
       method: 'POST',
       headers: authHeaders(),
-      body: JSON.stringify({ isOpen: sw.checked })
+      body: JSON.stringify({ isOpen: nextState })
     });
     if (res.status === 401) {
       handleUnauthorized();
@@ -360,16 +374,20 @@ window.toggleStoreStatus = async function() {
     }
     const data = await res.json();
     if (data.ok) {
-      label.textContent = data.isOpen ? 'Loja ABERTA' : 'Loja FECHADA';
-      label.style.color = data.isOpen ? 'var(--green)' : 'var(--danger)';
+      if (sw) sw.checked = data.isOpen;
+      if (glowBtn) {
+        glowBtn.className = `store-glow-pill ${data.isOpen ? 'open' : 'closed'}`;
+      }
+      if (label) {
+        label.textContent = data.isOpen ? 'LOJA ABERTA' : 'LOJA FECHADA';
+        label.style.color = data.isOpen ? '#34d399' : '#f87171';
+      }
       adminToast(data.isOpen ? 'A loja agora está ABERTA para receber pedidos!' : 'A loja foi FECHADA.', data.isOpen ? 'success' : 'info');
     } else {
       adminToast(data.error || 'Erro ao atualizar status da loja.', 'danger');
-      if (sw) sw.checked = !sw.checked;
     }
   } catch (e) {
     adminToast('Erro ao atualizar status da loja.', 'danger');
-    if (sw) sw.checked = !sw.checked;
   }
 };
 
@@ -598,12 +616,88 @@ window.clearAllKanbanFilters = function() {
 let AUDIO_NOTIFICATIONS_ENABLED = true;
 window.toggleAudioNotifications = function() {
   AUDIO_NOTIFICATIONS_ENABLED = !AUDIO_NOTIFICATIONS_ENABLED;
-  const btn = $('#btn-sound-toggle');
-  if (btn) {
-    btn.textContent = AUDIO_NOTIFICATIONS_ENABLED ? '🔔 Som: ON' : '🔕 Som: OFF';
-    btn.className = `btn-sm btn-sound ${AUDIO_NOTIFICATIONS_ENABLED ? 'on' : 'off'}`;
+  const bell = $('#btn-sound-toggle');
+  if (bell) {
+    bell.classList.toggle('off', !AUDIO_NOTIFICATIONS_ENABLED);
   }
-  showAdminToast(AUDIO_NOTIFICATIONS_ENABLED ? 'Alerta sonoro ativado' : 'Alerta sonoro silenciado');
+  const bellBadge = $('#badge-bell-count');
+  if (bellBadge) {
+    bellBadge.textContent = AUDIO_NOTIFICATIONS_ENABLED ? '1' : '0';
+    bellBadge.style.display = AUDIO_NOTIFICATIONS_ENABLED ? 'flex' : 'none';
+  }
+  adminToast(AUDIO_NOTIFICATIONS_ENABLED ? 'Alerta sonoro de pedidos ATIVADO 🔔' : 'Alerta sonoro SILENCIADO 🔕', AUDIO_NOTIFICATIONS_ENABLED ? 'success' : 'info');
+};
+
+let realtimeClockTimer = null;
+function startRealtimeClock() {
+  const clockEl = $('#header-realtime-clock');
+  if (!clockEl) return;
+  const update = () => {
+    const now = new Date();
+    clockEl.textContent = now.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
+  };
+  update();
+  if (realtimeClockTimer) clearInterval(realtimeClockTimer);
+  realtimeClockTimer = setInterval(update, 1000);
+}
+
+window.setKanbanViewMode = function(mode = 'live') {
+  const board = $('.kanban-board');
+  if (!board) return;
+
+  board.classList.remove('view-live', 'view-all', 'view-archive');
+  board.classList.add(`view-${mode}`);
+
+  const btnLive = $('#btn-view-live');
+  const btnAll = $('#btn-view-all');
+  const btnArchive = $('#btn-view-archive');
+  if (btnLive) btnLive.classList.toggle('active', mode === 'live');
+  if (btnAll) btnAll.classList.toggle('active', mode === 'all');
+  if (btnArchive) btnArchive.classList.toggle('active', mode === 'archive');
+
+  const colReceived = $('#col-received-wrapper');
+  const colPreparing = $('#col-preparing-wrapper');
+  const colReady = $('#col-ready-wrapper');
+  const colDelivered = $('#col-delivered-wrapper');
+  const colHistory = $('#col-history-wrapper');
+  const colReturned = $('#col-returned-wrapper');
+  const colCancelled = $('#col-cancelled-wrapper');
+
+  if (mode === 'live') {
+    if (colReceived) colReceived.style.display = 'flex';
+    if (colPreparing) colPreparing.style.display = 'flex';
+    if (colReady) colReady.style.display = 'flex';
+    if (colDelivered) colDelivered.style.display = 'flex';
+    if (colHistory) colHistory.style.display = 'none';
+    if (colReturned) colReturned.style.display = 'none';
+    if (colCancelled) colCancelled.style.display = 'none';
+  } else if (mode === 'all') {
+    if (colReceived) colReceived.style.display = 'flex';
+    if (colPreparing) colPreparing.style.display = 'flex';
+    if (colReady) colReady.style.display = 'flex';
+    if (colDelivered) colDelivered.style.display = 'flex';
+    if (colHistory) colHistory.style.display = 'flex';
+    if (colReturned) colReturned.style.display = 'flex';
+    if (colCancelled) colCancelled.style.display = 'flex';
+  } else if (mode === 'archive') {
+    if (colReceived) colReceived.style.display = 'none';
+    if (colPreparing) colPreparing.style.display = 'none';
+    if (colReady) colReady.style.display = 'none';
+    if (colDelivered) colDelivered.style.display = 'none';
+    if (colHistory) colHistory.style.display = 'flex';
+    if (colReturned) colReturned.style.display = 'flex';
+    if (colCancelled) colCancelled.style.display = 'flex';
+  }
+};
+
+window.switchAdminTab = function(tabId) {
+  const tabBtn = $(`.nav-tab[data-tab="${tabId}"]`);
+  if (tabBtn) {
+    tabBtn.click();
+  }
+  $$('.dock-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-tab-target') === tabId);
+  });
 };
 
 function updateHeaderKPIs() {
@@ -842,17 +936,17 @@ function createOrderCardHtml(order, isHistory = false) {
   if (!isHistory) {
     if (order.status === 'received') {
       // 1. Novos Pedidos: apenas envia para a cozinha
-      nextAction = `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'preparing')">Mandar p/ Cozinha</button>`;
+      nextAction = `<button class="btn-sm btn-next btn-next-received" onclick="advanceOrderStatus('${order.id}', 'preparing')">Aceitar / Mandar p/ Cozinha</button>`;
     } else if (order.status === 'preparing') {
       // 2. Em Preparo: move para a coluna de Pronto / Saiu para Entrega
       nextAction = isDelivery 
-        ? `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'out_for_delivery')">Despachar p/ Entrega</button>`
-        : `<button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'ready')">Pronto no Balcão</button>`;
+        ? `<button class="btn-sm btn-next btn-next-preparing" onclick="advanceOrderStatus('${order.id}', 'out_for_delivery')">Pronto p/ Entrega</button>`
+        : `<button class="btn-sm btn-next btn-next-preparing" onclick="advanceOrderStatus('${order.id}', 'ready')">Pronto no Balcão</button>`;
     } else if (order.status === 'out_for_delivery' || order.status === 'ready') {
       // 3. Pronto / Saiu para Entrega: confirma entrega/retirada e move para Concluídos
       if (isDelivery) {
         nextAction = `
-          <button class="btn-sm" style="background:#10b981;color:#fff;font-weight:700;font-size:11px;padding:4px 8px" onclick="confirmOrderDeliveryAndPayment('${order.id}')" title="Confirmar que o cliente recebeu e o pagamento foi concluído">
+          <button class="btn-sm btn-next btn-next-ready" onclick="confirmOrderDeliveryAndPayment('${order.id}')" title="Confirmar que o cliente recebeu e o pagamento foi concluído">
             ✓ Entregue & Recebido
           </button>
           <button class="btn-sm btn-secondary" style="font-size:10px;padding:4px 6px" onclick="copyMotoboyLink('${order.id}')" title="Copiar link para o celular do entregador">
@@ -864,7 +958,7 @@ function createOrderCardHtml(order, isHistory = false) {
         `;
       } else {
         nextAction = `
-          <button class="btn-sm btn-next" style="background:#10b981;color:#fff;font-weight:700" onclick="confirmPickupOrder('${order.id}')" title="Marcar como Pago e Retirado pelo Cliente no Balcão">
+          <button class="btn-sm btn-next btn-next-ready" onclick="confirmPickupOrder('${order.id}')" title="Marcar como Pago e Retirado pelo Cliente no Balcão">
             ✓ Concluir Retirada (Pago)
           </button>
         `;

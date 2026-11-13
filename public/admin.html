@@ -15,82 +15,121 @@
 <body>
 
   <!-- Container Principal do Dashboard Administrativo -->
-  <div id="dashboard-wrapper">
+  <div id="dashboard-wrapper" class="admin-app-layout">
 
-  <!-- Topbar Fixa: Header + Abas de Navegação Fixos ao Rolar a Página -->
-  <div class="admin-topbar-wrapper" id="admin-topbar">
+    <!-- Dock Lateral Esquerdo com Ícones (Como na Imagem Mockup do Gestor Pro) -->
+    <aside class="admin-sidebar-dock" id="admin-sidebar-dock">
+      <div class="dock-btn-group">
+        <button type="button" class="dock-btn active" data-tab-target="tab-kanban" onclick="switchAdminTab('tab-kanban')" title="Pedidos & Cozinha (Painel Principal)">
+          <span class="dock-icon">⊞</span>
+        </button>
+        <button type="button" class="dock-btn" data-tab-target="tab-products" onclick="switchAdminTab('tab-products')" title="Cardápio & Estoque">
+          <span class="dock-icon">🍱</span>
+        </button>
+        <button type="button" class="dock-btn" data-tab-target="tab-reports" onclick="switchAdminTab('tab-reports')" title="Relatórios & Vendas">
+          <span class="dock-icon">📅</span>
+        </button>
+        <button type="button" class="dock-btn" data-tab-target="tab-accompaniments" onclick="switchAdminTab('tab-accompaniments')" title="Acompanhamentos & Cozinha">
+          <span class="dock-icon">☕</span>
+        </button>
+        <button type="button" class="dock-btn" data-tab-target="tab-store" onclick="switchAdminTab('tab-store')" title="Configurações da Loja">
+          <span class="dock-icon">⚙️</span>
+        </button>
+      </div>
+    </aside>
+
+    <div class="admin-main-wrap">
+    <!-- Topbar Fixa: Header + Abas de Navegação Fixos ao Rolar a Página -->
+    <div class="admin-topbar-wrapper" id="admin-topbar">
     <!-- Header Administrativo -->
     <header class="admin-header">
       <div class="admin-brand">
-        <img src="imagens/Logo.png?v=3" alt="Explosão Açaí" onerror="this.style.display='none'">
+        <div class="brand-logo-wrap">
+          <img src="imagens/Logo.png?v=3" alt="Explosão Açaí" onerror="this.style.display='none'">
+        </div>
         <div class="brand-text-col">
-          <h1>Explosão Açaí <span>Painel Gestor PRO</span></h1>
-          <div class="brand-sub">Controle Operacional & Logística</div>
+          <h1>Explosão Açaí</h1>
+          <span class="brand-sub-tag">Gestor Pro</span>
         </div>
       </div>
 
-      <!-- Métricas Rápidas do Dia (KPIs em Tempo Real) -->
-      <div class="header-kpis" id="header-kpis">
-        <div class="kpi-mini-card" title="Faturamento de vendas aprovadas hoje">
-          <span class="kpi-lbl">💰 Faturamento Hoje</span>
-          <b class="kpi-val" id="kpi-faturamento">R$ 0,00</b>
+      <!-- Métricas Rápidas do Dia (KPIs em Tempo Real - Cápsula Central) -->
+      <div class="header-kpis-capsule" id="header-kpis">
+        <div class="kpi-cap-item" title="Faturamento de vendas aprovadas hoje">
+          <span class="kpi-cap-lbl">Faturamento Hoje:</span>
+          <b class="kpi-cap-val green" id="kpi-faturamento">R$ 0,00</b>
         </div>
-        <div class="kpi-mini-card" title="Total de pedidos recebidos hoje">
-          <span class="kpi-lbl">📦 Pedidos Hoje</span>
-          <b class="kpi-val" id="kpi-pedidos">0</b>
+        <div class="kpi-cap-divider"></div>
+        <div class="kpi-cap-item" title="Total de pedidos recebidos hoje">
+          <span class="kpi-cap-lbl">Pedidos Hoje:</span>
+          <b class="kpi-cap-val yellow" id="kpi-pedidos">0</b>
         </div>
-        <div class="kpi-mini-card" title="Tempo médio de entrega dos pedidos concluídos">
-          <span class="kpi-lbl">⏱️ Tempo Médio</span>
-          <b class="kpi-val" id="kpi-tempo">-- min</b>
+        <div class="kpi-cap-divider"></div>
+        <div class="kpi-cap-item" title="Tempo médio de entrega dos pedidos concluídos">
+          <span class="kpi-cap-lbl">Tempo Médio:</span>
+          <b class="kpi-cap-val blue" id="kpi-tempo">-- min</b>
         </div>
       </div>
 
-      <!-- Toggle Loja Aberta / Fechada -->
-      <div class="store-toggle-box">
-        <button id="btn-sound-toggle" class="btn-sm btn-sound on" onclick="toggleAudioNotifications()" title="Ativar/Desativar alerta sonoro de novos pedidos">
-          🔔 Som: ON
+      <!-- Lado Direito: Loja Aberta/Fechada, Alerta Sonoro, Relógio e Admin -->
+      <div class="header-actions-right">
+        <!-- Status Loja com Botão Luminoso -->
+        <button id="store-status-glow-btn" class="store-glow-pill open" onclick="toggleStoreStatus()" title="Clique para abrir ou fechar a loja">
+          <span class="dot-glow"></span>
+          <span id="store-toggle-label">LOJA ABERTA</span>
         </button>
-        <span id="store-toggle-label" style="font-weight:700;font-size:14px;color:var(--green)">Loja ABERTA</span>
-        <label class="switch">
-          <input type="checkbox" id="store-toggle-switch" checked onchange="toggleStoreStatus()">
-          <span class="slider"></span>
-        </label>
-        <button class="btn-sm btn-print" style="margin-left:6px;padding:6px 12px" onclick="openAdminPasswordModal()" title="Alterar senha do painel">🔒 Senha Admin</button>
-        <button class="btn-sm" style="background:#33144a;color:#fff;margin-left:6px" onclick="logout()" title="Sair do painel administrativo">Sair</button>
+        <!-- Toggle oculto para compatibilidade com scripts existentes -->
+        <input type="checkbox" id="store-toggle-switch" checked style="display:none" onchange="toggleStoreStatus()">
+
+        <!-- Sino de Alertas Sonoros -->
+        <div class="bell-alert-btn" id="btn-sound-toggle" onclick="toggleAudioNotifications()" title="Clique para alternar alerta sonoro de novos pedidos">
+          <span class="bell-emoji">🔔</span>
+          <span class="bell-num-badge" id="badge-bell-count">0</span>
+        </div>
+
+        <!-- Relógio Digital em Tempo Real -->
+        <div class="clock-display" id="header-realtime-clock">--:--</div>
+
+        <!-- Perfil Admin & Sair -->
+        <div class="admin-user-pill">
+          <button class="btn-pass-pill" onclick="openAdminPasswordModal()" title="Alterar senha do painel">admin</button>
+          <button class="btn-logout-pill" onclick="logout()" title="Sair do painel administrativo">🚪</button>
+        </div>
       </div>
     </header>
 
     <!-- Navegação por Abas -->
     <nav class="admin-nav">
+      <div class="nav-grid-icon-box" title="Menu Rápido">⊞</div>
       <button class="nav-tab active" data-tab="tab-kanban">
-        📋 Pedidos & Produção <span class="badge" id="badge-pending-orders" style="display:none">0</span>
+        Pedidos & Cozinha <span class="badge" id="badge-pending-orders" style="display:none">0</span>
       </button>
       <button class="nav-tab" data-tab="tab-chat">
-        💬 Chat de Atendimento <span class="badge" id="badge-unread-chat" style="display:none">0</span>
+        Chat de Clientes <span class="badge" id="badge-unread-chat" style="display:none">0</span>
       </button>
       <button class="nav-tab" data-tab="tab-products">
-        🍧 Cardápio & Ficha Técnica
+        Cardápio & Estoque
       </button>
       <button class="nav-tab" data-tab="tab-accompaniments">
-        🍓 Acompanhamentos
+        Acompanhamentos
       </button>
       <button class="nav-tab" data-tab="tab-extras">
-        🍫 Adicionais & Vínculos
+        Adicionais
       </button>
       <button class="nav-tab" data-tab="tab-categories">
-        📂 Categorias
+        Categorias
       </button>
       <button class="nav-tab" data-tab="tab-reports">
-        📊 Relatórios & Vendas
+        Relatórios & Vendas
       </button>
       <button class="nav-tab" data-tab="tab-coupons">
-        🏷️ Cupons de Desconto
+        Cupons
       </button>
       <button class="nav-tab" data-tab="tab-printers">
-        🖨️ Impressoras de Comanda
+        Impressoras
       </button>
       <button class="nav-tab" data-tab="tab-store">
-        ⚙️ Configuração
+        Configurações
       </button>
     </nav>
   </div>
@@ -138,7 +177,20 @@
         </select>
 
         <button type="button" class="btn-routes-gps" onclick="openDeliveryMapModal()" title="Visualizar pedidos no mapa e criar rotas de entrega">
-          🗺️ Ver Rotas & GPS
+          📍 Ver Rotas & GPS
+        </button>
+      </div>
+
+      <!-- Switcher de Modos de Visualização do Kanban -->
+      <div class="kanban-view-switcher">
+        <button type="button" class="view-switch-btn active" id="btn-view-live" onclick="setKanbanViewMode('live')" title="Visualização operacional ao vivo em 4 colunas">
+          🔥 Operação Ao Vivo (4 Colunas)
+        </button>
+        <button type="button" class="view-switch-btn" id="btn-view-all" onclick="setKanbanViewMode('all')" title="Visualizar todas as 7 colunas em rolagem horizontal">
+          📋 Todas as Colunas (7 Colunas)
+        </button>
+        <button type="button" class="view-switch-btn" id="btn-view-archive" onclick="setKanbanViewMode('archive')" title="Visualizar histórico permanente, devoluções e cancelamentos">
+          📦 Histórico & Devolvidos (3 Colunas)
         </button>
       </div>
 
@@ -148,9 +200,9 @@
         <button type="button" class="btn-clear-all-filters" onclick="clearAllKanbanFilters()">✕ Limpar Filtros</button>
       </div>
 
-      <div class="kanban-board">
+      <div class="kanban-board view-live">
         <!-- Coluna: Novos Pedidos -->
-        <div class="kanban-col col-received">
+        <div class="kanban-col col-received" id="col-received-wrapper">
           <div class="kanban-col-header" style="color:var(--y)">
             <span id="col-header-received">Novos Pedidos</span>
           </div>
@@ -159,7 +211,7 @@
         </div>
 
         <!-- Coluna: Cozinha / Preparo -->
-        <div class="kanban-col col-preparing">
+        <div class="kanban-col col-preparing" id="col-preparing-wrapper">
           <div class="kanban-col-header" style="color:#a78bfa">
             <span id="col-header-preparing">Em Preparo (Cozinha)</span>
           </div>
@@ -168,7 +220,7 @@
         </div>
 
         <!-- Coluna: Saiu para Entrega -->
-        <div class="kanban-col col-ready">
+        <div class="kanban-col col-ready" id="col-ready-wrapper">
           <div class="kanban-col-header" style="color:#38bdf8">
             <span id="col-header-ready">Pronto / Saiu para Entrega</span>
           </div>
@@ -177,7 +229,7 @@
         </div>
 
         <!-- Coluna: Entregues Hoje -->
-        <div class="kanban-col col-delivered">
+        <div class="kanban-col col-delivered" id="col-delivered-wrapper">
           <div class="kanban-col-header" style="color:var(--green)">
             <span id="col-header-delivered">Entregues Hoje</span>
           </div>
@@ -186,7 +238,7 @@
         </div>
 
         <!-- Coluna: Pedidos Concluídos (Histórico) -->
-        <div class="kanban-col col-history">
+        <div class="kanban-col col-history" id="col-history-wrapper" style="display:none">
           <div class="kanban-col-header" style="color:#14b8a6">
             <span id="col-header-history">Pedidos Concluídos</span>
           </div>
@@ -195,7 +247,7 @@
         </div>
 
         <!-- Coluna: Devolvidos à Loja -->
-        <div class="kanban-col col-returned">
+        <div class="kanban-col col-returned" id="col-returned-wrapper" style="display:none">
           <div class="kanban-col-header" style="color:#f59e0b">
             <span id="col-header-returned">Devolvidos à Loja</span>
           </div>
@@ -204,7 +256,7 @@
         </div>
 
         <!-- Coluna: Cancelados -->
-        <div class="kanban-col col-cancelled">
+        <div class="kanban-col col-cancelled" id="col-cancelled-wrapper" style="display:none">
           <div class="kanban-col-header" style="color:var(--danger)">
             <span id="col-header-cancelled">Cancelados</span>
           </div>
@@ -705,8 +757,9 @@
       </div>
     </div>
 
-  </div>
+  </div> <!-- Fim de .admin-content -->
 
+  </div> <!-- Fim de .admin-main-wrap -->
   </div> <!-- Fim de #dashboard-wrapper -->
 
   <!-- Modal de Edição de Produto (com Upload, Acompanhamentos por Tamanho, Combos e Prejuízo) -->

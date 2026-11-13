@@ -269,16 +269,43 @@ button:active {
   50% { opacity: 0.3; }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 520px) {
+  .top {
+    padding: 6px 12px;
+    gap: 8px;
+  }
+  .brand {
+    gap: 8px;
+  }
+  .brand img {
+    height: 38px;
+    max-width: 40px;
+  }
+  .bt b {
+    font-size: 15px;
+  }
+  .bt small {
+    font-size: 10px;
+  }
   .store-pill {
-    padding: 3px 8px;
-    font-size: 10.5px;
+    padding: 4px 8px;
+    font-size: 10px;
     gap: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   .store-pill.open::before,
   .store-pill.closed::before {
     width: 6px;
     height: 6px;
+  }
+  .cats {
+    padding: 8px 12px;
+    gap: 6px;
+  }
+  .cats a {
+    padding: 6px 14px;
+    font-size: 13px;
   }
 }
 
@@ -410,7 +437,8 @@ h2 {
 
 .ic {
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1 / 1;
+  max-height: 240px;
   height: auto;
   border-radius: 14px;
   background: linear-gradient(135deg, rgba(123, 44, 191, 0.08), rgba(75, 15, 107, 0.12));
@@ -428,6 +456,7 @@ h2 {
   height: 100%;
   object-fit: contain;
   object-position: center;
+  padding: 6px;
   transition: transform 0.35s ease;
   user-select: none;
 }
