@@ -558,6 +558,88 @@ window.toggleColumnExpand = function(colKey) {
 };
 window.toggleAllDeliveredCards = () => window.toggleColumnExpand('delivered');
 
+window.handleKanbanSearchInput = function() {
+  const q = ($('#kanban-search')?.value || '').trim();
+  const clearBtn = $('#btn-clear-search');
+  if (clearBtn) clearBtn.style.display = q ? 'inline-flex' : 'none';
+  Object.keys(KANBAN_PAGE).forEach(k => { KANBAN_PAGE[k] = 1; });
+  renderKanban();
+};
+
+window.clearKanbanSearch = function() {
+  const input = $('#kanban-search');
+  if (input) input.value = '';
+  const clearBtn = $('#btn-clear-search');
+  if (clearBtn) clearBtn.style.display = 'none';
+  Object.keys(KANBAN_PAGE).forEach(k => { KANBAN_PAGE[k] = 1; });
+  renderKanban();
+};
+
+window.handleKanbanFilterChange = function() {
+  Object.keys(KANBAN_PAGE).forEach(k => { KANBAN_PAGE[k] = 1; });
+  renderKanban();
+};
+
+window.clearAllKanbanFilters = function() {
+  const sInput = $('#kanban-search');
+  if (sInput) sInput.value = '';
+  const clearBtn = $('#btn-clear-search');
+  if (clearBtn) clearBtn.style.display = 'none';
+  const stFilter = $('#kanban-status-filter');
+  if (stFilter) stFilter.value = 'all';
+  const payFilter = $('#kanban-pay-filter');
+  if (payFilter) payFilter.value = 'all';
+  const dateFilter = $('#kanban-date-filter');
+  if (dateFilter) dateFilter.value = 'all';
+  Object.keys(KANBAN_PAGE).forEach(k => { KANBAN_PAGE[k] = 1; });
+  renderKanban();
+};
+
+let AUDIO_NOTIFICATIONS_ENABLED = true;
+window.toggleAudioNotifications = function() {
+  AUDIO_NOTIFICATIONS_ENABLED = !AUDIO_NOTIFICATIONS_ENABLED;
+  const btn = $('#btn-sound-toggle');
+  if (btn) {
+    btn.textContent = AUDIO_NOTIFICATIONS_ENABLED ? '🔔 Som: ON' : '🔕 Som: OFF';
+    btn.className = `btn-sm btn-sound ${AUDIO_NOTIFICATIONS_ENABLED ? 'on' : 'off'}`;
+  }
+  showAdminToast(AUDIO_NOTIFICATIONS_ENABLED ? 'Alerta sonoro ativado' : 'Alerta sonoro silenciado');
+};
+
+function updateHeaderKPIs() {
+  const kpiFaturamento = $('#kpi-faturamento');
+  const kpiPedidos = $('#kpi-pedidos');
+  const kpiTempo = $('#kpi-tempo');
+  if (!kpiFaturamento && !kpiPedidos && !kpiTempo) return;
+
+  const todayBrasilia = getBrasiliaDateString(new Date());
+  const todayOrders = (ORDERS || []).filter(o => {
+    const oDate = getBrasiliaDateString(o.deliveredAt || o.createdAt);
+    return oDate === todayBrasilia;
+  });
+
+  const validTodayOrders = todayOrders.filter(o => o.status !== 'cancelled' && o.status !== 'returned');
+  const revenue = validTodayOrders
+    .filter(o => o.payment?.status === 'approved' || o.status === 'delivered')
+    .reduce((acc, o) => acc + (Number(o.total) || 0), 0);
+
+  if (kpiFaturamento) {
+    kpiFaturamento.textContent = R(revenue);
+  }
+  if (kpiPedidos) {
+    kpiPedidos.textContent = String(validTodayOrders.length);
+  }
+  if (kpiTempo) {
+    const deliveredWithTime = validTodayOrders.filter(o => o.status === 'delivered' && o.deliveryTimeMinutes != null);
+    if (deliveredWithTime.length > 0) {
+      const avg = Math.round(deliveredWithTime.reduce((sum, o) => sum + o.deliveryTimeMinutes, 0) / deliveredWithTime.length);
+      kpiTempo.textContent = `${avg} min`;
+    } else {
+      kpiTempo.textContent = `~25 min`;
+    }
+  }
+}
+
 window.setKanbanPage = function(column, page) {
   KANBAN_PAGE[column] = page;
   renderKanban();
@@ -568,27 +650,35 @@ function renderKanban() {
   if (!colReceived) return;
 
   const todayBrasilia = getBrasiliaDateString(new Date());
+  const now = new Date();
+  const yesterdayObj = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const yesterdayBrasilia = getBrasiliaDateString(yesterdayObj);
+  const sevenDaysAgoObj = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const sevenDaysAgoBrasilia = getBrasiliaDateString(sevenDaysAgoObj);
+
   const q = ($('#kanban-search')?.value || '').trim().toLowerCase();
   const stFilter = $('#kanban-status-filter')?.value || 'all';
   const payFilter = $('#kanban-pay-filter')?.value || 'all';
+  const dateFilter = $('#kanban-date-filter')?.value || 'all';
 
   const filteredOrders = ORDERS.filter(order => {
-    // Busca por número, cliente, telefone ou motivo de cancelamento/devolução
-    if (q) {
-      const matchNo = String(order.orderNo || '').toLowerCase().includes(q.replace('#', ''));
-      const matchName = String(order.customer?.name || '').toLowerCase().includes(q);
-      const matchPhone = String(order.customer?.phone || '').includes(q);
-      const matchReason = String(order.returnReason || order.cancellationReason || '').toLowerCase().includes(q);
-      if (!matchNo && !matchName && !matchPhone && !matchReason) return false;
-    }
-
-    // Identificação de pedidos concluídos hoje vs concluídos em dias anteriores (histórico permanente)
     const isDeliveredStatus = order.status === 'delivered';
     const orderDateBrasilia = getBrasiliaDateString(order.deliveredAt || order.createdAt);
     const isTodayDelivered = isDeliveredStatus && !order.archivedToHistory && orderDateBrasilia === todayBrasilia;
     const isHistoryDelivered = isDeliveredStatus && (order.archivedToHistory || orderDateBrasilia < todayBrasilia);
 
-    // Filtro de status
+    // 1. Filtro de Data
+    if (dateFilter !== 'all') {
+      if (dateFilter === 'today') {
+        if (orderDateBrasilia !== todayBrasilia && !isTodayDelivered) return false;
+      } else if (dateFilter === 'yesterday') {
+        if (orderDateBrasilia !== yesterdayBrasilia) return false;
+      } else if (dateFilter === '7days') {
+        if (orderDateBrasilia < sevenDaysAgoBrasilia) return false;
+      }
+    }
+
+    // 2. Filtro de Status
     if (stFilter !== 'all') {
       if (stFilter === 'received' && order.status !== 'received') return false;
       if (stFilter === 'preparing' && order.status !== 'preparing') return false;
@@ -599,17 +689,71 @@ function renderKanban() {
       if (stFilter === 'cancelled' && order.status !== 'cancelled') return false;
     }
 
-    // Filtro de pagamento
+    // 3. Filtro de Pagamento
     if (payFilter !== 'all') {
       const isApproved = order.payment?.status === 'approved';
       const isDeliveryPayment = order.payment?.timing === 'delivery' || order.payment?.method === 'Dinheiro';
+      const isPending = !isApproved && !isDeliveryPayment;
+      const methodStr = String(order.payment?.method || '').toLowerCase();
+
       if (payFilter === 'approved' && !isApproved) return false;
-      if (payFilter === 'waiting' && (isApproved || isDeliveryPayment)) return false;
+      if ((payFilter === 'waiting' || payFilter === 'pending') && !isPending) return false;
       if (payFilter === 'delivery' && !isDeliveryPayment) return false;
+      if (payFilter === 'pix' && !methodStr.includes('pix')) return false;
+      if (payFilter === 'dinheiro' && !methodStr.includes('dinheiro')) return false;
+      if (payFilter === 'cartao' && !methodStr.includes('cart') && !methodStr.includes('crédito') && !methodStr.includes('débito')) return false;
+    }
+
+    // 4. Busca por Texto (q) - Pesquisa abrangente e inteligente
+    if (q) {
+      const cleanQ = q.replace('#', '').trim();
+      const matchNo = String(order.orderNo || '').toLowerCase().includes(cleanQ);
+      const matchId = String(order.id || '').toLowerCase().includes(cleanQ);
+      const matchName = String(order.customer?.name || '').toLowerCase().includes(q);
+      const matchPhone = String(order.customer?.phone || '').includes(cleanQ);
+      const matchReason = String(order.returnReason || order.cancellationReason || '').toLowerCase().includes(q);
+
+      const street = String(order.delivery?.street || '').toLowerCase();
+      const bairro = String(order.delivery?.bairro || '').toLowerCase();
+      const city = String(order.delivery?.city || '').toLowerCase();
+      const number = String(order.delivery?.number || '').toLowerCase();
+      const matchAddress = street.includes(q) || bairro.includes(q) || city.includes(q) || number.includes(q);
+
+      const matchItems = Array.isArray(order.items) && order.items.some(it => {
+        const iName = String(it.name || '').toLowerCase();
+        const iNote = String(it.note || '').toLowerCase();
+        const iAcomp = Array.isArray(it.accompaniments) && it.accompaniments.some(ac => String(ac).toLowerCase().includes(q));
+        const iExt = Array.isArray(it.extras) && it.extras.some(ex => String(ex).toLowerCase().includes(q));
+        return iName.includes(q) || iNote.includes(q) || iAcomp || iExt;
+      });
+
+      const matchPay = String(order.payment?.method || '').toLowerCase().includes(q);
+      const matchType = (order.delivery?.type === 'pickup' && (q.includes('retirada') || q.includes('balcão') || q.includes('balcao'))) ||
+                        (order.delivery?.type === 'delivery' && q.includes('entrega'));
+
+      if (!matchNo && !matchId && !matchName && !matchPhone && !matchReason && !matchAddress && !matchItems && !matchPay && !matchType) {
+        return false;
+      }
     }
 
     return true;
   });
+
+  // Atualiza barra de feedback de filtros
+  const feedbackEl = $('#kanban-filter-feedback');
+  const feedbackText = $('#kanban-filter-feedback-text');
+  const isFiltered = Boolean(q || stFilter !== 'all' || payFilter !== 'all' || (dateFilter !== 'all' && dateFilter !== 'today'));
+  if (feedbackEl && feedbackText) {
+    if (isFiltered) {
+      feedbackEl.style.display = 'flex';
+      feedbackText.innerHTML = `🔍 <b>${filteredOrders.length} pedido(s)</b> encontrado(s) com os filtros ativos (de ${ORDERS.length} no total)`;
+    } else {
+      feedbackEl.style.display = 'none';
+    }
+  }
+
+  // Atualiza métricas rápidas no header
+  updateHeaderKPIs();
 
   const ordersReceived = filteredOrders.filter(o => o.status === 'received');
   const ordersPreparing = filteredOrders.filter(o => o.status === 'preparing');
@@ -650,14 +794,16 @@ function renderKanbanColumn(colKey, list, containerId, paginationId, headerId, t
   }
   if (!container) return;
 
+  const q = ($('#kanban-search')?.value || '').trim();
+  const effectivePerPage = q ? 25 : KANBAN_PER_PAGE;
   const total = list.length;
-  const totalPages = Math.max(1, Math.ceil(total / KANBAN_PER_PAGE));
+  const totalPages = Math.max(1, Math.ceil(total / effectivePerPage));
   if (KANBAN_PAGE[colKey] > totalPages) KANBAN_PAGE[colKey] = totalPages;
   if (KANBAN_PAGE[colKey] < 1) KANBAN_PAGE[colKey] = 1;
 
   const curPage = KANBAN_PAGE[colKey];
-  const start = (curPage - 1) * KANBAN_PER_PAGE;
-  const pageOrders = list.slice(start, start + KANBAN_PER_PAGE);
+  const start = (curPage - 1) * effectivePerPage;
+  const pageOrders = list.slice(start, start + effectivePerPage);
 
   container.innerHTML = pageOrders.length === 0
     ? `<div style="color:var(--mut);text-align:center;padding:24px 10px;font-size:12px">Nenhum pedido</div>`

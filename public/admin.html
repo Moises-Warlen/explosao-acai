@@ -23,52 +23,74 @@
     <header class="admin-header">
       <div class="admin-brand">
         <img src="imagens/Logo.png?v=3" alt="Explosão Açaí" onerror="this.style.display='none'">
-        <h1>Explosão Açaí <span>Painel admin</span></h1>
+        <div class="brand-text-col">
+          <h1>Explosão Açaí <span>Painel Gestor PRO</span></h1>
+          <div class="brand-sub">Controle Operacional & Logística</div>
+        </div>
+      </div>
+
+      <!-- Métricas Rápidas do Dia (KPIs em Tempo Real) -->
+      <div class="header-kpis" id="header-kpis">
+        <div class="kpi-mini-card" title="Faturamento de vendas aprovadas hoje">
+          <span class="kpi-lbl">💰 Faturamento Hoje</span>
+          <b class="kpi-val" id="kpi-faturamento">R$ 0,00</b>
+        </div>
+        <div class="kpi-mini-card" title="Total de pedidos recebidos hoje">
+          <span class="kpi-lbl">📦 Pedidos Hoje</span>
+          <b class="kpi-val" id="kpi-pedidos">0</b>
+        </div>
+        <div class="kpi-mini-card" title="Tempo médio de entrega dos pedidos concluídos">
+          <span class="kpi-lbl">⏱️ Tempo Médio</span>
+          <b class="kpi-val" id="kpi-tempo">-- min</b>
+        </div>
       </div>
 
       <!-- Toggle Loja Aberta / Fechada -->
       <div class="store-toggle-box">
+        <button id="btn-sound-toggle" class="btn-sm btn-sound on" onclick="toggleAudioNotifications()" title="Ativar/Desativar alerta sonoro de novos pedidos">
+          🔔 Som: ON
+        </button>
         <span id="store-toggle-label" style="font-weight:700;font-size:14px;color:var(--green)">Loja ABERTA</span>
         <label class="switch">
           <input type="checkbox" id="store-toggle-switch" checked onchange="toggleStoreStatus()">
           <span class="slider"></span>
         </label>
-        <button class="btn-sm btn-print" style="margin-left:8px;padding:6px 12px" onclick="openAdminPasswordModal()">🔒 Senha Admin</button>
-        <button class="btn-sm" style="background:#33144a;color:#fff;margin-left:6px" onclick="logout()">Sair</button>
+        <button class="btn-sm btn-print" style="margin-left:6px;padding:6px 12px" onclick="openAdminPasswordModal()" title="Alterar senha do painel">🔒 Senha Admin</button>
+        <button class="btn-sm" style="background:#33144a;color:#fff;margin-left:6px" onclick="logout()" title="Sair do painel administrativo">Sair</button>
       </div>
     </header>
 
     <!-- Navegação por Abas -->
     <nav class="admin-nav">
-      <button class="nav-tab" data-tab="tab-chat">
-        Chat de Atendimento <span class="badge" id="badge-unread-chat" style="display:none">0</span>
-      </button>
       <button class="nav-tab active" data-tab="tab-kanban">
-        Pedidos & Produção <span class="badge" id="badge-pending-orders" style="display:none">0</span>
+        📋 Pedidos & Produção <span class="badge" id="badge-pending-orders" style="display:none">0</span>
+      </button>
+      <button class="nav-tab" data-tab="tab-chat">
+        💬 Chat de Atendimento <span class="badge" id="badge-unread-chat" style="display:none">0</span>
       </button>
       <button class="nav-tab" data-tab="tab-products">
-        Cardápio & Ficha Técnica
+        🍧 Cardápio & Ficha Técnica
       </button>
       <button class="nav-tab" data-tab="tab-accompaniments">
-        Acompanhamentos
+        🍓 Acompanhamentos
       </button>
       <button class="nav-tab" data-tab="tab-extras">
-        Adicionais & Vínculos
+        🍫 Adicionais & Vínculos
       </button>
       <button class="nav-tab" data-tab="tab-categories">
-        Categorias
+        📂 Categorias
       </button>
       <button class="nav-tab" data-tab="tab-reports">
-        Relatórios & Vendas
+        📊 Relatórios & Vendas
       </button>
       <button class="nav-tab" data-tab="tab-coupons">
-        Cupons de Desconto
+        🏷️ Cupons de Desconto
       </button>
       <button class="nav-tab" data-tab="tab-printers">
-        Impressoras de Comanda
+        🖨️ Impressoras de Comanda
       </button>
       <button class="nav-tab" data-tab="tab-store">
-        Configuração
+        ⚙️ Configuração
       </button>
     </nav>
   </div>
@@ -80,32 +102,55 @@
     <!-- ABA 1: KANBAN DE PEDIDOS -->
     <div class="tab-pane active" id="tab-kanban">
       <!-- Barra de Pesquisa e Filtros Rápidos do Kanban -->
-      <div class="kanban-filters-bar" style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
-        <input type="text" id="kanban-search" placeholder="🔍 Buscar por nº do pedido (#123) ou nome do cliente..." style="flex:1;min-width:240px;padding:8px 14px;font-size:13px" oninput="renderKanban()">
-        <select id="kanban-status-filter" style="width:auto;padding:8px 12px;font-size:13px" onchange="renderKanban()">
-          <option value="all">Todos os Status</option>
-          <option value="received">Novos Pedidos</option>
-          <option value="preparing">Em Preparo</option>
-          <option value="ready">Prontos / Em Entrega</option>
+      <div class="kanban-filters-bar">
+        <div class="search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="kanban-search" placeholder="🔍 Buscar por nº do pedido (#123) ou nome do cliente..." oninput="handleKanbanSearchInput()">
+          <button type="button" id="btn-clear-search" class="btn-clear-search" onclick="clearKanbanSearch()" title="Limpar busca" style="display:none">✕</button>
+        </div>
+        
+        <select id="kanban-status-filter" onchange="handleKanbanFilterChange()">
+          <option value="all">⚡ Todos os Status</option>
+          <option value="received">🟡 Novos Pedidos</option>
+          <option value="preparing">🟣 Em Preparo</option>
+          <option value="ready">🔵 Prontos / Em Entrega</option>
           <option value="delivered">Entregues Hoje</option>
           <option value="history">Pedidos Concluídos</option>
           <option value="returned">Devolvidos à Loja</option>
           <option value="cancelled">Cancelados</option>
         </select>
-        <select id="kanban-pay-filter" style="width:auto;padding:8px 12px;font-size:13px" onchange="renderKanban()">
-          <option value="all">Todas as Formas de Pagamento</option>
+        
+        <select id="kanban-pay-filter" onchange="handleKanbanFilterChange()">
+          <option value="all">💳 Todas as Formas de Pagamento</option>
+          <option value="pix">💚 Pix (Online / Entrega)</option>
+          <option value="dinheiro">💵 Dinheiro (com Troco)</option>
+          <option value="cartao">💳 Cartão (Máquina / Online)</option>
           <option value="approved">Pagamento Confirmado</option>
           <option value="delivery">Cobrar na Entrega</option>
           <option value="pending">Aguardando Pagamento</option>
         </select>
-        <button type="button" class="btn-sm" style="background:#6d28d9;color:#fff;border:1.5px solid #8b5cf6;padding:8px 14px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;cursor:pointer;border-radius:10px;box-shadow:0 2px 8px rgba(109,40,217,0.4)" onclick="openDeliveryMapModal()" title="Visualizar pedidos no mapa e criar rotas de entrega">
-          🗺️ Mapa & Rotas de Entrega
+
+        <select id="kanban-date-filter" onchange="handleKanbanFilterChange()">
+          <option value="all">📅 Todos os Dias (Geral)</option>
+          <option value="today" selected>📅 Apenas Hoje</option>
+          <option value="yesterday">📅 Ontem</option>
+          <option value="7days">📅 Últimos 7 Dias</option>
+        </select>
+
+        <button type="button" class="btn-routes-gps" onclick="openDeliveryMapModal()" title="Visualizar pedidos no mapa e criar rotas de entrega">
+          🗺️ Ver Rotas & GPS
         </button>
+      </div>
+
+      <!-- Barra de Feedback Dinâmico de Filtros -->
+      <div id="kanban-filter-feedback" class="kanban-filter-feedback" style="display:none">
+        <span id="kanban-filter-feedback-text">Mostrando resultados filtrados</span>
+        <button type="button" class="btn-clear-all-filters" onclick="clearAllKanbanFilters()">✕ Limpar Filtros</button>
       </div>
 
       <div class="kanban-board">
         <!-- Coluna: Novos Pedidos -->
-        <div class="kanban-col">
+        <div class="kanban-col col-received">
           <div class="kanban-col-header" style="color:var(--y)">
             <span id="col-header-received">Novos Pedidos</span>
           </div>
@@ -114,8 +159,8 @@
         </div>
 
         <!-- Coluna: Cozinha / Preparo -->
-        <div class="kanban-col">
-          <div class="kanban-col-header" style="color:#60a5fa">
+        <div class="kanban-col col-preparing">
+          <div class="kanban-col-header" style="color:#a78bfa">
             <span id="col-header-preparing">Em Preparo (Cozinha)</span>
           </div>
           <div class="kanban-cards" id="cards-preparing"></div>
@@ -123,8 +168,8 @@
         </div>
 
         <!-- Coluna: Saiu para Entrega -->
-        <div class="kanban-col">
-          <div class="kanban-col-header" style="color:#a78bfa">
+        <div class="kanban-col col-ready">
+          <div class="kanban-col-header" style="color:#38bdf8">
             <span id="col-header-ready">Pronto / Saiu para Entrega</span>
           </div>
           <div class="kanban-cards" id="cards-ready"></div>
@@ -132,7 +177,7 @@
         </div>
 
         <!-- Coluna: Entregues Hoje -->
-        <div class="kanban-col">
+        <div class="kanban-col col-delivered">
           <div class="kanban-col-header" style="color:var(--green)">
             <span id="col-header-delivered">Entregues Hoje</span>
           </div>
@@ -141,8 +186,8 @@
         </div>
 
         <!-- Coluna: Pedidos Concluídos (Histórico) -->
-        <div class="kanban-col">
-          <div class="kanban-col-header" style="color:#34d399">
+        <div class="kanban-col col-history">
+          <div class="kanban-col-header" style="color:#14b8a6">
             <span id="col-header-history">Pedidos Concluídos</span>
           </div>
           <div class="kanban-cards" id="cards-history"></div>
@@ -150,7 +195,7 @@
         </div>
 
         <!-- Coluna: Devolvidos à Loja -->
-        <div class="kanban-col">
+        <div class="kanban-col col-returned">
           <div class="kanban-col-header" style="color:#f59e0b">
             <span id="col-header-returned">Devolvidos à Loja</span>
           </div>
@@ -159,7 +204,7 @@
         </div>
 
         <!-- Coluna: Cancelados -->
-        <div class="kanban-col">
+        <div class="kanban-col col-cancelled">
           <div class="kanban-col-header" style="color:var(--danger)">
             <span id="col-header-cancelled">Cancelados</span>
           </div>
