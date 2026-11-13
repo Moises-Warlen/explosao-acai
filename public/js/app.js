@@ -53,6 +53,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   renderCatalog();
   bindEvents();
 
+  // Verifica se o cliente abriu o link com rastreamento de pedido (ex: ?pedido=123456)
+  await checkUrlForOrderTracking();
+
   // Banner amarelo de Boas-Vindas e Desconto: fecha sozinho após 3 segundos
   setTimeout(() => {
     const promoEl = document.getElementById('promo');
@@ -61,6 +64,58 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   }, 3000);
 });
+
+// Acompanhamento de Pedido Ativo & Botão Flutuante
+function updateActiveOrderBanner() {
+  const btn = $('#fab-track-order');
+  if (!btn) return;
+  if (ACTIVE_ORDER && ACTIVE_ORDER.status !== 'delivered' && ACTIVE_ORDER.status !== 'cancelled') {
+    btn.style.display = 'inline-flex';
+    btn.innerHTML = `🍧 Pedido #${ACTIVE_ORDER.orderNo} (${formatStatus(ACTIVE_ORDER.status, ACTIVE_ORDER)})`;
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
+window.openActiveOrderModal = function() {
+  if (ACTIVE_ORDER) {
+    renderOrderSuccess(ACTIVE_ORDER);
+    showSheet();
+  }
+};
+
+async function checkUrlForOrderTracking() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const orderRef = urlParams.get('pedido') || urlParams.get('orderNo') || urlParams.get('orderId') || urlParams.get('rastreio');
+
+  let cleanRef = orderRef ? orderRef.replace('#', '').trim() : '';
+  if (!cleanRef) {
+    const cachedOrderNo = localStorage.getItem('explosao_active_order_no');
+    const cachedOrderId = localStorage.getItem('explosao_active_order_id');
+    cleanRef = cachedOrderNo || cachedOrderId || '';
+  }
+
+  if (cleanRef) {
+    try {
+      const res = await fetch(`${API_URL}/orders/${encodeURIComponent(cleanRef)}`);
+      const data = await res.json();
+      if (data.ok && data.order) {
+        ACTIVE_ORDER = data.order;
+        localStorage.setItem('explosao_active_order_no', data.order.orderNo);
+        localStorage.setItem('explosao_active_order_id', data.order.id);
+
+        if (orderRef) {
+          renderOrderSuccess(data.order);
+          showSheet();
+        }
+        updateActiveOrderBanner();
+        registerCustomerWs();
+      }
+    } catch (e) {
+      console.warn('Erro ao carregar pedido:', e);
+    }
+  }
+}
 
 // Conexão WebSocket em Tempo Real
 function registerCustomerWs() {
@@ -94,6 +149,7 @@ function initWebSocket() {
           if ($('#sheet').classList.contains('on')) {
             renderOrderSuccess(ACTIVE_ORDER);
           }
+          updateActiveOrderBanner();
         }
         if (data.event === 'CHAT_MESSAGE') {
           handleIncomingChatMessage(data.payload);
@@ -1271,6 +1327,10 @@ window.submitOrder = async function() {
       // Limpa os dados digitados no checkout para que o próximo pedido comece com o formulário vazio
       CHECKOUT_DATA = { ent: 'e', cid: 'Franca', uf: 'SP', pay: 'Pix', timing: 'online' };
       renderOrderSuccess(data.order);
+      showSheet();
+      localStorage.setItem('explosao_active_order_no', data.order.orderNo);
+      localStorage.setItem('explosao_active_order_id', data.order.id);
+      updateActiveOrderBanner();
       toast('Pedido realizado com sucesso!');
     } else {
       toast(data.error || 'Erro ao registrar pedido.');
@@ -1291,6 +1351,7 @@ function renderOrderSuccess(order) {
   const trackingSiteUrl = (window.location.origin && !window.location.origin.includes('localhost'))
     ? window.location.origin
     : 'https://cardapioexplosaoacai.com.br';
+  const orderTrackingUrl = `${trackingSiteUrl}?pedido=${order.orderNo}`;
 
   const itemsSummary = (order.items || []).map(it => {
     let line = `*${it.quantity}x* ${it.name}`;
@@ -1325,7 +1386,7 @@ ${itemsSummary}
 ================================
 *ACOMPANHE SEU AÇAÍ EM TEMPO REAL:*
 Acompanhe as atualizações do seu açaí em tempo real pelo site do delivery!
-${trackingSiteUrl}
+${orderTrackingUrl}
 ================================`;
 
   const wppReceiptMsg = encodeURIComponent(wppReceiptText);

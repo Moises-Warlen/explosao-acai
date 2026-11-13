@@ -87,8 +87,11 @@
     <p style="margin:16px 0 0">Explosão Açaí © 2026 · Franca/SP · Todos os direitos reservados</p>
   </footer>
 
-  <!-- Botão Flutuante Único: Chat Oficial com a Loja -->
+  <!-- Botões Flutuantes: Rastrear Pedido Ativo & Chat com a Loja -->
   <div class="fab-container">
+    <button id="fab-track-order" class="fab-btn" style="display:none;background:linear-gradient(135deg,#7c3aed,#4b0f6b);color:#fff;font-weight:700" onclick="openActiveOrderModal()" title="Acompanhar status do pedido ao vivo">
+      🍧 Acompanhar Pedido
+    </button>
     <button class="fab-btn fab-chat" onclick="openChatModal()" title="Falar no Chat ao Vivo com a Explosão Açaí">
       <img src="imagens/Logo.png?v=3" alt="Logo" style="width:24px;height:24px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'">
       Chat com a Loja

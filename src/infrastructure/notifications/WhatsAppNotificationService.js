@@ -84,6 +84,7 @@ export class WhatsAppNotificationService {
       : 'Retirada no Balcão';
 
     const siteUrl = process.env.BASE_URL || 'https://cardapioexplosaoacai.com.br';
+    const orderTrackingUrl = `${siteUrl}?pedido=${orderNo}`;
 
     return `================================\n` +
       `*COMPROVANTE DO PEDIDO - EXPLOSÃO AÇAÍ*\n` +
@@ -99,7 +100,7 @@ export class WhatsAppNotificationService {
       `================================\n` +
       `*ACOMPANHE SEU AÇAÍ EM TEMPO REAL:*\n` +
       `Acompanhe as atualizações do seu açaí em tempo real pelo site do delivery!\n` +
-      `${siteUrl}\n` +
+      `${orderTrackingUrl}\n` +
       `================================`;
   }
 
