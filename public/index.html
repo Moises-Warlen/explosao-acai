@@ -18,15 +18,25 @@
     <button onclick="this.parentNode.classList.add('off')" aria-label="Fechar aviso">×</button>
   </div>
 
-  <!-- Cabeçalho Institucional -->
+  <!-- Cabeçalho Institucional Fixo no Topo com Logo Centralizada e Menu Hambúrguer -->
   <header class="top">
-    <div class="brand">
+    <div class="header-left">
+      <button id="btn-mobile-menu" class="btn-hamburger" onclick="openCategoriesMenuModal()" aria-label="Abrir menu de categorias" title="Navegar por categorias">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+          <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+        </svg>
+        <span class="btn-hamburger-label">Categorias</span>
+      </button>
+    </div>
+
+    <div class="brand brand-center">
       <img id="logo" src="imagens/Logo.png?v=3" alt="Logo Explosão Açaí" onerror="this.style.display='none'">
       <div class="bt">
         <b>Explosão Açaí</b>
         <small>Cardápio Digital & Delivery</small>
       </div>
     </div>
+
     <div class="header-status-area">
       <div id="store-status-pill" class="store-pill open" onclick="openStoreHoursModal()" role="button" tabindex="0" title="Clique para ver o horário de funcionamento">
         <span class="store-dot"></span>
@@ -46,19 +56,31 @@
     </div>
   </div>
 
-  <!-- Banner Principal de Apresentação -->
+  <!-- Banner Principal de Apresentação Hero -->
   <section class="hero">
-    <h1>Uma explosão de sabor em cada colherada!</h1>
-    <p>Mais que açaí, é puro sabor! Monte do seu jeito, escolha os acompanhamentos e receba super gelado no conforto da sua casa!</p>
-    <div class="pills">
-      <span>Açaí Cremoso</span>
-      <span>Frutas Frescas Selecionadas</span>
-      <span>Entrega Rápida</span>
-      <span>Pix & Cartões</span>
+    <div class="hero-container">
+      <div class="hero-text-block">
+        <h1 class="hero-title">
+          Uma explosão de sabor <span class="txt-yellow">em</span><br>
+          <span class="txt-yellow">cada colherada!</span>
+        </h1>
+        <p class="hero-subtitle">
+          Mais que açaí, é puro sabor! Monte do seu jeito, escolha os acompanhamentos e receba super gelado no conforto da sua casa!
+        </p>
+        <div class="pills">
+          <span>Açaí Cremoso</span>
+          <span>Frutas Frescas Selecionadas</span>
+          <span>Entrega Rápida</span>
+          <span>Pix & Cartões</span>
+        </div>
+      </div>
+      <div class="hero-image-block">
+        <img src="imagens/hero-acai-copo.png" alt="Açaí Artesanal no Copo com Frutas e Granola" class="hero-cup-img">
+      </div>
     </div>
   </section>
 
-  <!-- Navegação por Categorias Estratégicas -->
+  <!-- Navegação por Categorias Estratégicas (Rolagem Horizontal) -->
   <nav class="cats" id="category-nav" aria-label="Navegação por categorias"></nav>
 
   <!-- Catálogo Principal de Produtos -->
@@ -121,6 +143,17 @@
   <div class="ov" id="ov"></div>
   <aside class="sheet" id="sheet"></aside>
 
+  <!-- Modal Drawer de Categorias (Menu Hambúrguer) -->
+  <div id="categories-menu-modal" class="app-modal" style="display:none;">
+    <div class="app-modal-card categories-drawer-card">
+      <div class="modal-hours-header">
+        <h3 style="margin:0;font-size:18px;color:var(--tx)">Categorias do Cardápio</h3>
+        <button type="button" class="btn-close-modal" onclick="closeCategoriesMenuModal()">×</button>
+      </div>
+      <div id="categories-drawer-list" class="categories-drawer-list"></div>
+    </div>
+  </div>
+
   <!-- Modal de Horário de Funcionamento da Loja -->
   <div id="store-hours-modal" class="app-modal" style="display:none;">
     <div class="app-modal-card">
@@ -155,6 +188,6 @@
   <div id="toast"></div>
 
   <!-- Scripts -->
-  <script src="js/app.js?v=3.0"></script>
+  <script src="js/app.js?v=3.1"></script>
 </body>
 </html>

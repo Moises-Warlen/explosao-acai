@@ -300,32 +300,51 @@ async function loadBestSellers() {
   }
 }
 
-// Renderiza Menu de Categorias Dinâmico (Ordem Estratégica 1 a 12)
+// Renderiza Menu de Categorias Dinâmico (Ordem Estratégica 1 a 12 & Menu Hambúrguer)
 function renderNavigation() {
   const nav = $('#category-nav') || $('.cats');
-  if (!nav) return;
+  const drawerList = $('#categories-drawer-list');
 
   const launches = (CATALOG.products || []).filter(p => p.isNewLaunch && p.active);
   const promos = (CATALOG.products || []).filter(p => p.isPromo && p.active);
 
   let h = '';
+  let drawerHtml = '';
   let firstSet = false;
 
   // 1. Mais Vendidos
   if (BEST_SELLERS.length > 0) {
     h += `<a href="#mais-vendidos" class="cat-pill active">Mais Vendidos</a>`;
+    drawerHtml += `
+      <div class="categories-drawer-item" onclick="selectCategoryFromDrawer('mais-vendidos')">
+        <span>Mais Vendidos</span>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    `;
     firstSet = true;
   }
 
   // 2. Novidades e Lançamentos
   if (launches.length > 0) {
     h += `<a href="#lancamentos" class="cat-pill ${!firstSet ? 'active' : ''}">Novidades e Lançamentos</a>`;
+    drawerHtml += `
+      <div class="categories-drawer-item" onclick="selectCategoryFromDrawer('lancamentos')">
+        <span>Novidades e Lançamentos</span>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    `;
     firstSet = true;
   }
 
   // 3. Promoções
   if (promos.length > 0) {
     h += `<a href="#promocoes" class="cat-pill ${!firstSet ? 'active' : ''}">Promoções</a>`;
+    drawerHtml += `
+      <div class="categories-drawer-item" onclick="selectCategoryFromDrawer('promocoes')">
+        <span>Promoções</span>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    `;
     firstSet = true;
   }
 
@@ -335,19 +354,55 @@ function renderNavigation() {
       const isFirst = !firstSet;
       if (isFirst) firstSet = true;
       h += `<a href="#${cat.slug}" class="cat-pill ${isFirst ? 'active' : ''}">${esc(cat.name)}</a>`;
+      drawerHtml += `
+        <div class="categories-drawer-item" onclick="selectCategoryFromDrawer('${cat.slug}')">
+          <span>${esc(cat.name)}</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      `;
     }
   });
 
-  nav.innerHTML = h;
-
-  // Intercepta cliques nas pílulas para rolagem suave e destaque
-  nav.querySelectorAll('.cat-pill').forEach(pill => {
-    pill.addEventListener('click', () => {
-      nav.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
-      pill.classList.add('active');
+  if (nav) {
+    nav.innerHTML = h;
+    nav.querySelectorAll('.cat-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        nav.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+      });
     });
-  });
+  }
+
+  if (drawerList) {
+    drawerList.innerHTML = drawerHtml;
+  }
 }
+
+// Funções para controle do Menu Hambúrguer de Categorias no Mobile
+window.openCategoriesMenuModal = function() {
+  const modal = $('#categories-menu-modal');
+  if (modal) modal.style.display = 'flex';
+};
+
+window.closeCategoriesMenuModal = function() {
+  const modal = $('#categories-menu-modal');
+  if (modal) modal.style.display = 'none';
+};
+
+window.selectCategoryFromDrawer = function(slug) {
+  closeCategoriesMenuModal();
+  const target = document.getElementById(slug);
+  if (target) {
+    target.scrollIntoView({ behavior: 'smooth' });
+    const nav = $('#category-nav');
+    if (nav) {
+      nav.querySelectorAll('.cat-pill').forEach(p => {
+        if (p.getAttribute('href') === `#${slug}`) p.classList.add('active');
+        else p.classList.remove('active');
+      });
+    }
+  }
+};
 
 // Renderizar Produtos no Cardápio (Ordem Estratégica 1 a 12, Sem Emojis)
 function renderCatalog() {

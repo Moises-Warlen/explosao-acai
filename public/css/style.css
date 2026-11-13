@@ -57,8 +57,8 @@ html {
 }
 
 html, body {
-  max-width: 100vw;
-  overflow-x: hidden;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 body {
@@ -124,31 +124,63 @@ button:active {
   font-weight: bold;
 }
 
-/* Topo / Header */
+/* Topo / Header Fixo com Logo Centralizada e Menu Hambúrguer */
 .top {
   position: sticky;
   top: 0;
-  z-index: 25;
+  z-index: 50;
   background: var(--p);
   color: #fff;
-  padding: max(10px, env(safe-area-inset-top, 10px)) 16px 10px;
+  padding: max(8px, env(safe-area-inset-top, 8px)) 16px 8px;
   min-height: var(--header-h);
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
 }
 
-.brand {
+.header-left {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-width: 0;
-  flex: 1;
+  min-width: 90px;
+  flex-shrink: 0;
 }
 
-.brand img {
+.btn-hamburger {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  border-radius: 99px;
+  padding: 6px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.btn-hamburger:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+.brand.brand-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 auto;
+  text-align: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.brand.brand-center img {
   height: 44px;
   width: auto;
   max-width: 50px;
@@ -156,19 +188,19 @@ button:active {
   flex-shrink: 0;
 }
 
-.bt {
+.brand.brand-center .bt {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
+  align-items: center;
+  text-align: center;
   line-height: 1.15;
   min-width: 0;
 }
 
-.bt b {
+.brand.brand-center .bt b {
   font-family: 'Lilita One', 'Poppins', sans-serif;
   font-weight: 400;
-  font-size: clamp(16px, 4.2vw, 22px);
+  font-size: clamp(16px, 4vw, 22px);
   color: #fff;
   letter-spacing: 0.3px;
   white-space: nowrap;
@@ -177,7 +209,7 @@ button:active {
   max-width: 100%;
 }
 
-.bt small {
+.brand.brand-center .bt small {
   font-family: 'Poppins', sans-serif;
   font-weight: 600;
   font-size: clamp(10.5px, 2.6vw, 13px);
@@ -189,22 +221,23 @@ button:active {
 }
 
 @media (min-width: 768px) {
-  .brand {
+  .brand.brand-center {
     gap: 14px;
   }
-  .brand img {
-    height: 52px;
-    max-width: 60px;
+  .brand.brand-center img {
+    height: 50px;
+    max-width: 58px;
   }
-  .bt b { font-size: 24px; }
-  .bt small { font-size: 14px; }
+  .brand.brand-center .bt b { font-size: 24px; }
+  .brand.brand-center .bt small { font-size: 14px; }
 }
 
 /* Status Pill Loja Aberta/Fechada */
 .header-status-area {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: flex-end;
+  min-width: 90px;
   flex-shrink: 0;
 }
 
@@ -263,28 +296,38 @@ button:active {
   display: inline-block;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 600px) {
   .top {
-    padding: max(8px, env(safe-area-inset-top, 8px)) 12px 8px;
-    gap: 8px;
+    padding: max(8px, env(safe-area-inset-top, 8px)) 10px 8px;
+    gap: 6px;
   }
-  .brand {
-    gap: 8px;
+  .header-left {
+    min-width: auto;
   }
-  .brand img {
-    height: 38px;
-    max-width: 42px;
+  .header-status-area {
+    min-width: auto;
   }
-  .bt b {
-    font-size: 15px;
+  .btn-hamburger-label {
+    display: none;
   }
-  .bt small {
-    font-size: 10.5px;
+  .btn-hamburger {
+    padding: 6px 8px;
+    border-radius: 50%;
+  }
+  .brand.brand-center img {
+    height: 36px;
+    max-width: 38px;
+  }
+  .brand.brand-center .bt b {
+    font-size: 14.5px;
+  }
+  .brand.brand-center .bt small {
+    font-size: 10px;
   }
   .store-pill {
-    padding: 5px 10px;
-    font-size: 10.5px;
-    gap: 5px;
+    padding: 5px 9px;
+    font-size: 10px;
+    gap: 4px;
   }
 }
 
@@ -326,34 +369,105 @@ button:active {
   opacity: 0.9;
 }
 
-/* Hero */
+/* Hero Section (Apresentação Visual Conforme Referência) */
 .hero {
-  background: linear-gradient(145deg, var(--p) 0%, #300647 100%);
+  background: linear-gradient(135deg, #2b043f 0%, var(--p) 55%, #1f022d 100%);
   color: #fff;
-  text-align: center;
-  padding: 28px 16px 22px;
+  padding: 34px 20px 28px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 -4px 16px rgba(0, 0, 0, 0.2);
 }
 
-.hero h1 {
-  font-family: 'Lilita One', 'Poppins', sans-serif;
-  font-weight: 400;
-  font-size: clamp(22px, 5.2vw, 34px);
-  margin: 0 0 8px;
-  color: #fff;
-  letter-spacing: 0.3px;
+.hero-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
 }
 
-.hero p {
-  margin: 0 auto 16px;
-  max-width: 580px;
+.hero-text-block {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.hero-title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 800;
+  font-size: clamp(24px, 4.4vw, 38px);
+  line-height: 1.15;
+  margin: 0 0 14px;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+}
+
+.txt-yellow {
+  color: #ffcc00;
+  font-weight: 800;
+}
+
+.hero-subtitle {
+  margin: 0 0 20px;
+  max-width: 560px;
   color: #f3e8ff;
-  font-size: clamp(13px, 3vw, 15px);
-  line-height: 1.45;
+  font-size: clamp(13.5px, 2.5vw, 15px);
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.hero-image-block {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-cup-img {
+  height: 230px;
+  width: auto;
+  max-width: 220px;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.5));
+  animation: hero-cup-float 3.5s ease-in-out infinite;
+  user-select: none;
+  display: block;
+}
+
+@keyframes hero-cup-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+@media (max-width: 768px) {
+  .hero {
+    padding: 26px 16px 20px;
+  }
+  .hero-container {
+    flex-direction: column-reverse;
+    text-align: center;
+    gap: 16px;
+  }
+  .hero-text-block {
+    text-align: center;
+  }
+  .hero-subtitle {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .pills {
+    justify-content: center;
+  }
+  .hero-cup-img {
+    height: 175px;
+    max-width: 170px;
+  }
 }
 
 .pills {
   display: flex;
-  justify-content: center;
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -361,19 +475,20 @@ button:active {
 .pills span {
   display: inline-block;
   background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 99px;
   padding: 5px 14px;
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 600;
   color: #fff;
+  backdrop-filter: blur(4px);
 }
 
 /* Categorias */
 .cats {
   position: sticky;
-  top: 60px;
-  z-index: 18;
+  top: var(--header-h, 66px);
+  z-index: 20;
   background: var(--bg);
   display: flex;
   justify-content: flex-start;
@@ -416,6 +531,50 @@ button:active {
   color: #fff;
   border-color: var(--p2);
   box-shadow: 0 2px 8px rgba(123, 44, 191, 0.25);
+}
+
+/* Drawer / Modal de Categorias (Menu Hambúrguer) */
+.categories-drawer-card {
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.categories-drawer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  padding-right: 4px;
+  margin-top: 8px;
+  max-height: 60vh;
+}
+
+.categories-drawer-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #faf5ff;
+  border: 1px solid var(--ln);
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tx);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.categories-drawer-item:hover, .categories-drawer-item:active {
+  background: var(--p2);
+  color: #fff;
+  border-color: var(--p2);
+}
+
+.categories-drawer-item svg {
+  color: currentColor;
+  opacity: 0.6;
 }
 
 /* Grid & Cards */
