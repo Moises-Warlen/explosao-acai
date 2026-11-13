@@ -392,7 +392,12 @@ export class OrderService {
     wsHub.notifyNewOrder(newOrder);
 
     // 11. Dispara mensagem no WhatsApp do cliente: Pedido feito / aceito
-    whatsAppNotificationService.notifyStatusChange(newOrder, 'received').catch(() => {});
+    // Se o pagamento for online (Pix) e ainda estiver pendente, NÃO avisa que foi aceito nem inicia preparo!
+    // O pedido só é aceito e enviado para a cozinha após a confirmação bancária do pagamento.
+    const isOnlinePending = newOrder.payment?.timing === 'online' && newOrder.payment?.status !== PaymentStatus.APPROVED;
+    if (!isOnlinePending) {
+      whatsAppNotificationService.notifyStatusChange(newOrder, 'received').catch(() => {});
+    }
 
     // 12. REGRA DE IMPRESSÃO: Auto-impressão imediata se for Dinheiro ou Cartão na Entrega!
     // Pagamentos online (Pix e Cartão Online) SÓ IMPRIMEM depois que o banco confirmar o pagamento!
@@ -409,6 +414,14 @@ export class OrderService {
     if (orderIndex === -1) throw new Error('Pedido não encontrado.');
 
     const order = data.orders[orderIndex];
+
+    // Regra de Integridade Financeira: pedidos online (Pix) pendentes NÃO podem avançar para produção sem confirmação bancária
+    if (order.payment?.timing === 'online' && order.payment?.status !== PaymentStatus.APPROVED) {
+      if (newStatus === OrderStatus.PREPARING || newStatus === OrderStatus.READY || newStatus === OrderStatus.OUT_FOR_DELIVERY) {
+        throw new Error('Pagamento Pix pendente. Confirme o pagamento do Pix antes de aceitar o pedido ou enviá-lo para a cozinha.');
+      }
+    }
+
     const now = new Date();
 
     // Rastreia tempos de produção e logística para relatórios executivos

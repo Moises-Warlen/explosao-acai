@@ -398,6 +398,8 @@ function renderStoreSettingsForm() {
   if ($('#st-chatsender')) $('#st-chatsender').value = SETTINGS.chatSenderName || 'Delivery';
   if ($('#st-banner')) $('#st-banner').value = SETTINGS.bannerPromo || '';
   if ($('#st-wpp')) $('#st-wpp').value = SETTINGS.wpp || '';
+  if ($('#st-pix-key')) $('#st-pix-key').value = SETTINGS.pixKey || '';
+  if ($('#st-mp-token')) $('#st-mp-token').value = SETTINGS.mercadoPagoAccessToken || '';
   if ($('#st-address')) $('#st-address').value = SETTINGS.address || '';
   if ($('#st-wpp-api-url')) $('#st-wpp-api-url').value = SETTINGS.whatsappApiUrl || '';
   if ($('#st-wpp-api-token')) $('#st-wpp-api-token').value = SETTINGS.whatsappApiToken || '';
@@ -414,6 +416,8 @@ window.saveStoreSettings = async function(e) {
     chatSenderName: $('#st-chatsender') ? $('#st-chatsender').value.trim() || 'Delivery' : 'Delivery',
     bannerPromo: $('#st-banner').value.trim(),
     wpp: $('#st-wpp').value.trim(),
+    pixKey: $('#st-pix-key') ? $('#st-pix-key').value.trim() : (SETTINGS.pixKey || '16991098863'),
+    mercadoPagoAccessToken: $('#st-mp-token') ? $('#st-mp-token').value.trim() : (SETTINGS.mercadoPagoAccessToken || ''),
     address: $('#st-address').value.trim(),
     whatsappApiUrl: $('#st-wpp-api-url') ? $('#st-wpp-api-url').value.trim() : '',
     whatsappApiToken: $('#st-wpp-api-token') ? $('#st-wpp-api-token').value.trim() : '',
@@ -935,8 +939,17 @@ function createOrderCardHtml(order, isHistory = false) {
   let nextAction = '';
   if (!isHistory) {
     if (order.status === 'received') {
-      // 1. Novos Pedidos: apenas envia para a cozinha
-      nextAction = `<button class="btn-sm btn-next btn-next-received" onclick="advanceOrderStatus('${order.id}', 'preparing')">Aceitar / Mandar p/ Cozinha</button>`;
+      const isOnlinePending = !isDeliveryPayment && !isApproved;
+      if (isOnlinePending) {
+        nextAction = `
+          <button class="btn-sm btn-print" style="background:#059669;color:#fff;font-weight:700;font-size:11px;padding:4px 8px" onclick="simulateBankApproval('${order.id}')" title="Confirmar pagamento Pix recebido e aceitar pedido para a cozinha">
+            ✓ Confirmar Pix & Aceitar
+          </button>
+        `;
+      } else {
+        // 1. Novos Pedidos: apenas envia para a cozinha
+        nextAction = `<button class="btn-sm btn-next btn-next-received" onclick="advanceOrderStatus('${order.id}', 'preparing')">Aceitar / Mandar p/ Cozinha</button>`;
+      }
     } else if (order.status === 'preparing') {
       // 2. Em Preparo: move para a coluna de Pronto / Saiu para Entrega
       nextAction = isDelivery 
@@ -1025,7 +1038,12 @@ function createOrderCardHtml(order, isHistory = false) {
     if (isHistory) {
       statusSummary = `<span style="color:#34d399;font-weight:600">✓ Concluído (${payMethod})</span>`;
     } else if (order.status === 'received') {
-      statusSummary = `<span style="color:#fde047;font-weight:600">Novos Pedidos (Aguardando Cozinha)</span>`;
+      const isOnlinePending = !isDeliveryPayment && !isApproved;
+      if (isOnlinePending) {
+        statusSummary = `<span style="color:#f59e0b;font-weight:700">⏳ Aguardando Pagamento Pix</span>`;
+      } else {
+        statusSummary = `<span style="color:#fde047;font-weight:600">Novos Pedidos (Aguardando Cozinha)</span>`;
+      }
     } else if (order.status === 'preparing') {
       statusSummary = `<span style="color:#60a5fa;font-weight:600">Em Preparo (Cozinha)</span>`;
     } else if (order.status === 'out_for_delivery') {

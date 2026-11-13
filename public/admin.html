@@ -684,6 +684,27 @@
             <small style="color:var(--mut);font-size:10px;display:block;margin-top:4px">Dica: use <code>{horario}</code> para o sistema inserir automaticamente a informação de funcionamento.</small>
           </div>
 
+          <!-- Card de Pagamento Pix & Mercado Pago -->
+          <div style="margin-bottom:18px;padding:14px;background:#181028;border:1.5px solid #059669;border-radius:10px">
+            <h4 style="margin:0 0 6px 0;font-size:13px;color:#34d399">⚡ Pagamento Pix & Confirmação Automática</h4>
+            <p style="font-size:11px;color:var(--mut);margin-bottom:10px;line-height:1.4">
+              Defina sua chave Pix para recebimento ou informe seu Token do <b>Mercado Pago</b> para baixa e aceite <b>100% automático</b> em tempo real:
+            </p>
+            <div class="form-grid">
+              <div>
+                <label>Chave Pix da Loja (Celular/CPF/CNPJ/Aleatória)</label>
+                <input id="st-pix-key" placeholder="Ex: 16991098863">
+              </div>
+              <div>
+                <label>Mercado Pago Access Token (Para Aceite Automático Instantâneo)</label>
+                <input id="st-mp-token" type="password" placeholder="APP_USR-xxxxxx...">
+              </div>
+            </div>
+            <small style="color:var(--mut);font-size:10px;display:block;margin-top:6px">
+              💡 <b>Como funciona:</b> Com o token do Mercado Pago, no exato segundo em que o cliente paga o Pix, o sistema confirma o pagamento sozinho, aceita o pedido, imprime na cozinha e avisa no WhatsApp sem você precisar clicar em nada!
+            </small>
+          </div>
+
           <div style="margin-bottom:18px;padding:14px;background:#181028;border:1px solid #3b115b;border-radius:8px">
             <h4 style="margin:0 0 6px 0;font-size:13px;color:var(--y)">Notificações Automáticas via Gateway de WhatsApp (Opcional)</h4>
             <p style="font-size:11px;color:var(--mut);margin-bottom:10px">

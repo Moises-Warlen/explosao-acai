@@ -1430,8 +1430,10 @@ window.checkPixStatus = async function(orderId) {
 // Formatação limpa dos status operacionais
 function formatStatus(status, order = null) {
   const isPickup = (order && (order.delivery?.type === 'pickup' || order.delivery?.type === 'retirada' || order.delivery?.type !== 'delivery')) || (status === 'ready' && (!order || order.delivery?.type !== 'delivery'));
+  const isOnlinePending = order && order.payment?.timing === 'online' && order.payment?.status !== 'approved';
+
   switch (status) {
-    case 'received': return 'Recebido pela Loja';
+    case 'received': return isOnlinePending ? 'Aguardando Pagamento Pix' : 'Recebido pela Loja';
     case 'preparing': return 'Em Preparo na Cozinha';
     case 'ready': return isPickup ? 'Pronto para Retirada no Balcão' : 'Pronto para Entrega';
     case 'out_for_delivery': return isPickup ? 'Pronto para Retirada no Balcão' : 'Saiu para Entrega (Em Rota)';
