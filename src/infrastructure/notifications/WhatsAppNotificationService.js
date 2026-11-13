@@ -59,7 +59,8 @@ export class WhatsAppNotificationService {
   }
 
   /**
-   * Formata mensagem completa com cópia do pedido
+   * Formata mensagem completa com cópia do pedido no formato notinha/comanda
+   * Sem emojis para prevenir corrupção de caracteres no WhatsApp
    */
   formatNewOrderReceipt(order) {
     const custName = (order.customer?.name || 'Cliente').trim();
@@ -67,23 +68,39 @@ export class WhatsAppNotificationService {
     const isDelivery = order.delivery?.type === 'delivery';
 
     const itemsSummary = (order.items || []).map(it => {
-      let line = `• *${it.quantity}x* ${it.name}`;
+      let line = `*${it.quantity}x* ${it.name}`;
       if (it.accompaniments?.length) line += `\n   - Acomp: ${it.accompaniments.join(', ')}`;
       if (it.extras?.length) line += `\n   - Extras: ${it.extras.join(', ')}`;
       if (it.fruits?.length) line += `\n   - Frutas: ${it.fruits.join(', ')}`;
       if (it.note) line += `\n   - Obs: ${it.note}`;
       return line;
-    }).join('\n');
+    }).join('\n\n');
 
     const totalFmt = Number(order.total || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const trocoFmt = order.payment?.trocoValue > 0 ? ` (Levar troco de R$ ${Number(order.payment.trocoValue).toFixed(2).replace('.', ',')})` : '';
+    const payInfo = `${order.payment?.method || 'Pagamento'}${trocoFmt}`;
+    const tipoInfo = isDelivery
+      ? `Entrega (${order.delivery.street}, ${order.delivery.number} — ${order.delivery.bairro})`
+      : 'Retirada no Balcão';
 
-    return `🍧 *COMPROVANTE DO PEDIDO #${orderNo} - EXPLOSÃO AÇAÍ* 🍧\n\n` +
+    const siteUrl = process.env.BASE_URL || 'https://cardapioexplosaoacai.com.br';
+
+    return `================================\n` +
+      `*COMPROVANTE DO PEDIDO - EXPLOSÃO AÇAÍ*\n` +
+      `================================\n\n` +
       `Olá, *${custName}*!\n` +
-      `Seu pedido foi registrado com sucesso!\n\n` +
-      `📋 *ITENS:*\n${itemsSummary}\n\n` +
-      `💵 *Total:* ${totalFmt} (${order.payment?.method || 'Pagamento'})\n` +
-      `📍 *Entrega:* ${isDelivery ? `${order.delivery.street}, ${order.delivery.number} — ${order.delivery.bairro}` : 'Retirada no Balcão'}\n\n` +
-      `Você receberá atualizações em tempo real quando o pedido entrar em preparo e sair para entrega!`;
+      `Aqui está a cópia do seu pedido *#${orderNo}*:\n\n` +
+      `--------------------------------\n` +
+      `*ITENS:*\n` +
+      `${itemsSummary}\n` +
+      `--------------------------------\n\n` +
+      `*Total:* ${totalFmt} (${payInfo})\n` +
+      `*Tipo:* ${tipoInfo}\n\n` +
+      `================================\n` +
+      `*ACOMPANHE SEU AÇAÍ EM TEMPO REAL:*\n` +
+      `Acompanhe as atualizações do seu açaí em tempo real pelo site do delivery!\n` +
+      `${siteUrl}\n` +
+      `================================`;
   }
 
   /**

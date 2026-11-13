@@ -1288,24 +1288,47 @@ function renderOrderSuccess(order) {
   const isPixOnline = order.payment.method === 'Pix' && order.payment.timing === 'online';
 
   const cleanCustPhone = String(order.customer?.phone || '').replace(/\D/g, '');
-  const itemsSummary = (order.items || []).map(it => {
-    let line = `• *${it.quantity}x* ${it.name}`;
-    if (it.accompaniments?.length) line += ` (Acomp: ${it.accompaniments.join(', ')})`;
-    if (it.extras?.length) line += ` (Extras: ${it.extras.join(', ')})`;
-    if (it.fruits?.length) line += ` (Frutas: ${it.fruits.join(', ')})`;
-    if (it.note) line += ` (Obs: ${it.note})`;
-    return line;
-  }).join('\n');
+  const trackingSiteUrl = (window.location.origin && !window.location.origin.includes('localhost'))
+    ? window.location.origin
+    : 'https://cardapioexplosaoacai.com.br';
 
-  const wppReceiptMsg = encodeURIComponent(
-    `🍧 *COMPROVANTE DO MEU PEDIDO - EXPLOSÃO AÇAÍ* 🍧\n\n` +
-    `Olá, *${order.customer?.name}*!\n` +
-    `Aqui está a cópia do seu pedido *#${order.orderNo}*:\n\n` +
-    `📋 *ITENS:*\n${itemsSummary}\n\n` +
-    `💵 *Total:* ${R(order.total)} (${order.payment?.method || 'Pagamento'})\n` +
-    `📍 *Tipo:* ${order.delivery?.type === 'delivery' ? `Entrega (${order.delivery.street}, ${order.delivery.number} — ${order.delivery.bairro})` : 'Retirada no Balcão'}\n\n` +
-    `Acompanhe as atualizações do seu açaí em tempo real pelo site do delivery!`
-  );
+  const itemsSummary = (order.items || []).map(it => {
+    let line = `*${it.quantity}x* ${it.name}`;
+    if (it.accompaniments?.length) line += `\n   - Acomp: ${it.accompaniments.join(', ')}`;
+    if (it.extras?.length) line += `\n   - Extras: ${it.extras.join(', ')}`;
+    if (it.fruits?.length) line += `\n   - Frutas: ${it.fruits.join(', ')}`;
+    if (it.note) line += `\n   - Obs: ${it.note}`;
+    return line;
+  }).join('\n\n');
+
+  const payInfo = `${order.payment?.method || 'Pagamento'}${order.payment?.trocoValue > 0 ? ` (Levar troco de ${R(order.payment.trocoValue)})` : ''}`;
+  const tipoInfo = order.delivery?.type === 'delivery'
+    ? `Entrega (${order.delivery.street}, ${order.delivery.number} — ${order.delivery.bairro})`
+    : 'Retirada no Balcão';
+
+  const wppReceiptText = 
+`================================
+*COMPROVANTE DO PEDIDO - EXPLOSÃO AÇAÍ*
+================================
+
+Olá, *${order.customer?.name || 'Cliente'}*!
+Aqui está a cópia do seu pedido *#${order.orderNo}*:
+
+--------------------------------
+*ITENS:*
+${itemsSummary}
+--------------------------------
+
+*Total:* ${R(order.total)} (${payInfo})
+*Tipo:* ${tipoInfo}
+
+================================
+*ACOMPANHE SEU AÇAÍ EM TEMPO REAL:*
+Acompanhe as atualizações do seu açaí em tempo real pelo site do delivery!
+${trackingSiteUrl}
+================================`;
+
+  const wppReceiptMsg = encodeURIComponent(wppReceiptText);
   const wppReceiptUrl = `https://wa.me/55${cleanCustPhone}?text=${wppReceiptMsg}`;
 
   let h = `
