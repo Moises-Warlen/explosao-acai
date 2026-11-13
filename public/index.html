@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <title>Explosão Açaí</title>
+  <title>Explosão Açaí · Cardápio Digital & Delivery</title>
   <link rel="icon" href="imagens/Logo.png?v=3">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,22 +15,36 @@
   <!-- Banner de Notificação e Promoção Superior -->
   <div class="promo" id="promo">
     <span id="promo-text">Bem-vindo ao nosso delivery próprio! Peça direto por aqui com o melhor preço e entrega ágil.</span>
-    <button onclick="this.parentNode.classList.add('off')">×</button>
+    <button onclick="this.parentNode.classList.add('off')" aria-label="Fechar aviso">×</button>
   </div>
 
   <!-- Cabeçalho Institucional -->
   <header class="top">
     <div class="brand">
-      <img id="logo" src="imagens/Logo.png?v=3" alt="Explosão Açaí" onerror="this.style.display='none'">
+      <img id="logo" src="imagens/Logo.png?v=3" alt="Logo Explosão Açaí" onerror="this.style.display='none'">
       <div class="bt">
         <b>Explosão Açaí</b>
         <small>Cardápio Digital & Delivery</small>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-      <div id="store-status-pill" class="store-pill open">Carregando...</div>
+    <div class="header-status-area">
+      <div id="store-status-pill" class="store-pill open" onclick="openStoreHoursModal()" role="button" tabindex="0" title="Clique para ver o horário de funcionamento">
+        <span class="store-dot"></span>
+        <span class="store-status-text">LOJA ABERTA</span>
+      </div>
     </div>
   </header>
+
+  <!-- Aviso Destacado de Loja Fechada (Exibido automaticamente quando fora do horário) -->
+  <div id="store-closed-banner" class="store-closed-banner" style="display:none;">
+    <div class="banner-inner">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+      </svg>
+      <span id="store-closed-banner-msg">No momento a loja está fechada. Confira nosso horário de funcionamento.</span>
+      <button type="button" class="btn-banner-hours" onclick="openStoreHoursModal()">Ver Horários</button>
+    </div>
+  </div>
 
   <!-- Banner Principal de Apresentação -->
   <section class="hero">
@@ -44,32 +58,25 @@
     </div>
   </section>
 
-  <!-- Navegação por Categorias e Seções Especiais -->
-  <nav class="cats" id="category-nav">
-    <a href="#lancamentos" class="cat-pill">Novidades</a>
-    <a href="#promocoes" class="cat-pill">Promoções</a>
-    <a href="#monte" class="cat-pill">Monte seu Açaí</a>
-    <a href="#prontos" class="cat-pill active">Sabores Prontos</a>
-    <a href="#combos" class="cat-pill">Combos</a>
-    <a href="#polpa" class="cat-pill">Pura Polpa</a>
-  </nav>
+  <!-- Navegação por Categorias Estratégicas -->
+  <nav class="cats" id="category-nav" aria-label="Navegação por categorias"></nav>
 
   <!-- Catálogo Principal de Produtos -->
   <main id="main">
-    <div style="text-align:center;padding:40px;color:var(--mut)">Carregando o melhor açaí da cidade...</div>
+    <div class="loading-catalog">Carregando cardápio...</div>
   </main>
 
-  <!-- Rodapé Institucional (Área do lojista removida conforme solicitado) -->
+  <!-- Rodapé Institucional -->
   <footer>
     <div class="social">
-      <a href="https://wa.me/5516991098863" target="_blank" rel="noopener noreferrer">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="#25D366">
+      <a href="https://wa.me/5516991098863" target="_blank" rel="noopener noreferrer" title="Falar no WhatsApp">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="#25D366">
           <path d="M20.5 3.5A11.8 11.8 0 0 0 2 17.7L.5 23.5l6-1.6a11.8 11.8 0 0 0 14-18.4ZM12 21a9.8 9.8 0 0 1-5-1.4l-.4-.2-3.5.9.9-3.4-.2-.4A9.8 9.8 0 1 1 12 21Zm5.4-7.3c-.3-.2-1.8-.9-2.1-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7.1a8 8 0 0 1-2.4-1.5 9 9 0 0 1-1.7-2.1c-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.4.3-.6s0-.4 0-.6l-1-2.3c-.2-.5-.5-.4-.7-.4h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.8 1.2 3.2 1.4 3.4a11 11 0 0 0 4.3 3.8c.6.3 1.1.5 1.5.6.6.2 1.2.2 1.7.1.5-.1 1.8-.7 2.1-1.4.3-.7.3-1.3.2-1.4s-.2-.2-.5-.3Z"/>
         </svg>
         WhatsApp
       </a>
-      <a href="https://www.instagram.com/expl.osaoacai/" target="_blank" rel="noopener noreferrer">
-        <svg viewBox="0 0 24 24" width="22" height="22">
+      <a href="https://www.instagram.com/expl.osaoacai/" target="_blank" rel="noopener noreferrer" title="Seguir no Instagram">
+        <svg viewBox="0 0 24 24" width="20" height="20">
           <defs>
             <linearGradient id="instaGradient" x1="0" y1="1" x2="1" y2="0">
               <stop offset="0%" stop-color="#FFDC80"/>
@@ -84,41 +91,62 @@
         Instagram
       </a>
     </div>
-    <p style="margin:16px 0 0">Explosão Açaí © 2026 · Franca/SP · Todos os direitos reservados</p>
+    <p class="copyright">Explosão Açaí © 2026 · Franca/SP · Todos os direitos reservados</p>
   </footer>
 
   <!-- Botões Flutuantes: Rastrear Pedido Ativo & Chat com a Loja -->
   <div class="fab-container">
-    <button id="fab-track-order" class="fab-btn" style="display:none;background:linear-gradient(135deg,#7c3aed,#4b0f6b);color:#fff;font-weight:700" onclick="openActiveOrderModal()" title="Acompanhar status do pedido ao vivo">
-      🍧 Acompanhar Pedido
+    <button id="fab-track-order" class="fab-btn fab-track" style="display:none;" onclick="openActiveOrderModal()" title="Acompanhar status do pedido ao vivo">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h10v2H7zm0-3h10v2H7zm0 6h7v2H7z"/>
+      </svg>
+      <span id="fab-track-text">Acompanhar Pedido</span>
     </button>
     <button class="fab-btn fab-chat" onclick="openChatModal()" title="Falar no Chat ao Vivo com a Explosão Açaí">
-      <img src="imagens/Logo.png?v=3" alt="Logo" style="width:24px;height:24px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'">
-      Chat com a Loja
+      <img src="imagens/Logo.png?v=3" alt="Logo" class="fab-chat-logo" onerror="this.style.display='none'">
+      <span>Chat com a Loja</span>
     </button>
   </div>
 
   <!-- Barra Fixa Inferior de Resumo do Carrinho -->
   <div class="bar" id="bar">
-    <div>
+    <div class="bar-summary">
       <span id="bc">0 itens</span>
       <span id="bt">R$ 0,00</span>
     </div>
+    <button class="bar-btn" id="bar-view-cart">Ver Pedido</button>
   </div>
 
   <!-- Overlay e Modal Sheet -->
   <div class="ov" id="ov"></div>
   <aside class="sheet" id="sheet"></aside>
 
-  <!-- Modal de Confirmação do App (sem alert nativo) -->
-  <div id="app-confirm-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(5px);padding:16px">
-    <div style="background:var(--card);color:var(--tx);border:1.5px solid var(--ln);border-radius:20px;padding:24px;width:min(380px,92vw);text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.6)">
-      <div id="app-confirm-icon" style="font-size:42px;margin-bottom:8px">🗑️</div>
+  <!-- Modal de Horário de Funcionamento da Loja -->
+  <div id="store-hours-modal" class="app-modal" style="display:none;">
+    <div class="app-modal-card">
+      <div class="modal-hours-header">
+        <h3 style="margin:0;font-size:18px;color:var(--tx)">Horário de Funcionamento</h3>
+        <button type="button" class="btn-close-modal" onclick="closeStoreHoursModal()">×</button>
+      </div>
+      <div id="store-hours-status-summary" class="modal-hours-status"></div>
+      <div id="store-hours-table" class="modal-hours-list"></div>
+      <button type="button" class="btn btn-primary" style="width:100%;margin-top:16px" onclick="closeStoreHoursModal()">Entendi</button>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmação do App (sem emojis) -->
+  <div id="app-confirm-modal" class="app-modal" style="display:none;">
+    <div class="app-modal-card">
+      <div id="app-confirm-icon" class="modal-icon-wrap">
+        <svg viewBox="0 0 24 24" width="36" height="36" fill="#ef4444">
+          <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+        </svg>
+      </div>
       <h3 id="app-confirm-title" style="margin:0 0 8px;font-size:18px;color:var(--tx)">Limpar Pedido?</h3>
       <p id="app-confirm-msg" style="font-size:13px;color:var(--mut);line-height:1.45;margin:0 0 20px">Deseja remover todos os itens do seu carrinho?</p>
       <div style="display:flex;gap:10px">
-        <button id="app-confirm-btn-yes" class="btn" style="flex:1;background:#ef4444;color:#fff;padding:12px;font-weight:700;border:none;border-radius:10px;cursor:pointer">Sim, Limpar</button>
-        <button id="app-confirm-btn-no" class="btn o" style="flex:1;padding:12px" onclick="closeAppConfirmModal()">Cancelar</button>
+        <button id="app-confirm-btn-yes" class="btn btn-danger" style="flex:1">Sim, Limpar</button>
+        <button id="app-confirm-btn-no" class="btn btn-outline" style="flex:1" onclick="closeAppConfirmModal()">Cancelar</button>
       </div>
     </div>
   </div>
@@ -127,6 +155,6 @@
   <div id="toast"></div>
 
   <!-- Scripts -->
-  <script src="js/app.js?v=2.8"></script>
+  <script src="js/app.js?v=3.0"></script>
 </body>
 </html>

@@ -66,72 +66,77 @@
         "active": true
       }
     ],
-    "bestSellerProductIds": [],
+    "bestSellerProductIds": [
+      "prod_classico",
+      "prod_ninhomorango",
+      "prod_docetentacao",
+      "prod_monte"
+    ],
     "autoReplyClosedEnabled": true,
     "autoReplyClosedMessage": "Olá! A loja está fechada agora. Responderemos em breve."
   },
   "categories": [
     {
+      "id": "cat_combos",
+      "name": "Combos Especiais",
+      "slug": "combos",
+      "order": 4,
+      "active": true
+    },
+    {
       "id": "cat_classica",
       "name": "Explosão Clássica",
       "slug": "classica",
-      "order": 1,
+      "order": 5,
       "active": true
     },
     {
       "id": "cat_premium",
       "name": "Explosão Premium",
       "slug": "premium",
-      "order": 2,
-      "active": true
-    },
-    {
-      "id": "cat_natural",
-      "name": "Explosão Natural",
-      "slug": "natural",
-      "order": 3,
-      "active": true
-    },
-    {
-      "id": "cat_kids",
-      "name": "Explosão Kids",
-      "slug": "kids",
-      "order": 4,
-      "active": true
-    },
-    {
-      "id": "cat_fitness",
-      "name": "Explosão Fitness",
-      "slug": "fitness",
-      "order": 5,
+      "order": 6,
       "active": true
     },
     {
       "id": "cat_monte",
       "name": "Monte seu Açaí",
       "slug": "monte",
-      "order": 6,
+      "order": 7,
+      "active": true
+    },
+    {
+      "id": "cat_kids",
+      "name": "Explosão Kids",
+      "slug": "kids",
+      "order": 8,
+      "active": true
+    },
+    {
+      "id": "cat_natural",
+      "name": "Explosão Natural",
+      "slug": "natural",
+      "order": 9,
+      "active": true
+    },
+    {
+      "id": "cat_fitness",
+      "name": "Explosão Fitness",
+      "slug": "fitness",
+      "order": 10,
       "active": true
     },
     {
       "id": "cat_garrafa",
       "name": "Açaí na Garrafa",
       "slug": "garrafa",
-      "order": 7,
+      "order": 11,
       "active": true
     },
     {
       "id": "cat_levar",
       "name": "Explosão para Levar",
       "slug": "levar",
-      "order": 8,
-      "active": true
-    },
-    {
-      "id": "cat_combos",
-      "name": "Combos Especiais",
-      "slug": "combos",
-      "order": 9,
+      "order": 12,
       "active": true
     }
   ],
@@ -770,7 +775,9 @@
         "acomp_1794378367334",
         "acomp_1794378479333",
         "acomp_1794420772222",
-        "acomp_1794541556990"
+        "acomp_1794541556990",
+        "acomp_1794608862348",
+        "acomp_1794609239591"
       ]
     },
     {

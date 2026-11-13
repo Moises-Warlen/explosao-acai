@@ -56,6 +56,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   // Verifica se o cliente abriu o link com rastreamento de pedido (ex: ?pedido=123456)
   await checkUrlForOrderTracking();
 
+  // Atualização periódica do status da loja em tempo real (a cada 60s)
+  setInterval(loadStoreStatus, 60000);
+
   // Banner amarelo de Boas-Vindas e Desconto: fecha sozinho após 3 segundos
   setTimeout(() => {
     const promoEl = document.getElementById('promo');
@@ -65,13 +68,18 @@ window.addEventListener('DOMContentLoaded', async () => {
   }, 3000);
 });
 
-// Acompanhamento de Pedido Ativo & Botão Flutuante
+// Acompanhamento de Pedido Ativo & Botão Flutuante (sem emojis)
 function updateActiveOrderBanner() {
   const btn = $('#fab-track-order');
   if (!btn) return;
   if (ACTIVE_ORDER && ACTIVE_ORDER.status !== 'delivered' && ACTIVE_ORDER.status !== 'cancelled') {
     btn.style.display = 'inline-flex';
-    btn.innerHTML = `🍧 Pedido #${ACTIVE_ORDER.orderNo} (${formatStatus(ACTIVE_ORDER.status, ACTIVE_ORDER)})`;
+    btn.innerHTML = `
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h10v2H7zm0-3h10v2H7zm0 6h7v2H7z"/>
+      </svg>
+      <span>Pedido #${ACTIVE_ORDER.orderNo} (${formatStatus(ACTIVE_ORDER.status, ACTIVE_ORDER)})</span>
+    `;
   } else {
     btn.style.display = 'none';
   }
@@ -198,15 +206,71 @@ async function loadStoreStatus() {
 
 function renderStoreStatus() {
   const pill = $('#store-status-pill');
-  if (!pill) return;
-  if (STORE_STATUS.isOpen) {
-    pill.className = 'store-pill open';
-    pill.textContent = 'Loja Aberta';
-  } else {
-    pill.className = 'store-pill closed';
-    pill.textContent = 'Loja Fechada';
+  const banner = $('#store-closed-banner');
+  const bannerMsg = $('#store-closed-banner-msg');
+
+  if (pill) {
+    if (STORE_STATUS.isOpen) {
+      pill.className = 'store-pill open';
+      pill.innerHTML = `<span class="store-dot"></span><span class="store-status-text">LOJA ABERTA</span>`;
+    } else {
+      pill.className = 'store-pill closed';
+      pill.innerHTML = `<span class="store-dot"></span><span class="store-status-text">LOJA FECHADA</span>`;
+    }
+  }
+
+  if (banner) {
+    if (STORE_STATUS.isOpen) {
+      banner.style.display = 'none';
+    } else {
+      banner.style.display = 'block';
+      if (bannerMsg) {
+        bannerMsg.textContent = STORE_STATUS.message || 'No momento nossa loja está fechada. Confira nosso horário de funcionamento.';
+      }
+    }
   }
 }
+
+// Modal com Grade Semanal de Horário de Funcionamento
+window.openStoreHoursModal = function() {
+  const modal = $('#store-hours-modal');
+  if (!modal) return;
+
+  const statusBox = $('#store-hours-status-summary');
+  const list = $('#store-hours-table');
+
+  if (statusBox) {
+    statusBox.className = `modal-hours-status ${STORE_STATUS.isOpen ? 'open' : 'closed'}`;
+    statusBox.innerHTML = `<strong>${STORE_STATUS.isOpen ? '● LOJA ABERTA' : '● LOJA FECHADA'}</strong> — ${esc(STORE_STATUS.message || '')}`;
+  }
+
+  if (list) {
+    const schedules = STORE_STATUS.schedules || (SETTINGS && SETTINGS.schedules) || [];
+    const now = new Date();
+    const brTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    const currentDay = brTime.getDay();
+
+    let rowsHtml = '';
+    schedules.forEach(s => {
+      const isToday = s.day === currentDay;
+      const hoursText = s.active ? `${s.open} às ${s.close}` : 'Fechado';
+      rowsHtml += `
+        <div class="modal-hours-row ${isToday ? 'today' : ''}">
+          <span class="day-name">${esc(s.dayName)}${isToday ? ' (Hoje)' : ''}</span>
+          <span class="hours-val">${hoursText}</span>
+        </div>
+      `;
+    });
+    list.innerHTML = rowsHtml;
+  }
+
+  modal.style.display = 'flex';
+};
+
+window.closeStoreHoursModal = function() {
+  const modal = $('#store-hours-modal');
+  if (modal) modal.style.display = 'none';
+};
 
 // Carregar Catálogo e Categorias
 async function loadCatalog() {
@@ -221,7 +285,7 @@ async function loadCatalog() {
   }
 }
 
-// Carregar Mais Vendidos (Exibe SOMENTE os itens adicionados manualmente no painel)
+// Carregar Mais Vendidos (Exibe SOMENTE os itens selecionados/mais pedidos)
 async function loadBestSellers() {
   try {
     const res = await fetch(`${API_URL}/catalog/best-sellers`);
@@ -236,7 +300,7 @@ async function loadBestSellers() {
   }
 }
 
-// Renderiza Menu de Categorias Dinâmico
+// Renderiza Menu de Categorias Dinâmico (Ordem Estratégica 1 a 12)
 function renderNavigation() {
   const nav = $('#category-nav') || $('.cats');
   if (!nav) return;
@@ -245,63 +309,83 @@ function renderNavigation() {
   const promos = (CATALOG.products || []).filter(p => p.isPromo && p.active);
 
   let h = '';
+  let firstSet = false;
+
+  // 1. Mais Vendidos
   if (BEST_SELLERS.length > 0) {
     h += `<a href="#mais-vendidos" class="cat-pill active">Mais Vendidos</a>`;
-  }
-  if (launches.length > 0) {
-    h += `<a href="#lancamentos" class="cat-pill ${!BEST_SELLERS.length ? 'active' : ''}">Novidades</a>`;
-  }
-  if (promos.length > 0) {
-    h += `<a href="#promocoes" class="cat-pill ${!BEST_SELLERS.length && !launches.length ? 'active' : ''}">Promoções</a>`;
+    firstSet = true;
   }
 
-  (CATALOG.categories || []).forEach((cat, idx) => {
+  // 2. Novidades e Lançamentos
+  if (launches.length > 0) {
+    h += `<a href="#lancamentos" class="cat-pill ${!firstSet ? 'active' : ''}">Novidades e Lançamentos</a>`;
+    firstSet = true;
+  }
+
+  // 3. Promoções
+  if (promos.length > 0) {
+    h += `<a href="#promocoes" class="cat-pill ${!firstSet ? 'active' : ''}">Promoções</a>`;
+    firstSet = true;
+  }
+
+  // 4 a 12. Categorias Estratégicas do Cardápio
+  (CATALOG.categories || []).forEach((cat) => {
     if (cat.active && cat.slug !== 'lancamentos' && cat.slug !== 'promocoes') {
-      const isFirst = !BEST_SELLERS.length && !launches.length && !promos.length && idx === 0;
+      const isFirst = !firstSet;
+      if (isFirst) firstSet = true;
       h += `<a href="#${cat.slug}" class="cat-pill ${isFirst ? 'active' : ''}">${esc(cat.name)}</a>`;
     }
   });
 
   nav.innerHTML = h;
+
+  // Intercepta cliques nas pílulas para rolagem suave e destaque
+  nav.querySelectorAll('.cat-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      nav.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+    });
+  });
 }
 
-// Renderizar Produtos no Cardápio
+// Renderizar Produtos no Cardápio (Ordem Estratégica 1 a 12, Sem Emojis)
 function renderCatalog() {
   const main = $('#main');
   if (!main) return;
 
   let html = '';
 
-  // 0. SEÇÃO MAIS VENDIDOS (Apenas itens cadastrados manualmente pelo administrador)
+  // 1. SEÇÃO MAIS VENDIDOS
   if (BEST_SELLERS.length > 0) {
-    html += `<section id="mais-vendidos"><h2>Mais Vendidos</h2><div class="grid">`;
+    html += `<section id="mais-vendidos" class="cat-section"><h2 class="cat-title">Mais Vendidos</h2><div class="grid">`;
     BEST_SELLERS.forEach(p => {
       html += renderProductCard(p);
     });
     html += `</div></section>`;
   }
 
-  // 1. SEÇÃO LANÇAMENTOS / NOVIDADES
+  // 2. SEÇÃO NOVIDADES E LANÇAMENTOS
   const launches = (CATALOG.products || []).filter(p => p.isNewLaunch && p.active);
   if (launches.length > 0) {
-    html += `<section id="lancamentos"><h2>Novidades & Lançamentos</h2><div class="grid">`;
+    html += `<section id="lancamentos" class="cat-section"><h2 class="cat-title">Novidades e Lançamentos</h2><div class="grid">`;
     launches.forEach(p => {
       html += renderProductCard(p);
     });
     html += `</div></section>`;
   }
 
-  // 2. SEÇÃO PROMOÇÕES
+  // 3. SEÇÃO PROMOÇÕES
   const promos = (CATALOG.products || []).filter(p => p.isPromo && p.active);
   if (promos.length > 0) {
-    html += `<section id="promocoes"><h2>Produtos em Promoção</h2><div class="grid">`;
+    html += `<section id="promocoes" class="cat-section"><h2 class="cat-title">Promoções</h2><div class="grid">`;
     promos.forEach(p => {
       html += renderProductCard(p);
     });
     html += `</div></section>`;
   }
 
-  // 3. SEÇÕES POR CATEGORIA PADRÃO (Apenas produtos cadastrados manualmente)
+  // 4 a 12. SEÇÕES POR CATEGORIA ESTRATÉGICA
   const categories = CATALOG.categories || [];
   categories.forEach(cat => {
     if (!cat.active || cat.slug === 'lancamentos' || cat.slug === 'promocoes') return;
@@ -311,7 +395,7 @@ function renderCatalog() {
     );
 
     if (prods.length > 0) {
-      html += `<section id="${cat.slug}"><h2>${esc(cat.name)}</h2><div class="grid">`;
+      html += `<section id="${cat.slug}" class="cat-section"><h2 class="cat-title">${esc(cat.name)}</h2><div class="grid">`;
       prods.forEach(p => {
         html += renderProductCard(p);
       });
@@ -329,7 +413,8 @@ function renderProductCard(prod) {
   const isPromo = prod.isPromo || (promoPrice != null && promoPrice < price);
   const minPrice = promoPrice != null ? promoPrice : price;
   const isCustom = prod.isCustomizable || prod.categorySlug === 'monte';
-  const btnLabel = isCustom ? 'Escolher' : '+ Pedir';
+  const hasMultiplePrices = prod.prices && prod.prices.length > 1;
+  const btnLabel = isCustom ? 'Montar' : 'Pedir';
   const imgUrl = prod.image || 'imagens/do seu jeitinho.png';
 
   let badgeHtml = '';
@@ -339,22 +424,39 @@ function renderProductCard(prod) {
     badgeHtml = `<span class="badge-discount">Promoção</span>`;
   }
 
-  let priceHtml = `<b>a partir de ${R(minPrice)}</b>`;
+  let priceHtml = '';
   if (isPromo && promoPrice != null && promoPrice < price) {
-    priceHtml = `<div><span class="price-old">${R(price)}</span><b class="price-promo">${R(promoPrice)}</b></div>`;
+    priceHtml = `
+      <div class="card-price">
+        <div><span class="price-old">${R(price)}</span> <b class="price-val price-promo">${R(promoPrice)}</b></div>
+      </div>
+    `;
+  } else if (hasMultiplePrices || isCustom) {
+    priceHtml = `
+      <div class="card-price">
+        <span class="price-from">a partir de</span>
+        <b class="price-val">${R(minPrice)}</b>
+      </div>
+    `;
+  } else {
+    priceHtml = `
+      <div class="card-price">
+        <b class="price-val">${R(minPrice)}</b>
+      </div>
+    `;
   }
 
   return `
     <div class="card ${prod.isNewLaunch ? 'card-launch' : ''}" data-id="${prod.id}">
-      <div class="ic has">
+      <div class="ic">
         ${badgeHtml}
         <img src="${encodeURI(imgUrl)}" alt="${esc(prod.name)}" loading="lazy" onerror="this.src='imagens/do seu jeitinho.png'">
       </div>
-      <h3>${esc(prod.name)}</h3>
-      <p>${esc(prod.description)}</p>
-      <div class="ft">
+      <h3 class="card-title">${esc(prod.name)}</h3>
+      <p class="card-desc">${esc(prod.description || '')}</p>
+      <div class="card-ft">
         ${priceHtml}
-        <button class="mini" onclick="openItemModal('${prod.id}')">${btnLabel}</button>
+        <button type="button" class="btn-order" onclick="openItemModal('${prod.id}')">${btnLabel}</button>
       </div>
     </div>
   `;
@@ -742,13 +844,12 @@ window.openCartModal = function() {
 };
 
 let APP_CONFIRM_CALLBACK = null;
-window.showAppConfirmModal = function({ icon = '⚠️', title = 'Confirmar', message = 'Tem certeza?', btnText = 'Sim', onConfirm }) {
+window.showAppConfirmModal = function({ icon = '', title = 'Confirmar', message = 'Tem certeza?', btnText = 'Sim', onConfirm }) {
   const modal = $('#app-confirm-modal');
   if (!modal) {
     if (confirm(message)) { if (onConfirm) onConfirm(); }
     return;
   }
-  if ($('#app-confirm-icon')) $('#app-confirm-icon').textContent = icon;
   if ($('#app-confirm-title')) $('#app-confirm-title').textContent = title;
   if ($('#app-confirm-msg')) $('#app-confirm-msg').innerHTML = message;
   const yesBtn = $('#app-confirm-btn-yes');
@@ -773,7 +874,7 @@ window.closeAppConfirmModal = function() {
 window.clearCart = function() {
   if (CART.length === 0) return;
   showAppConfirmModal({
-    icon: '🗑️',
+    icon: '',
     title: 'Limpar Pedido?',
     message: 'Deseja realmente esvaziar seu carrinho e remover todos os itens adicionados?',
     btnText: 'Sim, Limpar Tudo',
@@ -800,7 +901,10 @@ function renderCartModal() {
       <h3 style="margin:0">Seu Pedido</h3>
       ${CART.length > 0 ? `
         <button onclick="clearCart()" style="background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px" title="Remover todos os itens">
-          🗑️ Limpar Pedido
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+          </svg>
+          Limpar Pedido
         </button>
       ` : ''}
     </div>
@@ -862,7 +966,7 @@ function renderCartModal() {
     <button class="btn" onclick="openCheckoutModal()">Finalizar Compra</button>
     <div style="display:flex;gap:10px;margin-top:8px">
       <button class="btn o" style="flex:1" onclick="closeSheet()">Voltar para o cardápio</button>
-      <button class="btn" style="flex:1;background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.3);font-size:13px;font-weight:600" onclick="clearCart()">🗑️ Limpar Pedido</button>
+      <button class="btn" style="flex:1;background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.3);font-size:13px;font-weight:600" onclick="clearCart()">Limpar Pedido</button>
     </div>
   `;
 
@@ -1220,6 +1324,18 @@ function updateCheckoutTotalsDisplay() {
 // Enviar Pedido
 window.submitOrder = async function() {
   const btn = $('#btn-submit-order');
+
+  // Validação do Status da Loja (Não permite envio se fechada)
+  if (!STORE_STATUS.isOpen) {
+    toast(STORE_STATUS.message || 'A loja está fechada no momento.');
+    if (typeof openStoreHoursModal === 'function') openStoreHoursModal();
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Enviar Pedido';
+    }
+    return;
+  }
+
   if (btn) {
     btn.disabled = true;
     btn.textContent = 'Enviando Pedido...';
@@ -1412,7 +1528,11 @@ ${orderTrackingUrl}
       }
       h += `
         <div class="pix-approved-box" style="background:#ecfdf5;border:1.5px solid #10b981;border-radius:14px;padding:16px;text-align:center;margin:14px 0">
-          <div style="font-size:24px">✅</div>
+          <div style="display:flex;align-items:center;justify-content:center;margin-bottom:6px">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="#10b981">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+          </div>
           <b style="color:#065f46;font-size:15px;display:block;margin-top:4px">Pagamento Confirmado pelo Banco!</b>
           <span style="font-size:12px;color:#047857">Seu pedido já foi encaminhado para a produção na cozinha.</span>
         </div>
@@ -1472,7 +1592,10 @@ ${orderTrackingUrl}
     </div>
 
     <a href="${wppReceiptUrl}" target="_blank" class="btn" style="background:#22c55e;color:#fff;margin-top:10px;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:700">
-      💬 Receber Cópia do Pedido no WhatsApp
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+        <path d="M20.5 3.5A11.8 11.8 0 0 0 2 17.7L.5 23.5l6-1.6a11.8 11.8 0 0 0 14-18.4ZM12 21a9.8 9.8 0 0 1-5-1.4l-.4-.2-3.5.9.9-3.4-.2-.4A9.8 9.8 0 1 1 12 21Zm5.4-7.3c-.3-.2-1.8-.9-2.1-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7.1a8 8 0 0 1-2.4-1.5 9 9 0 0 1-1.7-2.1c-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.4.3-.6s0-.4 0-.6l-1-2.3c-.2-.5-.5-.4-.7-.4h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.8 1.2 3.2 1.4 3.4a11 11 0 0 0 4.3 3.8c.6.3 1.1.5 1.5.6.6.2 1.2.2 1.7.1.5-.1 1.8-.7 2.1-1.4.3-.7.3-1.3.2-1.4s-.2-.2-.5-.3Z"/>
+      </svg>
+      <span>Receber Cópia do Pedido no WhatsApp</span>
     </a>
     <button class="btn p" style="margin-top:8px" onclick="openChatModal('${order.customer.phone}', '${esc(order.customer.name)}')">
       Abrir Chat com a Loja
@@ -1574,7 +1697,7 @@ function renderChatModal(phone, name) {
         <b>Explosão Açaí</b>
         <span>Atendimento Oficial da Loja</span>
       </div>
-      <button class="btn-sm" style="margin-left:auto;margin-right:24px;background:#7c3aed;border:1.5px solid #a855f7;color:#fff;border-radius:10px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(124,58,237,0.5)" onclick="clearAndStartNewChat()" title="Iniciar atendimento limpo do zero">🧹 Novo Chat</button>
+      <button class="btn-sm" style="margin-left:auto;margin-right:24px;background:#7c3aed;border:1.5px solid #a855f7;color:#fff;border-radius:10px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(124,58,237,0.5)" onclick="clearAndStartNewChat()" title="Iniciar atendimento limpo do zero">Novo Chat</button>
     </div>
 
     ${isTemp ? `
@@ -1619,7 +1742,11 @@ function renderChatClosedState() {
   if (!box) return;
   box.innerHTML = `
     <div style="text-align:center;padding:28px 14px;color:var(--mut);margin:auto">
-      <div style="font-size:32px;margin-bottom:8px">🏁</div>
+      <div style="display:flex;align-items:center;justify-content:center;margin-bottom:8px">
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="#10b981">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>
+      </div>
       <b style="color:var(--tx);font-size:15px">Atendimento Concluído</b>
       <p style="font-size:13px;line-height:1.45;margin:8px 0 16px">O atendimento anterior foi finalizado pelo operador.<br>Digite sua mensagem abaixo para iniciar uma nova conversa limpa!</p>
     </div>
