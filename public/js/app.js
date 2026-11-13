@@ -425,8 +425,20 @@ function renderItemModal() {
 
   // Acompanhamentos inclusos (se customizável ou monte seu açaí)
   if (prod.isCustomizable || isMonteSeuAcai || hasPanelAccompaniments) {
+    const acompPct = Math.min(100, Math.round((st.accompaniments.length / (maxAcomp || 1)) * 100));
+    const isComplete = st.accompaniments.length >= maxAcomp;
     h += `
-      <h4>Acompanhamentos Inclusos <small style="color:var(--mut);font-weight:normal">(${st.accompaniments.length} de ${maxAcomp} inclusos no valor)</small></h4>
+      <div class="acomp-progress-box">
+        <div class="acomp-progress-header">
+          <span><b>Acompanhamentos Inclusos:</b> ${st.accompaniments.length} de ${maxAcomp}</span>
+          <span class="acomp-progress-status ${isComplete ? 'complete' : ''}">
+            ${isComplete ? '✓ Limite atingido' : `Escolha mais ${maxAcomp - st.accompaniments.length}`}
+          </span>
+        </div>
+        <div class="acomp-progress-track">
+          <div class="acomp-progress-fill ${isComplete ? 'complete' : ''}" style="width: ${acompPct}%"></div>
+        </div>
+      </div>
       <div class="chips">
         ${availableAccompaniments.map(ac => {
           const acName = typeof ac === 'string' ? ac : ac.name;
@@ -931,6 +943,11 @@ function renderCheckoutModal() {
         <label style="font-size:13px">Precisa de troco para quanto?
           <input id="f_troco" value="${esc(CHECKOUT_DATA.troco || '')}" placeholder="Ex: R$ 50,00 (deixe em branco se for valor exato)" oninput="CHECKOUT_DATA.troco = this.value">
         </label>
+        <div class="quick-troco-buttons">
+          <button type="button" class="troco-pill-btn" onclick="setFastTroco('50')">R$ 50</button>
+          <button type="button" class="troco-pill-btn" onclick="setFastTroco('100')">R$ 100</button>
+          <button type="button" class="troco-pill-btn" onclick="setFastTroco('Sem troco')">Sem Troco</button>
+        </div>
       </div>
     `;
   }
@@ -974,6 +991,12 @@ window.setPaymentMethod = function(method) {
 window.setPaymentTiming = function(timing) {
   CHECKOUT_DATA.timing = timing;
   renderCheckoutModal();
+};
+
+window.setFastTroco = function(val) {
+  CHECKOUT_DATA.troco = val;
+  const input = $('#f_troco');
+  if (input) input.value = val;
 };
 
 function applyAddressFromLookup(item) {

@@ -87,53 +87,75 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 10px;
       width: 100%;
-      padding: 14px;
-      border-radius: 12px;
-      font-weight: 700;
-      font-size: 15px;
+      padding: 16px;
+      border-radius: 14px;
+      font-weight: 800;
+      font-size: 16px;
       text-decoration: none;
       cursor: pointer;
       border: none;
       transition: all 0.2s;
     }
     .btn:active { transform: scale(0.98); }
-    .btn-maps { background: #2563eb; color: #fff; margin-top: 8px; }
-    .btn-wpp { background: #22c55e; color: #fff; margin-top: 8px; }
+    .btn-maps { background: #2563eb; color: #fff; margin-top: 8px; font-weight: 800; font-size: 16px; }
+    .btn-waze { background: #059669; color: #fff; margin-top: 8px; font-weight: 800; font-size: 16px; }
+    .btn-wpp { background: #22c55e; color: #fff; margin-top: 8px; font-weight: 800; font-size: 15px; }
     .btn-confirm {
       background: linear-gradient(135deg, #10b981 0%, #059669 100%);
       color: #fff;
-      font-size: 17px;
-      padding: 18px;
-      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+      font-size: 18px;
+      font-weight: 900;
+      padding: 20px 16px;
+      border-radius: 16px;
+      box-shadow: 0 6px 24px rgba(16, 185, 129, 0.45);
+      letter-spacing: 0.3px;
     }
     .btn-confirm:disabled {
       opacity: 0.6;
       cursor: not-allowed;
     }
     .pay-highlight {
-      border-radius: 12px;
-      padding: 14px;
+      border-radius: 14px;
+      padding: 16px;
       margin: 12px 0;
       text-align: center;
-      font-weight: 700;
+      font-weight: 800;
       font-size: 15px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
     }
     .pay-highlight.cash {
       background: #78350f;
       color: #fef08a;
-      border: 1.5px solid var(--y);
+      border: 2px solid #facc15;
     }
     .pay-highlight.card {
       background: #3b0764;
-      color: #e9d5ff;
-      border: 1.5px solid #a855f7;
+      color: #f3e8ff;
+      border: 2px solid #c084fc;
     }
     .pay-highlight.free {
-      background: var(--green-dark);
+      background: #064e3b;
       color: #a7f3d0;
-      border: 1.5px solid var(--green);
+      border: 2px solid #34d399;
+    }
+    .pay-highlight .pay-big-title {
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: 0.3px;
+      margin-bottom: 4px;
+    }
+    .pay-highlight .pay-troco-badge {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 6px 14px;
+      background: #facc15;
+      color: #11021c;
+      font-weight: 900;
+      font-size: 14px;
+      border-radius: 99px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     }
     .success-box {
       background: var(--green-dark);
@@ -521,7 +543,9 @@
         if (btnWpp && cleanPhone) {
           btnWpp.style.display = 'flex';
           const ddiPhone = cleanPhone.startsWith('55') ? cleanPhone : '55' + cleanPhone;
-          btnWpp.href = `https://wa.me/${ddiPhone}?text=Ol%C3%A1%20${encodeURIComponent(order.customer.name)}!%20Sou%20o%20entregador%20da%20Explos%C3%A3o%20A%C3%A7a%C3%AD%20com%20o%20seu%20pedido%20%23${order.orderNo}.`;
+          const wppArrivalMsg = encodeURIComponent(`Olá ${order.customer.name}! Sou o entregador da Explosão Açaí, acabei de chegar no portão com o seu pedido #${order.orderNo} 🛵🍓`);
+          btnWpp.href = `https://wa.me/${ddiPhone}?text=${wppArrivalMsg}`;
+          btnWpp.innerHTML = `💬 Avisar no WhatsApp ("Cheguei no portão!")`;
         }
         if (btnTel && cleanPhone) {
           btnTel.style.display = 'flex';
@@ -567,15 +591,18 @@
           const hasTroco = order.payment?.trocoValue > 0;
           payBox.innerHTML = `
             <div class="pay-highlight cash">
-              💵 RECEBER EM DINHEIRO: ${R(order.total)}<br>
-              ${hasTroco ? `⚠️ LEVAR TROCO DE ${R(order.payment.trocoValue)}` : '✓ NÃO PRECISA DE TROCO (VALOR EXATO)'}
+              <div class="pay-big-title">💵 RECEBER EM DINHEIRO: ${R(order.total)}</div>
+              ${hasTroco 
+                ? `<div class="pay-troco-badge">⚠️ LEVAR R$ ${Number(order.payment.trocoValue).toFixed(2).replace('.', ',')} DE TROCO</div><div style="font-size:12px;margin-top:5px;opacity:0.9">(Cliente paga com ${order.payment.changeFor ? 'R$ ' + order.payment.changeFor : 'valor informado'})</div>`
+                : '<div style="font-size:13px;color:#fef08a;margin-top:4px">✓ VALOR EXATO (NÃO PRECISA DE TROCO)</div>'
+              }
             </div>
           `;
         } else {
           payBox.innerHTML = `
             <div class="pay-highlight card">
-              💳 PASSAR NA MAQUININHA: ${R(order.total)}<br>
-              Forma: <b>${order.payment?.method.toUpperCase()}</b>
+              <div class="pay-big-title">💳 PASSAR NA MAQUININHA: ${R(order.total)}</div>
+              <div style="font-size:13px;margin-top:4px">Modalidade: <b>${order.payment?.method ? order.payment.method.toUpperCase() : 'CARTÃO'}</b></div>
             </div>
           `;
         }
@@ -583,14 +610,15 @@
         if (isApproved) {
           payBox.innerHTML = `
             <div class="pay-highlight free">
-              ✅ JÁ PAGO ONLINE (${order.payment?.method.toUpperCase()})<br>
-              NÃO COBRAR NADA DO CLIENTE!
+              <div class="pay-big-title">🟢 JÁ ESTÁ PAGO ONLINE (${order.payment?.method ? order.payment.method.toUpperCase() : 'PIX'})</div>
+              <div style="font-size:14px;font-weight:800;margin-top:4px">✓ NÃO COBRAR NADA DO CLIENTE!</div>
             </div>
           `;
         } else {
           payBox.innerHTML = `
-            <div class="pay-highlight" style="background:#451a03;color:#fdba74">
-              ⏳ Aguardando Aprovação Bancária (${order.payment?.method})
+            <div class="pay-highlight" style="background:#451a03;color:#fdba74;border:2px solid #ea580c">
+              <div class="pay-big-title">⏳ AGUARDANDO CONFIRMAÇÃO BANCÁRIA</div>
+              <div style="font-size:12px;margin-top:4px">Método: ${order.payment?.method}</div>
             </div>
           `;
         }
@@ -635,6 +663,29 @@
       }
     }
 
+    function playSuccessChime() {
+      try {
+        if (navigator.vibrate) {
+          navigator.vibrate([150, 80, 150]);
+        }
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          const ctx = new AudioContext();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+          osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1); // A5
+          gain.gain.setValueAtTime(0.3, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.4);
+        }
+      } catch (e) {}
+    }
+
     async function executeConfirmDelivery() {
       closeMotoboyModal();
       const btn = document.getElementById('btn-confirm-delivery');
@@ -648,6 +699,7 @@
         });
         const data = await res.json();
         if (data.ok) {
+          playSuccessChime();
           document.getElementById('order-details-box').style.display = 'none';
           document.getElementById('success-screen').style.display = 'block';
         } else {

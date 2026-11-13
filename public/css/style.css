@@ -271,7 +271,7 @@ button:active {
 
 @media (max-width: 520px) {
   .top {
-    padding: 6px 12px;
+    padding: max(10px, env(safe-area-inset-top, 10px)) 14px 10px;
     gap: 8px;
   }
   .brand {
@@ -300,8 +300,9 @@ button:active {
     height: 6px;
   }
   .cats {
-    padding: 8px 12px;
-    gap: 6px;
+    padding: 10px 14px;
+    gap: 8px;
+    scroll-padding-inline: 14px;
   }
   .cats a {
     padding: 6px 14px;
@@ -660,6 +661,80 @@ h2 {
   font-size: 13px;
   color: var(--p);
   margin-bottom: 8px;
+}
+
+/* Botões Rápidos de Troco no Pagamento em Dinheiro */
+.quick-troco-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.troco-pill-btn {
+  background: #ffffff;
+  border: 1.5px solid var(--p2);
+  color: var(--p2);
+  font-weight: 700;
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 99px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.troco-pill-btn:hover, .troco-pill-btn:active {
+  background: var(--p2);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+/* Barra de Progresso de Acompanhamentos Inclusos */
+.acomp-progress-box {
+  background: #faf5ff;
+  border: 1px solid #ebd9f7;
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin: 16px 0 12px;
+}
+
+.acomp-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--tx);
+  margin-bottom: 8px;
+  gap: 10px;
+}
+
+.acomp-progress-status {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--p2);
+}
+
+.acomp-progress-status.complete {
+  color: var(--ok);
+}
+
+.acomp-progress-track {
+  width: 100%;
+  height: 8px;
+  background: #e8dbf2;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.acomp-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--p2), #c084fc);
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+
+.acomp-progress-fill.complete {
+  background: linear-gradient(90deg, #16a34a, #22c55e);
 }
 
 .ft {
@@ -1081,6 +1156,24 @@ body.hascart .fab-container {
   font-size: 11px;
   padding: 2px 6px;
   border-radius: 99px;
+}
+
+@media (max-width: 600px) {
+  .fab-container {
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    gap: 8px;
+  }
+  .fab-btn {
+    padding: 8px 14px;
+    font-size: 12px;
+    gap: 6px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  }
+  .fab-btn img, .fab-btn svg {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 /* Chat Modal */

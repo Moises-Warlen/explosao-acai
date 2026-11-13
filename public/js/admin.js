@@ -1698,6 +1698,9 @@ function renderReportDashboard(rep) {
   // Renderiza Gráficos Visuais de Mais e Menos Vendidos
   renderRankings(rep.bestSellers || [], rep.worstSellers || []);
 
+  // Inteligência de Vendas: Horários de Pico e Acompanhamentos Mais Consumidos
+  renderPeakHoursAndAcompRank(rep.orders || ORDERS || []);
+
   // Breakdown por Forma de Pagamento
   const payBox = $('#report-payments-breakdown');
   if (payBox) {
@@ -1889,6 +1892,117 @@ function renderRankings(bestSellers, worstSellers) {
           </div>
         `;
       }).join('');
+    }
+  }
+}
+
+// Renderização Inteligente: Horários de Maior Volume e Top Acompanhamentos Mais Consumidos
+function renderPeakHoursAndAcompRank(orders) {
+  const peakBox = $('#report-peak-hours-container');
+  const acompBox = $('#report-top-acomp-container');
+
+  if (!orders || !orders.length) {
+    if (peakBox) peakBox.innerHTML = '<p style="color:var(--mut);font-size:13px">Nenhum dado de horário no período selecionado.</p>';
+    if (acompBox) acompBox.innerHTML = '<p style="color:var(--mut);font-size:13px">Nenhum dado de acompanhamentos no período selecionado.</p>';
+    return;
+  }
+
+  // 1. Horários de Pico (Contagem 00h às 23h)
+  const hourCounts = {};
+  for (let i = 0; i < 24; i++) hourCounts[i] = 0;
+
+  // 2. Acompanhamentos Mais Pedidos
+  const acompCounts = {};
+
+  orders.forEach(o => {
+    if (o.createdAt) {
+      try {
+        const d = new Date(o.createdAt);
+        const h = d.getHours();
+        if (!isNaN(h)) hourCounts[h] = (hourCounts[h] || 0) + 1;
+      } catch (e) {}
+    }
+
+    if (!o.isCancelled && Array.isArray(o.items)) {
+      o.items.forEach(it => {
+        const list = [];
+        if (Array.isArray(it.accompaniments)) {
+          it.accompaniments.forEach(a => {
+            const name = typeof a === 'string' ? a : (a && a.name ? a.name : '');
+            if (name) list.push(name);
+          });
+        }
+        if (Array.isArray(it.fruits)) {
+          it.fruits.forEach(f => {
+            const name = typeof f === 'string' ? f : (f && f.name ? f.name : '');
+            if (name) list.push(name);
+          });
+        }
+        if (Array.isArray(it.extras)) {
+          it.extras.forEach(ex => {
+            const name = typeof ex === 'string' ? ex : (ex && ex.name ? ex.name : '');
+            if (name) list.push(name);
+          });
+        }
+        list.forEach(name => {
+          const clean = name.trim();
+          if (clean) acompCounts[clean] = (acompCounts[clean] || 0) + (it.quantity || 1);
+        });
+      });
+    }
+  });
+
+  // Renderiza Gráfico de Barras de Horários
+  if (peakBox) {
+    const hoursWithOrders = Object.entries(hourCounts)
+      .map(([h, cnt]) => ({ hour: parseInt(h, 10), count: cnt }))
+      .filter(item => item.count > 0)
+      .sort((a, b) => b.count - a.count);
+
+    if (hoursWithOrders.length === 0) {
+      peakBox.innerHTML = '<p style="color:var(--mut);font-size:13px">Nenhum pedido no período para análise de horários.</p>';
+    } else {
+      const topHours = hoursWithOrders.slice(0, 6);
+      const maxCount = Math.max(...topHours.map(x => x.count), 1);
+
+      peakBox.innerHTML = topHours.map(item => {
+        const pct = Math.round((item.count / maxCount) * 100);
+        const isPeak = pct >= 80;
+        const hourStr = `${String(item.hour).padStart(2, '0')}:00`;
+
+        return `
+          <div class="peak-hour-bar-row">
+            <span class="peak-hour-label">${hourStr}</span>
+            <div class="peak-hour-track">
+              <div class="peak-hour-fill ${isPeak ? 'peak' : ''}" style="width: ${Math.max(pct, 10)}%"></div>
+            </div>
+            <span class="peak-hour-val">${item.count} ped. (${pct}%)</span>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  // Renderiza Top 5 Acompanhamentos / Frutas / Insumos
+  if (acompBox) {
+    const sortedAcomps = Object.entries(acompCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    if (sortedAcomps.length === 0) {
+      acompBox.innerHTML = '<p style="color:var(--mut);font-size:13px">Nenhum acompanhamento registrado nos pedidos deste período.</p>';
+    } else {
+      const medals = ['🥇', '🥈', '🥉', '4º', '5º'];
+      acompBox.innerHTML = sortedAcomps.map((item, idx) => `
+        <div class="acomp-rank-row">
+          <div class="acomp-rank-name">
+            <span style="font-size:15px">${medals[idx] || `${idx + 1}º`}</span>
+            <span>${esc(item.name)}</span>
+          </div>
+          <span class="acomp-rank-badge">${item.count} saídas</span>
+        </div>
+      `).join('');
     }
   }
 }
@@ -2129,6 +2243,82 @@ async function saveBestSellersList(newList) {
 
 let PRODUCTS_PAGE = 1;
 let PRODUCTS_PER_PAGE = 10;
+let PRODUCT_VIEW_MODE = 'table';
+
+window.setProductViewMode = function(mode) {
+  PRODUCT_VIEW_MODE = mode;
+  const btnTable = $('#btn-prod-view-table');
+  const btnGrid = $('#btn-prod-view-grid');
+  const tableCont = $('#products-table-container');
+  const gridCont = $('#products-grid-view');
+
+  if (mode === 'grid') {
+    if (btnGrid) btnGrid.classList.add('active');
+    if (btnTable) btnTable.classList.remove('active');
+    if (tableCont) tableCont.style.display = 'none';
+    if (gridCont) gridCont.style.display = 'grid';
+    renderProductsVitrineGrid();
+  } else {
+    if (btnTable) btnTable.classList.add('active');
+    if (btnGrid) btnGrid.classList.remove('active');
+    if (tableCont) tableCont.style.display = 'block';
+    if (gridCont) gridCont.style.display = 'none';
+  }
+};
+
+function renderProductsVitrineGrid() {
+  const grid = $('#products-grid-view');
+  if (!grid) return;
+  const total = PRODUCTS.length;
+  const perPage = PRODUCTS_PER_PAGE || 10;
+  const start = (PRODUCTS_PAGE - 1) * perPage;
+  const pageProducts = PRODUCTS.slice(start, start + perPage);
+
+  if (pageProducts.length === 0) {
+    grid.innerHTML = '<p style="color:var(--mut);font-size:13px;grid-column:1/-1;text-align:center;padding:24px">Nenhum produto cadastrado.</p>';
+    return;
+  }
+
+  grid.innerHTML = pageProducts.map(p => {
+    const isBest = Array.isArray(SETTINGS.bestSellerProductIds) && SETTINGS.bestSellerProductIds.includes(p.id);
+    const prices = Array.isArray(p.prices) ? p.prices : [];
+    const minPrice = prices.length ? Math.min(...prices.map(pr => pr.price)) : 0;
+    const maxPrice = prices.length ? Math.max(...prices.map(pr => pr.price)) : 0;
+    const priceLabel = minPrice === maxPrice ? R(minPrice) : `${R(minPrice)} ~ ${R(maxPrice)}`;
+    
+    const margins = prices.map(pr => pr.price > 0 ? Math.round(((pr.price - (pr.costPrice || 0)) / pr.price) * 100) : 0);
+    const avgMargin = margins.length ? Math.round(margins.reduce((a, b) => a + b, 0) / margins.length) : 0;
+
+    return `
+      <div class="prod-vitrine-card ${p.active ? '' : 'paused'}">
+        <div class="prod-vitrine-img-wrap">
+          <img src="${p.image || 'imagens/do seu jeitinho.png'}" alt="${esc(p.name)}" class="prod-vitrine-img" loading="lazy">
+          <span class="prod-vitrine-badge ${p.active ? 'badge-active' : 'badge-paused'}">
+            ${p.active ? '● Ativo' : '⏸ Pausado'}
+          </span>
+          ${isBest ? '<span class="prod-vitrine-best">★ Mais Vendido</span>' : ''}
+        </div>
+        <div class="prod-vitrine-body">
+          <div class="prod-vitrine-cat">${esc(p.categorySlug || p.category || 'Geral')}</div>
+          <div class="prod-vitrine-title" title="${esc(p.name)}">${esc(p.name)}</div>
+          <div class="prod-vitrine-prices">
+            <span class="prod-vitrine-val">${priceLabel}</span>
+            <span class="prod-vitrine-margin ${avgMargin >= 40 ? 'high' : (avgMargin > 0 ? 'med' : 'low')}">
+              ${avgMargin > 0 ? `Lucro ~${avgMargin}%` : (p.hasAnyLoss ? 'Prejuízo' : 'Margem 0%')}
+            </span>
+          </div>
+          <div class="prod-vitrine-actions">
+            <button class="btn-sm ${p.active ? 'btn-next' : 'btn-secondary'}" onclick="toggleProductPause('${p.id}')" title="Pausar ou Ativar produto">
+              ${p.active ? 'Ativo' : 'Pausado'}
+            </button>
+            <button class="btn-sm btn-print" onclick="openRecipeModal('${p.id}')" title="Ficha Técnica & PDF">Receita</button>
+            <button class="btn-sm btn-secondary" onclick="editProductModal('${p.id}')">Editar</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
 
 window.setProductsPage = function(page) {
   PRODUCTS_PAGE = page;
@@ -2216,6 +2406,9 @@ function renderProductsTable() {
       </div>
     `;
   }
+
+  // Mantém a visualização em grade (vitrine) sincronizada
+  renderProductsVitrineGrid();
 }
 
 // Modal de Ficha Técnica / Receita com Quantidades por Copo

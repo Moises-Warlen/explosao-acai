@@ -379,6 +379,31 @@
           </div>
         </div>
 
+        <!-- Inteligência de Vendas: Horários de Pico & Top Acompanhamentos -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:16px;margin:24px 0">
+          <!-- Horários de Pico -->
+          <div class="ranking-box" style="margin:0">
+            <h4 style="color:#38bdf8;display:flex;justify-content:space-between;align-items:center">
+              <span>⏱️ Horários de Maior Movimento</span>
+              <small style="color:var(--mut);font-weight:normal;font-size:12px">Pico de vendas</small>
+            </h4>
+            <div id="report-peak-hours-container" style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+              <p style="color:var(--mut);font-size:13px">Nenhum dado no período selecionado.</p>
+            </div>
+          </div>
+
+          <!-- Top Acompanhamentos Mais Consumidos -->
+          <div class="ranking-box" style="margin:0">
+            <h4 style="color:var(--green);display:flex;justify-content:space-between;align-items:center">
+              <span>🍓 Top 5 Acompanhamentos Mais Pedidos</span>
+              <small style="color:var(--mut);font-weight:normal;font-size:12px">Saída de insumos</small>
+            </h4>
+            <div id="report-top-acomp-container" style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+              <p style="color:var(--mut);font-size:13px">Nenhum dado no período selecionado.</p>
+            </div>
+          </div>
+        </div>
+
         <!-- Quebra por Forma de Pagamento -->
         <h3 style="margin:24px 0 10px;font-size:16px">Vendas por Forma de Pagamento</h3>
         <div class="form-grid" id="report-payments-breakdown"></div>
@@ -439,7 +464,13 @@
               Fotos do computador, limites de acompanhamentos por tamanho, soma de combos e alerta automático de prejuízo.
             </p>
           </div>
-          <button class="btn-sm btn-next" onclick="openNewProductModal()">+ Novo Produto</button>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div class="prod-view-switcher" style="display:inline-flex;background:var(--panel);border:1px solid var(--ln);border-radius:10px;padding:3px;gap:4px">
+              <button type="button" id="btn-prod-view-table" class="view-switch-btn active" style="padding:5px 12px;font-size:12px" onclick="setProductViewMode('table')" title="Visualização em Tabela">☰ Tabela</button>
+              <button type="button" id="btn-prod-view-grid" class="view-switch-btn" style="padding:5px 12px;font-size:12px" onclick="setProductViewMode('grid')" title="Visualização em Cards Vitrine">⊞ Cards</button>
+            </div>
+            <button class="btn-sm btn-next" onclick="openNewProductModal()">+ Novo Produto</button>
+          </div>
         </div>
 
         <!-- Gestão da Seção Mais Vendidos -->
@@ -459,7 +490,7 @@
           <div id="bestsellers-manager-list" style="display:flex;gap:10px;flex-wrap:wrap"></div>
         </div>
 
-        <div class="table-responsive">
+        <div id="products-table-container" class="table-responsive">
           <table>
             <thead>
               <tr>
@@ -474,6 +505,8 @@
             <tbody id="products-table-body"></tbody>
           </table>
         </div>
+        <!-- Modo Vitrine de Cards com Fotos e Margem de Lucro -->
+        <div id="products-grid-view" class="products-vitrine-grid" style="display:none"></div>
         <div id="products-pagination" style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;flex-wrap:wrap;gap:10px"></div>
       </div>
     </div>
@@ -737,12 +770,14 @@
             </div>
 
             <!-- Atalhos de Resposta Rápida (1 Clique) -->
-            <div id="admin-chat-quick-replies" style="display:flex;gap:6px;padding:6px 12px;background:rgba(255,255,255,0.03);border-top:1px solid var(--ln);overflow-x:auto;white-space:nowrap;align-items:center">
-              <span style="font-size:11px;color:var(--mut);flex-shrink:0">⚡ Resposta Rápida:</span>
+            <div id="admin-chat-quick-replies" style="display:flex;gap:6px;padding:8px 12px;background:rgba(255,255,255,0.03);border-top:1px solid var(--ln);overflow-x:auto;white-space:nowrap;align-items:center">
+              <span style="font-size:11px;color:var(--mut);flex-shrink:0">⚡ Atalhos:</span>
               <button type="button" class="btn-sm" style="background:#7c3aed;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;flex-shrink:0" onclick="insertQuickReply('🍧 Olá! Seu pedido já está sendo preparado com muito capricho.')">🍧 Em Preparo</button>
               <button type="button" class="btn-sm" style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;flex-shrink:0" onclick="insertQuickReply('🛵 O motoboy acabou de sair para entrega! Em instantes chega até você.')">🛵 Saiu p/ Entrega</button>
-              <button type="button" class="btn-sm" style="background:#059669;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;flex-shrink:0" onclick="insertQuickReply('🏪 Seu pedido já está pronto no balcão para retirada!')">🏪 Pronto no Balcão</button>
-              <button type="button" class="btn-sm" style="background:#d97706;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;flex-shrink:0" onclick="insertQuickReply('⭐ Agradecemos a preferência! Bom apetite! 🥰')">⭐ Agradecimento</button>
+              <button type="button" class="btn-sm" style="background:#0891b2;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;flex-shrink:0" onclick="insertQuickReply('📍 Pode confirmar o número da sua residência ou ponto de referência/interfone?')">📍 Ponto de Ref.</button>
+              <button type="button" class="btn-sm" style="background:#059669;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;flex-shrink:0" onclick="insertQuickReply('💳 Pagamento confirmado com sucesso! Já estamos preparando o seu açaí.')">💳 Pagamento Aprovado</button>
+              <button type="button" class="btn-sm" style="background:#d97706;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;flex-shrink:0" onclick="insertQuickReply('🏪 Seu pedido já está pronto no balcão para retirada!')">🏪 Pronto no Balcão</button>
+              <button type="button" class="btn-sm" style="background:#ec4899;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;flex-shrink:0" onclick="insertQuickReply('⭐ Agradecemos a preferência! Bom apetite! 🥰')">⭐ Agradecimento</button>
             </div>
 
             <div class="admin-chat-input-row">
