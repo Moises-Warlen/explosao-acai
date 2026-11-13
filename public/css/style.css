@@ -1,7 +1,8 @@
 :root {
-  --logo-h: 56px;
+  --logo-h: 46px;
+  --header-h: 66px;
   --foto-h: clamp(170px, 24vw, 220px);
-  --foto-fit: cover;
+  --foto-fit: contain;
   --foto-zoom: 1.02;
   --foto-max: 320px;
   --bg: #f6eefc;
@@ -18,6 +19,13 @@
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (min-width: 600px) {
+  :root {
+    --logo-h: 56px;
+    --header-h: 76px;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -123,30 +131,34 @@ button:active {
   z-index: 20;
   background: var(--p);
   color: #fff;
-  padding: 10px 18px;
-  height: calc(var(--logo-h) + 20px);
+  padding: 8px 14px;
+  min-height: var(--header-h);
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
 }
 
 .brand {
   font-family: 'Lilita One', 'Poppins', sans-serif;
   font-size: 24px;
   max-width: 1100px;
-  margin: auto;
-  height: 100%;
+  margin: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
+  justify-content: flex-start;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
 }
 
 .brand img {
   height: var(--logo-h);
   width: auto;
-  max-width: 50vw;
+  max-width: 50px;
   object-fit: contain;
+  flex-shrink: 0;
   animation: pulse 2.4s ease-in-out infinite;
 }
 
@@ -158,42 +170,67 @@ button:active {
 .bt {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  line-height: 1.1;
+  align-items: flex-start;
+  text-align: left;
+  line-height: 1.15;
   min-width: 0;
+  overflow: hidden;
 }
 
 .bt b {
   font-family: 'Lilita One', 'Poppins', sans-serif;
   font-weight: 400;
-  font-size: 22px;
+  font-size: clamp(16px, 4.4vw, 22px);
   color: #fff;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  display: block;
 }
 
 .bt small {
   font-family: 'Poppins', sans-serif;
   font-weight: 600;
-  font-size: 15px;
+  font-size: clamp(10.5px, 2.7vw, 13px);
   color: var(--y);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  display: block;
 }
 
-@media (min-width: 600px) {
-  .bt b { font-size: 28px; }
-  .bt small { font-size: 18px; }
+@media (min-width: 768px) {
+  .brand {
+    justify-content: center;
+    margin: auto;
+  }
+  .brand img {
+    max-width: 60px;
+  }
+  .bt {
+    align-items: center;
+    text-align: center;
+  }
+  .bt b { font-size: 26px; }
+  .bt small { font-size: 16px; }
 }
 
 /* Status Pill Loja Aberta/Fechada */
 .store-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
+  gap: 5px;
+  padding: 4px 10px;
   border-radius: 99px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  margin-top: 6px;
+  margin: 0;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1;
 }
 
 .store-pill.open {
@@ -203,12 +240,13 @@ button:active {
 
 .store-pill.open::before {
   content: "";
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   background: #22c55e;
   border-radius: 50%;
   display: inline-block;
   animation: blink 1.5s infinite;
+  flex-shrink: 0;
 }
 
 .store-pill.closed {
@@ -218,16 +256,30 @@ button:active {
 
 .store-pill.closed::before {
   content: "";
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   background: #ef4444;
   border-radius: 50%;
   display: inline-block;
+  flex-shrink: 0;
 }
 
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
+}
+
+@media (max-width: 480px) {
+  .store-pill {
+    padding: 3px 8px;
+    font-size: 10.5px;
+    gap: 4px;
+  }
+  .store-pill.open::before,
+  .store-pill.closed::before {
+    width: 6px;
+    height: 6px;
+  }
 }
 
 /* Hero */
@@ -271,16 +323,29 @@ button:active {
 /* Categorias */
 .cats {
   position: sticky;
-  top: calc(var(--logo-h) + 20px + env(safe-area-inset-top, 0px));
+  top: calc(var(--header-h) + env(safe-area-inset-top, 0px));
   z-index: 15;
   background: var(--bg);
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
+  align-items: center;
   gap: 8px;
-  padding: 10px 12px;
+  padding: 10px 16px;
   border-bottom: 1px solid var(--ln);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  scroll-padding-left: 16px;
+  scrollbar-width: none;
+}
+
+.cats::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .cats {
+    justify-content: center;
+  }
 }
 
 .cats a {
@@ -294,6 +359,7 @@ button:active {
   font-size: 14px;
   font-weight: 600;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 
 .cats a.active, .cats a:hover {
@@ -344,11 +410,13 @@ h2 {
 
 .ic {
   width: 100%;
-  height: var(--foto-h);
+  aspect-ratio: 4 / 3;
+  height: auto;
   border-radius: 14px;
-  background: linear-gradient(135deg, var(--p2), var(--p));
-  display: grid;
-  place-items: center;
+  background: linear-gradient(135deg, rgba(123, 44, 191, 0.08), rgba(75, 15, 107, 0.12));
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
   overflow: hidden;
 }
@@ -358,7 +426,7 @@ h2 {
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
   transition: transform 0.35s ease;
   user-select: none;
@@ -691,19 +759,23 @@ h2 {
 
 .sheet-photo-wrap {
   width: 100%;
-  height: clamp(160px, 28vw, 240px);
+  aspect-ratio: 4 / 3;
+  max-height: 280px;
   border-radius: 18px;
   overflow: hidden;
   margin-bottom: 14px;
-  background: linear-gradient(135deg, var(--p2), var(--p));
+  background: linear-gradient(135deg, rgba(123, 44, 191, 0.08), rgba(75, 15, 107, 0.12));
   position: relative;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sheet-photo-wrap img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
   display: block;
 }
