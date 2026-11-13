@@ -13,7 +13,7 @@
     "minFreight": 4.5,
     "maxKm": 25,
     "isOpenManual": true,
-    "useAutoSchedule": false,
+    "useAutoSchedule": true,
     "bannerPromo": "Bem-vindo ao nosso delivery próprio! Peça direto por aqui e ganhe descontos exclusivos.",
     "schedules": [
       {
