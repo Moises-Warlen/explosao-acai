@@ -550,7 +550,7 @@
               Quando um cliente enviar mensagem no chat enquanto a loja estiver fechada (manualmente ou fora do horário de funcionamento), o sistema responderá instantaneamente para dar retorno imediato ao cliente.
             </p>
             <label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">Mensagem Personalizada ao Cliente:</label>
-            <textarea id="st-autoreply-closed-msg" rows="3" style="width:100%;background:var(--card);color:#fff;border:1px solid var(--ln);border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;resize:vertical" placeholder="Olá! 🍧 Agradecemos a sua mensagem. No momento a Explosão Açaí está fechada ({horario}). Seu recado foi registrado com sucesso e responderemos assim que abrirmos nosso atendimento! Agradecemos o carinho e a preferência."></textarea>
+            <textarea id="st-autoreply-closed-msg" rows="3" style="width:100%;background:var(--card);color:#fff;border:1px solid var(--ln);border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;resize:vertical" placeholder="Olá! Agradecemos a sua mensagem. No momento a Explosão Açaí está fechada ({horario}). Seu recado foi registrado com sucesso e responderemos assim que abrirmos nosso atendimento! Agradecemos a preferência."></textarea>
             <small style="color:var(--mut);font-size:10px;display:block;margin-top:4px">Dica: use <code>{horario}</code> para o sistema inserir automaticamente a informação de funcionamento.</small>
           </div>
 
@@ -1046,7 +1046,7 @@
       </div>
 
       <!-- Corpo do Modal: Mapa Interativo + Painel Lateral de Rota -->
-      <div style="display:grid;grid-template-columns:1fr 350px;gap:16px;flex:1;min-height:0;overflow:hidden" id="map-modal-grid">
+      <div id="map-modal-grid">
         <!-- Contêiner do Mapa Leaflet -->
         <div style="position:relative;border-radius:14px;overflow:hidden;border:1.5px solid var(--ln);background:#1a102a;min-height:400px;display:flex">
           <div id="delivery-leaflet-map" style="width:100%;height:100%;min-height:400px;z-index:1"></div>

@@ -762,6 +762,15 @@ input:focus, select:focus, textarea:focus {
   display: none !important;
 }
 
+#map-modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 /* ================= RESPONSIVIDADE (MOBILE & TABLETS) ================= */
 @media (max-width: 900px) {
   .sales-ranking-grid {
@@ -793,12 +802,42 @@ input:focus, select:focus, textarea:focus {
   }
 
   .kanban-board {
-    grid-template-columns: 1fr;
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 12px;
+    padding-bottom: 14px;
+    -webkit-overflow-scrolling: touch;
   }
 
   .kanban-col {
+    min-width: 86vw;
+    max-width: 86vw;
+    scroll-snap-align: start;
+    flex-shrink: 0;
     min-height: auto;
     padding: 12px;
+  }
+
+  #delivery-map-modal > div {
+    width: 98vw !important;
+    max-height: 96vh !important;
+    padding: 12px !important;
+    overflow-y: auto !important;
+  }
+
+  #map-modal-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  #delivery-leaflet-map {
+    height: 250px !important;
+    min-height: 250px !important;
   }
 
   .admin-header {

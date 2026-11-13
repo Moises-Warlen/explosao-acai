@@ -172,7 +172,7 @@ export class ChatService {
             if (customMsg) {
               autoText = customMsg.replace(/{horario}/g, closedNotice).replace(/{status}/g, closedNotice);
             } else {
-              autoText = `Olá! 🍧 Agradecemos a sua mensagem. No momento a Explosão Açaí está fechada (${closedNotice}). Seu recado foi registrado com sucesso e responderemos assim que abrirmos nosso atendimento! Agradecemos o carinho e a preferência.`;
+              autoText = `Olá! Agradecemos a sua mensagem. No momento a Explosão Açaí está fechada (${closedNotice}). Seu recado foi registrado com sucesso e responderemos assim que abrirmos nosso atendimento! Agradecemos a preferência.`;
             }
 
             const autoMsg = {

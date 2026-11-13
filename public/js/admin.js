@@ -4006,10 +4006,12 @@ window.generateRouteWhatsAppText = function(selected) {
   const now = new Date();
   const dateStr = now.toLocaleDateString('pt-BR');
   const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  const routeLabel = CURRENT_SELECTED_ROUTE_LABEL || 'ROTA GERAL';
+  const rawRouteLabel = CURRENT_SELECTED_ROUTE_LABEL || 'Rota Geral';
+  // Remove qualquer emoji do rótulo para evitar caracteres inválidos ()
+  const routeLabel = rawRouteLabel.replace(/[^\w\sÀ-ÿ\(\)\-]/g, '').trim() || 'ROTA GERAL';
 
-  let text = `🛵 *${routeLabel.toUpperCase()} - EXPLOSÃO AÇAÍ*\n`;
-  text += `📅 ${dateStr} às ${timeStr} · *Total: ${selected.length} entrega${selected.length > 1 ? 's' : ''}*\n\n`;
+  let text = `*${routeLabel.toUpperCase()} - EXPLOSÃO AÇAÍ*\n`;
+  text += `Data: ${dateStr} às ${timeStr} · Total: ${selected.length} entrega${selected.length > 1 ? 's' : ''}\n\n`;
 
   const waypoints = [];
   selected.forEach((order, idx) => {
@@ -4024,27 +4026,31 @@ window.generateRouteWhatsAppText = function(selected) {
     let payStr = '';
     if (isDeliveryPayment) {
       if (isMoney) {
-        payStr = `💵 Receber em Dinheiro: ${R(order.total)}${order.payment?.trocoValue > 0 ? ` (Levar troco de ${R(order.payment.trocoValue)})` : ''}`;
+        payStr = `Receber em Dinheiro: ${R(order.total)}${order.payment?.trocoValue > 0 ? ` (Levar troco de ${R(order.payment.trocoValue)})` : ''}`;
       } else {
-        payStr = `💳 Passar na Maquininha: ${R(order.total)} (${order.payment?.method || 'Cartão'})`;
+        payStr = `Passar na Maquininha: ${R(order.total)} (${order.payment?.method || 'Cartão'})`;
       }
     } else {
-      payStr = isApproved ? `✅ JÁ PAGO ONLINE (${order.payment?.method || 'PIX'}) - NÃO COBRAR` : `⏳ Cobrança: ${R(order.total)}`;
+      payStr = isApproved ? `JÁ PAGO ONLINE (${order.payment?.method || 'PIX'}) - NÃO COBRAR` : `Cobrança: ${R(order.total)}`;
     }
 
-    text += `${idx + 1}️⃣ *Parada ${idx + 1} · Pedido #${order.orderNo}*\n`;
-    text += `👤 *Cliente:* ${order.customer?.name || 'Cliente'}\n`;
-    text += `📍 *Endereço:* ${fullAddress}\n`;
-    if (del.reference) text += `📌 *Ref:* ${del.reference}\n`;
-    text += `💰 *Pagamento:* ${payStr}\n`;
-    text += `📲 *Link da Entrega:* ${originUrl}/motoboy?orderId=${order.id}&orderNo=${order.orderNo}&cliente=${encodeURIComponent(order.customer?.name || '')}\n\n`;
+    text += `------------------------------------\n`;
+    text += `*Parada ${idx + 1} · Pedido #${order.orderNo}*\n`;
+    text += `Cliente: ${order.customer?.name || 'Cliente'}\n`;
+    text += `Endereço: ${fullAddress}\n`;
+    if (del.reference && del.reference.trim()) {
+      text += `Ref: ${del.reference.trim()}\n`;
+    }
+    text += `Pagamento: ${payStr}\n`;
+    text += `Link da Entrega: ${originUrl}/motoboy?id=${order.id}\n\n`;
   });
 
   if (waypoints.length > 0) {
     const lastStop = waypoints[waypoints.length - 1];
     const intermediate = waypoints.slice(0, waypoints.length - 1);
     const googleRouteUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(STORE_COORDINATES.address)}&destination=${encodeURIComponent(lastStop)}${intermediate.length > 0 ? `&waypoints=${encodeURIComponent(intermediate.join('|'))}` : ''}&travelmode=driving`;
-    text += `🗺️ *ABRIR ROTA MULTI-PARADAS NO GPS:*\n${googleRouteUrl}\n`;
+    text += `------------------------------------\n`;
+    text += `*GPS ROTA COMPLETA (GOOGLE MAPS):*\n${googleRouteUrl}\n`;
   }
 
   return text;

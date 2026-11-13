@@ -19,16 +19,20 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Arquivos estáticos (Frontend Cardápio + Painel Admin)
+// Arquivos estáticos (Frontend Cardápio + Painel Admin + Portal do Entregador)
 const publicDir = path.resolve(__dirname, '../public');
-app.use(express.static(publicDir));
+app.use(express.static(publicDir, { extensions: ['html'] }));
 
 // Rotas da API
 app.use('/api', apiRoutes);
 
-// Fallbacks de navegação para SPA
+// Rotas diretas e amigáveis para SPA e entregador
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(publicDir, 'admin.html'));
+});
+
+app.get(['/motoboy', '/m'], (req, res) => {
+  res.sendFile(path.join(publicDir, 'motoboy.html'));
 });
 
 app.use((req, res) => {

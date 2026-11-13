@@ -265,8 +265,15 @@
       </button>
     </div>
 
+    <!-- Tela de Carregando Inicial -->
+    <div id="loading-box" class="card" style="text-align:center;padding:36px 16px">
+      <div style="font-size:42px;margin-bottom:10px">🛵</div>
+      <b style="color:var(--y);font-size:17px">Carregando dados da entrega...</b>
+      <p style="color:var(--mut);font-size:13px;margin-top:6px">Conectando ao sistema da Explosão Açaí</p>
+    </div>
+
     <!-- Detalhes do Pedido Único -->
-    <div id="order-details-box" style="display:none;display:flex;flex-direction:column;gap:14px">
+    <div id="order-details-box" style="display:none;flex-direction:column;gap:14px">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
           <span style="font-size:22px;font-weight:900;color:var(--y)" id="order-no">#000</span>
@@ -276,9 +283,14 @@
         <div style="font-size:16px;font-weight:700" id="customer-name">Cliente</div>
         <div style="font-size:13px;color:var(--mut);display:none" id="customer-phone"></div>
 
-        <a id="btn-wpp" href="#" target="_blank" class="btn btn-wpp" style="display:none">
-          💬 Falar no WhatsApp com Cliente
-        </a>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <a id="btn-wpp" href="#" target="_blank" class="btn btn-wpp" style="flex:1;min-width:160px;display:none;margin-top:0">
+            💬 WhatsApp do Cliente
+          </a>
+          <a id="btn-tel" href="#" class="btn" style="flex:1;min-width:130px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid var(--ln);display:none;margin-top:0;font-size:13px">
+            📞 Ligar p/ Cliente
+          </a>
+        </div>
       </div>
 
       <!-- Endereço de Entrega -->
@@ -454,14 +466,20 @@
         const res = await fetch(`${API_URL}/orders/${id}`);
         const data = await res.json();
         if (!data.ok || !data.order) {
+          const lBox = document.getElementById('loading-box');
+          if (lBox) lBox.style.display = 'none';
           document.getElementById('error-box').style.display = 'block';
           document.getElementById('error-msg').textContent = data.error || 'Pedido não encontrado.';
           return;
         }
 
+        const lBox = document.getElementById('loading-box');
+        if (lBox) lBox.style.display = 'none';
         const order = data.order;
         renderOrderDetails(order);
       } catch (e) {
+        const lBox = document.getElementById('loading-box');
+        if (lBox) lBox.style.display = 'none';
         document.getElementById('error-box').style.display = 'block';
         document.getElementById('error-msg').textContent = 'Erro ao carregar os dados do pedido.';
       }
@@ -479,6 +497,7 @@
       const isFinished = order.status === 'delivered' || order.status === 'returned';
       const phoneEl = document.getElementById('customer-phone');
       const btnWpp = document.getElementById('btn-wpp');
+      const btnTel = document.getElementById('btn-tel');
 
       if (isFinished) {
         if (phoneEl) {
@@ -489,15 +508,24 @@
           btnWpp.style.display = 'none';
           btnWpp.removeAttribute('href');
         }
+        if (btnTel) {
+          btnTel.style.display = 'none';
+          btnTel.removeAttribute('href');
+        }
       } else {
         if (phoneEl) {
           phoneEl.style.display = 'block';
           phoneEl.textContent = order.customer.phone || '';
         }
-        if (btnWpp) {
+        const cleanPhone = (order.customer.phone || '').replace(/\D/g, '');
+        if (btnWpp && cleanPhone) {
           btnWpp.style.display = 'flex';
-          const cleanPhone = (order.customer.phone || '').replace(/\D/g, '');
-          btnWpp.href = `https://wa.me/55${cleanPhone}?text=Ol%C3%A1%20${encodeURIComponent(order.customer.name)}!%20Sou%20o%20entregador%20da%20Explos%C3%A3o%20A%C3%A7a%C3%AD%20com%20o%20seu%20pedido%20%23${order.orderNo}.`;
+          const ddiPhone = cleanPhone.startsWith('55') ? cleanPhone : '55' + cleanPhone;
+          btnWpp.href = `https://wa.me/${ddiPhone}?text=Ol%C3%A1%20${encodeURIComponent(order.customer.name)}!%20Sou%20o%20entregador%20da%20Explos%C3%A3o%20A%C3%A7a%C3%AD%20com%20o%20seu%20pedido%20%23${order.orderNo}.`;
+        }
+        if (btnTel && cleanPhone) {
+          btnTel.style.display = 'flex';
+          btnTel.href = `tel:${cleanPhone}`;
         }
       }
 
@@ -635,6 +663,8 @@
     }
 
     async function loadActiveOrdersList() {
+      const lBox = document.getElementById('loading-box');
+      if (lBox) lBox.style.display = 'none';
       try {
         const res = await fetch(`${API_URL}/orders?motoboy=pending`);
         const data = await res.json();
