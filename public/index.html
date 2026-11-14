@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=9">
+  <link rel="stylesheet" href="css/style.css?v=10">
 </head>
 <body>
 
@@ -79,6 +79,27 @@
     </div>
   </section>
 
+  <!-- Os 4 Cards de Destaque Estratégicos (Red Box 2) -->
+  <section class="featured-cards-section" id="featured-cards" aria-label="Categorias em destaque">
+    <div class="featured-cards-grid">
+      <a href="#mais-vendidos" class="feat-card" onclick="scrollToSection('mais-vendidos', event)">
+        <strong class="feat-card-title">Mais Vendidos</strong>
+        <span class="feat-card-sub">Os favoritos de quem já experimentou</span>
+      </a>
+      <a href="#lancamentos" class="feat-card" onclick="scrollToSection('lancamentos', event)">
+        <strong class="feat-card-title">Novidades e Lançamentos</strong>
+        <span class="feat-card-sub">Descubra as combinações que acabaram de chegar</span>
+      </a>
+      <a href="#promocoes" class="feat-card" onclick="scrollToSection('promocoes', event)">
+        <strong class="feat-card-title">Promoções</strong>
+        <span class="feat-card-sub">Ofertas especiais da Explosão Açaí</span>
+      </a>
+      <a href="#combos" class="feat-card" onclick="scrollToSection('combos', event)">
+        <strong class="feat-card-title">Combos Especiais</strong>
+        <span class="feat-card-sub">Perfeitos para dividir e aproveitar</span>
+      </a>
+    </div>
+  </section>
   <!-- Catálogo Principal de Produtos -->
   <main id="main">
     <div class="loading-catalog">Carregando cardápio...</div>
@@ -184,6 +205,6 @@
   <div id="toast"></div>
 
   <!-- Scripts -->
-  <script src="js/app.js?v=3.5"></script>
+  <script src="js/app.js?v=3.6"></script>
 </body>
 </html>

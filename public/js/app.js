@@ -324,13 +324,26 @@ function getCategorySubtitle(catOrSlug) {
   return CATEGORY_SUBTITLES[catOrSlug] || '';
 }
 
-// Renderiza Menu de Categorias Dinâmico (Ordem Estratégica 1 a 12 & Menu Hambúrguer)
+// Nomes curtos das pílulas da barra superior (Red Box 1 da referência)
+const SHORT_CATEGORY_NAMES = {
+  'mais-vendidos': 'Mais Vendidos',
+  'lancamentos': 'Novidades',
+  'promocoes': 'Promoções',
+  'combos': 'Combos',
+  'classica': 'Clássica',
+  'premium': 'Premium',
+  'monte': 'Monte seu Açaí',
+  'kids': 'Kids',
+  'natural': 'Natural',
+  'fitness': 'Fitness',
+  'garrafa': 'Garrafa',
+  'levar': 'Para Levar'
+};
+
+// Renderiza Menu Superior de Pílulas (Red Box 1) & Menu Lateral Hambúrguer
 function renderNavigation() {
   const nav = $('#category-nav') || $('.cats');
   const drawerList = $('#categories-drawer-list');
-
-  const launches = (CATALOG.products || []).filter(p => p.isNewLaunch && p.active);
-  const promos = (CATALOG.products || []).filter(p => p.isPromo && p.active);
 
   let h = '';
   let drawerHtml = '';
@@ -338,18 +351,12 @@ function renderNavigation() {
 
   // 1. Mais Vendidos
   if (BEST_SELLERS.length > 0) {
-    const sub = getCategorySubtitle('mais-vendidos');
-    h += `
-      <a href="#mais-vendidos" class="cat-pill cat-card active">
-        <strong class="cat-card-title">Mais Vendidos</strong>
-        <span class="cat-card-sub">${esc(sub)}</span>
-      </a>
-    `;
+    h += `<a href="#mais-vendidos" class="cat-pill active">Mais Vendidos</a>`;
     drawerHtml += `
       <div class="categories-drawer-item" onclick="selectCategoryFromDrawer('mais-vendidos')">
         <div class="categories-drawer-info">
           <strong class="drawer-item-title">Mais Vendidos</strong>
-          <span class="drawer-item-sub">${esc(sub)}</span>
+          <span class="drawer-item-sub">Os favoritos de quem já experimentou</span>
         </div>
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
       </div>
@@ -358,86 +365,43 @@ function renderNavigation() {
   }
 
   // 2. Novidades e Lançamentos
-  if (launches.length > 0) {
-    const sub = getCategorySubtitle('lancamentos');
-    const isActive = !firstSet;
-    h += `
-      <a href="#lancamentos" class="cat-pill cat-card ${isActive ? 'active' : ''}">
-        <strong class="cat-card-title">Novidades e Lançamentos</strong>
-        <span class="cat-card-sub">${esc(sub)}</span>
-      </a>
-    `;
-    drawerHtml += `
-      <div class="categories-drawer-item" onclick="selectCategoryFromDrawer('lancamentos')">
-        <div class="categories-drawer-info">
-          <strong class="drawer-item-title">Novidades e Lançamentos</strong>
-          <span class="drawer-item-sub">${esc(sub)}</span>
-        </div>
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+  h += `<a href="#lancamentos" class="cat-pill ${!firstSet ? 'active' : ''}">Novidades</a>`;
+  drawerHtml += `
+    <div class="categories-drawer-item" onclick="selectCategoryFromDrawer('lancamentos')">
+      <div class="categories-drawer-info">
+        <strong class="drawer-item-title">Novidades e Lançamentos</strong>
+        <span class="drawer-item-sub">Descubra as combinações que acabaram de chegar</span>
       </div>
-    `;
-    firstSet = true;
-  }
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+    </div>
+  `;
+  if (!firstSet) firstSet = true;
 
-  // 3. Promoções (Card com Subtítulo)
-  if (promos.length > 0) {
-    const sub = getCategorySubtitle('promocoes');
-    const isActive = !firstSet;
-    h += `
-      <a href="#promocoes" class="cat-pill cat-card ${isActive ? 'active' : ''}">
-        <strong class="cat-card-title">Promoções</strong>
-        <span class="cat-card-sub">${esc(sub)}</span>
-      </a>
-    `;
-    drawerHtml += `
-      <div class="categories-drawer-item" onclick="selectCategoryFromDrawer('promocoes')">
-        <div class="categories-drawer-info">
-          <strong class="drawer-item-title">Promoções</strong>
-          <span class="drawer-item-sub">${esc(sub)}</span>
-        </div>
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+  // 3. Promoções
+  h += `<a href="#promocoes" class="cat-pill ${!firstSet ? 'active' : ''}">Promoções</a>`;
+  drawerHtml += `
+    <div class="categories-drawer-item" onclick="selectCategoryFromDrawer('promocoes')">
+      <div class="categories-drawer-info">
+        <strong class="drawer-item-title">Promoções</strong>
+        <span class="drawer-item-sub">Ofertas especiais da Explosão Açaí</span>
       </div>
-    `;
-    firstSet = true;
-  }
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+    </div>
+  `;
 
-  // 4. Combos Especiais (Último dos 4 cards de destaque com subtítulo)
-  const combosCat = (CATALOG.categories || []).find(c => c.slug === 'combos' && c.active);
-  if (combosCat) {
-    const sub = getCategorySubtitle(combosCat);
-    const isActive = !firstSet;
-    h += `
-      <a href="#combos" class="cat-pill cat-card ${isActive ? 'active' : ''}">
-        <strong class="cat-card-title">${esc(combosCat.name)}</strong>
-        <span class="cat-card-sub">${esc(sub)}</span>
-      </a>
-    `;
-    drawerHtml += `
-      <div class="categories-drawer-item" onclick="selectCategoryFromDrawer('combos')">
-        <div class="categories-drawer-info">
-          <strong class="drawer-item-title">${esc(combosCat.name)}</strong>
-          <span class="drawer-item-sub">${esc(sub)}</span>
-        </div>
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
-      </div>
-    `;
-    firstSet = true;
-  }
-
-  // 5 a 12. Demais Categorias do Cardápio (Apenas pílulas simples com o nome; o slogan fica na seção do cardápio)
+  // 4 a 12. Categorias Estratégicas do Cardápio (Combos, Clássica, Premium, Monte seu Açaí, Kids, Natural, Fitness, Garrafa, Para Levar)
   (CATALOG.categories || []).forEach((cat) => {
-    if (cat.active && cat.slug !== 'lancamentos' && cat.slug !== 'promocoes' && cat.slug !== 'combos') {
+    if (cat.active && cat.slug !== 'lancamentos' && cat.slug !== 'promocoes') {
       const isFirst = !firstSet;
       if (isFirst) firstSet = true;
-      h += `
-        <a href="#${cat.slug}" class="cat-pill cat-pill-simple ${isFirst ? 'active' : ''}">
-          ${esc(cat.name)}
-        </a>
-      `;
+      const shortName = SHORT_CATEGORY_NAMES[cat.slug] || cat.name;
+      const sub = getCategorySubtitle(cat);
+      h += `<a href="#${cat.slug}" class="cat-pill ${isFirst ? 'active' : ''}">${esc(shortName)}</a>`;
       drawerHtml += `
         <div class="categories-drawer-item" onclick="selectCategoryFromDrawer('${cat.slug}')">
           <div class="categories-drawer-info">
             <strong class="drawer-item-title">${esc(cat.name)}</strong>
+            ${sub ? `<span class="drawer-item-sub">${esc(sub)}</span>` : ''}
           </div>
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
         </div>
@@ -459,6 +423,12 @@ function renderNavigation() {
     drawerList.innerHTML = drawerHtml;
   }
 }
+
+// Rolagem suave para seções a partir dos 4 cards de destaque (Red Box 2)
+window.scrollToSection = function(id, e) {
+  if (e) e.preventDefault();
+  selectCategoryFromDrawer(id);
+};
 
 // Funções para controle do Menu Hambúrguer de Categorias no Mobile
 window.openCategoriesMenuModal = function() {
