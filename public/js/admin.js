@@ -831,6 +831,11 @@ window.setKanbanViewMode = function(mode = 'live') {
     if (colReturned) colReturned.style.display = 'flex';
     if (colCancelled) colCancelled.style.display = 'flex';
   }
+
+  // No mobile, força a exibição de apenas uma única coluna ativa
+  if (window.innerWidth <= 860 && typeof window.applyMobileSingleColumn === 'function') {
+    window.applyMobileSingleColumn();
+  }
 };
 
 window.switchAdminTab = function(tabId) {
@@ -1029,19 +1034,50 @@ function renderKanban() {
 
   const ordersReceived = filteredOrders.filter(o => o.status === 'received');
   const ordersPreparing = filteredOrders.filter(o => o.status === 'preparing');
+  const ordersOnlyReady = filteredOrders.filter(o => o.status === 'ready');
+  const ordersOnlyOutForDelivery = filteredOrders.filter(o => o.status === 'out_for_delivery');
   const ordersReady = filteredOrders.filter(o => o.status === 'ready' || o.status === 'out_for_delivery');
   const ordersDelivered = filteredOrders.filter(o => o.status === 'delivered' && !o.archivedToHistory && getBrasiliaDateString(o.deliveredAt || o.createdAt) === todayBrasilia);
   const ordersHistory = filteredOrders.filter(o => o.status === 'delivered' && (o.archivedToHistory || getBrasiliaDateString(o.deliveredAt || o.createdAt) < todayBrasilia));
   const ordersReturned = filteredOrders.filter(o => o.status === 'returned');
   const ordersCancelled = filteredOrders.filter(o => o.status === 'cancelled');
 
+  // Atualiza contadores do menu OPERAÇÃO e pílulas rápidas no Mobile
+  if (typeof window.updateMobileStageCounts === 'function') {
+    window.updateMobileStageCounts({
+      received: ordersReceived.length,
+      preparing: ordersPreparing.length,
+      ready: ordersOnlyReady.length,
+      out_for_delivery: ordersOnlyOutForDelivery.length,
+      ready_all: ordersReady.length,
+      delivered: ordersDelivered.length,
+      history: ordersHistory.length,
+      returned: ordersReturned.length,
+      cancelled: ordersCancelled.length
+    });
+  }
+
   renderKanbanColumn('received', ordersReceived, 'cards-received', 'cards-received-pagination', 'col-header-received', 'Novos Pedidos');
   renderKanbanColumn('preparing', ordersPreparing, 'cards-preparing', 'cards-preparing-pagination', 'col-header-preparing', 'Em Preparo (Cozinha)');
-  renderKanbanColumn('ready', ordersReady, 'cards-ready', 'cards-ready-pagination', 'col-header-ready', 'Pronto / Saiu para Entrega');
+
+  // No mobile, se a etapa ativa for especificamente 'ready' ou 'out_for_delivery', filtra adequadamente
+  if (window.innerWidth <= 860 && typeof MOBILE_ACTIVE_STAGE !== 'undefined' && MOBILE_ACTIVE_STAGE === 'ready') {
+    renderKanbanColumn('ready', ordersOnlyReady, 'cards-ready', 'cards-ready-pagination', 'col-header-ready', 'Pronto no Balcão');
+  } else if (window.innerWidth <= 860 && typeof MOBILE_ACTIVE_STAGE !== 'undefined' && MOBILE_ACTIVE_STAGE === 'out_for_delivery') {
+    renderKanbanColumn('ready', ordersOnlyOutForDelivery, 'cards-ready', 'cards-ready-pagination', 'col-header-ready', 'Saiu para Entrega');
+  } else {
+    renderKanbanColumn('ready', ordersReady, 'cards-ready', 'cards-ready-pagination', 'col-header-ready', 'Pronto / Saiu para Entrega');
+  }
+
   renderKanbanColumn('delivered', ordersDelivered, 'cards-delivered', 'cards-delivered-pagination', 'col-header-delivered', 'Entregues Hoje');
   renderKanbanColumn('history', ordersHistory, 'cards-history', 'cards-history-pagination', 'col-header-history', 'Pedidos Concluídos', true);
   renderKanbanColumn('returned', ordersReturned, 'cards-returned', 'cards-returned-pagination', 'col-header-returned', 'Devolvidos à Loja');
   renderKanbanColumn('cancelled', ordersCancelled, 'cards-cancelled', 'cards-cancelled-pagination', 'col-header-cancelled', 'Cancelados');
+
+  // No mobile, garante a exibição exclusiva da etapa selecionada
+  if (window.innerWidth <= 860 && typeof window.applyMobileSingleColumn === 'function') {
+    window.applyMobileSingleColumn();
+  }
 }
 
 function renderKanbanColumn(colKey, list, containerId, paginationId, headerId, title, isHistory = false) {
@@ -5006,12 +5042,145 @@ function initAdminNotifications() {
   window.renderNotificationsList();
 }
 
-// ==================== MENU COMPLETO DE OPERAÇÕES (MOBILE) ====================
-window.toggleOperacoesMenu = function() {
-  const modal = $('#admin-operacoes-modal');
+// ==================== KANBAN MOBILE: UMA ÚNICA COLUNA ATIVA & MENU OPERAÇÃO ====================
+let MOBILE_ACTIVE_STAGE = localStorage.getItem('admin_mobile_active_stage') || 'received';
+let LAST_MOBILE_COUNTS = {
+  received: 0,
+  preparing: 0,
+  ready: 0,
+  out_for_delivery: 0,
+  ready_all: 0,
+  delivered: 0,
+  history: 0,
+  returned: 0,
+  cancelled: 0
+};
+
+const MOBILE_STAGE_NAMES = {
+  'received': 'Novos Pedidos',
+  'preparing': 'Preparando (Cozinha)',
+  'ready': 'Pronto no Balcão',
+  'out_for_delivery': 'Saiu para Entrega',
+  'delivered': 'Concluídos Hoje',
+  'history': 'Histórico Concluídos',
+  'returned': 'Devolvidos à Loja',
+  'cancelled': 'Cancelados'
+};
+
+const MOBILE_STAGE_MAP = {
+  'received': 'col-received-wrapper',
+  'preparing': 'col-preparing-wrapper',
+  'ready': 'col-ready-wrapper',
+  'out_for_delivery': 'col-ready-wrapper',
+  'delivered': 'col-delivered-wrapper',
+  'history': 'col-history-wrapper',
+  'returned': 'col-returned-wrapper',
+  'cancelled': 'col-cancelled-wrapper'
+};
+
+window.updateMobileStageCounts = function(counts) {
+  if (!counts) return;
+  LAST_MOBILE_COUNTS = { ...LAST_MOBILE_COUNTS, ...counts };
+
+  const setEl = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(val);
+  };
+
+  // Badges no modal OPERAÇÃO
+  setEl('modal-stage-count-received', LAST_MOBILE_COUNTS.received);
+  setEl('modal-stage-count-preparing', LAST_MOBILE_COUNTS.preparing);
+  setEl('modal-stage-count-ready', LAST_MOBILE_COUNTS.ready);
+  setEl('modal-stage-count-out_for_delivery', LAST_MOBILE_COUNTS.out_for_delivery);
+  setEl('modal-stage-count-delivered', LAST_MOBILE_COUNTS.delivered);
+  setEl('modal-stage-count-history', LAST_MOBILE_COUNTS.history);
+  setEl('modal-stage-count-returned', LAST_MOBILE_COUNTS.returned);
+  setEl('modal-stage-count-cancelled', LAST_MOBILE_COUNTS.cancelled);
+
+  // Badges nas pílulas rápidas
+  setEl('pill-count-received', LAST_MOBILE_COUNTS.received);
+  setEl('pill-count-preparing', LAST_MOBILE_COUNTS.preparing);
+  setEl('pill-count-ready', LAST_MOBILE_COUNTS.ready);
+  setEl('pill-count-out_for_delivery', LAST_MOBILE_COUNTS.out_for_delivery);
+  setEl('pill-count-delivered', LAST_MOBILE_COUNTS.delivered);
+  setEl('pill-count-history', LAST_MOBILE_COUNTS.history);
+  setEl('pill-count-cancelled', LAST_MOBILE_COUNTS.cancelled);
+
+  // Botão principal OPERAÇÃO no topo do kanban
+  const countKey = MOBILE_ACTIVE_STAGE;
+  const currentCount = LAST_MOBILE_COUNTS[countKey] != null ? LAST_MOBILE_COUNTS[countKey] : 0;
+  const activeCountEl = document.getElementById('mobile-op-active-stage-count');
+  if (activeCountEl) activeCountEl.textContent = String(currentCount);
+
+  const activeTitleEl = document.getElementById('mobile-op-active-stage-title');
+  if (activeTitleEl) activeTitleEl.textContent = MOBILE_STAGE_NAMES[MOBILE_ACTIVE_STAGE] || 'Novos Pedidos';
+};
+
+window.applyMobileSingleColumn = function() {
+  if (window.innerWidth > 860) return; // No desktop, o layout multipropósito é preservado 100%
+
+  const stage = MOBILE_ACTIVE_STAGE || 'received';
+  const targetColId = MOBILE_STAGE_MAP[stage] || 'col-received-wrapper';
+
+  const allCols = document.querySelectorAll('.kanban-board .kanban-col');
+  allCols.forEach(col => {
+    if (col.id === targetColId) {
+      col.classList.add('mobile-active-col');
+      col.style.setProperty('display', 'flex', 'important');
+    } else {
+      col.classList.remove('mobile-active-col');
+      col.style.setProperty('display', 'none', 'important');
+    }
+  });
+
+  // Atualiza pílulas rápidas
+  document.querySelectorAll('.mobile-stage-pill').forEach(pill => {
+    const pStage = pill.getAttribute('data-stage');
+    pill.classList.toggle('active', pStage === stage);
+  });
+
+  // Atualiza seleção visual dos cards dentro do modal
+  document.querySelectorAll('.op-stage-card').forEach(card => {
+    const cStage = card.getAttribute('data-stage');
+    const isAct = cStage === stage;
+    card.classList.toggle('active', isAct);
+    const chk = card.querySelector('.op-stage-check');
+    if (chk) chk.style.display = isAct ? 'inline-block' : 'none';
+  });
+
+  // Atualiza texto e badge do botão OPERAÇÃO
+  const activeTitleEl = document.getElementById('mobile-op-active-stage-title');
+  if (activeTitleEl) activeTitleEl.textContent = MOBILE_STAGE_NAMES[stage] || 'Novos Pedidos';
+
+  const countKey = stage;
+  const currentCount = LAST_MOBILE_COUNTS[countKey] != null ? LAST_MOBILE_COUNTS[countKey] : 0;
+  const activeCountEl = document.getElementById('mobile-op-active-stage-count');
+  if (activeCountEl) activeCountEl.textContent = String(currentCount);
+};
+
+window.setMobileActiveStage = function(stage) {
+  MOBILE_ACTIVE_STAGE = stage;
+  try {
+    localStorage.setItem('admin_mobile_active_stage', stage);
+  } catch (e) {}
+
+  window.closeMobileOperacaoModal();
+  renderKanban();
+  window.applyMobileSingleColumn();
+
+  // Scroll suave até a coluna ativa
+  const board = document.querySelector('.kanban-board');
+  if (board) {
+    board.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+};
+
+window.toggleMobileOperacaoModal = function() {
+  const modal = $('#admin-mobile-operacao-modal');
   if (!modal) return;
   const isOpening = !modal.classList.contains('active');
   if (isOpening) {
+    window.applyMobileSingleColumn();
     modal.classList.add('active');
     modal.style.display = 'flex';
   } else {
@@ -5020,35 +5189,38 @@ window.toggleOperacoesMenu = function() {
   }
 };
 
-window.closeOperacoesMenu = function() {
-  const modal = $('#admin-operacoes-modal');
+window.closeMobileOperacaoModal = function() {
+  const modal = $('#admin-mobile-operacao-modal');
   if (modal) {
     modal.classList.remove('active');
     modal.style.display = 'none';
   }
 };
 
-window.handleOperacoesBackdropClick = function(event) {
-  if (event.target === $('#admin-operacoes-modal')) {
-    window.closeOperacoesMenu();
+window.handleMobileOperacaoBackdropClick = function(event) {
+  if (event.target === $('#admin-mobile-operacao-modal')) {
+    window.closeMobileOperacaoModal();
   }
 };
 
-window.selectOperationTab = function(tabId) {
-  window.closeOperacoesMenu();
-  window.switchAdminTab(tabId);
-};
+// Retrocompatibilidade para chamadas legadas
+window.toggleOperacoesMenu = window.toggleMobileOperacaoModal;
+window.closeOperacoesMenu = window.closeMobileOperacaoModal;
+window.handleOperacoesBackdropClick = window.handleMobileOperacaoBackdropClick;
 
-window.selectOperationModal = function(type) {
-  window.closeOperacoesMenu();
-  if (type === 'routes') {
-    if (typeof window.openDeliveryMapModal === 'function') {
-      window.openDeliveryMapModal();
+window.addEventListener('resize', () => {
+  if (window.innerWidth <= 860) {
+    window.applyMobileSingleColumn();
+  } else {
+    // Restaura layout normal do desktop
+    const board = $('.kanban-board');
+    if (board) {
+      document.querySelectorAll('.kanban-board .kanban-col').forEach(c => {
+        c.classList.remove('mobile-active-col');
+        c.style.removeProperty('display');
+      });
+      const mode = board.classList.contains('view-all') ? 'all' : (board.classList.contains('view-archive') ? 'archive' : 'live');
+      window.setKanbanViewMode(mode);
     }
   }
-};
-
-window.selectOperationLink = function(url) {
-  window.closeOperacoesMenu();
-  window.open(url, '_blank');
-};
+});

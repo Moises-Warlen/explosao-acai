@@ -235,7 +235,7 @@
         </div>
       </div>
 
-      <!-- Switcher de Modos de Visualização do Kanban (Desktop) e Menu Operações (Mobile) -->
+      <!-- Switcher de Modos de Visualização do Kanban (Desktop) e Menu Único OPERAÇÃO (Mobile) -->
       <div class="kanban-view-switcher">
         <button type="button" class="view-switch-btn active" id="btn-view-live" onclick="setKanbanViewMode('live')" title="Visualização operacional ao vivo em 4 colunas">
           🔥 Operação Ao Vivo (4 Colunas)
@@ -247,10 +247,41 @@
           📦 Histórico & Devolvidos (3 Colunas)
         </button>
 
-        <!-- Botão Menu Operações Completo (Exclusivo Mobile) -->
-        <button type="button" class="btn-operacoes-mobile" id="btn-operacoes-mobile" onclick="toggleOperacoesMenu()" title="Ver todas as operações do sistema">
-          <span>⚡ Menu Operações</span>
-          <span class="op-chevron">▾</span>
+        <!-- Botão ÚNICO OPERAÇÃO (Exclusivo Mobile) -->
+        <button type="button" class="btn-operacao-unica-mobile" id="btn-operacao-mobile-menu" onclick="toggleMobileOperacaoModal()" title="Abrir menu de etapas da operação">
+          <span class="op-btn-left">
+            <span class="op-btn-tag">OPERAÇÃO</span>
+            <span class="op-btn-stage" id="mobile-op-active-stage-title">Novos Pedidos</span>
+          </span>
+          <span class="op-btn-right">
+            <span class="op-btn-count" id="mobile-op-active-stage-count">0</span>
+            <span class="op-chevron">▾</span>
+          </span>
+        </button>
+      </div>
+
+      <!-- Barra Rápida de Etapas Mobile (Pills para alternar com 1 toque) -->
+      <div class="mobile-stage-pills-bar" id="mobile-stage-pills-bar">
+        <button type="button" class="mobile-stage-pill active" data-stage="received" onclick="setMobileActiveStage('received')">
+          Novos <span class="pill-count" id="pill-count-received">0</span>
+        </button>
+        <button type="button" class="mobile-stage-pill" data-stage="preparing" onclick="setMobileActiveStage('preparing')">
+          Preparo <span class="pill-count" id="pill-count-preparing">0</span>
+        </button>
+        <button type="button" class="mobile-stage-pill" data-stage="ready" onclick="setMobileActiveStage('ready')">
+          Pronto <span class="pill-count" id="pill-count-ready">0</span>
+        </button>
+        <button type="button" class="mobile-stage-pill" data-stage="out_for_delivery" onclick="setMobileActiveStage('out_for_delivery')">
+          Em Rota <span class="pill-count" id="pill-count-out_for_delivery">0</span>
+        </button>
+        <button type="button" class="mobile-stage-pill" data-stage="delivered" onclick="setMobileActiveStage('delivered')">
+          Concluídos <span class="pill-count" id="pill-count-delivered">0</span>
+        </button>
+        <button type="button" class="mobile-stage-pill" data-stage="cancelled" onclick="setMobileActiveStage('cancelled')">
+          Cancelados <span class="pill-count" id="pill-count-cancelled">0</span>
+        </button>
+        <button type="button" class="mobile-stage-pill" data-stage="history" onclick="setMobileActiveStage('history')">
+          Histórico <span class="pill-count" id="pill-count-history">0</span>
         </button>
       </div>
 
@@ -1383,111 +1414,154 @@
     </div>
   </div>
 
-  <!-- Modal / Menu de Todas as Operações do Sistema (Exclusivo Mobile) -->
-  <div id="admin-operacoes-modal" class="operacoes-modal-backdrop" style="display:none" onclick="handleOperacoesBackdropClick(event)">
-    <div class="operacoes-modal-sheet" onclick="event.stopPropagation()">
-      <div class="operacoes-modal-header">
-        <div class="operacoes-title-wrap">
-          <span class="op-header-icon">⚡</span>
-          <h3>Menu de Operações</h3>
+  <!-- Modal / Menu Único de OPERAÇÃO (Exclusivo Mobile) -->
+  <div id="admin-mobile-operacao-modal" class="mobile-operacao-modal-backdrop" style="display:none" onclick="handleMobileOperacaoBackdropClick(event)">
+    <div class="mobile-operacao-modal-sheet" onclick="event.stopPropagation()">
+      <div class="mobile-operacao-header">
+        <div class="mobile-operacao-title-wrap">
+          <span class="op-modal-icon">⚡</span>
+          <div>
+            <h3>Menu Operação</h3>
+            <span class="op-modal-subtitle">Selecione a etapa ativa para exibir no painel</span>
+          </div>
         </div>
-        <button type="button" class="btn-op-close" onclick="closeOperacoesMenu()" title="Fechar Menu">✕</button>
+        <button type="button" class="btn-op-modal-close" onclick="closeMobileOperacaoModal()" title="Fechar">✕</button>
       </div>
-      <p class="operacoes-subtitle">Selecione uma operação para acessar diretamente:</p>
-      <div class="operacoes-grid-list">
-        <div class="op-item-card" onclick="selectOperationTab('tab-kanban')">
-          <span class="op-item-icon">📋</span>
-          <div class="op-item-info">
-            <b>Pedidos & Cozinha</b>
-            <span>Kanban ao vivo de novos pedidos e preparo</span>
+
+      <div class="mobile-operacao-stages-list">
+        <!-- 1. Novos Pedidos -->
+        <div class="op-stage-card" data-stage="received" onclick="setMobileActiveStage('received')">
+          <div class="op-stage-left">
+            <span class="op-stage-icon" style="background:rgba(250,204,21,0.15);color:#facc15">🟡</span>
+            <div class="op-stage-info">
+              <b>Novos Pedidos</b>
+              <span>Aguardando aceite e envio para a cozinha</span>
+            </div>
+          </div>
+          <div class="op-stage-right">
+            <span class="op-stage-badge" id="modal-stage-count-received">0</span>
+            <span class="op-stage-check" id="modal-stage-check-received">✓</span>
           </div>
         </div>
-        <div class="op-item-card" onclick="selectOperationTab('tab-chat')">
-          <span class="op-item-icon">💬</span>
-          <div class="op-item-info">
-            <b>Chat de Clientes</b>
-            <span>Atendimento em tempo real com clientes</span>
+
+        <!-- 2. Preparando (Cozinha) -->
+        <div class="op-stage-card" data-stage="preparing" onclick="setMobileActiveStage('preparing')">
+          <div class="op-stage-left">
+            <span class="op-stage-icon" style="background:rgba(168,85,247,0.15);color:#c084fc">🟣</span>
+            <div class="op-stage-info">
+              <b>Preparando (Cozinha)</b>
+              <span>Em montagem e preparo na bancada</span>
+            </div>
+          </div>
+          <div class="op-stage-right">
+            <span class="op-stage-badge" id="modal-stage-count-preparing">0</span>
+            <span class="op-stage-check" id="modal-stage-check-preparing">✓</span>
           </div>
         </div>
-        <div class="op-item-card" onclick="selectOperationModal('routes')">
-          <span class="op-item-icon">📍</span>
-          <div class="op-item-info">
-            <b>Rotas de Entrega & GPS</b>
-            <span>Mapa de entregas, paradas e rotas de motoboy</span>
+
+        <!-- 3. Pronto (Balcão) -->
+        <div class="op-stage-card" data-stage="ready" onclick="setMobileActiveStage('ready')">
+          <div class="op-stage-left">
+            <span class="op-stage-icon" style="background:rgba(56,189,248,0.15);color:#38bdf8">🔵</span>
+            <div class="op-stage-info">
+              <b>Pronto no Balcão</b>
+              <span>Aguardando retirada pelo cliente</span>
+            </div>
+          </div>
+          <div class="op-stage-right">
+            <span class="op-stage-badge" id="modal-stage-count-ready">0</span>
+            <span class="op-stage-check" id="modal-stage-check-ready">✓</span>
           </div>
         </div>
-        <div class="op-item-card" onclick="selectOperationTab('tab-products')">
-          <span class="op-item-icon">🍨</span>
-          <div class="op-item-info">
-            <b>Cardápio & Estoque</b>
-            <span>Produtos, tamanhos, preços e estoque</span>
+
+        <!-- 4. Saiu para Entrega -->
+        <div class="op-stage-card" data-stage="out_for_delivery" onclick="setMobileActiveStage('out_for_delivery')">
+          <div class="op-stage-left">
+            <span class="op-stage-icon" style="background:rgba(14,165,233,0.15);color:#38bdf8">🛵</span>
+            <div class="op-stage-info">
+              <b>Saiu para Entrega</b>
+              <span>Em rota com o motoboy para entrega</span>
+            </div>
+          </div>
+          <div class="op-stage-right">
+            <span class="op-stage-badge" id="modal-stage-count-out_for_delivery">0</span>
+            <span class="op-stage-check" id="modal-stage-check-out_for_delivery">✓</span>
           </div>
         </div>
-        <div class="op-item-card" onclick="selectOperationTab('tab-accompaniments')">
-          <span class="op-item-icon">☕</span>
-          <div class="op-item-info">
-            <b>Acompanhamentos</b>
-            <span>Frutas, cremes, caldas e coberturas grátis</span>
+
+        <!-- 5. Concluídos (Hoje) -->
+        <div class="op-stage-card" data-stage="delivered" onclick="setMobileActiveStage('delivered')">
+          <div class="op-stage-left">
+            <span class="op-stage-icon" style="background:rgba(34,197,94,0.15);color:#4ade80">🟢</span>
+            <div class="op-stage-info">
+              <b>Concluídos (Entregues Hoje)</b>
+              <span>Pedidos entregues ou retirados hoje</span>
+            </div>
+          </div>
+          <div class="op-stage-right">
+            <span class="op-stage-badge" id="modal-stage-count-delivered">0</span>
+            <span class="op-stage-check" id="modal-stage-check-delivered">✓</span>
           </div>
         </div>
-        <div class="op-item-card" onclick="selectOperationTab('tab-extras')">
-          <span class="op-item-icon">🍫</span>
-          <div class="op-item-info">
-            <b>Adicionais Pagos</b>
-            <span>Complementos, nutella e adicionais extras</span>
+
+        <!-- 6. Cancelados -->
+        <div class="op-stage-card" data-stage="cancelled" onclick="setMobileActiveStage('cancelled')">
+          <div class="op-stage-left">
+            <span class="op-stage-icon" style="background:rgba(239,68,68,0.15);color:#f87171">🔴</span>
+            <div class="op-stage-info">
+              <b>Cancelados</b>
+              <span>Pedidos cancelados pela loja ou cliente</span>
+            </div>
+          </div>
+          <div class="op-stage-right">
+            <span class="op-stage-badge" id="modal-stage-count-cancelled">0</span>
+            <span class="op-stage-check" id="modal-stage-check-cancelled">✓</span>
           </div>
         </div>
-        <div class="op-item-card" onclick="selectOperationTab('tab-categories')">
-          <span class="op-item-icon">🏷️</span>
-          <div class="op-item-info">
-            <b>Categorias</b>
-            <span>Organização e ordem das seções do cardápio</span>
+
+        <!-- 7. Histórico Permanente -->
+        <div class="op-stage-card" data-stage="history" onclick="setMobileActiveStage('history')">
+          <div class="op-stage-left">
+            <span class="op-stage-icon" style="background:rgba(20,184,166,0.15);color:#2dd4bf">🗄️</span>
+            <div class="op-stage-info">
+              <b>Histórico Permanente</b>
+              <span>Pedidos de dias anteriores arquivados</span>
+            </div>
+          </div>
+          <div class="op-stage-right">
+            <span class="op-stage-badge" id="modal-stage-count-history">0</span>
+            <span class="op-stage-check" id="modal-stage-check-history">✓</span>
           </div>
         </div>
-        <div class="op-item-card" onclick="selectOperationTab('tab-reports')">
-          <span class="op-item-icon">📊</span>
-          <div class="op-item-info">
-            <b>Relatórios & Vendas</b>
-            <span>Faturamento diário, vendas por período e lucros</span>
+
+        <!-- 8. Devolvidos à Loja -->
+        <div class="op-stage-card" data-stage="returned" onclick="setMobileActiveStage('returned')">
+          <div class="op-stage-left">
+            <span class="op-stage-icon" style="background:rgba(245,158,11,0.15);color:#fbbf24">🟠</span>
+            <div class="op-stage-info">
+              <b>Devolvidos à Loja</b>
+              <span>Tentativas sem sucesso ou devoluções</span>
+            </div>
+          </div>
+          <div class="op-stage-right">
+            <span class="op-stage-badge" id="modal-stage-count-returned">0</span>
+            <span class="op-stage-check" id="modal-stage-check-returned">✓</span>
           </div>
         </div>
-        <div class="op-item-card" onclick="selectOperationTab('tab-coupons')">
-          <span class="op-item-icon">🎟️</span>
-          <div class="op-item-info">
-            <b>Cupons de Desconto</b>
-            <span>Cupons promocionais e regras de desconto</span>
-          </div>
-        </div>
-        <div class="op-item-card" onclick="selectOperationTab('tab-printers')">
-          <span class="op-item-icon">🖨️</span>
-          <div class="op-item-info">
-            <b>Impressoras & Comandas</b>
-            <span>Configuração térmica para cozinha e balcão</span>
-          </div>
-        </div>
-        <div class="op-item-card" onclick="selectOperationTab('tab-store')">
-          <span class="op-item-icon">⚙️</span>
-          <div class="op-item-info">
-            <b>Configurações da Loja</b>
-            <span>Horários de funcionamento de Brasília e dados</span>
-          </div>
-        </div>
-        <div class="op-item-card" onclick="selectOperationLink('motoboy.html')">
-          <span class="op-item-icon">🛵</span>
-          <div class="op-item-info">
-            <b>Painel do Entregador</b>
-            <span>Acesso externo exclusivo para motoboy</span>
-          </div>
-        </div>
-        <div class="op-item-card" onclick="selectOperationLink('index.html')">
-          <span class="op-item-icon">📱</span>
-          <div class="op-item-info">
-            <b>Cardápio Digital</b>
-            <span>Visualizar o cardápio público como cliente</span>
-          </div>
+      </div>
+
+      <!-- Acesso Rápido a Outras Operações (Chat, Rotas, etc.) -->
+      <div class="mobile-op-extra-links">
+        <span class="mobile-op-extra-title">Outras operações do sistema:</span>
+        <div class="mobile-op-extra-btns">
+          <button type="button" onclick="closeMobileOperacaoModal(); switchAdminTab('tab-chat')" title="Abrir Chat">💬 Chat</button>
+          <button type="button" onclick="closeMobileOperacaoModal(); openDeliveryMapModal()" title="Abrir Rotas">📍 Rotas</button>
+          <button type="button" onclick="closeMobileOperacaoModal(); switchAdminTab('tab-products')" title="Abrir Cardápio">🍨 Cardápio</button>
+          <button type="button" onclick="closeMobileOperacaoModal(); switchAdminTab('tab-reports')" title="Abrir Relatórios">📊 Relatórios</button>
         </div>
       </div>
     </div>
+  </div>
   </div>
 
   <!-- Área Oculta para Impressão Térmica Direta -->
