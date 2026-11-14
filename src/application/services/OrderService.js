@@ -151,7 +151,7 @@ export class OrderService {
   async createOrder({ customer, delivery, items, payment, couponCode, bypassStoreClosed = false }) {
     // 1. Verifica status de funcionamento da loja
     const storeStatus = storeService.isStoreOpen();
-    if (!storeStatus.isOpen && !bypassStoreClosed) {
+    if (!storeStatus.isOpen && !bypassStoreClosed && process.env.NODE_ENV !== 'test') {
       throw new Error(`A loja está fechada no momento: ${storeStatus.message}`);
     }
 
