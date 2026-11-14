@@ -415,7 +415,7 @@
       "image": "imagens/Logo.png",
       "active": true,
       "isCustomizable": false,
-      "isNewLaunch": false,
+      "isNewLaunch": true,
       "isPromo": false,
       "comboProductIds": [],
       "prices": [
@@ -571,7 +571,7 @@
       "image": "imagens/mix fini.png",
       "active": true,
       "isCustomizable": false,
-      "isNewLaunch": false,
+      "isNewLaunch": true,
       "isPromo": false,
       "comboProductIds": [],
       "prices": [
@@ -951,7 +951,7 @@
       "active": true,
       "isCustomizable": false,
       "isNewLaunch": false,
-      "isPromo": false,
+      "isPromo": true,
       "comboProductIds": [
         "prod_classico"
       ],
@@ -978,7 +978,7 @@
       "active": true,
       "isCustomizable": false,
       "isNewLaunch": false,
-      "isPromo": false,
+      "isPromo": true,
       "comboProductIds": [
         "prod_classico"
       ],

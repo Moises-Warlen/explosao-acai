@@ -541,7 +541,7 @@ button:active {
   background: var(--bg);
   display: flex;
   justify-content: flex-start;
-  align-items: stretch;
+  align-items: center;
   gap: 12px;
   padding: 12px 20px;
   border-bottom: 1px solid var(--ln);
@@ -571,14 +571,15 @@ button:active {
   }
 }
 
-.cats a, .cat-card {
+/* Os 4 Cards de Destaque com Subtítulo (Mais Vendidos, Lançamentos, Promoções, Combos) */
+.cats a.cat-card {
   white-space: nowrap;
   background: #ffffff;
   border: 1.5px solid #e7d8f5;
   color: var(--tx);
   text-decoration: none;
   border-radius: 14px;
-  padding: 10px 18px;
+  padding: 8px 18px;
   display: inline-flex;
   flex-direction: column;
   justify-content: center;
@@ -609,27 +610,64 @@ button:active {
   display: block;
 }
 
-.cats a:hover, .cat-card:hover {
+.cats a.cat-card:hover {
   transform: translateY(-2px);
   border-color: var(--p2);
   box-shadow: 0 4px 12px rgba(123, 44, 191, 0.15);
 }
 
-.cats a.active, .cat-card.active {
+.cats a.cat-card.active {
   background: #ffffff;
   border-color: var(--p2);
   border-width: 2px;
   box-shadow: 0 4px 14px rgba(123, 44, 191, 0.22);
 }
 
-.cats a.active .cat-card-title, .cat-card.active .cat-card-title {
+.cats a.cat-card.active .cat-card-title {
   color: var(--p2);
   font-weight: 800;
 }
 
-.cats a.active .cat-card-sub, .cat-card.active .cat-card-sub {
+.cats a.cat-card.active .cat-card-sub {
   color: var(--p);
   font-weight: 600;
+}
+
+/* Demais Categorias em formato Pílula Normal (única linha, sem subtítulo no menu) */
+.cats a.cat-pill-simple {
+  white-space: nowrap;
+  background: #ffffff;
+  border: 1.5px solid #e7d8f5;
+  color: var(--tx);
+  text-decoration: none;
+  border-radius: 99px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: max-content;
+  box-shadow: 0 2px 6px rgba(75, 15, 107, 0.04);
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+  user-select: none;
+  cursor: pointer;
+}
+
+.cats a.cat-pill-simple:hover {
+  transform: translateY(-2px);
+  border-color: var(--p2);
+  color: var(--p2);
+  box-shadow: 0 4px 12px rgba(123, 44, 191, 0.15);
+}
+
+.cats a.cat-pill-simple.active {
+  background: var(--p2);
+  color: #ffffff;
+  border-color: var(--p2);
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(123, 44, 191, 0.25);
 }
 
 /* Drawer / Modal de Categorias (Menu Hambúrguer no Mobile com Subtítulos) */

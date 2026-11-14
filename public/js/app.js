@@ -379,7 +379,7 @@ function renderNavigation() {
     firstSet = true;
   }
 
-  // 3. Promoções
+  // 3. Promoções (Card com Subtítulo)
   if (promos.length > 0) {
     const sub = getCategorySubtitle('promocoes');
     const isActive = !firstSet;
@@ -401,23 +401,43 @@ function renderNavigation() {
     firstSet = true;
   }
 
-  // 4 a 12. Categorias Estratégicas do Cardápio
+  // 4. Combos Especiais (Último dos 4 cards de destaque com subtítulo)
+  const combosCat = (CATALOG.categories || []).find(c => c.slug === 'combos' && c.active);
+  if (combosCat) {
+    const sub = getCategorySubtitle(combosCat);
+    const isActive = !firstSet;
+    h += `
+      <a href="#combos" class="cat-pill cat-card ${isActive ? 'active' : ''}">
+        <strong class="cat-card-title">${esc(combosCat.name)}</strong>
+        <span class="cat-card-sub">${esc(sub)}</span>
+      </a>
+    `;
+    drawerHtml += `
+      <div class="categories-drawer-item" onclick="selectCategoryFromDrawer('combos')">
+        <div class="categories-drawer-info">
+          <strong class="drawer-item-title">${esc(combosCat.name)}</strong>
+          <span class="drawer-item-sub">${esc(sub)}</span>
+        </div>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    `;
+    firstSet = true;
+  }
+
+  // 5 a 12. Demais Categorias do Cardápio (Apenas pílulas simples com o nome; o slogan fica na seção do cardápio)
   (CATALOG.categories || []).forEach((cat) => {
-    if (cat.active && cat.slug !== 'lancamentos' && cat.slug !== 'promocoes') {
+    if (cat.active && cat.slug !== 'lancamentos' && cat.slug !== 'promocoes' && cat.slug !== 'combos') {
       const isFirst = !firstSet;
       if (isFirst) firstSet = true;
-      const sub = getCategorySubtitle(cat);
       h += `
-        <a href="#${cat.slug}" class="cat-pill cat-card ${isFirst ? 'active' : ''}">
-          <strong class="cat-card-title">${esc(cat.name)}</strong>
-          <span class="cat-card-sub">${esc(sub)}</span>
+        <a href="#${cat.slug}" class="cat-pill cat-pill-simple ${isFirst ? 'active' : ''}">
+          ${esc(cat.name)}
         </a>
       `;
       drawerHtml += `
         <div class="categories-drawer-item" onclick="selectCategoryFromDrawer('${cat.slug}')">
           <div class="categories-drawer-info">
             <strong class="drawer-item-title">${esc(cat.name)}</strong>
-            <span class="drawer-item-sub">${esc(sub)}</span>
           </div>
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
         </div>
