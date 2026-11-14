@@ -455,6 +455,8 @@ button:active {
   }
   .hero-text-block {
     text-align: center;
+    flex: 0 0 auto;
+    width: 100%;
   }
   .hero-subtitle {
     margin-left: auto;
