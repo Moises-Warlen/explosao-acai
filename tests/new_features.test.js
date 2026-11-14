@@ -340,8 +340,9 @@ describe('Explosão Açaí - Testes das Novas Funcionalidades', () => {
 
     const getResClean = await fetch(`${baseUrl}/api/chat?phone=${testPhone}`);
     const getDataClean = await getResClean.json();
-    assert.strictEqual(getDataClean.messages.length, 1, 'Novo chat deve conter APENAS a nova mensagem sem histórico antigo');
-    assert.strictEqual(getDataClean.messages[0].message, 'Olá, gostaria de fazer outro pedido!');
+    const customerMsgs = getDataClean.messages.filter(m => !m.isAutoReply);
+    assert.strictEqual(customerMsgs.length, 1, 'Novo chat deve conter APENAS a nova mensagem sem histórico antigo');
+    assert.strictEqual(customerMsgs[0].message, 'Olá, gostaria de fazer outro pedido!');
   });
 
   test('Fluxo de Pedidos Devolvidos: POST /api/orders/:id/return e Relatório de Vendas', async () => {

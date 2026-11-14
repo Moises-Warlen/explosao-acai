@@ -298,6 +298,7 @@ function bindNavigation() {
   const tabs = $$('.nav-tab');
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
+      if (typeof window.closeAdminMobileNav === 'function') window.closeAdminMobileNav();
       tabs.forEach(t => t.classList.remove('active'));
       $$('.tab-pane').forEach(p => p.classList.remove('active'));
 
@@ -636,6 +637,10 @@ window.toggleColumnExpand = function(colKey) {
 window.toggleAllDeliveredCards = () => window.toggleColumnExpand('delivered');
 
 window.handleKanbanSearchInput = function() {
+  const activeTab = $('.nav-tab.active')?.dataset?.tab;
+  if (activeTab !== 'tab-kanban') {
+    window.switchAdminTab('tab-kanban');
+  }
   const q = ($('#kanban-search')?.value || '').trim();
   const clearBtn = $('#btn-clear-search');
   if (clearBtn) clearBtn.style.display = q ? 'inline-flex' : 'none';
@@ -759,6 +764,42 @@ window.switchAdminTab = function(tabId) {
   });
 };
 
+let HIDE_FATURAMENTO = localStorage.getItem('admin_hide_faturamento') === 'true';
+let LAST_FATURAMENTO_VAL = 0;
+
+window.toggleHideFaturamento = function() {
+  HIDE_FATURAMENTO = !HIDE_FATURAMENTO;
+  localStorage.setItem('admin_hide_faturamento', HIDE_FATURAMENTO ? 'true' : 'false');
+  renderFaturamentoKPI();
+};
+
+function renderFaturamentoKPI() {
+  const kpiFaturamento = $('#kpi-faturamento');
+  const eye = $('#kpi-faturamento-eye');
+  if (!kpiFaturamento) return;
+  if (HIDE_FATURAMENTO) {
+    kpiFaturamento.textContent = 'R$ ****';
+    if (eye) eye.textContent = '🙈';
+  } else {
+    kpiFaturamento.textContent = R(LAST_FATURAMENTO_VAL);
+    if (eye) eye.textContent = '👁️';
+  }
+}
+
+window.toggleAdminMobileNav = function() {
+  const topbar = $('#admin-topbar');
+  if (topbar) {
+    topbar.classList.toggle('mobile-nav-open');
+  }
+};
+
+window.closeAdminMobileNav = function() {
+  const topbar = $('#admin-topbar');
+  if (topbar) {
+    topbar.classList.remove('mobile-nav-open');
+  }
+};
+
 function updateHeaderKPIs() {
   const kpiFaturamento = $('#kpi-faturamento');
   const kpiPedidos = $('#kpi-pedidos');
@@ -776,9 +817,8 @@ function updateHeaderKPIs() {
     .filter(o => o.payment?.status === 'approved' || o.status === 'delivered')
     .reduce((acc, o) => acc + (Number(o.total) || 0), 0);
 
-  if (kpiFaturamento) {
-    kpiFaturamento.textContent = R(revenue);
-  }
+  LAST_FATURAMENTO_VAL = revenue;
+  renderFaturamentoKPI();
   if (kpiPedidos) {
     kpiPedidos.textContent = String(validTodayOrders.length);
   }

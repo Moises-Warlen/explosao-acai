@@ -180,15 +180,40 @@ body {
   letter-spacing: 0.8px;
 }
 
-/* Cápsula Central de KPIs (Igual Mockup) */
+/* Cápsula Central de KPIs (Centralizada e Interativa) */
 .header-kpis-capsule {
   display: flex;
   align-items: center;
+  justify-content: center;
   background: rgba(30, 8, 48, 0.85);
   border: 1.5px solid rgba(168, 85, 247, 0.35);
   border-radius: 14px;
   padding: 6px 16px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  margin: 0 auto;
+}
+
+.kpi-cap-clickable {
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+  border-radius: 8px;
+}
+
+.kpi-cap-clickable:hover {
+  opacity: 0.85;
+}
+
+.kpi-cap-clickable:active {
+  transform: scale(0.97);
+}
+
+.kpi-eye-icon {
+  font-size: 13px;
+  margin-left: 4px;
+  opacity: 0.85;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .kpi-cap-item {
@@ -222,11 +247,124 @@ body {
   margin: 0 4px;
 }
 
-/* Lado Direito do Header (Status Loja, Sino, Relógio, Admin) */
+/* Lado Direito do Header (Status Loja, Sino, Busca no lugar do Relógio, Admin e Hambúrguer) */
 .header-actions-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+}
+
+/* Campo de Busca Rápida no Header (Substituindo o Relógio) */
+.header-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 170px;
+  max-width: 260px;
+  flex: 1;
+}
+
+.header-search-box input {
+  width: 100%;
+  padding: 7px 28px 7px 32px;
+  font-size: 12.5px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  border-radius: 10px;
+  color: #fff;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.header-search-box input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.header-search-box input:focus {
+  background: rgba(30, 8, 48, 0.95);
+  border-color: var(--y);
+  box-shadow: 0 0 10px rgba(255, 200, 0, 0.3);
+}
+
+.header-search-box .search-icon {
+  position: absolute;
+  left: 9px;
+  font-size: 13px;
+  opacity: 0.85;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-search-box .btn-clear-search {
+  position: absolute;
+  right: 7px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 0;
+  color: #fff;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.header-search-box .btn-clear-search:hover {
+  background: var(--danger);
+}
+
+/* Botão Hambúrguer Mobile */
+.admin-hamburger-btn {
+  display: none;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: #fff;
+  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.admin-hamburger-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #a855f7;
+}
+
+.admin-topbar-wrapper.mobile-nav-open .admin-hamburger-btn {
+  background: var(--p2);
+  border-color: #a855f7;
+}
+
+.admin-topbar-wrapper.mobile-nav-open .icon-hamburger {
+  display: none !important;
+}
+
+.admin-topbar-wrapper.mobile-nav-open .icon-close {
+  display: block !important;
+}
+
+/* Backdrop do Menu Hambúrguer Mobile */
+.admin-nav-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(2px);
+  z-index: 58;
+}
+
+.admin-topbar-wrapper.mobile-nav-open ~ .admin-nav-backdrop {
+  display: block;
 }
 
 .store-glow-pill {
@@ -442,6 +580,92 @@ input:checked + .slider:before {
   font-weight: 800;
   padding: 2px 7px;
   border-radius: 99px;
+}
+
+/* ================= HEADER & NAV RESPONSIVO (MOBILE) ================= */
+@media (max-width: 860px) {
+  .admin-header {
+    padding: 10px 14px 8px !important;
+    gap: 10px !important;
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    grid-template-areas:
+      "brand hamburger"
+      "kpis kpis"
+      "actions actions" !important;
+    align-items: center !important;
+  }
+
+  .admin-brand {
+    grid-area: brand !important;
+  }
+
+  .admin-hamburger-btn {
+    grid-area: hamburger !important;
+    display: inline-flex !important;
+    justify-self: end !important;
+    align-self: center !important;
+  }
+
+  .header-kpis-capsule {
+    grid-area: kpis !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 2px auto !important;
+    justify-content: center !important;
+  }
+
+  .header-actions-right {
+    grid-area: actions !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .header-search-box {
+    min-width: 130px !important;
+    flex: 1 !important;
+    max-width: 100% !important;
+  }
+
+  /* Menu de Abas no Mobile: Oculto por padrão, abre via Hambúrguer no canto superior direito */
+  .admin-nav {
+    display: none !important;
+  }
+
+  .admin-topbar-wrapper.mobile-nav-open .admin-nav {
+    display: flex !important;
+    flex-direction: column !important;
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: #140324 !important;
+    border-bottom: 2px solid #7b2cbf !important;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.9) !important;
+    padding: 12px 14px !important;
+    gap: 8px !important;
+    max-height: calc(100vh - 150px) !important;
+    overflow-y: auto !important;
+    z-index: 100 !important;
+  }
+
+  .admin-topbar-wrapper.mobile-nav-open .nav-grid-icon-box {
+    display: none !important;
+  }
+
+  .admin-topbar-wrapper.mobile-nav-open .nav-tab {
+    width: 100% !important;
+    justify-content: space-between !important;
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(168, 85, 247, 0.2) !important;
+    border-radius: 12px !important;
+  }
 }
 
 /* Layout Content */
@@ -1452,12 +1676,6 @@ input:focus, select:focus, textarea:focus {
     min-height: 250px !important;
   }
 
-  .admin-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
   .admin-card {
     padding: 16px;
     border-radius: 14px;
@@ -1737,6 +1955,32 @@ input:focus, select:focus, textarea:focus {
   font-weight: 800;
   padding: 2px 8px;
   border-radius: 99px;
+}
+
+@media (max-width: 600px) {
+  #kpi-tempo-divider,
+  #kpi-tempo-box {
+    display: none !important;
+  }
+
+  .header-kpis-capsule {
+    padding: 6px 12px;
+    width: auto;
+    max-width: 95vw;
+  }
+
+  .kpi-cap-item {
+    padding: 2px 6px;
+    gap: 6px;
+  }
+
+  .kpi-cap-lbl {
+    font-size: 11px;
+  }
+
+  .kpi-cap-val {
+    font-size: 14px;
+  }
 }
 
 @media (max-width: 480px) {

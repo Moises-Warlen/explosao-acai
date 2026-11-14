@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/admin.css?v=3.0">
+  <link rel="stylesheet" href="css/admin.css?v=3.2">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
@@ -53,25 +53,36 @@
         </div>
       </div>
 
+      <!-- Botão Hambúrguer Mobile no Canto Superior Direito -->
+      <button type="button" id="admin-hamburger-btn" class="admin-hamburger-btn" onclick="toggleAdminMobileNav()" aria-label="Abrir menu de navegação" title="Menu de Abas">
+        <svg class="icon-hamburger" viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+          <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+        </svg>
+        <svg class="icon-close" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" style="display:none">
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+        </svg>
+      </button>
+
       <!-- Métricas Rápidas do Dia (KPIs em Tempo Real - Cápsula Central) -->
       <div class="header-kpis-capsule" id="header-kpis">
-        <div class="kpi-cap-item" title="Faturamento de vendas aprovadas hoje">
+        <div class="kpi-cap-item kpi-cap-clickable" id="kpi-faturamento-box" onclick="toggleHideFaturamento()" role="button" tabindex="0" title="Clique para ocultar ou exibir o faturamento">
           <span class="kpi-cap-lbl">Faturamento Hoje:</span>
           <b class="kpi-cap-val green" id="kpi-faturamento">R$ 0,00</b>
+          <span class="kpi-eye-icon" id="kpi-faturamento-eye" title="Ocultar / Mostrar">👁️</span>
         </div>
         <div class="kpi-cap-divider"></div>
         <div class="kpi-cap-item" title="Total de pedidos recebidos hoje">
           <span class="kpi-cap-lbl">Pedidos Hoje:</span>
           <b class="kpi-cap-val yellow" id="kpi-pedidos">0</b>
         </div>
-        <div class="kpi-cap-divider"></div>
-        <div class="kpi-cap-item" title="Tempo médio de entrega dos pedidos concluídos">
+        <div class="kpi-cap-divider" id="kpi-tempo-divider"></div>
+        <div class="kpi-cap-item" id="kpi-tempo-box" title="Tempo médio de entrega dos pedidos concluídos">
           <span class="kpi-cap-lbl">Tempo Médio:</span>
           <b class="kpi-cap-val blue" id="kpi-tempo">-- min</b>
         </div>
       </div>
 
-      <!-- Lado Direito: Loja Aberta/Fechada, Alerta Sonoro, Relógio e Admin -->
+      <!-- Lado Direito: Loja Aberta/Fechada, Alerta Sonoro, Busca e Admin -->
       <div class="header-actions-right">
         <!-- Status Loja com Botão Luminoso -->
         <button id="store-status-glow-btn" class="store-glow-pill open" onclick="toggleStoreStatus()" title="Clique para abrir ou fechar a loja">
@@ -87,8 +98,12 @@
           <span class="bell-num-badge" id="badge-bell-count">0</span>
         </div>
 
-        <!-- Relógio Digital em Tempo Real -->
-        <div class="clock-display" id="header-realtime-clock">--:--</div>
+        <!-- Busca Rápida de Pedidos (no lugar do horário, com 1 única lupa) -->
+        <div class="search-input-wrap header-search-box" id="admin-header-search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="kanban-search" placeholder="Buscar por nº (#123) ou nome..." oninput="handleKanbanSearchInput()">
+          <button type="button" id="btn-clear-search" class="btn-clear-search" onclick="clearKanbanSearch()" title="Limpar busca" style="display:none">✕</button>
+        </div>
 
         <!-- Perfil Admin & Sair -->
         <div class="admin-user-pill">
@@ -133,6 +148,8 @@
       </button>
     </nav>
   </div>
+  <!-- Backdrop para fechar o menu mobile ao tocar fora -->
+  <div id="admin-nav-backdrop" class="admin-nav-backdrop" onclick="closeAdminMobileNav()"></div>
   <div class="admin-topbar-spacer" id="admin-topbar-spacer"></div>
 
   <!-- Conteúdo das Abas -->
@@ -142,11 +159,6 @@
     <div class="tab-pane active" id="tab-kanban">
       <!-- Barra de Pesquisa e Filtros Rápidos do Kanban -->
       <div class="kanban-filters-bar">
-        <div class="search-input-wrap">
-          <span class="search-icon">🔍</span>
-          <input type="text" id="kanban-search" placeholder="🔍 Buscar por nº do pedido (#123) ou nome do cliente..." oninput="handleKanbanSearchInput()">
-          <button type="button" id="btn-clear-search" class="btn-clear-search" onclick="clearKanbanSearch()" title="Limpar busca" style="display:none">✕</button>
-        </div>
         
         <select id="kanban-status-filter" onchange="handleKanbanFilterChange()">
           <option value="all">⚡ Todos os Status</option>
