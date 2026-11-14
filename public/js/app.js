@@ -586,7 +586,7 @@ function renderProductCard(prod) {
   }
 
   return `
-    <div class="card ${prod.isNewLaunch ? 'card-launch' : ''}" data-id="${prod.id}">
+    <div class="card ${prod.isNewLaunch ? 'card-launch' : ''}" data-id="${prod.id}" onclick="openItemModal('${prod.id}')" style="cursor:pointer">
       <div class="ic">
         ${badgeHtml}
         <img src="${encodeURI(imgUrl)}" alt="${esc(prod.name)}" loading="lazy" onerror="this.src='imagens/do seu jeitinho.png'">
@@ -595,7 +595,7 @@ function renderProductCard(prod) {
       <p class="card-desc">${esc(prod.description || '')}</p>
       <div class="card-ft">
         ${priceHtml}
-        <button type="button" class="btn-order" onclick="openItemModal('${prod.id}')">${btnLabel}</button>
+        <button type="button" class="btn-order" onclick="event.stopPropagation(); openItemModal('${prod.id}')">${btnLabel}</button>
       </div>
     </div>
   `;
@@ -606,24 +606,38 @@ window.openItemModal = function(productId) {
   const prod = (CATALOG.products || []).find(p => p.id === productId);
   if (!prod) return;
 
+  // REGRA 1: Sempre inicia com estado 100% limpo a cada abertura
   CURRENT_ITEM_STATE = {
     product: prod,
-    selectedSizeIdx: 0,
-    accompaniments: [],
-    extras: [],
-    fruits: [],
-    note: '',
-    quantity: 1
+    selectedSizeIdx: 0,        // Tamanho padrão (primeiro da lista)
+    accompaniments: [],        // Nenhum acompanhamento selecionado
+    extras: [],                // Nenhum adicional extra marcado
+    fruits: [],                // Nenhuma fruta marcada
+    note: '',                  // Campo de observação limpo
+    quantity: 1                // Quantidade igual a 1
   };
 
   renderItemModal();
   showSheet();
+
+  // Garante que o campo de observação no DOM fique limpo e rola ao topo
+  const obsEl = document.getElementById('modal-obs');
+  if (obsEl) obsEl.value = '';
+  const sheet = $('#sheet');
+  if (sheet) sheet.scrollTop = 0;
 };
 
 function renderItemModal() {
   const st = CURRENT_ITEM_STATE;
+  if (!st || !st.product) return;
   const prod = st.product;
   const sheet = $('#sheet');
+
+  // Preserva o que o cliente digitou no campo de observação nesta personalização atual
+  const existingObs = document.getElementById('modal-obs');
+  if (existingObs) {
+    st.note = existingObs.value;
+  }
 
   const selectedSizeObj = prod.prices[st.selectedSizeIdx] || prod.prices[0];
   const basePrice = selectedSizeObj?.promoPrice != null ? selectedSizeObj.promoPrice : (selectedSizeObj?.price || 0);
@@ -680,7 +694,6 @@ function renderItemModal() {
     const ext = availableExtras.find(e => e.id === extId);
     if (ext) {
       if (ext.isFruitExtra) {
-        // Cobrança de cada fruta adicionada (1 fruta = R$ 3,90, 2 frutas = R$ 7,80, etc.)
         extrasTotal += ext.price * st.fruits.length;
       } else {
         extrasTotal += ext.price;
@@ -788,7 +801,7 @@ function renderItemModal() {
   // Observações e Quantidade
   h += `
     <h4>Observações para a Produção</h4>
-    <textarea id="modal-obs" rows="2" placeholder="Ex: sem granola, enviar colher e guardanapo, etc." oninput="CURRENT_ITEM_STATE.note = this.value">${esc(st.note)}</textarea>
+    <textarea id="modal-obs" rows="2" placeholder="Ex: sem granola, enviar colher e guardanapo, etc." autocomplete="off" oninput="if(CURRENT_ITEM_STATE) CURRENT_ITEM_STATE.note = this.value">${esc(st.note || '')}</textarea>
 
     <div class="qty">
       <button onclick="changeQuantity(-1)">−</button>
@@ -805,11 +818,14 @@ function renderItemModal() {
 
 window.selectSize = function(idx) {
   if (!CURRENT_ITEM_STATE) return;
+  const existingObs = document.getElementById('modal-obs');
+  if (existingObs) {
+    CURRENT_ITEM_STATE.note = existingObs.value;
+  }
   CURRENT_ITEM_STATE.selectedSizeIdx = idx;
   const prod = CURRENT_ITEM_STATE.product;
   const selectedSizeObj = prod.prices[idx] || prod.prices[0];
   const sizeMl = selectedSizeObj?.size || 500;
-  const isMonte = prod.id === 'prod_monte' || prod.categorySlug === 'monte' || prod.name.toLowerCase().includes('monte seu');
 
   let maxAcomp = selectedSizeObj?.maxAccompaniments;
   if (maxAcomp === undefined || maxAcomp === null) {
@@ -832,10 +848,14 @@ window.toggleAccompaniment = function(name) {
   const st = CURRENT_ITEM_STATE;
   if (!st) return;
 
+  const existingObs = document.getElementById('modal-obs');
+  if (existingObs) {
+    st.note = existingObs.value;
+  }
+
   const prod = st.product;
   const selectedSizeObj = prod.prices[st.selectedSizeIdx] || prod.prices[0];
   const sizeMl = selectedSizeObj?.size || 500;
-  const isMonte = prod.id === 'prod_monte' || prod.categorySlug === 'monte' || prod.name.toLowerCase().includes('monte seu');
 
   let maxAcomp = selectedSizeObj?.maxAccompaniments;
   if (maxAcomp === undefined || maxAcomp === null) {
@@ -861,6 +881,11 @@ window.toggleExtra = function(extId) {
   const st = CURRENT_ITEM_STATE;
   if (!st) return;
 
+  const existingObs = document.getElementById('modal-obs');
+  if (existingObs) {
+    st.note = existingObs.value;
+  }
+
   const idx = st.extras.indexOf(extId);
   if (idx !== -1) {
     st.extras.splice(idx, 1);
@@ -878,6 +903,11 @@ window.toggleFruit = function(fruitName) {
   const st = CURRENT_ITEM_STATE;
   if (!st) return;
 
+  const existingObs = document.getElementById('modal-obs');
+  if (existingObs) {
+    st.note = existingObs.value;
+  }
+
   const idx = st.fruits.indexOf(fruitName);
   if (idx !== -1) {
     st.fruits.splice(idx, 1);
@@ -893,6 +923,10 @@ window.toggleFruit = function(fruitName) {
 
 window.changeQuantity = function(delta) {
   if (!CURRENT_ITEM_STATE) return;
+  const existingObs = document.getElementById('modal-obs');
+  if (existingObs) {
+    CURRENT_ITEM_STATE.note = existingObs.value;
+  }
   CURRENT_ITEM_STATE.quantity = Math.max(1, CURRENT_ITEM_STATE.quantity + delta);
   renderItemModal();
 };
@@ -924,6 +958,10 @@ window.addItemToCart = function() {
     return toast('Por favor, selecione qual fruta deseja adicionar no seu açaí ou desmarque a opção.');
   }
 
+  // Captura observação mais recente diretamente do campo de texto
+  const obsEl = document.getElementById('modal-obs');
+  const finalNote = obsEl ? obsEl.value.trim() : (st.note || '').trim();
+
   let extrasTotal = 0;
   const extrasNames = [];
   st.extras.forEach(extId => {
@@ -935,7 +973,7 @@ window.addItemToCart = function() {
         extrasNames.push(`Frutas: ${st.fruits.join(', ')} (+${R(cost)})`);
       } else {
         extrasTotal += ext.price;
-        extrasNames.push(ext.name);
+        extrasNames.push(`${ext.name} (+${R(ext.price)})`);
       }
     }
   });
@@ -943,17 +981,31 @@ window.addItemToCart = function() {
   const unitPrice = basePrice + extrasTotal;
   const itemTitle = `${prod.name} ${selectedSizeObj.size} ml`;
 
-  CART.push({
+  // REGRA 2: Cria um novo item no carrinho com ID ÚNICO e combinação exata escolhida
+  const cartItemId = 'copo_' + Date.now() + '_' + Math.random().toString(36).substr(2, 7);
+
+  const cartItem = {
+    id: cartItemId,
     productId: prod.id,
     name: itemTitle,
+    productName: prod.name,
     size: selectedSizeObj.size,
-    quantity: st.quantity,
-    unitPrice,
+    quantity: Math.max(1, st.quantity || 1),
+    unitPrice: unitPrice,
+    basePrice: basePrice,
+    extrasTotal: extrasTotal,
     accompaniments: [...st.accompaniments],
-    extras: extrasNames,
+    extras: [...extrasNames],
     fruits: [...st.fruits],
-    note: st.note.trim()
-  });
+    note: finalNote,
+    addedAt: Date.now()
+  };
+
+  // NUNCA altera, substitui ou mistura com os copos existentes: adiciona sempre como novo item
+  CART.push(cartItem);
+
+  // Limpa o estado ativo imediatamente para que próximas aberturas iniciem limpas
+  CURRENT_ITEM_STATE = null;
 
   toast(`${itemTitle} adicionado ao pedido!`);
   closeSheet();
@@ -1058,21 +1110,58 @@ function renderCartModal() {
     return;
   }
 
+  // REGRA 3: Exibição separada e independente de cada copo montado
   CART.forEach((it, idx) => {
+    const acompText = Array.isArray(it.accompaniments) && it.accompaniments.length > 0 ? it.accompaniments.join(', ') : '';
+    const extrasText = Array.isArray(it.extras) && it.extras.length > 0 ? it.extras.join(', ') : '';
+    const noteText = it.note || '';
+
     h += `
-      <div class="ci">
-        <div>
-          <b>${esc(it.name)}</b>
-          ${it.accompaniments.length > 0 ? `<small>Acomp: ${esc(it.accompaniments.join(', '))}</small>` : ''}
-          ${it.extras.length > 0 ? `<small>Extras: ${esc(it.extras.join(', '))}</small>` : ''}
-          ${it.note ? `<small>Obs: ${esc(it.note)}</small>` : ''}
+      <div class="cart-item-card" data-item-id="${it.id}">
+        <div class="cart-item-header">
+          <div class="cart-item-main-info">
+            <b class="cart-item-title">${esc(it.name)}</b>
+            <span class="cart-item-unit-tag">${R(it.unitPrice)} un.</span>
+          </div>
+          <button type="button" class="btn-cart-remove" onclick="removeCartItem('${it.id}')" title="Remover este copo do pedido">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+              <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+            </svg>
+          </button>
         </div>
-        <div class="qty sm">
-          <button onclick="changeCartQty(${idx}, -1)">−</button>
-          <b>${it.quantity}</b>
-          <button onclick="changeCartQty(${idx}, 1)">+</button>
+
+        ${acompText ? `
+          <div class="cart-item-detail">
+            <span class="detail-badge acomp">Acompanhamentos</span>
+            <span class="detail-content">${esc(acompText)}</span>
+          </div>
+        ` : ''}
+
+        ${extrasText ? `
+          <div class="cart-item-detail">
+            <span class="detail-badge extra">Adicionais</span>
+            <span class="detail-content">${esc(extrasText)}</span>
+          </div>
+        ` : ''}
+
+        ${noteText ? `
+          <div class="cart-item-detail">
+            <span class="detail-badge note">Obs</span>
+            <span class="detail-content">${esc(noteText)}</span>
+          </div>
+        ` : ''}
+
+        <div class="cart-item-footer">
+          <div class="qty sm">
+            <button type="button" onclick="changeCartQty('${it.id}', -1)" title="Diminuir">−</button>
+            <b>${it.quantity}</b>
+            <button type="button" onclick="changeCartQty('${it.id}', 1)" title="Aumentar">+</button>
+          </div>
+          <div class="cart-item-subtotal">
+            <span class="subtotal-label">Subtotal:</span>
+            <b>${R(it.unitPrice * it.quantity)}</b>
+          </div>
         </div>
-        <b>${R(it.unitPrice * it.quantity)}</b>
       </div>
     `;
   });
@@ -1112,13 +1201,32 @@ function renderCartModal() {
   sheet.innerHTML = h;
 }
 
-window.changeCartQty = function(idx, delta) {
-  CART[idx].quantity += delta;
-  if (CART[idx].quantity <= 0) {
-    CART.splice(idx, 1);
+window.changeCartQty = function(idOrIdx, delta) {
+  let itemIndex = -1;
+  if (typeof idOrIdx === 'string') {
+    itemIndex = CART.findIndex(it => it.id === idOrIdx);
+  } else {
+    itemIndex = idOrIdx;
+  }
+
+  if (itemIndex < 0 || itemIndex >= CART.length) return;
+
+  CART[itemIndex].quantity += delta;
+  if (CART[itemIndex].quantity <= 0) {
+    CART.splice(itemIndex, 1);
   }
   updateCartBar();
   renderCartModal();
+};
+
+window.removeCartItem = function(cartItemId) {
+  const itemIndex = CART.findIndex(it => it.id === cartItemId);
+  if (itemIndex !== -1) {
+    CART.splice(itemIndex, 1);
+    updateCartBar();
+    renderCartModal();
+    toast('Copo removido do pedido.');
+  }
 };
 
 window.applyCoupon = async function() {
@@ -2026,6 +2134,7 @@ window.closeSheet = function() {
   $('#ov').classList.remove('on');
   $('#sheet').classList.remove('on');
   document.body.style.overflow = '';
+  CURRENT_ITEM_STATE = null;
 };
 
 function bindEvents() {
