@@ -59,14 +59,17 @@ describe('Explosão Açaí — Testes das 4 Correções Finais', () => {
     const confirmed = orderService.confirmPaymentApproved(order.id);
     assert.ok(confirmed, 'Deve retornar pedido atualizado');
     assert.equal(confirmed.payment.status, PaymentStatus.APPROVED, 'Status do pagamento deve ser APPROVED (Pago)');
-    assert.equal(confirmed.status, OrderStatus.PREPARING, 'Status do pedido deve mudar para PREPARING');
+    assert.equal(confirmed.status, OrderStatus.RECEIVED, 'Pedido deve permanecer em NOVOS PEDIDOS (RECEIVED) até movimentação manual');
 
     // Segunda chamada (simulação de webhook duplicado pelo gateway)
     const secondCall = orderService.confirmPaymentApproved(order.id);
     assert.equal(secondCall.payment.status, PaymentStatus.APPROVED);
-    // Deve retornar sem erros e sem duplicar notificações
-    assert.ok(secondCall.notifiedStatuses.includes('preparing'));
-    assert.equal(secondCall.notifiedStatuses.filter(s => s === 'preparing').length, 1, 'Não deve duplicar status notificado');
+    assert.equal(secondCall.status, OrderStatus.RECEIVED, 'Não deve alterar status do pedido em chamadas duplicadas');
+
+    // Movimentação manual pelo administrador para PREPARING
+    const advanced = orderService.updateOrderStatus(order.id, OrderStatus.PREPARING);
+    assert.equal(advanced.status, OrderStatus.PREPARING, 'Após o administrador aceitar, status avança para PREPARING');
+    assert.ok(advanced.notifiedStatuses.includes('preparing'), 'Notifica WhatsApp apenas após envio para preparo');
   });
 
   test('4. Notificações WhatsApp: Formatação DDI 55 + DDD + número e textos exatos solicitados', () => {

@@ -497,32 +497,19 @@ export class OrderService {
       return new Order(order);
     }
 
+    // Regra: Atualiza o status financeiro para PAGO, mas NÃO movimenta automaticamente para PREPARING!
+    // O pedido permanece na coluna atual (ex: NOVOS PEDIDOS) aguardando aceite manual do administrador.
     order.payment.status = PaymentStatus.APPROVED;
     order.payment.paidAt = new Date().toISOString();
-    order.status = OrderStatus.PREPARING;
     order.updatedAt = new Date().toISOString();
-
-    // Notificação WhatsApp para 'Em preparo' (apenas uma única vez)
-    if (!Array.isArray(order.notifiedStatuses)) {
-      order.notifiedStatuses = [];
-    }
-    let shouldNotifyWpp = false;
-    if (!order.notifiedStatuses.includes('preparing')) {
-      order.notifiedStatuses.push('preparing');
-      shouldNotifyWpp = true;
-    }
 
     this.db.save();
 
     const updated = new Order(order);
     wsHub.notifyOrderStatus(updated);
 
-    // AGORA QUE O BANCO CONFIRMOU: DISPARA A IMPRESSÃO!
+    // Agora que o pagamento foi confirmado pelo banco, dispara auto-impressão se configurada
     this.autoPrintIfConfigured(updated);
-
-    if (shouldNotifyWpp) {
-      whatsAppNotificationService.notifyStatusChange(updated, OrderStatus.PREPARING).catch(() => {});
-    }
 
     return updated;
   }

@@ -101,6 +101,12 @@
               <span class="bell-emoji">🔔</span>
               <span class="bell-num-badge" id="badge-bell-count">0</span>
             </div>
+
+            <!-- Central Inteligente de Notificações Mobile (Próximo ao Sino) -->
+            <div class="bell-alert-btn notif-center-btn" id="btn-notifications-drawer-toggle" onclick="toggleNotificationsDrawer()" title="Central Inteligente de Notificações">
+              <span class="notif-center-icon">💬</span>
+              <span class="bell-num-badge" id="badge-unread-notifications" style="display:none">0</span>
+            </div>
           </div>
         </div>
 
@@ -229,7 +235,7 @@
         </div>
       </div>
 
-      <!-- Switcher de Modos de Visualização do Kanban -->
+      <!-- Switcher de Modos de Visualização do Kanban (Desktop) e Menu Operações (Mobile) -->
       <div class="kanban-view-switcher">
         <button type="button" class="view-switch-btn active" id="btn-view-live" onclick="setKanbanViewMode('live')" title="Visualização operacional ao vivo em 4 colunas">
           🔥 Operação Ao Vivo (4 Colunas)
@@ -239,6 +245,12 @@
         </button>
         <button type="button" class="view-switch-btn" id="btn-view-archive" onclick="setKanbanViewMode('archive')" title="Visualizar histórico permanente, devoluções e cancelamentos">
           📦 Histórico & Devolvidos (3 Colunas)
+        </button>
+
+        <!-- Botão Menu Operações Completo (Exclusivo Mobile) -->
+        <button type="button" class="btn-operacoes-mobile" id="btn-operacoes-mobile" onclick="toggleOperacoesMenu()" title="Ver todas as operações do sistema">
+          <span>⚡ Menu Operações</span>
+          <span class="op-chevron">▾</span>
         </button>
       </div>
 
@@ -1347,6 +1359,133 @@
       <div style="display:flex;gap:10px">
         <button id="confirm-modal-btn-ok" class="btn-sm btn-next" style="flex:1;padding:12px;font-size:14px">Confirmar</button>
         <button id="confirm-modal-btn-cancel" class="btn-sm btn-secondary" style="flex:1;padding:12px;font-size:14px" onclick="closeConfirmModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal / Gaveta de Notificações Inteligentes Mobile -->
+  <div id="admin-notifications-drawer" class="notif-drawer-backdrop" style="display:none" onclick="handleNotifBackdropClick(event)">
+    <div class="notif-drawer-sheet" onclick="event.stopPropagation()">
+      <div class="notif-drawer-header">
+        <div class="notif-drawer-title-wrap">
+          <span class="notif-drawer-icon">🔔</span>
+          <h3>Notificações</h3>
+          <span class="notif-badge-pill" id="notif-drawer-unread-count">0 novas</span>
+        </div>
+        <div class="notif-drawer-actions">
+          <button type="button" class="btn-notif-mark-all" onclick="markAllNotificationsAsRead()" title="Marcar todas como lidas">✓ Lidas</button>
+          <button type="button" class="btn-notif-close" onclick="closeNotificationsDrawer()" title="Fechar">✕</button>
+        </div>
+      </div>
+      <div class="notif-drawer-body" id="notif-drawer-list">
+        <!-- Renderizado dinamicamente via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal / Menu de Todas as Operações do Sistema (Exclusivo Mobile) -->
+  <div id="admin-operacoes-modal" class="operacoes-modal-backdrop" style="display:none" onclick="handleOperacoesBackdropClick(event)">
+    <div class="operacoes-modal-sheet" onclick="event.stopPropagation()">
+      <div class="operacoes-modal-header">
+        <div class="operacoes-title-wrap">
+          <span class="op-header-icon">⚡</span>
+          <h3>Menu de Operações</h3>
+        </div>
+        <button type="button" class="btn-op-close" onclick="closeOperacoesMenu()" title="Fechar Menu">✕</button>
+      </div>
+      <p class="operacoes-subtitle">Selecione uma operação para acessar diretamente:</p>
+      <div class="operacoes-grid-list">
+        <div class="op-item-card" onclick="selectOperationTab('tab-kanban')">
+          <span class="op-item-icon">📋</span>
+          <div class="op-item-info">
+            <b>Pedidos & Cozinha</b>
+            <span>Kanban ao vivo de novos pedidos e preparo</span>
+          </div>
+        </div>
+        <div class="op-item-card" onclick="selectOperationTab('tab-chat')">
+          <span class="op-item-icon">💬</span>
+          <div class="op-item-info">
+            <b>Chat de Clientes</b>
+            <span>Atendimento em tempo real com clientes</span>
+          </div>
+        </div>
+        <div class="op-item-card" onclick="selectOperationModal('routes')">
+          <span class="op-item-icon">📍</span>
+          <div class="op-item-info">
+            <b>Rotas de Entrega & GPS</b>
+            <span>Mapa de entregas, paradas e rotas de motoboy</span>
+          </div>
+        </div>
+        <div class="op-item-card" onclick="selectOperationTab('tab-products')">
+          <span class="op-item-icon">🍨</span>
+          <div class="op-item-info">
+            <b>Cardápio & Estoque</b>
+            <span>Produtos, tamanhos, preços e estoque</span>
+          </div>
+        </div>
+        <div class="op-item-card" onclick="selectOperationTab('tab-accompaniments')">
+          <span class="op-item-icon">☕</span>
+          <div class="op-item-info">
+            <b>Acompanhamentos</b>
+            <span>Frutas, cremes, caldas e coberturas grátis</span>
+          </div>
+        </div>
+        <div class="op-item-card" onclick="selectOperationTab('tab-extras')">
+          <span class="op-item-icon">🍫</span>
+          <div class="op-item-info">
+            <b>Adicionais Pagos</b>
+            <span>Complementos, nutella e adicionais extras</span>
+          </div>
+        </div>
+        <div class="op-item-card" onclick="selectOperationTab('tab-categories')">
+          <span class="op-item-icon">🏷️</span>
+          <div class="op-item-info">
+            <b>Categorias</b>
+            <span>Organização e ordem das seções do cardápio</span>
+          </div>
+        </div>
+        <div class="op-item-card" onclick="selectOperationTab('tab-reports')">
+          <span class="op-item-icon">📊</span>
+          <div class="op-item-info">
+            <b>Relatórios & Vendas</b>
+            <span>Faturamento diário, vendas por período e lucros</span>
+          </div>
+        </div>
+        <div class="op-item-card" onclick="selectOperationTab('tab-coupons')">
+          <span class="op-item-icon">🎟️</span>
+          <div class="op-item-info">
+            <b>Cupons de Desconto</b>
+            <span>Cupons promocionais e regras de desconto</span>
+          </div>
+        </div>
+        <div class="op-item-card" onclick="selectOperationTab('tab-printers')">
+          <span class="op-item-icon">🖨️</span>
+          <div class="op-item-info">
+            <b>Impressoras & Comandas</b>
+            <span>Configuração térmica para cozinha e balcão</span>
+          </div>
+        </div>
+        <div class="op-item-card" onclick="selectOperationTab('tab-store')">
+          <span class="op-item-icon">⚙️</span>
+          <div class="op-item-info">
+            <b>Configurações da Loja</b>
+            <span>Horários de funcionamento de Brasília e dados</span>
+          </div>
+        </div>
+        <div class="op-item-card" onclick="selectOperationLink('motoboy.html')">
+          <span class="op-item-icon">🛵</span>
+          <div class="op-item-info">
+            <b>Painel do Entregador</b>
+            <span>Acesso externo exclusivo para motoboy</span>
+          </div>
+        </div>
+        <div class="op-item-card" onclick="selectOperationLink('index.html')">
+          <span class="op-item-icon">📱</span>
+          <div class="op-item-info">
+            <b>Cardápio Digital</b>
+            <span>Visualizar o cardápio público como cliente</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>

@@ -221,6 +221,7 @@ async function initDashboard() {
   bindNavigation();
   updateHeaderKPIs();
   window.syncTopbarHeight();
+  initAdminNotifications();
 }
 
 // Conexão WebSocket para Atualizações em Tempo Real
@@ -241,6 +242,17 @@ function initWebSocket() {
           renderKanban();
           updateOrdersBadge();
           loadSalesReport({ period: $('#report-period-select')?.value || 'today' });
+          if (typeof window.addAdminNotification === 'function') {
+            window.addAdminNotification({
+              type: 'order',
+              referenceId: 'order_' + data.payload.id,
+              title: `Novo Pedido #${data.payload.orderNo || data.payload.id.slice(0, 6)}`,
+              description: `${data.payload.customer?.name || data.payload.customerName || 'Cliente'} • R$ ${Number(data.payload.total || 0).toFixed(2).replace('.', ',')}`,
+              icon: '🛍️',
+              targetTab: 'tab-kanban',
+              targetId: data.payload.id
+            });
+          }
         }
         if (data.event === 'ORDER_STATUS_CHANGED') {
           const idx = ORDERS.findIndex(o => o.id === data.payload.id);
@@ -252,6 +264,18 @@ function initWebSocket() {
           renderKanban();
           updateOrdersBadge();
           loadSalesReport({ period: $('#report-period-select')?.value || 'today' });
+
+          if (data.payload.payment?.status === 'approved' && data.payload.payment?.method === 'Pix' && typeof window.addAdminNotification === 'function') {
+            window.addAdminNotification({
+              type: 'payment',
+              referenceId: 'pix_approved_' + data.payload.id,
+              title: `Pix Aprovado #${data.payload.orderNo || data.payload.id.slice(0, 6)}`,
+              description: `Pagamento de R$ ${Number(data.payload.total || 0).toFixed(2).replace('.', ',')} confirmado para ${data.payload.customer?.name || data.payload.customerName || 'Cliente'}. Pronto para envio à cozinha!`,
+              icon: '💚',
+              targetTab: 'tab-kanban',
+              targetId: data.payload.id
+            });
+          }
         }
         if (data.event === 'ORDERS_ARCHIVED') {
           await loadOrders();
@@ -262,6 +286,18 @@ function initWebSocket() {
           loadChatConversations();
           if (ACTIVE_CHAT_PHONE === data.payload.customerPhone) {
             loadChatMessages(ACTIVE_CHAT_PHONE);
+          }
+          if (data.payload.sender !== 'admin' && typeof window.addAdminNotification === 'function') {
+            const isNew = !Array.isArray(CHAT_CONVERSATIONS) || !CHAT_CONVERSATIONS.some(c => c.customerPhone === data.payload.customerPhone);
+            window.addAdminNotification({
+              type: 'chat',
+              referenceId: 'chat_' + (data.payload.id || (data.payload.customerPhone + '_' + Date.now())),
+              title: isNew ? `Nova Conversa: ${data.payload.senderName || 'Cliente'}` : `Mensagem de ${data.payload.senderName || 'Cliente'}`,
+              description: data.payload.text || 'Nova mensagem recebida no chat de atendimento',
+              icon: isNew ? '👋' : '💬',
+              targetTab: 'tab-chat',
+              targetId: data.payload.customerPhone
+            });
           }
         }
         if (data.event === 'CHAT_CLOSED') {
@@ -1097,8 +1133,8 @@ function createOrderCardHtml(order, isHistory = false) {
       const isOnlinePending = !isDeliveryPayment && !isApproved;
       if (isOnlinePending) {
         nextAction = `
-          <button class="btn-sm btn-print" style="background:#059669;color:#fff;font-weight:700;font-size:11px;padding:4px 8px" onclick="simulateBankApproval('${order.id}')" title="Confirmar pagamento Pix recebido e aceitar pedido para a cozinha">
-            ✓ Confirmar Pix & Aceitar
+          <button class="btn-sm btn-print" style="background:#059669;color:#fff;font-weight:700;font-size:11px;padding:4px 8px" onclick="simulateBankApproval('${order.id}')" title="Confirmar pagamento Pix">
+            ✓ Confirmar Pix
           </button>
         `;
       } else {
@@ -1196,6 +1232,8 @@ function createOrderCardHtml(order, isHistory = false) {
       const isOnlinePending = !isDeliveryPayment && !isApproved;
       if (isOnlinePending) {
         statusSummary = `<span style="color:#f59e0b;font-weight:700">⏳ Aguardando Pagamento Pix</span>`;
+      } else if (order.payment?.method === 'Pix') {
+        statusSummary = `<span style="color:#34d399;font-weight:700">💚 Pix Pago (Aguardando Aceite)</span>`;
       } else {
         statusSummary = `<span style="color:#fde047;font-weight:600">Novos Pedidos (Aguardando Cozinha)</span>`;
       }
@@ -4734,4 +4772,283 @@ window.dispatchSelectedOrdersRoute = async function() {
   } catch (e) {
     adminToast('Erro ao atualizar status dos pedidos.', 'danger');
   }
+};
+
+// ==================== CENTRAL INTELIGENTE DE NOTIFICAÇÕES (MOBILE) ====================
+const NOTIF_STORAGE_KEY = 'explosa_admin_notifs_v2';
+
+function getAdminNotifications() {
+  try {
+    const raw = localStorage.getItem(NOTIF_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveAdminNotifications(notifs) {
+  try {
+    localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(notifs));
+  } catch (e) {}
+}
+
+function formatNotifTime(iso) {
+  try {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const now = new Date();
+    const diffMs = Math.max(0, now - d);
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return 'Agora';
+    if (diffMin < 60) return `há ${diffMin} min`;
+    const diffH = Math.floor(diffMin / 60);
+    if (diffH < 24) return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  } catch (e) {
+    return '';
+  }
+}
+
+window.addAdminNotification = function({ type = 'system', referenceId, title, description, icon = '🔔', targetTab = 'tab-kanban', targetId = null }) {
+  const notifs = getAdminNotifications();
+  const ref = referenceId || `notif_${Date.now()}`;
+  const existingIdx = notifs.findIndex(n => n.referenceId === ref);
+
+  if (existingIdx !== -1) {
+    notifs[existingIdx].title = title || notifs[existingIdx].title;
+    notifs[existingIdx].description = description || notifs[existingIdx].description;
+    notifs[existingIdx].timestamp = new Date().toISOString();
+    notifs[existingIdx].read = false;
+  } else {
+    notifs.unshift({
+      id: 'notif_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+      type,
+      referenceId: ref,
+      title: title || 'Notificação',
+      description: description || '',
+      timestamp: new Date().toISOString(),
+      read: false,
+      icon,
+      targetTab,
+      targetId
+    });
+    if (notifs.length > 50) notifs.pop();
+  }
+
+  saveAdminNotifications(notifs);
+  window.updateNotificationBadge();
+  window.renderNotificationsList();
+};
+
+window.updateNotificationBadge = function() {
+  const notifs = getAdminNotifications();
+  const unreadCount = notifs.filter(n => !n.read).length;
+
+  const badgeBtn = $('#badge-unread-notifications');
+  if (badgeBtn) {
+    if (unreadCount > 0) {
+      badgeBtn.textContent = unreadCount > 99 ? '99+' : unreadCount;
+      badgeBtn.style.display = 'flex';
+    } else {
+      badgeBtn.style.display = 'none';
+    }
+  }
+
+  const pillDrawer = $('#notif-drawer-unread-count');
+  if (pillDrawer) {
+    pillDrawer.textContent = unreadCount === 0 ? '0 novas' : (unreadCount === 1 ? '1 nova' : `${unreadCount} novas`);
+  }
+};
+
+window.renderNotificationsList = function() {
+  const container = $('#notif-drawer-list');
+  if (!container) return;
+  const notifs = getAdminNotifications();
+
+  if (notifs.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:32px 16px;color:rgba(255,255,255,0.4)">
+        <div style="font-size:32px;margin-bottom:8px">🔕</div>
+        <div style="font-weight:700;font-size:13px;color:#fff">Nenhuma notificação recente</div>
+        <p style="font-size:11px;margin-top:4px;color:rgba(255,255,255,0.6)">Novos pedidos, mensagens de chat e atualizações aparecerão aqui em tempo real.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = notifs.map(n => `
+    <div class="notif-item-card ${n.read ? '' : 'unread'}" onclick="openNotificationItem('${n.id}')" title="Clique para abrir">
+      <div class="notif-item-icon-box">${n.icon || '🔔'}</div>
+      <div class="notif-item-content">
+        <div class="notif-item-top">
+          <div class="notif-item-title">${esc(n.title)}</div>
+          <div class="notif-item-time">${formatNotifTime(n.timestamp)}</div>
+        </div>
+        <div class="notif-item-desc">${esc(n.description)}</div>
+      </div>
+      ${!n.read ? '<span style="width:8px;height:8px;background:#facc15;border-radius:50%;align-self:center;flex-shrink:0;box-shadow:0 0 6px #facc15"></span>' : ''}
+    </div>
+  `).join('');
+};
+
+window.markAllNotificationsAsRead = function() {
+  const notifs = getAdminNotifications();
+  if (notifs.length === 0) return;
+  notifs.forEach(n => { n.read = true; });
+  saveAdminNotifications(notifs);
+  window.updateNotificationBadge();
+  window.renderNotificationsList();
+  adminToast('Todas as notificações foram marcadas como lidas.', 'info');
+};
+
+window.openNotificationItem = function(notifId) {
+  const notifs = getAdminNotifications();
+  const item = notifs.find(n => n.id === notifId);
+  if (!item) return;
+
+  item.read = true;
+  saveAdminNotifications(notifs);
+  window.updateNotificationBadge();
+  window.renderNotificationsList();
+  window.closeNotificationsDrawer();
+
+  if (item.targetTab === 'tab-kanban') {
+    window.switchAdminTab('tab-kanban');
+    if (item.targetId) {
+      setTimeout(() => {
+        const card = document.getElementById(`card-${item.targetId}`);
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          card.style.outline = '3px solid #facc15';
+          card.style.boxShadow = '0 0 24px rgba(250, 204, 21, 0.7)';
+          setTimeout(() => {
+            card.style.outline = '';
+            card.style.boxShadow = '';
+          }, 3500);
+        }
+      }, 300);
+    }
+  } else if (item.targetTab === 'tab-chat') {
+    window.switchAdminTab('tab-chat');
+    if (item.targetId) {
+      setTimeout(() => {
+        const conv = (CHAT_CONVERSATIONS || []).find(c => c.customerPhone === item.targetId);
+        if (conv) {
+          window.selectChat(conv.customerPhone, conv.customerName);
+        } else if (typeof loadChatConversations === 'function') {
+          loadChatConversations().then(() => {
+            const found = (CHAT_CONVERSATIONS || []).find(c => c.customerPhone === item.targetId);
+            if (found) window.selectChat(found.customerPhone, found.customerName);
+          });
+        }
+      }, 300);
+    }
+  } else if (item.targetTab === 'routes') {
+    if (typeof window.openDeliveryMapModal === 'function') {
+      window.openDeliveryMapModal();
+    }
+  } else if (item.targetTab) {
+    window.switchAdminTab(item.targetTab);
+  }
+};
+
+window.toggleNotificationsDrawer = function() {
+  const drawer = $('#admin-notifications-drawer');
+  if (!drawer) return;
+  const isOpening = !drawer.classList.contains('active');
+  if (isOpening) {
+    window.renderNotificationsList();
+    window.updateNotificationBadge();
+    drawer.classList.add('active');
+    drawer.style.display = 'flex';
+  } else {
+    drawer.classList.remove('active');
+    drawer.style.display = 'none';
+  }
+};
+
+window.closeNotificationsDrawer = function() {
+  const drawer = $('#admin-notifications-drawer');
+  if (drawer) {
+    drawer.classList.remove('active');
+    drawer.style.display = 'none';
+  }
+};
+
+window.handleNotifBackdropClick = function(event) {
+  if (event.target === $('#admin-notifications-drawer')) {
+    window.closeNotificationsDrawer();
+  }
+};
+
+function initAdminNotifications() {
+  let notifs = getAdminNotifications();
+  if (!localStorage.getItem('explosa_admin_notifs_initialized')) {
+    localStorage.setItem('explosa_admin_notifs_initialized', 'true');
+    if (notifs.length === 0) {
+      notifs = [
+        {
+          id: 'notif_welcome',
+          type: 'system',
+          referenceId: 'welcome',
+          title: 'Gestor Pro Conectado',
+          description: 'Painel operacional ativo com notificações em tempo real e rotas inteligentes.',
+          timestamp: new Date().toISOString(),
+          read: false,
+          icon: '⚡',
+          targetTab: 'tab-kanban'
+        }
+      ];
+      saveAdminNotifications(notifs);
+    }
+  }
+  window.updateNotificationBadge();
+  window.renderNotificationsList();
+}
+
+// ==================== MENU COMPLETO DE OPERAÇÕES (MOBILE) ====================
+window.toggleOperacoesMenu = function() {
+  const modal = $('#admin-operacoes-modal');
+  if (!modal) return;
+  const isOpening = !modal.classList.contains('active');
+  if (isOpening) {
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+  } else {
+    modal.classList.remove('active');
+    modal.style.display = 'none';
+  }
+};
+
+window.closeOperacoesMenu = function() {
+  const modal = $('#admin-operacoes-modal');
+  if (modal) {
+    modal.classList.remove('active');
+    modal.style.display = 'none';
+  }
+};
+
+window.handleOperacoesBackdropClick = function(event) {
+  if (event.target === $('#admin-operacoes-modal')) {
+    window.closeOperacoesMenu();
+  }
+};
+
+window.selectOperationTab = function(tabId) {
+  window.closeOperacoesMenu();
+  window.switchAdminTab(tabId);
+};
+
+window.selectOperationModal = function(type) {
+  window.closeOperacoesMenu();
+  if (type === 'routes') {
+    if (typeof window.openDeliveryMapModal === 'function') {
+      window.openDeliveryMapModal();
+    }
+  }
+};
+
+window.selectOperationLink = function(url) {
+  window.closeOperacoesMenu();
+  window.open(url, '_blank');
 };
