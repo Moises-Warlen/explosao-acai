@@ -81,63 +81,72 @@
       "name": "Combos Especiais",
       "slug": "combos",
       "order": 4,
-      "active": true
+      "active": true,
+      "subtitle": "Perfeitos para dividir e aproveitar"
     },
     {
       "id": "cat_classica",
       "name": "Explosão Clássica",
       "slug": "classica",
       "order": 5,
-      "active": true
+      "active": true,
+      "subtitle": "Combinações deliciosas para todos os dias"
     },
     {
       "id": "cat_premium",
       "name": "Explosão Premium",
       "slug": "premium",
       "order": 6,
-      "active": true
+      "active": true,
+      "subtitle": "Para quem gosta de uma combinação especial"
     },
     {
       "id": "cat_monte",
       "name": "Monte seu Açaí",
       "slug": "monte",
       "order": 7,
-      "active": true
+      "active": true,
+      "subtitle": "Você escolhe, a gente prepara"
     },
     {
       "id": "cat_kids",
       "name": "Explosão Kids",
       "slug": "kids",
       "order": 8,
-      "active": true
+      "active": true,
+      "subtitle": "Pequenos copos, grandes momentos"
     },
     {
       "id": "cat_natural",
       "name": "Explosão Natural",
       "slug": "natural",
       "order": 9,
-      "active": true
+      "active": true,
+      "subtitle": "Pequenos copos, grandes momentos"
     },
     {
       "id": "cat_fitness",
       "name": "Explosão Fitness",
       "slug": "fitness",
       "order": 10,
-      "active": true
+      "active": true,
+      "subtitle": "Opções com ingredientes selecionados"
     },
     {
       "id": "cat_garrafa",
       "name": "Açaí na Garrafa",
       "slug": "garrafa",
       "order": 11,
-      "active": true
+      "active": true,
+      "subtitle": "Leve o sabor do açaí para onde quiser"
     },
     {
       "id": "cat_levar",
       "name": "Explosão para Levar",
       "slug": "levar",
       "order": 12,
-      "active": true
+      "active": true,
+      "subtitle": "Leve o sabor do açaí para onde quiser"
     }
   ],
   "printers": [
@@ -2379,8 +2388,8 @@
         "received",
         "delivered"
       ],
-      "archivedToHistory": false,
-      "archivedAt": null,
+      "archivedToHistory": true,
+      "archivedAt": "2026-11-14T06:38:06.843Z",
       "preparedAt": null,
       "deliveredAt": "2026-11-13T03:45:58.653Z",
       "preparationTimeMinutes": null,
@@ -2390,7 +2399,7 @@
       "returnReason": null,
       "returnedAt": null,
       "createdAt": "2026-11-13T03:45:58.641Z",
-      "updatedAt": "2026-11-13T03:45:58.653Z",
+      "updatedAt": "2026-11-14T06:38:06.843Z",
       "printed": true
     },
     {

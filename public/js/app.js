@@ -300,6 +300,30 @@ async function loadBestSellers() {
   }
 }
 
+// Mapa de Subtítulos Estratégicos das Categorias (sem ícones de IA, conforme solicitação)
+const CATEGORY_SUBTITLES = {
+  'mais-vendidos': 'Os favoritos de quem já experimentou',
+  'lancamentos': 'Descubra as combinações que acabaram de chegar',
+  'promocoes': 'Ofertas especiais da Explosão Açaí',
+  'combos': 'Perfeitos para dividir e aproveitar',
+  'classica': 'Combinações deliciosas para todos os dias',
+  'premium': 'Para quem gosta de uma combinação especial',
+  'monte': 'Você escolhe, a gente prepara',
+  'kids': 'Pequenos copos, grandes momentos',
+  'natural': 'Pequenos copos, grandes momentos',
+  'fitness': 'Opções com ingredientes selecionados',
+  'garrafa': 'Leve o sabor do açaí para onde quiser',
+  'levar': 'Leve o sabor do açaí para onde quiser'
+};
+
+function getCategorySubtitle(catOrSlug) {
+  if (!catOrSlug) return '';
+  if (typeof catOrSlug === 'object') {
+    return catOrSlug.subtitle || CATEGORY_SUBTITLES[catOrSlug.slug] || '';
+  }
+  return CATEGORY_SUBTITLES[catOrSlug] || '';
+}
+
 // Renderiza Menu de Categorias Dinâmico (Ordem Estratégica 1 a 12 & Menu Hambúrguer)
 function renderNavigation() {
   const nav = $('#category-nav') || $('.cats');
@@ -314,10 +338,19 @@ function renderNavigation() {
 
   // 1. Mais Vendidos
   if (BEST_SELLERS.length > 0) {
-    h += `<a href="#mais-vendidos" class="cat-pill active">Mais Vendidos</a>`;
+    const sub = getCategorySubtitle('mais-vendidos');
+    h += `
+      <a href="#mais-vendidos" class="cat-pill cat-card active">
+        <strong class="cat-card-title">Mais Vendidos</strong>
+        <span class="cat-card-sub">${esc(sub)}</span>
+      </a>
+    `;
     drawerHtml += `
       <div class="categories-drawer-item" onclick="selectCategoryFromDrawer('mais-vendidos')">
-        <span>Mais Vendidos</span>
+        <div class="categories-drawer-info">
+          <strong class="drawer-item-title">Mais Vendidos</strong>
+          <span class="drawer-item-sub">${esc(sub)}</span>
+        </div>
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
       </div>
     `;
@@ -326,10 +359,20 @@ function renderNavigation() {
 
   // 2. Novidades e Lançamentos
   if (launches.length > 0) {
-    h += `<a href="#lancamentos" class="cat-pill ${!firstSet ? 'active' : ''}">Novidades e Lançamentos</a>`;
+    const sub = getCategorySubtitle('lancamentos');
+    const isActive = !firstSet;
+    h += `
+      <a href="#lancamentos" class="cat-pill cat-card ${isActive ? 'active' : ''}">
+        <strong class="cat-card-title">Novidades e Lançamentos</strong>
+        <span class="cat-card-sub">${esc(sub)}</span>
+      </a>
+    `;
     drawerHtml += `
       <div class="categories-drawer-item" onclick="selectCategoryFromDrawer('lancamentos')">
-        <span>Novidades e Lançamentos</span>
+        <div class="categories-drawer-info">
+          <strong class="drawer-item-title">Novidades e Lançamentos</strong>
+          <span class="drawer-item-sub">${esc(sub)}</span>
+        </div>
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
       </div>
     `;
@@ -338,10 +381,20 @@ function renderNavigation() {
 
   // 3. Promoções
   if (promos.length > 0) {
-    h += `<a href="#promocoes" class="cat-pill ${!firstSet ? 'active' : ''}">Promoções</a>`;
+    const sub = getCategorySubtitle('promocoes');
+    const isActive = !firstSet;
+    h += `
+      <a href="#promocoes" class="cat-pill cat-card ${isActive ? 'active' : ''}">
+        <strong class="cat-card-title">Promoções</strong>
+        <span class="cat-card-sub">${esc(sub)}</span>
+      </a>
+    `;
     drawerHtml += `
       <div class="categories-drawer-item" onclick="selectCategoryFromDrawer('promocoes')">
-        <span>Promoções</span>
+        <div class="categories-drawer-info">
+          <strong class="drawer-item-title">Promoções</strong>
+          <span class="drawer-item-sub">${esc(sub)}</span>
+        </div>
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
       </div>
     `;
@@ -353,10 +406,19 @@ function renderNavigation() {
     if (cat.active && cat.slug !== 'lancamentos' && cat.slug !== 'promocoes') {
       const isFirst = !firstSet;
       if (isFirst) firstSet = true;
-      h += `<a href="#${cat.slug}" class="cat-pill ${isFirst ? 'active' : ''}">${esc(cat.name)}</a>`;
+      const sub = getCategorySubtitle(cat);
+      h += `
+        <a href="#${cat.slug}" class="cat-pill cat-card ${isFirst ? 'active' : ''}">
+          <strong class="cat-card-title">${esc(cat.name)}</strong>
+          <span class="cat-card-sub">${esc(sub)}</span>
+        </a>
+      `;
       drawerHtml += `
         <div class="categories-drawer-item" onclick="selectCategoryFromDrawer('${cat.slug}')">
-          <span>${esc(cat.name)}</span>
+          <div class="categories-drawer-info">
+            <strong class="drawer-item-title">${esc(cat.name)}</strong>
+            <span class="drawer-item-sub">${esc(sub)}</span>
+          </div>
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
         </div>
       `;
@@ -413,7 +475,15 @@ function renderCatalog() {
 
   // 1. SEÇÃO MAIS VENDIDOS
   if (BEST_SELLERS.length > 0) {
-    html += `<section id="mais-vendidos" class="cat-section"><h2 class="cat-title">Mais Vendidos</h2><div class="grid">`;
+    const sub = getCategorySubtitle('mais-vendidos');
+    html += `
+      <section id="mais-vendidos" class="cat-section">
+        <div class="cat-header">
+          <h2 class="cat-title">Mais Vendidos</h2>
+          ${sub ? `<p class="cat-subtitle">${esc(sub)}</p>` : ''}
+        </div>
+        <div class="grid">
+    `;
     BEST_SELLERS.forEach(p => {
       html += renderProductCard(p);
     });
@@ -423,7 +493,15 @@ function renderCatalog() {
   // 2. SEÇÃO NOVIDADES E LANÇAMENTOS
   const launches = (CATALOG.products || []).filter(p => p.isNewLaunch && p.active);
   if (launches.length > 0) {
-    html += `<section id="lancamentos" class="cat-section"><h2 class="cat-title">Novidades e Lançamentos</h2><div class="grid">`;
+    const sub = getCategorySubtitle('lancamentos');
+    html += `
+      <section id="lancamentos" class="cat-section">
+        <div class="cat-header">
+          <h2 class="cat-title">Novidades e Lançamentos</h2>
+          ${sub ? `<p class="cat-subtitle">${esc(sub)}</p>` : ''}
+        </div>
+        <div class="grid">
+    `;
     launches.forEach(p => {
       html += renderProductCard(p);
     });
@@ -433,7 +511,15 @@ function renderCatalog() {
   // 3. SEÇÃO PROMOÇÕES
   const promos = (CATALOG.products || []).filter(p => p.isPromo && p.active);
   if (promos.length > 0) {
-    html += `<section id="promocoes" class="cat-section"><h2 class="cat-title">Promoções</h2><div class="grid">`;
+    const sub = getCategorySubtitle('promocoes');
+    html += `
+      <section id="promocoes" class="cat-section">
+        <div class="cat-header">
+          <h2 class="cat-title">Promoções</h2>
+          ${sub ? `<p class="cat-subtitle">${esc(sub)}</p>` : ''}
+        </div>
+        <div class="grid">
+    `;
     promos.forEach(p => {
       html += renderProductCard(p);
     });
@@ -450,7 +536,15 @@ function renderCatalog() {
     );
 
     if (prods.length > 0) {
-      html += `<section id="${cat.slug}" class="cat-section"><h2 class="cat-title">${esc(cat.name)}</h2><div class="grid">`;
+      const sub = getCategorySubtitle(cat);
+      html += `
+        <section id="${cat.slug}" class="cat-section">
+          <div class="cat-header">
+            <h2 class="cat-title">${esc(cat.name)}</h2>
+            ${sub ? `<p class="cat-subtitle">${esc(sub)}</p>` : ''}
+          </div>
+          <div class="grid">
+      `;
       prods.forEach(p => {
         html += renderProductCard(p);
       });

@@ -3231,12 +3231,13 @@ function renderCategoriesList() {
   if (!box) return;
 
   box.innerHTML = CATEGORIES.map(c => `
-    <div style="background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+    <div style="background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:12px">
       <div>
-        <b>${esc(c.name)}</b>
-        <div style="font-size:12px;color:var(--mut)">Slug: ${esc(c.slug)} · Ordem: ${c.order}</div>
+        <b style="font-size:14px">${esc(c.name)}</b>
+        ${c.subtitle ? `<div style="font-size:12px;color:var(--y);font-weight:500;margin-top:2px">“${esc(c.subtitle)}”</div>` : ''}
+        <div style="font-size:12px;color:var(--mut);margin-top:2px">Slug: ${esc(c.slug)} · Ordem: ${c.order}</div>
       </div>
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;flex-shrink:0">
         <button class="btn-sm btn-secondary" onclick="openEditCategoryModal('${c.id}')">Editar</button>
         <button class="btn-sm btn-danger" onclick="deleteCategory('${c.id}')">Excluir</button>
       </div>
@@ -3254,6 +3255,7 @@ window.openNewCategoryModal = function() {
   $('#cat-modal-title').textContent = 'Nova Categoria';
   $('#cat-id').value = '';
   $('#cat-name').value = '';
+  if ($('#cat-subtitle')) $('#cat-subtitle').value = '';
   $('#cat-order').value = (CATEGORIES.length + 1);
   $('#category-edit-modal').style.display = 'flex';
 };
@@ -3265,6 +3267,7 @@ window.openEditCategoryModal = function(id) {
   $('#cat-modal-title').textContent = `Editar Categoria: ${cat.name}`;
   $('#cat-id').value = cat.id;
   $('#cat-name').value = cat.name;
+  if ($('#cat-subtitle')) $('#cat-subtitle').value = cat.subtitle || '';
   $('#cat-order').value = cat.order || 1;
   $('#category-edit-modal').style.display = 'flex';
 };
@@ -3277,6 +3280,7 @@ window.saveCategoryForm = async function(e) {
   if (e) e.preventDefault();
   const id = $('#cat-id').value;
   const name = $('#cat-name').value.trim();
+  const subtitle = $('#cat-subtitle') ? $('#cat-subtitle').value.trim() : '';
   const order = parseInt($('#cat-order').value) || 1;
 
   if (!name) return adminToast('Informe o nome da categoria.', 'danger');
@@ -3287,13 +3291,13 @@ window.saveCategoryForm = async function(e) {
       res = await fetch(`${API_URL}/catalog/categories/${id}`, {
         method: 'PUT',
         headers: authHeaders(),
-        body: JSON.stringify({ name, order })
+        body: JSON.stringify({ name, order, subtitle })
       });
     } else {
       res = await fetch(`${API_URL}/catalog/categories`, {
         method: 'POST',
         headers: authHeaders(),
-        body: JSON.stringify({ name, order })
+        body: JSON.stringify({ name, order, subtitle })
       });
     }
     const data = await res.json();
