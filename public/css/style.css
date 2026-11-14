@@ -550,16 +550,14 @@ button:active {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scroll-padding-left: max(16px, calc((100% - 1120px) / 2 + 16px));
-  scrollbar-width: thin;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .cats::-webkit-scrollbar {
-  height: 4px;
-}
-
-.cats::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 99px;
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 /* Oculto no mobile (onde a navegação é feita pelo botão hambúrguer) */
