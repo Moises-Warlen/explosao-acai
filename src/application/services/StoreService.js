@@ -24,7 +24,7 @@ export class StoreService {
       return {
         isOpen: false,
         mode: 'manual',
-        message: 'Loja fechada temporariamente pelo administrador.',
+        message: 'Loja fechada temporariamente',
         schedules: settings.schedules || []
       };
     }

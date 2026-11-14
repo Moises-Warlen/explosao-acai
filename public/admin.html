@@ -667,7 +667,22 @@
           <label>Texto do Banner Promocional do Topo</label>
           <input id="st-banner" value="Bem-vindo ao nosso delivery próprio! Peça direto por aqui e ganhe descontos." style="margin-bottom:18px">
 
-          <!-- Card de Resposta Automática no Chat quando Loja Fechada -->
+          <!-- Card de Horário de Funcionamento -->
+          <div style="margin-bottom:18px;padding:14px;background:#181028;border:1.5px solid var(--y);border-radius:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+              <h4 style="margin:0;font-size:13px;color:var(--y)">🕒 Horário de Funcionamento</h4>
+              <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;font-weight:700">
+                <input type="checkbox" id="st-auto-schedule" style="width:auto" checked>
+                <span style="color:#a78bfa">Abrir e fechar a loja automaticamente pelo horário</span>
+              </label>
+            </div>
+            <p style="font-size:11px;color:var(--mut);margin-bottom:10px;line-height:1.4">
+              Defina os dias e horários em que a loja funciona. Com o modo automático ligado, a loja abre e fecha sozinha (horário de Brasília). Desmarque o dia para deixá-lo como <b>Fechado</b>.
+            </p>
+            <div id="st-schedules-list" style="display:flex;flex-direction:column;gap:8px"></div>
+            <button type="button" class="btn btn-primary" style="margin-top:12px" onclick="saveStoreSettings()">💾 Salvar Horários</button>
+          </div>
+
           <div style="margin-bottom:18px;padding:14px;background:#181028;border:1.5px solid #7c3aed;border-radius:10px">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
               <h4 style="margin:0;font-size:13px;color:var(--y)">💬 Resposta Automática no Chat (Quando a Loja Estiver Fechada)</h4>
@@ -1298,6 +1313,6 @@
   <div id="recipe-pdf-area"></div>
 
   <!-- Scripts -->
-  <script src="js/admin.js?v=3.0"></script>
+  <script src="js/admin.js?v=3.1"></script>
 </body>
 </html>

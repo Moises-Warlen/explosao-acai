@@ -391,7 +391,49 @@ window.toggleStoreStatus = async function() {
   }
 };
 
+const DEFAULT_SCHEDULES = [
+  { day: 0, dayName: 'Domingo', open: '13:00', close: '23:00', active: true },
+  { day: 1, dayName: 'Segunda-feira', open: '13:00', close: '23:00', active: true },
+  { day: 2, dayName: 'Terça-feira', open: '13:00', close: '23:00', active: true },
+  { day: 3, dayName: 'Quarta-feira', open: '13:00', close: '23:00', active: true },
+  { day: 4, dayName: 'Quinta-feira', open: '13:00', close: '23:00', active: true },
+  { day: 5, dayName: 'Sexta-feira', open: '13:00', close: '23:30', active: true },
+  { day: 6, dayName: 'Sábado', open: '13:00', close: '23:30', active: true }
+];
+
+function renderSchedulesEditor() {
+  const list = $('#st-schedules-list');
+  if (!list) return;
+  const schedules = (SETTINGS.schedules && SETTINGS.schedules.length === 7) ? SETTINGS.schedules : DEFAULT_SCHEDULES;
+  const autoCb = $('#st-auto-schedule');
+  if (autoCb) autoCb.checked = !!SETTINGS.useAutoSchedule;
+  const timeStyle = 'width:auto;padding:6px 10px';
+  list.innerHTML = schedules.map(s => `
+    <div class="st-sched-row" data-day="${s.day}" data-name="${s.dayName}" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <label style="display:inline-flex;align-items:center;gap:8px;min-width:150px;cursor:pointer;font-size:13px;font-weight:700">
+        <input type="checkbox" class="st-sched-active" style="width:auto" ${s.active ? 'checked' : ''}>
+        <span>${s.dayName}</span>
+      </label>
+      <span style="font-size:12px;color:var(--mut)">Abre</span>
+      <input type="time" class="st-sched-open" value="${s.open}" style="${timeStyle}">
+      <span style="font-size:12px;color:var(--mut)">Fecha</span>
+      <input type="time" class="st-sched-close" value="${s.close}" style="${timeStyle}">
+    </div>
+  `).join('');
+}
+
+function collectSchedules() {
+  return Array.from(document.querySelectorAll('#st-schedules-list .st-sched-row')).map(row => ({
+    day: parseInt(row.dataset.day, 10),
+    dayName: row.dataset.name,
+    active: row.querySelector('.st-sched-active').checked,
+    open: row.querySelector('.st-sched-open').value || '13:00',
+    close: row.querySelector('.st-sched-close').value || '23:00'
+  }));
+}
+
 function renderStoreSettingsForm() {
+  renderSchedulesEditor();
   if ($('#st-perkm')) $('#st-perkm').value = SETTINGS.perKmRate !== undefined ? SETTINGS.perKmRate : 1.0;
   if ($('#st-minfreight')) $('#st-minfreight').value = SETTINGS.minFreight !== undefined ? SETTINGS.minFreight : 4.5;
   if ($('#st-freekm')) $('#st-freekm').value = SETTINGS.freeKmThreshold !== undefined ? SETTINGS.freeKmThreshold : 2.0;
@@ -409,7 +451,16 @@ function renderStoreSettingsForm() {
 
 window.saveStoreSettings = async function(e) {
   if (e) e.preventDefault();
+  const schedules = collectSchedules();
+  const invalid = schedules.find(s => s.active && s.open >= s.close);
+  if (invalid) {
+    adminToast(`Horário inválido em ${invalid.dayName}: a abertura deve ser antes do fechamento.`, 'danger');
+    return;
+  }
+  const autoOn = $('#st-auto-schedule') ? $('#st-auto-schedule').checked : !!SETTINGS.useAutoSchedule;
   const updates = {
+    schedules,
+    useAutoSchedule: autoOn,
     perKmRate: parseFloat($('#st-perkm').value) || 1.0,
     minFreight: parseFloat($('#st-minfreight').value) || 4.5,
     freeKmThreshold: parseFloat($('#st-freekm').value) >= 0 ? parseFloat($('#st-freekm').value) : 2.0,
@@ -425,6 +476,9 @@ window.saveStoreSettings = async function(e) {
     autoReplyClosedMessage: $('#st-autoreply-closed-msg') ? $('#st-autoreply-closed-msg').value.trim() : ''
   };
 
+  // Ao ligar o modo automático, libera o fechamento manual para o horário passar a valer
+  if (autoOn && !SETTINGS.useAutoSchedule) updates.isOpenManual = true;
+
   try {
     const res = await fetch(`${API_URL}/store/settings`, {
       method: 'PUT',
@@ -435,6 +489,7 @@ window.saveStoreSettings = async function(e) {
     if (data.ok) {
       SETTINGS = data.settings;
       renderStoreSettingsForm();
+      loadStoreStatus();
       adminToast('Configurações da loja salvas com sucesso!', 'success');
     }
   } catch (e) {

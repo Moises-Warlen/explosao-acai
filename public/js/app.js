@@ -241,7 +241,7 @@ window.openStoreHoursModal = function() {
 
   if (statusBox) {
     statusBox.className = `modal-hours-status ${STORE_STATUS.isOpen ? 'open' : 'closed'}`;
-    statusBox.innerHTML = `<strong>${STORE_STATUS.isOpen ? '● LOJA ABERTA' : '● LOJA FECHADA'}</strong> — ${esc(STORE_STATUS.message || '')}`;
+    statusBox.innerHTML = `<strong>${STORE_STATUS.isOpen ? '● LOJA ABERTA' : '● LOJA FECHADA'}</strong>&nbsp;&nbsp;&nbsp;${esc((STORE_STATUS.message || '').replace(/\.\s*$/, ''))}`;
   }
 
   if (list) {

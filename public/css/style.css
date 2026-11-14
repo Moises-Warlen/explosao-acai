@@ -164,6 +164,17 @@ button:active {
   user-select: none;
 }
 
+/* Botão Categorias: removido nas telas grandes */
+@media (min-width: 769px) {
+  .btn-hamburger {
+    display: none;
+  }
+  .header-left,
+  .header-status-area {
+    min-width: 150px;
+  }
+}
+
 .btn-hamburger:hover {
   background: rgba(255, 255, 255, 0.22);
   transform: translateY(-1px);
@@ -376,23 +387,24 @@ button:active {
 .hero {
   background: linear-gradient(135deg, #2b043f 0%, var(--p) 55%, #1f022d 100%);
   color: #fff;
-  padding: 34px 20px 28px;
+  padding: 34px 16px 28px;
   position: relative;
   overflow: hidden;
   box-shadow: inset 0 -4px 16px rgba(0, 0, 0, 0.2);
 }
 
+/* Mesmo alinhamento (largura e margem) da seção Mais Vendidos (main) */
 .hero-container {
-  max-width: 1100px;
+  max-width: 1120px;
   margin: 0 auto;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 28px;
 }
 
 .hero-text-block {
-  flex: 0 1 600px;
+  flex: 1;
   min-width: 0;
   text-align: left;
 }
@@ -449,21 +461,21 @@ button:active {
     padding: 26px 16px 20px;
   }
   .hero-container {
-    flex-direction: column-reverse;
-    text-align: center;
+    flex-direction: column;
+    text-align: left;
     gap: 16px;
   }
   .hero-text-block {
-    text-align: center;
+    text-align: left;
     flex: 0 0 auto;
     width: 100%;
   }
   .hero-subtitle {
-    margin-left: auto;
-    margin-right: auto;
+    margin-left: 0;
+    margin-right: 0;
   }
   .pills {
-    justify-content: center;
+    justify-content: flex-start;
   }
   .hero-image-block {
     display: none !important;
@@ -512,7 +524,7 @@ button:active {
   .pills {
     flex-wrap: nowrap;
     gap: 4px;
-    justify-content: center;
+    justify-content: flex-start;
   }
   .pills span {
     white-space: nowrap;
