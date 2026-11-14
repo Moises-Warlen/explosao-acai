@@ -254,6 +254,40 @@ body {
   gap: 10px;
 }
 
+.header-actions-row3,
+.header-controls-left,
+.header-controls-right {
+  display: contents;
+}
+
+.header-top-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-routes-mobile,
+.store-shop-icon,
+.btn-mobile-search-trigger,
+.col-title-mobile,
+.date-filter-icon {
+  display: none !important;
+}
+
+.date-filter-wrap {
+  display: contents;
+}
+
+@media (min-width: 861px) {
+  .mobile-search-panel {
+    display: none !important;
+  }
+}
+
+.col-title-desktop {
+  display: inline !important;
+}
+
 /* Campo de Busca Rápida no Header (Substituindo o Relógio) */
 .header-search-box {
   position: relative;
@@ -584,51 +618,406 @@ input:checked + .slider:before {
 
 /* ================= HEADER & NAV RESPONSIVO (MOBILE) ================= */
 @media (max-width: 860px) {
+  /* 1. Header Grid de 3 Linhas (Idêntico à Imagem 2 de Referência) */
   .admin-header {
-    padding: 10px 14px 8px !important;
-    gap: 10px !important;
+    padding: 10px 14px 10px !important;
+    gap: 8px 0 !important;
     display: grid !important;
     grid-template-columns: 1fr auto !important;
-    grid-template-areas:
-      "brand hamburger"
-      "kpis kpis"
-      "actions actions" !important;
+    grid-template-rows: auto auto auto !important;
     align-items: center !important;
   }
 
+  /* Linha 1: Marca (esquerda) e Admin + Hambúrguer (direita) */
   .admin-brand {
-    grid-area: brand !important;
-  }
-
-  .admin-hamburger-btn {
-    grid-area: hamburger !important;
-    display: inline-flex !important;
-    justify-self: end !important;
-    align-self: center !important;
-  }
-
-  .header-kpis-capsule {
-    grid-area: kpis !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 2px auto !important;
-    justify-content: center !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    justify-self: start !important;
   }
 
   .header-actions-right {
-    grid-area: actions !important;
-    width: 100% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 8px !important;
-    flex-wrap: wrap !important;
+    display: contents !important;
   }
 
-  .header-search-box {
-    min-width: 130px !important;
-    flex: 1 !important;
+  .header-top-right {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    justify-self: end !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .admin-user-pill {
+    padding: 0 !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1.5px solid rgba(168, 85, 247, 0.35) !important;
+    border-radius: 10px !important;
+    width: 38px !important;
+    height: 38px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .admin-user-pill .btn-pass-pill {
+    display: none !important;
+  }
+
+  .admin-user-pill .btn-logout-pill {
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 16px !important;
+    padding: 0 !important;
+  }
+
+  .admin-hamburger-btn {
+    display: inline-flex !important;
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 10px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1.5px solid rgba(168, 85, 247, 0.35) !important;
+  }
+
+  /* Linha 2: Cápsula de Métricas Centralizada */
+  .header-kpis-capsule {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
     max-width: 100% !important;
+    margin: 4px auto !important;
+    justify-content: center !important;
+    padding: 6px 12px !important;
+  }
+
+  #kpi-tempo-divider,
+  #kpi-tempo-box {
+    display: none !important;
+  }
+
+  /* Linha 3: Segunda Linha de Controles (Loja + Rotas à esquerda, Sino à direita) */
+  .header-actions-row3 {
+    grid-column: 1 / -1 !important;
+    grid-row: 3 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin-top: 4px !important;
+  }
+
+  .header-controls-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .header-controls-right {
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  /* Loja no Mobile: Apenas Ícone da Loja com Moldura Luminosa */
+  .store-glow-pill {
+    width: 52px !important;
+    height: 38px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 10px !important;
+  }
+
+  .store-glow-pill .dot-glow,
+  .store-glow-pill #store-toggle-label {
+    display: none !important;
+  }
+
+  .store-glow-pill .store-shop-icon {
+    display: inline-flex !important;
+    color: #fff !important;
+  }
+
+  /* Botão Rotas Mobile */
+  .btn-routes-mobile {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    height: 38px !important;
+    padding: 0 14px !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    color: #facc15 !important;
+    background: rgba(250, 204, 21, 0.08) !important;
+    border: 1.5px solid #facc15 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 0 12px rgba(250, 204, 21, 0.2) !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+  }
+
+  /* Sino de Notificações */
+  .bell-alert-btn {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 10px !important;
+  }
+
+  /* Busca do Header (Desktop): oculto no mobile, pois busca fica na 3ª linha de filtros */
+  .header-search-box {
+    display: none !important;
+  }
+
+  /* Linha 4: Terceira Linha de Filtros (Status, Data 📅, Pagamento 💳, Busca 🔍) */
+  .kanban-filters-bar {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    width: 100% !important;
+    margin-bottom: 8px !important;
+  }
+
+  .btn-routes-desktop {
+    display: none !important;
+  }
+
+  #kanban-status-filter {
+    order: 1 !important;
+    flex: 1.1 1 0% !important;
+    min-width: 0 !important;
+    max-width: 130px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    padding: 8px 6px !important;
+    height: 38px !important;
+    border-radius: 10px !important;
+    background: #180829 !important;
+    border: 1px solid rgba(168, 85, 247, 0.4) !important;
+    color: #fff !important;
+  }
+
+  .date-filter-wrap {
+    order: 2 !important;
+    display: inline-flex !important;
+    position: relative !important;
+    flex: 0 0 52px !important;
+    width: 52px !important;
+    min-width: 52px !important;
+    max-width: 52px !important;
+    height: 38px !important;
+  }
+
+  .date-filter-wrap .date-filter-icon {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: #180829 !important;
+    border: 1px solid rgba(168, 85, 247, 0.4) !important;
+    border-radius: 10px !important;
+    color: #fff !important;
+    font-size: 13px !important;
+    pointer-events: none !important;
+  }
+
+  .date-filter-wrap select#kanban-date-filter {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    opacity: 0 !important;
+    cursor: pointer !important;
+    z-index: 2 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  #kanban-pay-filter {
+    order: 3 !important;
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    max-width: 122px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    padding: 8px 6px !important;
+    height: 38px !important;
+    border-radius: 10px !important;
+    background: #180829 !important;
+    border: 1px solid rgba(168, 85, 247, 0.4) !important;
+    color: #fff !important;
+  }
+
+  .btn-mobile-search-trigger {
+    order: 4 !important;
+    flex: 0 0 38px !important;
+    width: 38px !important;
+    height: 38px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 10px !important;
+    background: #180829 !important;
+    border: 1.5px solid #a855f7 !important;
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.3) !important;
+    color: #fff !important;
+    font-size: 15px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+  }
+
+  .btn-mobile-search-trigger.active,
+  .btn-mobile-search-trigger.has-query {
+    background: #7b2cbf !important;
+    border-color: var(--y) !important;
+    box-shadow: 0 0 12px rgba(250, 204, 21, 0.5) !important;
+  }
+
+  /* Painel Expansível de Busca Mobile */
+  .mobile-search-panel {
+    display: none;
+    width: 100% !important;
+    margin-bottom: 10px !important;
+  }
+
+  .mobile-search-panel.active {
+    display: block !important;
+  }
+
+  .mobile-search-inner {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+  }
+
+  .mobile-search-inner input {
+    width: 100% !important;
+    padding: 8px 32px 8px 34px !important;
+    font-size: 12.5px !important;
+    background: rgba(30, 8, 48, 0.95) !important;
+    border: 1.5px solid #a855f7 !important;
+    border-radius: 10px !important;
+    color: #fff !important;
+    outline: none !important;
+    box-shadow: 0 0 12px rgba(168, 85, 247, 0.35) !important;
+  }
+
+  .mobile-search-inner .search-icon {
+    position: absolute !important;
+    left: 10px !important;
+    font-size: 13px !important;
+    pointer-events: none !important;
+    opacity: 0.85 !important;
+  }
+
+  .mobile-search-inner .btn-clear-search-mobile {
+    position: absolute !important;
+    right: 8px !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: 0 !important;
+    color: #fff !important;
+    border-radius: 50% !important;
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 11px !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* Linha 5: Switcher de Modos */
+  .kanban-view-switcher {
+    display: flex !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    scrollbar-width: none !important;
+    max-width: 100% !important;
+    margin-bottom: 12px !important;
+    gap: 4px !important;
+    padding: 3px !important;
+  }
+
+  .kanban-view-switcher::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .view-switch-btn {
+    padding: 6px 12px !important;
+    font-size: 11.5px !important;
+    white-space: nowrap !important;
+  }
+
+  /* Linha 6: Colunas do Kanban - Modo Ao Vivo (4 Colunas) */
+  .kanban-board.view-live {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    width: 100% !important;
+    padding-bottom: 14px !important;
+    overflow-x: hidden !important;
+    scrollbar-width: none !important;
+  }
+
+  .kanban-board.view-live::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .kanban-board.view-live .kanban-col {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    padding: 8px 4px !important;
+    border-radius: 12px !important;
+  }
+
+  .kanban-col-header {
+    font-size: 11px !important;
+    padding-bottom: 6px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .kanban-col-header > div {
+    width: 100% !important;
+  }
+
+  .col-title-desktop {
+    display: none !important;
+  }
+
+  .col-title-mobile {
+    display: inline !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    white-space: nowrap !important;
+  }
+
+  .btn-col-expand-toggle {
+    display: none !important;
+  }
+
+  .col-badge-count {
+    font-size: 9.5px !important;
+    padding: 1px 4px !important;
+    margin-left: 2px !important;
+  }
+
+  .order-card {
+    padding: 8px 6px !important;
+    border-radius: 10px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .order-card-header {
+    font-size: 11.5px !important;
   }
 
   /* Menu de Abas no Mobile: Oculto por padrão, abre via Hambúrguer no canto superior direito */

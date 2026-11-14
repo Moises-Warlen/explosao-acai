@@ -665,6 +665,10 @@ window.handleKanbanFilterChange = function() {
 window.clearAllKanbanFilters = function() {
   const sInput = $('#kanban-search');
   if (sInput) sInput.value = '';
+  const mInput = $('#kanban-search-mobile');
+  if (mInput) mInput.value = '';
+  const triggerBtn = $('#btn-mobile-search-trigger');
+  if (triggerBtn) triggerBtn.classList.remove('has-query');
   const clearBtn = $('#btn-clear-search');
   if (clearBtn) clearBtn.style.display = 'none';
   const stFilter = $('#kanban-status-filter');
@@ -675,6 +679,45 @@ window.clearAllKanbanFilters = function() {
   if (dateFilter) dateFilter.value = 'all';
   Object.keys(KANBAN_PAGE).forEach(k => { KANBAN_PAGE[k] = 1; });
   renderKanban();
+};
+
+window.toggleMobileSearch = function() {
+  const panel = $('#mobile-search-panel');
+  const triggerBtn = $('#btn-mobile-search-trigger');
+  if (!panel) return;
+  const isOpening = !panel.classList.contains('active');
+  panel.classList.toggle('active', isOpening);
+  if (triggerBtn) {
+    triggerBtn.classList.toggle('active', isOpening);
+  }
+  if (isOpening) {
+    const input = $('#kanban-search-mobile');
+    if (input) {
+      setTimeout(() => input.focus(), 60);
+    }
+  }
+};
+
+window.handleMobileSearchInput = function(val) {
+  const desktopInput = $('#kanban-search');
+  if (desktopInput) {
+    desktopInput.value = val;
+  }
+  const triggerBtn = $('#btn-mobile-search-trigger');
+  if (triggerBtn) {
+    triggerBtn.classList.toggle('has-query', !!(val && val.trim().length > 0));
+  }
+  handleKanbanSearchInput();
+};
+
+window.clearMobileSearch = function() {
+  const mInput = $('#kanban-search-mobile');
+  if (mInput) mInput.value = '';
+  const desktopInput = $('#kanban-search');
+  if (desktopInput) desktopInput.value = '';
+  const triggerBtn = $('#btn-mobile-search-trigger');
+  if (triggerBtn) triggerBtn.classList.remove('has-query');
+  handleKanbanSearchInput();
 };
 
 let AUDIO_NOTIFICATIONS_ENABLED = true;
@@ -971,18 +1014,35 @@ function renderKanbanColumn(colKey, list, containerId, paginationId, headerId, t
   const header = $(`#${headerId}`);
 
   if (header) {
+    const SHORT_TITLES = {
+      'Novos Pedidos': 'Novos Ped.',
+      'Em Preparo (Cozinha)': 'Em Preparo',
+      'Pronto / Saiu para Entrega': 'Pronto / Saiu',
+      'Entregues Hoje': 'Entregues',
+      'Pedidos Concluídos': 'Concluídos',
+      'Devolvidos à Loja': 'Devolvidos',
+      'Cancelados': 'Cancelados'
+    };
+    const shortTitle = SHORT_TITLES[title] || title;
+    const titleHtml = `<span class="col-title-desktop">${title}</span><span class="col-title-mobile">${shortTitle}</span>`;
+    const badgeHtml = `<span class="col-badge-count" style="font-size:11px;opacity:0.85;background:rgba(255,255,255,0.12);padding:1px 6px;border-radius:99px;margin-left:4px;color:#fff">${list.length}</span>`;
+
     if (list.length > 0) {
       const allExp = list.every(o => EXPANDED_ORDERS.has(o.id));
       header.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
-          <span>${title} <span style="font-size:11px;opacity:0.85;background:rgba(255,255,255,0.12);padding:1px 7px;border-radius:99px;margin-left:4px;color:#fff">${list.length}</span></span>
-          <button class="btn-sm btn-secondary" style="font-size:10px;padding:2px 7px" onclick="toggleColumnExpand('${colKey}')" title="${allExp ? 'Minimizar todos os pedidos desta coluna' : 'Expandir todos os pedidos desta coluna'}">
+          <span style="display:inline-flex;align-items:center;min-width:0;overflow:hidden;text-overflow:ellipsis">${titleHtml} ${badgeHtml}</span>
+          <button class="btn-sm btn-secondary btn-col-expand-toggle" style="font-size:10px;padding:2px 7px" onclick="toggleColumnExpand('${colKey}')" title="${allExp ? 'Minimizar todos os pedidos desta coluna' : 'Expandir todos os pedidos desta coluna'}">
             ${allExp ? '▲ Minimizar' : '▼ Expandir'}
           </button>
         </div>
       `;
     } else {
-      header.innerHTML = `${title} <span style="font-size:11px;opacity:0.85;background:rgba(255,255,255,0.12);padding:1px 7px;border-radius:99px;margin-left:4px;color:#fff">${list.length}</span>`;
+      header.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
+          <span style="display:inline-flex;align-items:center;min-width:0;overflow:hidden;text-overflow:ellipsis">${titleHtml} ${badgeHtml}</span>
+        </div>
+      `;
     }
   }
   if (!container) return;

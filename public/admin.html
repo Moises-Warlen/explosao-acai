@@ -53,16 +53,6 @@
         </div>
       </div>
 
-      <!-- Botão Hambúrguer Mobile no Canto Superior Direito -->
-      <button type="button" id="admin-hamburger-btn" class="admin-hamburger-btn" onclick="toggleAdminMobileNav()" aria-label="Abrir menu de navegação" title="Menu de Abas">
-        <svg class="icon-hamburger" viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-          <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
-        </svg>
-        <svg class="icon-close" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" style="display:none">
-          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
-        </svg>
-      </button>
-
       <!-- Métricas Rápidas do Dia (KPIs em Tempo Real - Cápsula Central) -->
       <div class="header-kpis-capsule" id="header-kpis">
         <div class="kpi-cap-item kpi-cap-clickable" id="kpi-faturamento-box" onclick="toggleHideFaturamento()" role="button" tabindex="0" title="Clique para ocultar ou exibir o faturamento">
@@ -82,33 +72,61 @@
         </div>
       </div>
 
-      <!-- Lado Direito: Loja Aberta/Fechada, Alerta Sonoro, Busca e Admin -->
+      <!-- Lado Direito: Loja Aberta/Fechada, Alerta Sonoro, Busca, Rotas e Admin -->
       <div class="header-actions-right">
-        <!-- Status Loja com Botão Luminoso -->
-        <button id="store-status-glow-btn" class="store-glow-pill open" onclick="toggleStoreStatus()" title="Clique para abrir ou fechar a loja">
-          <span class="dot-glow"></span>
-          <span id="store-toggle-label">LOJA ABERTA</span>
-        </button>
-        <!-- Toggle oculto para compatibilidade com scripts existentes -->
-        <input type="checkbox" id="store-toggle-switch" checked style="display:none" onchange="toggleStoreStatus()">
+        <!-- Segunda Linha de Controles Mobile / Controles do Header -->
+        <div class="header-actions-row3">
+          <div class="header-controls-left">
+            <!-- Status Loja com Botão Luminoso -->
+            <button id="store-status-glow-btn" class="store-glow-pill open" onclick="toggleStoreStatus()" title="Clique para abrir ou fechar a loja">
+              <span class="dot-glow"></span>
+              <svg class="store-shop-icon" viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                <path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 6H6v-6h6v6z"/>
+              </svg>
+              <span id="store-toggle-label">LOJA ABERTA</span>
+            </button>
+            <!-- Toggle oculto para compatibilidade com scripts existentes -->
+            <input type="checkbox" id="store-toggle-switch" checked style="display:none" onchange="toggleStoreStatus()">
 
-        <!-- Sino de Alertas Sonoros -->
-        <div class="bell-alert-btn" id="btn-sound-toggle" onclick="toggleAudioNotifications()" title="Clique para alternar alerta sonoro de novos pedidos">
-          <span class="bell-emoji">🔔</span>
-          <span class="bell-num-badge" id="badge-bell-count">0</span>
+            <!-- Botão Rotas Mobile (Exclusivo da Segunda Linha de Controles Mobile) -->
+            <button type="button" class="btn-routes-gps btn-routes-mobile" onclick="openDeliveryMapModal()" title="Visualizar pedidos no mapa e criar rotas de entrega">
+              <span class="routes-icon">📍</span>
+              <span>Rotas</span>
+            </button>
+          </div>
+
+          <div class="header-controls-right">
+            <!-- Sino de Alertas Sonoros -->
+            <div class="bell-alert-btn" id="btn-sound-toggle" onclick="toggleAudioNotifications()" title="Clique para alternar alerta sonoro de novos pedidos">
+              <span class="bell-emoji">🔔</span>
+              <span class="bell-num-badge" id="badge-bell-count">0</span>
+            </div>
+          </div>
         </div>
 
-        <!-- Busca Rápida de Pedidos (no lugar do horário, com 1 única lupa) -->
+        <!-- Busca Rápida de Pedidos (Desktop) -->
         <div class="search-input-wrap header-search-box" id="admin-header-search-wrap">
           <span class="search-icon">🔍</span>
           <input type="text" id="kanban-search" placeholder="Buscar por nº (#123) ou nome..." oninput="handleKanbanSearchInput()">
           <button type="button" id="btn-clear-search" class="btn-clear-search" onclick="clearKanbanSearch()" title="Limpar busca" style="display:none">✕</button>
         </div>
 
-        <!-- Perfil Admin & Sair -->
-        <div class="admin-user-pill">
-          <button class="btn-pass-pill" onclick="openAdminPasswordModal()" title="Alterar senha do painel">admin</button>
-          <button class="btn-logout-pill" onclick="logout()" title="Sair do painel administrativo">🚪</button>
+        <!-- Perfil Admin & Hambúrguer (Top-Right) -->
+        <div class="header-top-right" id="header-top-right">
+          <div class="admin-user-pill">
+            <button class="btn-pass-pill" onclick="openAdminPasswordModal()" title="Alterar senha do painel">admin</button>
+            <button class="btn-logout-pill" onclick="logout()" title="Sair do painel administrativo">🚪</button>
+          </div>
+
+          <!-- Botão Hambúrguer Mobile -->
+          <button type="button" id="admin-hamburger-btn" class="admin-hamburger-btn" onclick="toggleAdminMobileNav()" aria-label="Abrir menu de navegação" title="Menu de Abas">
+            <svg class="icon-hamburger" viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+              <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+            </svg>
+            <svg class="icon-close" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" style="display:none">
+              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+            </svg>
+          </button>
         </div>
       </div>
     </header>
@@ -159,20 +177,30 @@
     <div class="tab-pane active" id="tab-kanban">
       <!-- Barra de Pesquisa e Filtros Rápidos do Kanban -->
       <div class="kanban-filters-bar">
-        
         <select id="kanban-status-filter" onchange="handleKanbanFilterChange()">
-          <option value="all">⚡ Todos os Status</option>
+          <option value="all">Status Pedidos</option>
           <option value="received">🟡 Novos Pedidos</option>
           <option value="preparing">🟣 Em Preparo</option>
           <option value="ready">🔵 Prontos / Em Entrega</option>
           <option value="delivered">Entregues Hoje</option>
           <option value="history">Pedidos Concluídos</option>
-          <option value="returned">Devolvidos à Loja</option>
-          <option value="cancelled">Cancelados</option>
+          <option value="returned">↩️ Devolvidos à Loja</option>
+          <option value="cancelled">❌ Cancelados</option>
         </select>
+
+        <!-- Filtro de Data -->
+        <div class="date-filter-wrap">
+          <span class="date-filter-icon">📅 ▾</span>
+          <select id="kanban-date-filter" onchange="handleKanbanFilterChange()">
+            <option value="all">📅 Todos os Dias (Geral)</option>
+            <option value="today" selected>📅 Apenas Hoje</option>
+            <option value="yesterday">📅 Ontem</option>
+            <option value="7days">📅 Últimos 7 Dias</option>
+          </select>
+        </div>
         
         <select id="kanban-pay-filter" onchange="handleKanbanFilterChange()">
-          <option value="all">💳 Todas as Formas de Pagamento</option>
+          <option value="all">💳 Pagamento</option>
           <option value="pix">💚 Pix (Online / Entrega)</option>
           <option value="dinheiro">💵 Dinheiro (com Troco)</option>
           <option value="cartao">💳 Cartão (Máquina / Online)</option>
@@ -181,16 +209,24 @@
           <option value="pending">Aguardando Pagamento</option>
         </select>
 
-        <select id="kanban-date-filter" onchange="handleKanbanFilterChange()">
-          <option value="all">📅 Todos os Dias (Geral)</option>
-          <option value="today" selected>📅 Apenas Hoje</option>
-          <option value="yesterday">📅 Ontem</option>
-          <option value="7days">📅 Últimos 7 Dias</option>
-        </select>
+        <!-- Botão Busca Mobile (Terceira Linha de Filtros) -->
+        <button type="button" id="btn-mobile-search-trigger" class="btn-mobile-search-trigger" onclick="toggleMobileSearch()" title="Buscar pedidos">
+          🔍
+        </button>
 
-        <button type="button" class="btn-routes-gps" onclick="openDeliveryMapModal()" title="Visualizar pedidos no mapa e criar rotas de entrega">
+        <!-- Botão Rotas Desktop -->
+        <button type="button" class="btn-routes-gps btn-routes-desktop" onclick="openDeliveryMapModal()" title="Visualizar pedidos no mapa e criar rotas de entrega">
           📍 Ver Rotas & GPS
         </button>
+      </div>
+
+      <!-- Gaveta de Busca Expansível Mobile -->
+      <div class="mobile-search-panel" id="mobile-search-panel">
+        <div class="mobile-search-inner">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="kanban-search-mobile" placeholder="Buscar por nº (#123) ou nome..." oninput="handleMobileSearchInput(this.value)">
+          <button type="button" class="btn-clear-search-mobile" onclick="clearMobileSearch()" title="Limpar busca">✕</button>
+        </div>
       </div>
 
       <!-- Switcher de Modos de Visualização do Kanban -->
