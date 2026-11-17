@@ -627,6 +627,30 @@ window.openItemModal = function(productId) {
   if (sheet) sheet.scrollTop = 0;
 };
 
+// PADRÃO ÚNICO: seção "Escolha o Tamanho" usada por TODOS os produtos (atuais e futuros).
+// Um botão por tamanho cadastrado, com o preço correspondente e destaque no selecionado.
+function renderSizeSelector(prod, selectedIdx) {
+  const sizes = Array.isArray(prod.prices) ? prod.prices : [];
+  if (sizes.length === 0) return '';
+  return `
+    <h4>Escolha o Tamanho</h4>
+    <div class="size-grid" role="radiogroup" aria-label="Tamanhos disponíveis">
+      ${sizes.map((p, idx) => {
+        const hasPromo = p.promoPrice != null && p.promoPrice < p.price;
+        const pr = hasPromo ? p.promoPrice : p.price;
+        const on = selectedIdx === idx;
+        return `
+          <button type="button" class="size-btn ${on ? 'on' : ''}" role="radio" aria-checked="${on}" data-size-idx="${idx}" onclick="selectSize(${idx})">
+            <span class="size-btn-ml">${p.size} ml</span>
+            ${hasPromo ? `<span class="size-btn-old">${R(p.price)}</span>` : ''}
+            <span class="size-btn-price">${R(pr)}</span>
+          </button>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
 function renderItemModal() {
   const st = CURRENT_ITEM_STATE;
   if (!st || !st.product) return;
@@ -711,7 +735,7 @@ function renderItemModal() {
 
   let h = `
     <button class="x" onclick="closeSheet()">×</button>
-    <button class="btn o" onclick="closeSheet()" style="position:absolute;top:14px;left:14px;padding:5px 12px;font-size:12px;font-weight:700;display:flex;align-items:center;cursor:pointer;z-index:10;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.25);color:#fff;border-radius:20px">
+    <button class="btn o" onclick="closeSheet()" style="position:absolute;top:14px;left:14px;width:calc(100% - 28px);box-sizing:border-box;padding:5px 12px;font-size:12px;font-weight:700;display:flex;align-items:center;cursor:pointer;z-index:10;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.25);color:#fff;border-radius:20px">
       Voltar para o cardápio
     </button>
     <div class="sheet-photo-wrap">
@@ -720,17 +744,7 @@ function renderItemModal() {
     <h3>${esc(prod.name)}</h3>
     <p class="mut" style="margin-top:2px;font-size:13px">${esc(prod.description)}</p>
 
-    <h4>Escolha o Tamanho</h4>
-    <div class="chips">
-      ${prod.prices.map((p, idx) => {
-        const pr = p.promoPrice != null ? p.promoPrice : p.price;
-        return `
-          <div class="chip ${st.selectedSizeIdx === idx ? 'on' : ''}" onclick="selectSize(${idx})">
-            ${p.size} ml · ${R(pr)}
-          </div>
-        `;
-      }).join('')}
-    </div>
+    ${renderSizeSelector(prod, st.selectedSizeIdx)}
   `;
 
   // Acompanhamentos inclusos (se customizável ou monte seu açaí)
