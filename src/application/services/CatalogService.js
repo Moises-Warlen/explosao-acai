@@ -425,31 +425,74 @@ export class CatalogService {
   }
 
   // ================= FRUTAS ADICIONAIS =================
-  getFruits() {
-    const data = this.db.get();
-    return (data.fruits || []).map(f => {
+  _normalizeFruits(data) {
+    if (!data.fruits) data.fruits = [];
+    let changed = false;
+    data.fruits = data.fruits.map(f => {
       if (typeof f === 'string') {
+        changed = true;
+        const cleanName = f.trim();
         return {
-          id: `frt_${f.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
-          name: f,
+          id: `frt_${cleanName.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+          name: cleanName,
           price: 3.9,
           costPrice: 1.0,
           active: true
         };
       }
-      return {
-        id: f.id || `frt_${(f.name || '').toLowerCase().replace(/[^a-z0-9]/g, '')}`,
-        name: f.name || '',
-        price: Number(f.price !== undefined ? f.price : 3.9),
-        costPrice: Number(f.costPrice !== undefined ? f.costPrice : 0),
-        active: f.active !== undefined ? !!f.active : true
-      };
+      if (typeof f === 'object' && f !== null) {
+        if (!f.id) {
+          changed = true;
+          f.id = `frt_${(f.name || '').toLowerCase().replace(/[^a-z0-9]/g, '') || Date.now()}`;
+        }
+      }
+      return f;
     });
+    if (changed) {
+      this.db.save();
+    }
+  }
+
+  _findFruitIndex(data, id) {
+    if (!data.fruits || !id) return -1;
+    const cleanId = String(id).toLowerCase().trim();
+    const strippedId = cleanId.replace(/^frt_/, '');
+
+    return data.fruits.findIndex(f => {
+      if (!f) return false;
+      if (typeof f === 'string') {
+        const s = f.toLowerCase().trim();
+        const genId = 'frt_' + s.replace(/[^a-z0-9]/g, '');
+        return s === cleanId || genId === cleanId || s === strippedId;
+      }
+      const fId = String(f.id || '').toLowerCase().trim();
+      const fName = String(f.name || '').toLowerCase().trim();
+      const genId = 'frt_' + fName.replace(/[^a-z0-9]/g, '');
+      return (
+        fId === cleanId ||
+        fName === cleanId ||
+        fName === strippedId ||
+        genId === cleanId ||
+        fId.replace(/^frt_/, '') === strippedId
+      );
+    });
+  }
+
+  getFruits() {
+    const data = this.db.get();
+    this._normalizeFruits(data);
+    return data.fruits.map(f => ({
+      id: f.id,
+      name: f.name || '',
+      price: Number(f.price !== undefined ? f.price : 3.9),
+      costPrice: Number(f.costPrice !== undefined ? f.costPrice : 0),
+      active: f.active !== undefined ? !!f.active : true
+    }));
   }
 
   createFruit(fruitData) {
     const data = this.db.get();
-    if (!data.fruits) data.fruits = [];
+    this._normalizeFruits(data);
     const name = (fruitData.name || '').trim();
     if (!name) throw new Error('O nome da fruta é obrigatório.');
 
@@ -468,8 +511,8 @@ export class CatalogService {
 
   updateFruit(id, updates) {
     const data = this.db.get();
-    if (!data.fruits) data.fruits = [];
-    const idx = data.fruits.findIndex(f => (typeof f === 'object' && f.id === id) || (typeof f === 'string' && f === id));
+    this._normalizeFruits(data);
+    const idx = this._findFruitIndex(data, id);
     if (idx === -1) throw new Error('Fruta não encontrada.');
 
     const current = typeof data.fruits[idx] === 'string'
@@ -479,7 +522,7 @@ export class CatalogService {
     const updated = {
       ...current,
       ...updates,
-      id
+      id: current.id || id
     };
     if (updates.name !== undefined) updated.name = updates.name.trim();
     if (updates.price !== undefined) updated.price = Number(updates.price);
@@ -493,8 +536,8 @@ export class CatalogService {
 
   deleteFruit(id) {
     const data = this.db.get();
-    if (!data.fruits) data.fruits = [];
-    const idx = data.fruits.findIndex(f => (typeof f === 'object' && f.id === id) || (typeof f === 'string' && f === id));
+    this._normalizeFruits(data);
+    const idx = this._findFruitIndex(data, id);
     if (idx === -1) throw new Error('Fruta não encontrada.');
 
     const removed = data.fruits.splice(idx, 1);

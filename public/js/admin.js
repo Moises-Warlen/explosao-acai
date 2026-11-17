@@ -4183,7 +4183,7 @@ window.closeFruitModal = function() {
 
 window.saveFruitForm = async function(e) {
   if (e) e.preventDefault();
-  const id = $('#fruit-id')?.value;
+  let id = $('#fruit-id')?.value;
   const name = $('#fruit-name')?.value.trim();
   const price = parseFloat($('#fruit-price')?.value);
   const costPrice = parseFloat($('#fruit-cost')?.value) || 0;
@@ -4193,12 +4193,18 @@ window.saveFruitForm = async function(e) {
     return adminToast('Preencha o nome da fruta e o preço adicional.', 'danger');
   }
 
+  // Se não tiver ID explícito, mas já existir fruta com mesmo nome, atualiza a existente
+  if (!id && name) {
+    const existing = (FRUITS || []).find(f => (f.name || '').toLowerCase() === name.toLowerCase());
+    if (existing) id = existing.id;
+  }
+
   const payload = { name, price, costPrice, active };
 
   try {
     let res;
     if (id) {
-      res = await fetch(`${API_URL}/catalog/fruits/${id}`, {
+      res = await fetch(`${API_URL}/catalog/fruits/${encodeURIComponent(id)}`, {
         method: 'PUT',
         headers: authHeaders(),
         body: JSON.stringify(payload)
