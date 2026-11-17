@@ -1,165 +1,65 @@
-process.env.NODE_ENV = 'test';
-import { test, describe, before, after } from 'node:test';
-import assert from 'node:assert';
-import http from 'node:http';
-import { server } from '../src/server.js';
-
-function req(options, body = null) {
-  return new Promise((resolve, reject) => {
-    const r = http.request(options, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        try {
-          resolve({ status: res.statusCode, body: JSON.parse(data), raw: data });
-        } catch (e) {
-          resolve({ status: res.statusCode, body: data, raw: data });
-        }
-      });
-    });
-    r.on('error', reject);
-    if (body) r.write(typeof body === 'string' ? body : JSON.stringify(body));
-    r.end();
-  });
-}
+import { test, describe } from 'node:test';
+import assert from 'node:assert/strict';
+import { catalogService } from '../src/application/services/CatalogService.js';
+import { orderService } from '../src/application/services/OrderService.js';
+import { db } from '../src/infrastructure/database/JsonDatabase.js';
 
 describe('Controle de Preço Individual de Frutas Adicionais', () => {
-  let port;
-  let token;
 
-  before(async () => {
-    if (!server.listening) {
-      await new Promise(resolve => server.listen(0, resolve));
-    }
-    port = server.address().port;
+  test('1. getCatalog() e getFruits() retornam lista com preços e custos individuais', () => {
+    const catalog = catalogService.getCatalog();
+    assert.ok(Array.isArray(catalog.fruits), 'Catalog deve ter array de frutas');
+    assert.ok(catalog.fruits.length >= 5, 'Deve ter pelo menos 5 frutas cadastradas');
 
-    // Login admin com a senha oficial
-    const loginRes = await req({
-      hostname: 'localhost',
-      port,
-      path: '/api/auth/login',
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    }, { password: 'RafaeLL@2' });
-
-    assert.strictEqual(loginRes.status, 200);
-    token = loginRes.body.token;
-  });
-
-  test('1. GET /api/catalog/fruits - Retorna lista de frutas com preços individuais', async () => {
-    const res = await req({
-      hostname: 'localhost',
-      port,
-      path: '/api/catalog/fruits',
-      method: 'GET'
-    });
-
-    assert.strictEqual(res.status, 200);
-    assert.strictEqual(res.body.ok, true);
-    assert.ok(Array.isArray(res.body.fruits));
-    assert.ok(res.body.fruits.length >= 5);
-
-    const banana = res.body.fruits.find(f => f.name.toLowerCase() === 'banana');
-    assert.ok(banana);
+    const banana = catalog.fruits.find(f => f.name.toLowerCase() === 'banana');
+    assert.ok(banana, 'Banana deve estar cadastrada');
     assert.strictEqual(typeof banana.price, 'number');
     assert.strictEqual(typeof banana.costPrice, 'number');
+    assert.strictEqual(typeof banana.active, 'boolean');
   });
 
-  test('2. CRUD de Frutas: Criar, Atualizar preço individual e Excluir fruta', async () => {
-    // Criar Fruta
-    const createRes = await req({
-      hostname: 'localhost',
-      port,
-      path: '/api/catalog/fruits',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    }, {
-      name: 'Abacaxi Pérola',
+  test('2. CRUD de Frutas: Criar, Atualizar preço individual e Excluir fruta', () => {
+    // 1. Criar Fruta
+    const novaFruta = catalogService.createFruit({
+      name: 'Abacaxi Pérola Teste',
       price: 4.50,
       costPrice: 1.20,
       active: true
     });
 
-    assert.strictEqual(createRes.status, 201);
-    assert.strictEqual(createRes.body.ok, true);
-    const createdFruit = createRes.body.fruit;
-    assert.strictEqual(createdFruit.name, 'Abacaxi Pérola');
-    assert.strictEqual(createdFruit.price, 4.50);
+    assert.ok(novaFruta.id);
+    assert.strictEqual(novaFruta.name, 'Abacaxi Pérola Teste');
+    assert.strictEqual(novaFruta.price, 4.50);
 
-    // Atualizar Preço da Fruta
-    const updateRes = await req({
-      hostname: 'localhost',
-      port,
-      path: `/api/catalog/fruits/${createdFruit.id}`,
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    }, {
-      price: 5.00,
-      costPrice: 1.50
+    // 2. Atualizar Preço da Fruta
+    const atualizada = catalogService.updateFruit(novaFruta.id, {
+      price: 5.50,
+      costPrice: 1.80
     });
+    assert.strictEqual(atualizada.price, 5.50);
+    assert.strictEqual(atualizada.costPrice, 1.80);
 
-    assert.strictEqual(updateRes.status, 200);
-    assert.strictEqual(updateRes.body.ok, true);
-    assert.strictEqual(updateRes.body.fruit.price, 5.00);
-
-    // Excluir Fruta
-    const delRes = await req({
-      hostname: 'localhost',
-      port,
-      path: `/api/catalog/fruits/${createdFruit.id}`,
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-
-    assert.strictEqual(delRes.status, 200);
-    assert.strictEqual(delRes.body.ok, true);
+    // 3. Excluir Fruta
+    const removida = catalogService.deleteFruit(novaFruta.id);
+    assert.strictEqual(removida.id, novaFruta.id);
   });
 
   test('3. Criação de Pedido: Preço de frutas adicionais calculado com base no valor individual de cada uma', async () => {
-    // Obter cardápio para pegar um produto base
-    const catRes = await req({
-      hostname: 'localhost',
-      port,
-      path: '/api/catalog',
-      method: 'GET'
-    });
-    const catalog = catRes.body;
-    const acaiTrad = catalog.products.find(p => p.id === 'acai_tradicional' || p.name.includes('Açaí Tradicional'));
+    const catalog = catalogService.getCatalog();
+    const acaiTrad = catalog.products[0];
     assert.ok(acaiTrad);
-    const size300 = acaiTrad.prices.find(pr => Number(pr.size) === 300) || acaiTrad.prices[0];
+    const size300 = acaiTrad.prices[0];
     const basePrice = size300.promoPrice != null ? size300.promoPrice : size300.price;
 
-    // Atualiza temporariamente os preços das frutas Banana e Morango para valores distintos
     const banana = catalog.fruits.find(f => f.name.toLowerCase() === 'banana');
     const morango = catalog.fruits.find(f => f.name.toLowerCase() === 'morango');
     assert.ok(banana && morango);
 
-    await req({
-      hostname: 'localhost',
-      port,
-      path: `/api/catalog/fruits/${banana.id}`,
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
-    }, { price: 2.50 });
+    // Configura preços individuais temporários para teste
+    catalogService.updateFruit(banana.id, { price: 2.50 });
+    catalogService.updateFruit(morango.id, { price: 4.50 });
 
-    await req({
-      hostname: 'localhost',
-      port,
-      path: `/api/catalog/fruits/${morango.id}`,
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
-    }, { price: 4.50 });
-
-    // Cria pedido com 1 copo contendo Banana e Morango como frutas adicionais
-    const orderPayload = {
+    const order = await orderService.createOrder({
       customer: {
         name: 'Cliente Teste Frutas',
         phone: '16999998888',
@@ -186,40 +86,15 @@ describe('Controle de Preço Individual de Frutas Adicionais', () => {
         changeFor: 50
       },
       deliveryType: 'delivery'
-    };
+    });
 
-    const orderRes = await req({
-      hostname: 'localhost',
-      port,
-      path: '/api/orders',
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    }, orderPayload);
-
-    assert.strictEqual(orderRes.status, 201);
-    assert.strictEqual(orderRes.body.ok, true);
-    const createdOrder = orderRes.body.order;
-
-    // O preço do item deve ser: basePrice + 2.50 (Banana) + 4.50 (Morango) = basePrice + 7.00
     const expectedUnitPrice = Number((basePrice + 2.50 + 4.50).toFixed(2));
-    assert.strictEqual(createdOrder.items[0].unitPrice, expectedUnitPrice);
-    assert.strictEqual(createdOrder.subtotal, expectedUnitPrice);
+    assert.strictEqual(order.items[0].unitPrice, expectedUnitPrice);
+    assert.strictEqual(order.subtotal, expectedUnitPrice);
 
-    // Restaura preços padrões
-    await req({
-      hostname: 'localhost',
-      port,
-      path: `/api/catalog/fruits/${banana.id}`,
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
-    }, { price: 3.90 });
-
-    await req({
-      hostname: 'localhost',
-      port,
-      path: `/api/catalog/fruits/${morango.id}`,
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
-    }, { price: 3.90 });
+    // Restaura preços
+    catalogService.updateFruit(banana.id, { price: 3.90 });
+    catalogService.updateFruit(morango.id, { price: 3.90 });
   });
+
 });

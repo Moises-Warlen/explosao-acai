@@ -5689,7 +5689,7 @@
       "customerName": "Cliente Noturno",
       "message": "Olá, ainda estão aceitando pedidos hoje?",
       "timestamp": "2026-11-17T16:09:03.049Z",
-      "read": false
+      "read": true
     },
     {
       "id": "msg_1794931743052_auto",
@@ -5740,7 +5740,7 @@
       "customerName": "Cliente Noturno",
       "message": "Olá, ainda estão aceitando pedidos hoje?",
       "timestamp": "2026-11-17T16:09:55.780Z",
-      "read": false
+      "read": true
     },
     {
       "id": "msg_1794931831884_744u",
@@ -5780,7 +5780,7 @@
       "customerName": "Cliente Noturno",
       "message": "Olá, ainda estão aceitando pedidos hoje?",
       "timestamp": "2026-11-17T16:10:33.256Z",
-      "read": false
+      "read": true
     },
     {
       "id": "msg_1794931878379_p76p",
@@ -5820,7 +5820,7 @@
       "customerName": "Cliente Noturno",
       "message": "Olá, ainda estão aceitando pedidos hoje?",
       "timestamp": "2026-11-17T16:11:19.531Z",
-      "read": false
+      "read": true
     },
     {
       "id": "msg_1794936358554_v2ci",
@@ -5860,7 +5860,7 @@
       "customerName": "Cliente Noturno",
       "message": "Olá, ainda estão aceitando pedidos hoje?",
       "timestamp": "2026-11-17T17:26:00.183Z",
-      "read": false
+      "read": true
     },
     {
       "id": "msg_1794936360188_auto",
@@ -5911,7 +5911,7 @@
       "customerName": "Cliente Noturno",
       "message": "Olá, ainda estão aceitando pedidos hoje?",
       "timestamp": "2026-11-17T17:32:26.140Z",
-      "read": false
+      "read": true
     },
     {
       "id": "msg_1794936789873_fvad",
@@ -5951,7 +5951,7 @@
       "customerName": "Cliente Noturno",
       "message": "Olá, ainda estão aceitando pedidos hoje?",
       "timestamp": "2026-11-17T17:33:11.753Z",
-      "read": false
+      "read": true
     },
     {
       "id": "msg_1794936838788_jln4",
@@ -6001,7 +6001,7 @@
       "customerName": "Cliente Noturno",
       "message": "Olá, ainda estão aceitando pedidos hoje?",
       "timestamp": "2026-11-17T17:34:01.704Z",
-      "read": false
+      "read": true
     }
   ],
   "catalogVersion": "2026-11-10-flyer-v1"

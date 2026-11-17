@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/admin.css?v=3.3">
+  <link rel="stylesheet" href="css/admin.css?v=3.4">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
@@ -650,7 +650,7 @@
     <!-- ABA 6: ADICIONAIS & VÍNCULOS -->
     <div class="tab-pane" id="tab-extras">
       <div class="admin-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
           <div>
             <h2 style="margin:0">Gestão de Adicionais & Extras</h2>
             <p style="color:var(--mut);font-size:13px;margin:4px 0 0">
@@ -660,21 +660,8 @@
           <button class="btn-sm btn-next" onclick="openNewExtraModal()">+ Novo Adicional</button>
         </div>
 
-        <div class="table-responsive">
-          <table>
-            <thead>
-              <tr>
-                <th>Adicional</th>
-                <th>Preço de Venda</th>
-                <th>Custo Insumo</th>
-                <th>Vínculo Permitido</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="extras-table-body"></tbody>
-          </table>
-        </div>
+        <!-- Lista de Cards de Adicionais Padronizada conforme Gestor Pro -->
+        <div id="extras-table-body" class="extras-cards-list"></div>
         <div id="extras-pagination" style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;flex-wrap:wrap;gap:10px"></div>
       </div>
 
@@ -690,21 +677,8 @@
           <button class="btn-sm btn-next" onclick="openNewFruitModal()">+ Nova Fruta</button>
         </div>
 
-        <div class="table-responsive">
-          <table>
-            <thead>
-              <tr>
-                <th>Fruta</th>
-                <th>Preço Adicional (Cobrado do Cliente)</th>
-                <th>Custo Insumo</th>
-                <th>Margem Bruta</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="fruits-table-body"></tbody>
-          </table>
-        </div>
+        <!-- Lista de Cards de Frutas Adicionais Padronizada conforme Gestor Pro -->
+        <div id="fruits-table-body" class="extras-cards-list"></div>
       </div>
     </div>
 

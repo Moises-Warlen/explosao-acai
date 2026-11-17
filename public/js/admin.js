@@ -1,4 +1,4 @@
-/* =========================================================================
+﻿/* =========================================================================
    PAINEL ADMINISTRATIVO COMPLETO & GESTÃO AVANÇADA — EXPLOSÃO AÇAÍ
    - Regra de Impressão Rígida: Pix e Cartão só imprimem após confirmação bancária
    - Relatórios Gerenciais de Vendas, Fretes, Lucros, Tempos de Preparo e Entrega
@@ -3809,10 +3809,22 @@ window.setExtrasPerPage = function(perPage) {
   renderExtrasTable();
 };
 
+function getExtraIcon(name) {
+  const n = String(name || '').toLowerCase();
+  if (n.includes('fruta') || n.includes('morango') || n.includes('banana') || n.includes('uva') || n.includes('kiwi') || n.includes('manga') || n.includes('abacaxi')) return '🍓';
+  if (n.includes('nutella') || n.includes('chocolate') || n.includes('brigadeiro') || n.includes('kit kat') || n.includes('bis') || n.includes('sonho')) return '🍫';
+  if (n.includes('ninho') || n.includes('leite') || n.includes('chantilly')) return '🥛';
+  if (n.includes('granola')) return '🥣';
+  if (n.includes('paçoca') || n.includes('amendoim')) return '🥜';
+  if (n.includes('confete') || n.includes('ovomaltine') || n.includes('gotas')) return '🍬';
+  if (n.includes('mel')) return '🍯';
+  return '🍧';
+}
+
 function renderExtrasTable() {
-  const tbody = $('#extras-table-body');
+  const container = $('#extras-table-body');
   const paginationBox = $('#extras-pagination');
-  if (!tbody) return;
+  if (!container) return;
 
   const total = EXTRAS.length;
   const perPage = EXTRAS_PER_PAGE || 10;
@@ -3823,30 +3835,67 @@ function renderExtrasTable() {
   const start = (EXTRAS_PAGE - 1) * perPage;
   const pageItems = EXTRAS.slice(start, start + perPage);
 
-  tbody.innerHTML = pageItems.map(e => `
-    <tr>
-      <td><b>${esc(e.name)}</b></td>
-      <td>${R(e.price)}</td>
-      <td>${R(e.costPrice || 0)}</td>
-      <td>
-        ${e.allowInAcai ? '<span class="profit-badge" style="margin-right:4px">Copos de Açaí</span>' : ''}
-        ${e.allowInCombos ? '<span class="profit-badge">Combos</span>' : ''}
-      </td>
-      <td>${e.active ? '<span style="color:var(--green)">Ativo</span>' : '<span style="color:var(--danger)">Pausado</span>'}</td>
-      <td>
-        <button class="btn-sm btn-print" onclick="openEditExtraModal('${e.id}')">Editar</button>
-        <button class="btn-sm btn-danger" onclick="deleteExtra('${e.id}')">Excluir</button>
-      </td>
-    </tr>
-  `).join('');
+  if (pageItems.length === 0) {
+    container.innerHTML = `<p style="color:var(--mut);font-size:13px;text-align:center;padding:24px">Nenhum adicional cadastrado.</p>`;
+    return;
+  }
+
+  container.innerHTML = pageItems.map(e => {
+    const price = Number(e.price || 0);
+    const cost = Number(e.costPrice || 0);
+    const margin = price - cost;
+    const marginPct = price > 0 ? Math.round((margin / price) * 100) : 0;
+    const icon = getExtraIcon(e.name);
+
+    const vinculos = [];
+    if (e.allowInAcai) vinculos.push('<span class="profit-badge">Copos de Açaí</span>');
+    if (e.allowInCombos) vinculos.push('<span class="profit-badge">Combos</span>');
+    if (!vinculos.length) vinculos.push('<span style="color:var(--mut);font-size:11px">Geral</span>');
+
+    return `
+      <div class="extra-item-card ${e.active ? '' : 'paused'}">
+        <div class="extra-card-header">
+          <div class="extra-card-info">
+            <div class="extra-card-avatar" aria-hidden="true">${icon}</div>
+            <div class="extra-card-text">
+              <h4 class="extra-card-title" title="${esc(e.name)}">${esc(e.name)}</h4>
+              <div class="extra-card-tags">
+                ${vinculos.join(' ')}
+              </div>
+            </div>
+          </div>
+          <div class="extra-card-status-wrap">
+            <span class="badge ${e.active ? 'badge-active' : 'badge-paused'}" style="background:${e.active ? 'var(--green)' : 'var(--danger)'};color:#fff;font-weight:700;padding:4px 10px;border-radius:8px;font-size:11.5px">
+              ${e.active ? '● Ativo' : '⏸ Pausado'}
+            </span>
+          </div>
+        </div>
+
+        <div class="extra-card-pricing-block">
+          <div><b>Preço de Venda:</b> <span class="extra-card-pricing-val">${R(price)}</span></div>
+          <div><b>Custo Insumo:</b> <span>${R(cost)}</span></div>
+          <div><b>Margem de Lucro:</b> <span style="color:${margin >= 0 ? 'var(--green)' : 'var(--danger)'};font-weight:700">${margin >= 0 ? '+' : ''}${R(margin)} (${marginPct}%)</span></div>
+        </div>
+
+        <div class="extra-card-actions">
+          <button class="btn-sm btn-print" onclick="openEditExtraModal('${e.id}')" title="Editar este adicional">
+            ✏️ Editar
+          </button>
+          <button class="btn-sm btn-danger" onclick="deleteExtra('${e.id}')" title="Excluir este adicional">
+            🗑️ Excluir
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
 
   if (paginationBox) {
     paginationBox.innerHTML = `
       <div style="font-size:13px;color:var(--mut)">
-        Mostrando <b>${total === 0 ? 0 : start + 1} - ${Math.min(start + perPage, total)}</b> de <b>${total}</b> adicionais
+        Mostrando <b>${total === 0 ? 0 : start + 1} - ${Math.min(start + perPage, total)}</b> de <b>${total}</b> adicionais cadastrados
       </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <select onchange="setExtrasPerPage(this.value)" style="padding:4px 8px;font-size:12px;border-radius:8px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <select onchange="setExtrasPerPage(this.value)" style="padding:6px 10px;font-size:12px;border-radius:8px;background:var(--card);color:#fff;border:1px solid var(--ln)">
           <option value="10" ${perPage === 10 ? 'selected' : ''}>10 por página</option>
           <option value="25" ${perPage === 25 ? 'selected' : ''}>25 por página</option>
           <option value="50" ${perPage === 50 ? 'selected' : ''}>50 por página</option>
@@ -3974,33 +4023,55 @@ async function loadFruits() {
 }
 
 function renderFruitsTable() {
-  const tbody = $('#fruits-table-body');
-  if (!tbody) return;
+  const container = $('#fruits-table-body');
+  if (!container) return;
 
   if (!FRUITS || FRUITS.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--mut);padding:18px">Nenhuma fruta cadastrada. Clique em "+ Nova Fruta" para cadastrar.</td></tr>`;
+    container.innerHTML = `<p style="color:var(--mut);font-size:13px;text-align:center;padding:24px">Nenhuma fruta cadastrada. Clique em "+ Nova Fruta" para cadastrar.</p>`;
     return;
   }
 
-  tbody.innerHTML = FRUITS.map(f => {
+  container.innerHTML = FRUITS.map(f => {
     const price = Number(f.price !== undefined ? f.price : 3.9);
     const cost = Number(f.costPrice !== undefined ? f.costPrice : 0);
     const margin = price - cost;
-    const marginPercent = price > 0 ? ((margin / price) * 100).toFixed(0) : 0;
+    const marginPercent = price > 0 ? Math.round((margin / price) * 100) : 0;
     const marginColor = margin < 0 ? 'var(--danger)' : 'var(--green)';
 
     return `
-      <tr>
-        <td><b>${esc(f.name)}</b></td>
-        <td><b>${R(price)}</b></td>
-        <td>${R(cost)}</td>
-        <td><span style="color:${marginColor};font-weight:700">${R(margin)} (${marginPercent}%)</span></td>
-        <td>${f.active !== false ? '<span style="color:var(--green);font-weight:700">Ativa</span>' : '<span style="color:var(--danger)">Pausada</span>'}</td>
-        <td>
-          <button class="btn-sm btn-print" onclick="openEditFruitModal('${f.id}')">Editar</button>
-          <button class="btn-sm btn-danger" onclick="deleteFruit('${f.id}')">Excluir</button>
-        </td>
-      </tr>
+      <div class="extra-item-card ${f.active !== false ? '' : 'paused'}">
+        <div class="extra-card-header">
+          <div class="extra-card-info">
+            <div class="extra-card-avatar" aria-hidden="true">🍓</div>
+            <div class="extra-card-text">
+              <h4 class="extra-card-title" title="${esc(f.name)}">${esc(f.name)}</h4>
+              <div class="extra-card-tags">
+                <span class="profit-badge">Fruta Adicional</span>
+              </div>
+            </div>
+          </div>
+          <div class="extra-card-status-wrap">
+            <span class="badge ${f.active !== false ? 'badge-active' : 'badge-paused'}" style="background:${f.active !== false ? 'var(--green)' : 'var(--danger)'};color:#fff;font-weight:700;padding:4px 10px;border-radius:8px;font-size:11.5px">
+              ${f.active !== false ? '● Ativa' : '⏸ Pausada'}
+            </span>
+          </div>
+        </div>
+
+        <div class="extra-card-pricing-block">
+          <div><b>Preço Adicional:</b> <span class="extra-card-pricing-val">${R(price)}</span></div>
+          <div><b>Custo Insumo:</b> <span>${R(cost)}</span></div>
+          <div><b>Margem Bruta:</b> <span style="color:${marginColor};font-weight:700">${margin >= 0 ? '+' : ''}${R(margin)} (${marginPercent}%)</span></div>
+        </div>
+
+        <div class="extra-card-actions">
+          <button class="btn-sm btn-print" onclick="openEditFruitModal('${f.id}')" title="Editar fruta">
+            ✏️ Editar
+          </button>
+          <button class="btn-sm btn-danger" onclick="deleteFruit('${f.id}')" title="Excluir fruta">
+            🗑️ Excluir
+          </button>
+        </div>
+      </div>
     `;
   }).join('');
 }
