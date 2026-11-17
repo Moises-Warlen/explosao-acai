@@ -396,19 +396,17 @@ export class OrderService {
     // 10. Emite evento em tempo real via WebSocket para o Painel Administrativo
     wsHub.notifyNewOrder(newOrder);
 
-    // 11. Dispara mensagem no WhatsApp do cliente: Pedido feito / aceito
-    // Se o pagamento for online (Pix) e ainda estiver pendente, NÃO avisa que foi aceito nem inicia preparo!
-    // O pedido só é aceito e enviado para a cozinha após a confirmação bancária do pagamento.
+    // 11. Dispara mensagem no WhatsApp do cliente: Pedido recebido (Aguardando confirmação da loja)
+    // Se o pagamento for online (Pix) e ainda estiver pendente, aguarda confirmação bancária.
+    // O pedido SÓ é aceito e enviado para a cozinha após o operador clicar em "Aceitar / Mandar p/ Cozinha".
     const isOnlinePending = newOrder.payment?.timing === 'online' && newOrder.payment?.status !== PaymentStatus.APPROVED;
     if (!isOnlinePending) {
       whatsAppNotificationService.notifyStatusChange(newOrder, 'received').catch(() => {});
     }
 
-    // 12. REGRA DE IMPRESSÃO: Auto-impressão imediata se for Dinheiro ou Cartão na Entrega!
-    // Pagamentos online (Pix e Cartão Online) SÓ IMPRIMEM depois que o banco confirmar o pagamento!
-    if (newOrder.canPrint().allowed) {
-      this.autoPrintIfConfigured(newOrder);
-    }
+    // 12. REGRA DE IMPRESSÃO TÉRMICA:
+    // A comanda térmica da cozinha NÃO imprime na criação do pedido!
+    // A impressão é disparada exclusivamente quando o operador clicar no botão "Aceitar / Mandar p/ Cozinha" (PREPARING).
 
     return newOrder;
   }
@@ -475,6 +473,13 @@ export class OrderService {
       whatsAppNotificationService.notifyStatusChange(updated, newStatus).catch(() => {});
     }
 
+    // REGRA DE IMPRESSÃO: Ao aceitar o pedido e enviar para a cozinha (PREPARING),
+    // dispara a impressão térmica da comanda de produção se o pagamento permitir
+    if (newStatus === OrderStatus.PREPARING && updated.canPrint().allowed) {
+      this.autoPrintIfConfigured(updated);
+      return new Order(data.orders[orderIndex]);
+    }
+
     return updated;
   }
 
@@ -513,8 +518,8 @@ export class OrderService {
     const updated = new Order(order);
     wsHub.notifyOrderStatus(updated);
 
-    // Agora que o pagamento foi confirmado pelo banco, dispara auto-impressão se configurada
-    this.autoPrintIfConfigured(updated);
+    // O pedido permanece na coluna Novos Pedidos com pagamento aprovado.
+    // A impressão térmica e o aviso de aceite e preparo só ocorrem ao clicar em "Aceitar / Mandar p/ Cozinha".
 
     return updated;
   }

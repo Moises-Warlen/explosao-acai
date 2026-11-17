@@ -44,6 +44,7 @@ export class Order {
     total = 0,
     costTotal = 0,
     status = OrderStatus.RECEIVED,
+    printed = false,
     printedStations = [],
     preparedAt = null,
     deliveredAt = null,
@@ -72,6 +73,7 @@ export class Order {
     this.total = Number(total);
     this.costTotal = Number(costTotal || 0); // Custo dos insumos para relatório financeiro
     this.status = status;
+    this.printed = Boolean(printed || (printedStations && printedStations.length > 0));
     this.printedStations = printedStations; // ['kitchen', 'counter']
     this.notifiedStatuses = Array.isArray(notifiedStatuses) ? notifiedStatuses : [];
     this.archivedToHistory = Boolean(archivedToHistory);

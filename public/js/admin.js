@@ -222,6 +222,32 @@ async function initDashboard() {
   updateHeaderKPIs();
   window.syncTopbarHeight();
   initAdminNotifications();
+
+  // Fallback de sincronização periódica (garante novos pedidos e status em tempo real mesmo em suspensão mobile ou oscilação de rede)
+  if (!window._adminOrdersPollInterval) {
+    window._adminOrdersPollInterval = setInterval(async () => {
+      if (!ADMIN_TOKEN) return;
+      try {
+        const res = await fetch(`${API_URL}/orders`, { headers: authHeaders() });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.ok && Array.isArray(data.orders)) {
+            const oldLen = ORDERS.length;
+            const newLen = data.orders.length;
+            const hasDiff = oldLen !== newLen || data.orders.some((no, i) => {
+              const oo = ORDERS[i];
+              return !oo || oo.id !== no.id || oo.status !== no.status || oo.payment?.status !== no.payment?.status;
+            });
+            if (hasDiff) {
+              ORDERS = data.orders;
+              renderKanban();
+              updateOrdersBadge();
+            }
+          }
+        }
+      } catch (e) {}
+    }, 4000);
+  }
 }
 
 // Conexão WebSocket para Atualizações em Tempo Real
@@ -238,7 +264,12 @@ function initWebSocket() {
         const data = JSON.parse(event.data);
         if (data.event === 'NEW_ORDER') {
           playNotificationChime();
-          ORDERS.unshift(data.payload);
+          const existingIdx = ORDERS.findIndex(o => o.id === data.payload.id);
+          if (existingIdx !== -1) {
+            ORDERS[existingIdx] = data.payload;
+          } else {
+            ORDERS.unshift(data.payload);
+          }
           renderKanban();
           updateOrdersBadge();
           window.highlightOrderCard(data.payload.id);
@@ -1595,7 +1626,17 @@ window.advanceOrderStatus = async function(orderId, newStatus) {
     const data = await res.json();
     if (data.ok) {
       const idx = ORDERS.findIndex(o => o.id === orderId);
-      if (idx !== -1) ORDERS[idx] = data.order;
+      if (idx !== -1) {
+        ORDERS[idx] = data.order;
+      } else {
+        ORDERS.unshift(data.order);
+      }
+
+      // Se havia um filtro de status ativo que esconderia o pedido avançado, reseta para 'all'
+      const statusFilter = $('#kanban-status-filter');
+      if (statusFilter && statusFilter.value !== 'all') {
+        statusFilter.value = 'all';
+      }
 
       // No mobile: transição automática da visualização para acompanhar o pedido
       if (window.innerWidth <= 860 && typeof window.setMobileActiveStage === 'function') {
@@ -1605,6 +1646,8 @@ window.advanceOrderStatus = async function(orderId, newStatus) {
           window.setMobileActiveStage('ready');
         } else if (newStatus === 'out_for_delivery') {
           window.setMobileActiveStage('out_for_delivery');
+        } else if (newStatus === 'delivered') {
+          window.setMobileActiveStage('delivered');
         } else {
           renderKanban();
         }
@@ -1631,9 +1674,9 @@ window.getWppStatusMessage = function(order) {
 
   switch (order.status) {
     case 'received':
-      return `Olá, ${nome}! Seu pedido #${numero} na Explosão Açaí foi aceito! Já já começamos a preparar.`;
+      return `Olá, ${nome}! Recebemos o seu pedido #${numero} na Explosão Açaí! Aguarde um instante enquanto nossa equipe confirma seu pedido.`;
     case 'preparing':
-      return `Seu pedido #${numero} já está sendo preparado com muito carinho!`;
+      return `Olá, ${nome}! Seu pedido #${numero} foi aceito pela Explosão Açaí e já está sendo preparado com muito carinho!`;
     case 'ready':
     case 'out_for_delivery':
       // Se for entrega (delivery), mensagem de entrega a caminho:

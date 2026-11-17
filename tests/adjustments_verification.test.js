@@ -54,19 +54,21 @@ describe('Explosão Açaí — Testes das 4 Correções Finais', () => {
     });
 
     assert.equal(order.payment.status, PaymentStatus.PENDING, 'Deve iniciar pendente');
+    assert.equal(order.printed, false, 'Não deve imprimir automaticamente na criação do pedido');
 
     // Primeira confirmação (Webhook ou Auto-Sync)
     const confirmed = orderService.confirmPaymentApproved(order.id);
     assert.ok(confirmed, 'Deve retornar pedido atualizado');
     assert.equal(confirmed.payment.status, PaymentStatus.APPROVED, 'Status do pagamento deve ser APPROVED (Pago)');
     assert.equal(confirmed.status, OrderStatus.RECEIVED, 'Pedido deve permanecer em NOVOS PEDIDOS (RECEIVED) até movimentação manual');
+    assert.equal(confirmed.printed, false, 'Não deve imprimir automaticamente na confirmação do Pix (apenas ao aceitar)');
 
     // Segunda chamada (simulação de webhook duplicado pelo gateway)
     const secondCall = orderService.confirmPaymentApproved(order.id);
     assert.equal(secondCall.payment.status, PaymentStatus.APPROVED);
     assert.equal(secondCall.status, OrderStatus.RECEIVED, 'Não deve alterar status do pedido em chamadas duplicadas');
 
-    // Movimentação manual pelo administrador para PREPARING
+    // Movimentação manual pelo administrador para PREPARING (Aceitar / Mandar p/ Cozinha)
     const advanced = orderService.updateOrderStatus(order.id, OrderStatus.PREPARING);
     assert.equal(advanced.status, OrderStatus.PREPARING, 'Após o administrador aceitar, status avança para PREPARING');
     assert.ok(advanced.notifiedStatuses.includes('preparing'), 'Notifica WhatsApp apenas após envio para preparo');
@@ -84,18 +86,18 @@ describe('Explosão Açaí — Testes das 4 Correções Finais', () => {
       status: 'received'
     };
 
-    // 1. Pedido feito / aceito (sem emojis / UTF-8)
+    // 1. Pedido recebido (Aguardando confirmação da loja)
     const msgReceived = whatsAppNotificationService.formatStatusMessage(fakeOrder, 'received');
     assert.equal(
       msgReceived,
-      'Olá, Maria Souza! Seu pedido #789123 na Explosão Açaí foi aceito! Já já começamos a preparar.'
+      'Olá, Maria Souza! Recebemos o seu pedido #789123 na Explosão Açaí! Aguarde um instante enquanto nossa equipe confirma seu pedido.'
     );
 
-    // 2. Em preparo (sem emojis / UTF-8)
+    // 2. Em preparo (Aceito pela loja e enviado para a cozinha)
     const msgPreparing = whatsAppNotificationService.formatStatusMessage(fakeOrder, 'preparing');
     assert.equal(
       msgPreparing,
-      'Seu pedido #789123 já está sendo preparado com muito carinho!'
+      'Olá, Maria Souza! Seu pedido #789123 foi aceito pela Explosão Açaí e já está sendo preparado com muito carinho!'
     );
 
     // 3. Pronto / Saiu para entrega (sem emojis / UTF-8)
@@ -111,6 +113,40 @@ describe('Explosão Açaí — Testes das 4 Correções Finais', () => {
       msgDelivered,
       'Obrigado por comprar com a Explosão Açaí, Maria Souza! Esperamos que você curta sua explosão de sabor! Nos siga no Instagram: https://www.instagram.com/expl.osaoacai?mdxt=Zm1obWhpaTFhbmV3'
     );
+  });
+
+  test('5. Fluxo Rigoroso de Aceite e Cozinha: Não avisa aceite nem imprime até o operador clicar em Aceitar / Mandar p/ Cozinha', async () => {
+    // 1. Cria pedido com Dinheiro
+    const order = await orderService.createOrder({
+      customer: { name: 'Cliente Aceite Cozinha', phone: '16993334455' },
+      delivery: { type: 'pickup' },
+      items: [
+        { productId: 'prod_classico', name: 'Clássico 300 ml', size: 300, quantity: 1, unitPrice: 19.90, accompaniments: [], extras: [], fruits: [] }
+      ],
+      payment: { method: 'Dinheiro', timing: 'delivery', changeFor: '50' },
+      bypassStoreClosed: true
+    });
+
+    // Pedido criado deve estar em Novos Pedidos (received), NÃO deve ter impresso comanda ainda
+    assert.equal(order.status, OrderStatus.RECEIVED);
+    assert.equal(order.printed, false, 'Comanda não pode imprimir ao registrar o pedido');
+    assert.deepEqual(order.printedStations, [], 'Nenhuma estação deve ter sido impressa');
+
+    // Mensagem de recebimento NÃO deve dizer que foi aceito
+    const msgReceived = whatsAppNotificationService.formatStatusMessage(order, 'received');
+    assert.ok(!msgReceived.includes('foi aceito!'), 'Mensagem recebida não pode dizer que foi aceito');
+    assert.ok(msgReceived.includes('Aguarde um instante enquanto nossa equipe confirma seu pedido'));
+
+    // 2. Operador clica em "Aceitar / Mandar p/ Cozinha" (PREPARING)
+    const acceptedOrder = orderService.updateOrderStatus(order.id, OrderStatus.PREPARING);
+
+    // Agora sim: status PREPARING, auto-impressão da cozinha disparada e mensagem de aceite
+    assert.equal(acceptedOrder.status, OrderStatus.PREPARING);
+    assert.equal(acceptedOrder.printed, true, 'Deve marcar como impresso após envio para a cozinha');
+    assert.ok(acceptedOrder.printedStations.includes('kitchen'), 'Deve registrar via da cozinha em printedStations');
+
+    const msgPreparing = whatsAppNotificationService.formatStatusMessage(acceptedOrder, 'preparing');
+    assert.ok(msgPreparing.includes('foi aceito pela Explosão Açaí e já está sendo preparado com muito carinho!'));
   });
 
   after(() => {

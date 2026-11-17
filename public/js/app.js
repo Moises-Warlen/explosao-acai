@@ -1808,7 +1808,7 @@ ${orderTrackingUrl}
             </svg>
           </div>
           <b style="color:#065f46;font-size:15px;display:block;margin-top:4px">Pagamento Confirmado pelo Banco!</b>
-          <span style="font-size:12px;color:#047857">Seu pedido já foi encaminhado para a produção na cozinha.</span>
+          <span style="font-size:12px;color:#047857">Seu pedido foi recebido com sucesso. Aguardando a loja aceitar e iniciar o preparo na cozinha.</span>
         </div>
       `;
     } else if (order.payment.qrCodeBase64 || order.payment.qrCode) {
@@ -1897,7 +1897,7 @@ window.checkPixStatus = async function(orderId) {
     const data = await res.json();
     if (data.ok && data.order) {
       if (data.order.payment.status === 'approved' || data.order.status !== 'received') {
-        toast('Pagamento aprovado pelo banco! Cupom impresso para a cozinha.');
+        toast('Pagamento aprovado pelo banco! Aguardando a loja aceitar o pedido.');
         renderOrderSuccess(data.order);
       } else {
         toast('Aguardando confirmação do banco... Tente novamente em alguns segundos.');
@@ -1914,8 +1914,8 @@ function formatStatus(status, order = null) {
   const isOnlinePending = order && order.payment?.timing === 'online' && order.payment?.status !== 'approved';
 
   switch (status) {
-    case 'received': return isOnlinePending ? 'Aguardando Pagamento Pix' : 'Recebido pela Loja';
-    case 'preparing': return 'Em Preparo na Cozinha';
+    case 'received': return isOnlinePending ? 'Aguardando Pagamento Pix' : 'Pedido Recebido · Aguardando Loja';
+    case 'preparing': return 'Aceito · Em Preparo na Cozinha';
     case 'ready': return isPickup ? 'Pronto para Retirada no Balcão' : 'Pronto para Entrega';
     case 'out_for_delivery': return isPickup ? 'Pronto para Retirada no Balcão' : 'Saiu para Entrega (Em Rota)';
     case 'delivered': return isPickup ? 'Retirado no Balcão (Concluído)' : 'Entregue (Concluído)';

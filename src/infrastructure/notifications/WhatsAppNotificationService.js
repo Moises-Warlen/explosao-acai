@@ -33,9 +33,9 @@ export class WhatsAppNotificationService {
 
     switch (status) {
       case 'received':
-        return `Olá, ${nome}! Seu pedido #${numero} na Explosão Açaí foi aceito! Já já começamos a preparar.`;
+        return `Olá, ${nome}! Recebemos o seu pedido #${numero} na Explosão Açaí! Aguarde um instante enquanto nossa equipe confirma seu pedido.`;
       case 'preparing':
-        return `Seu pedido #${numero} já está sendo preparado com muito carinho!`;
+        return `Olá, ${nome}! Seu pedido #${numero} foi aceito pela Explosão Açaí e já está sendo preparado com muito carinho!`;
       case 'ready':
       case 'out_for_delivery':
         // Se for entrega (delivery), mensagem de entrega a caminho:
