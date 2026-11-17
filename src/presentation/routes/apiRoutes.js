@@ -94,7 +94,8 @@ router.post('/test/simulate-payment/:orderId', adminAuthMiddleware, (req, res) =
 router.post('/admin/auth', (req, res) => {
   const { password } = req.body || {};
   if (isValidAdminToken(password)) {
-    return res.json({ ok: true, token: password });
+    const raw = typeof password === 'string' ? password.trim() : password;
+    return res.json({ ok: true, token: raw });
   }
   return res.status(401).json({ ok: false, error: 'Senha incorreta.' });
 });
