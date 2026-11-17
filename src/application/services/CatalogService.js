@@ -328,6 +328,8 @@ export class CatalogService {
       isPromo: !!productData.isPromo,
       comboProductIds: Array.isArray(productData.comboProductIds) ? productData.comboProductIds : [],
       allowedAccompanimentIds: Array.isArray(productData.allowedAccompanimentIds) ? productData.allowedAccompanimentIds : undefined,
+      allowExtras: productData.allowExtras !== undefined ? !!productData.allowExtras : true,
+      allowedExtraIds: Array.isArray(productData.allowedExtraIds) ? productData.allowedExtraIds : undefined,
       prices,
       recipes: productData.recipes || []
     };

@@ -984,6 +984,26 @@
           </div>
           <div id="product-accompaniments-checkboxes" style="max-height:160px;overflow-y:auto;border:1px solid var(--ln);border-radius:10px;padding:10px;background:var(--card);display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px"></div>
         </div>
+
+        <!-- Adicionais Extras Disponíveis para este Produto -->
+        <div id="product-extras-section" style="margin-top:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <label style="display:flex;align-items:center;gap:8px;margin:0;font-weight:700;cursor:pointer">
+              <input type="checkbox" id="p-allow-extras" style="width:auto" onchange="toggleProductExtrasVisibility(this.checked)">
+              <span>Habilitar Adicionais Extras neste Produto</span>
+            </label>
+            <div id="product-extras-actions" style="display:flex;gap:6px">
+              <button type="button" class="btn-sm btn-secondary" style="font-size:11px;padding:3px 8px" onclick="toggleAllProductExtras(true)">Marcar Todos</button>
+              <button type="button" class="btn-sm btn-secondary" style="font-size:11px;padding:3px 8px" onclick="toggleAllProductExtras(false)">Desmarcar Todos</button>
+            </div>
+          </div>
+          <div id="product-extras-box-wrapper" style="transition:opacity 0.2s">
+            <div id="product-extras-checkboxes" style="max-height:160px;overflow-y:auto;border:1px solid var(--ln);border-radius:10px;padding:10px;background:var(--card);display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px"></div>
+            <div style="font-size:11px;color:var(--mut);margin-top:4px">
+              Selecione quais adicionais extras (Nutella, Brigadeiro, Frutas extras, etc.) aparecerão para o cliente neste produto.
+            </div>
+          </div>
+        </div>
         
         <!-- Ficha Técnica, Acompanhamentos Inclusos e Preços por Tamanho -->
         <h4 style="margin:18px 0 6px">Tamanhos, Preços, Acompanhamentos Inclusos e Custos de Insumo</h4>

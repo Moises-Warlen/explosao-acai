@@ -19,6 +19,9 @@ export class Product {
     isNewLaunch = false,
     isPromo = false,
     comboProductIds = [],
+    allowedAccompanimentIds,
+    allowExtras = true,
+    allowedExtraIds,
     maxAccompaniments = 0,
     prices = [],
     recipes = []
@@ -35,6 +38,9 @@ export class Product {
     this.isNewLaunch = isNewLaunch;
     this.isPromo = isPromo;
     this.comboProductIds = comboProductIds;
+    this.allowedAccompanimentIds = allowedAccompanimentIds;
+    this.allowExtras = allowExtras !== false;
+    this.allowedExtraIds = allowedExtraIds;
     this.maxAccompaniments = maxAccompaniments;
     this.prices = (prices || []).map(pr => {
       const price = Number(pr.price || 0);

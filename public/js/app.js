@@ -664,11 +664,14 @@ function renderItemModal() {
     return isCombo ? e.allowInCombos : e.allowInAcai;
   });
 
-  // REGRA ESPECÍFICA: Remover completamente adicionais extras de Pura Polpa (1L e 2L) e Combo Kids
-  if (isPolpa || isComboKids) {
+  // REGRA ESPECÍFICA: Controle de adicionais extras (painel administrativo ou Pura Polpa / Combo Kids)
+  if (prod.allowExtras === false || isPolpa || isComboKids) {
     availableExtras = [];
     st.extras = [];
     st.fruits = [];
+  } else if (Array.isArray(prod.allowedExtraIds)) {
+    availableExtras = availableExtras.filter(e => prod.allowedExtraIds.includes(e.id));
+    st.extras = (st.extras || []).filter(extId => availableExtras.some(e => e.id === extId));
   }
 
   // Acompanhamentos disponíveis: todos os acompanhamentos ativos cadastrados no catálogo
@@ -943,10 +946,12 @@ window.addItemToCart = function() {
   const isComboKids = prod.id === 'combo_kids';
 
   let availableExtras = (CATALOG.extras || []).filter(e => isCombo ? e.allowInCombos : e.allowInAcai);
-  if (isPolpa || isComboKids) {
+  if (prod.allowExtras === false || isPolpa || isComboKids) {
     availableExtras = [];
     st.extras = [];
     st.fruits = [];
+  } else if (Array.isArray(prod.allowedExtraIds)) {
+    availableExtras = availableExtras.filter(e => prod.allowedExtraIds.includes(e.id));
   }
 
   // Se selecionou fruta extra mas não marcou nenhuma fruta:

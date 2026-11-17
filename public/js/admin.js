@@ -2926,6 +2926,47 @@ window.toggleAllProductAccompaniments = function(checked) {
   checkboxes.forEach(cb => { cb.checked = !!checked; });
 };
 
+window.toggleProductExtrasVisibility = function(enabled) {
+  const wrapper = $('#product-extras-box-wrapper');
+  const actions = $('#product-extras-actions');
+  if (wrapper) wrapper.style.display = enabled ? 'block' : 'none';
+  if (actions) actions.style.display = enabled ? 'flex' : 'none';
+};
+
+window.renderProductExtrasCheckboxes = function(selectedIds = null, allowExtras = true) {
+  const box = $('#product-extras-checkboxes');
+  const allowCb = $('#p-allow-extras');
+  if (allowCb) allowCb.checked = allowExtras !== false;
+  toggleProductExtrasVisibility(allowExtras !== false);
+
+  if (!box) return;
+
+  if (!EXTRAS || EXTRAS.length === 0) {
+    box.innerHTML = `<span style="font-size:12px;color:var(--mut)">Nenhum adicional extra cadastrado. Cadastre novos na aba "Adicionais / Extras".</span>`;
+    return;
+  }
+
+  box.innerHTML = EXTRAS.map(ex => {
+    const isChecked = selectedIds === null || selectedIds === undefined
+      ? (ex.active !== false)
+      : (Array.isArray(selectedIds) ? selectedIds.includes(ex.id) : true);
+
+    const priceLabel = ex.price ? ` (+R$ ${Number(ex.price).toFixed(2).replace('.', ',')})` : '';
+
+    return `
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;margin:0;color:#fff">
+        <input type="checkbox" class="prod-extra-cb" value="${ex.id}" ${isChecked ? 'checked' : ''} style="width:auto">
+        <span>${esc(ex.name)}${priceLabel}</span>
+      </label>
+    `;
+  }).join('');
+};
+
+window.toggleAllProductExtras = function(checked) {
+  const checkboxes = $$('#product-extras-checkboxes input[type="checkbox"]');
+  checkboxes.forEach(cb => { cb.checked = !!checked; });
+};
+
 window.openNewProductModal = function() {
   $('#prod-modal-title').textContent = 'Novo Produto';
   $('#p-id').value = '';
@@ -2945,6 +2986,7 @@ window.openNewProductModal = function() {
   $('#loss-alert-box').style.display = 'none';
   handleCategoryChange($('#p-category')?.value);
   renderProductAccompanimentsCheckboxes(null);
+  renderProductExtrasCheckboxes(null, true);
   $('#product-edit-modal').style.display = 'flex';
 };
 
@@ -2969,6 +3011,13 @@ window.editProductModal = function(id) {
   // por isso a tela mostra desmarcado (reflete exatamente o que o cliente vê) até você marcar e salvar.
   const isMonteProd = !!prod.isCustomizable || prod.categorySlug === 'monte' || prod.id === 'prod_monte';
   renderProductAccompanimentsCheckboxes(prod.allowedAccompanimentIds || (isMonteProd ? null : []));
+
+  const isPolpa = prod.id === 'polpa_1l' || prod.id === 'polpa_2l' || prod.categorySlug === 'polpa' || (prod.name && prod.name.toLowerCase().includes('pura polpa'));
+  const isComboKids = prod.id === 'combo_kids';
+  const defaultAllowExtras = (isPolpa || isComboKids) ? false : true;
+  const allowExtras = prod.allowExtras !== undefined ? !!prod.allowExtras : defaultAllowExtras;
+  renderProductExtrasCheckboxes(prod.allowedExtraIds !== undefined ? prod.allowedExtraIds : null, allowExtras);
+
   checkFormPrejuizo();
   $('#product-edit-modal').style.display = 'flex';
 };
@@ -3177,6 +3226,11 @@ window.saveProductForm = async function(e) {
   const acompCheckboxes = $$('#product-accompaniments-checkboxes input[type="checkbox"]:checked');
   const allowedAccompanimentIds = Array.from(acompCheckboxes).map(cb => cb.value);
 
+  // Adicionais extras selecionados para este copo
+  const allowExtras = $('#p-allow-extras') ? $('#p-allow-extras').checked : true;
+  const extraCheckboxes = $$('#product-extras-checkboxes input[type="checkbox"]:checked');
+  const allowedExtraIds = Array.from(extraCheckboxes).map(cb => cb.value);
+
   const payload = {
     name,
     categoryId,
@@ -3186,6 +3240,8 @@ window.saveProductForm = async function(e) {
     isPromo,
     comboProductIds,
     allowedAccompanimentIds,
+    allowExtras,
+    allowedExtraIds,
     prices,
     active: true
   };
@@ -3573,6 +3629,11 @@ async function loadExtras() {
     if (data.ok) {
       EXTRAS = data.extras || [];
       renderExtrasTable();
+      if ($('#product-edit-modal')?.style.display === 'flex') {
+        const currentlyChecked = Array.from($$('#product-extras-checkboxes input[type="checkbox"]:checked')).map(cb => cb.value);
+        const allowExtras = $('#p-allow-extras') ? $('#p-allow-extras').checked : true;
+        renderProductExtrasCheckboxes(currentlyChecked, allowExtras);
+      }
     }
   } catch (e) {}
 }
