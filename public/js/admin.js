@@ -241,6 +241,7 @@ function initWebSocket() {
           ORDERS.unshift(data.payload);
           renderKanban();
           updateOrdersBadge();
+          window.highlightOrderCard(data.payload.id);
           loadSalesReport({ period: $('#report-period-select')?.value || 'today' });
           if (typeof window.addAdminNotification === 'function') {
             window.addAdminNotification({
@@ -263,6 +264,7 @@ function initWebSocket() {
           }
           renderKanban();
           updateOrdersBadge();
+          window.highlightOrderCard(data.payload.id);
           loadSalesReport({ period: $('#report-period-select')?.value || 'today' });
 
           if (data.payload.payment?.status === 'approved' && data.payload.payment?.method === 'Pix' && typeof window.addAdminNotification === 'function') {
@@ -635,7 +637,19 @@ const KANBAN_PAGE = {
   returned: 1,
   cancelled: 1
 };
-const KANBAN_PER_PAGE = 3;
+const KANBAN_PER_PAGE = 50;
+
+window.highlightOrderCard = function(orderId) {
+  if (!orderId) return;
+  setTimeout(() => {
+    const cardEl = document.getElementById(`card-${orderId}`);
+    if (cardEl) {
+      cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      cardEl.classList.add('order-card-highlight');
+      setTimeout(() => cardEl.classList.remove('order-card-highlight'), 3000);
+    }
+  }, 150);
+};
 
 // Controle de Cards Minimizados em Todas as Colunas do Kanban
 const EXPANDED_ORDERS = new Set();
@@ -944,14 +958,17 @@ function renderKanban() {
     const isTodayDelivered = isDeliveredStatus && !order.archivedToHistory && orderDateBrasilia === todayBrasilia;
     const isHistoryDelivered = isDeliveredStatus && (order.archivedToHistory || orderDateBrasilia < todayBrasilia);
 
-    // 1. Filtro de Data
+    // 1. Filtro de Data (pedidos ativos em produção NUNCA devem sumir da tela de operação)
     if (dateFilter !== 'all') {
-      if (dateFilter === 'today') {
-        if (orderDateBrasilia !== todayBrasilia && !isTodayDelivered) return false;
-      } else if (dateFilter === 'yesterday') {
-        if (orderDateBrasilia !== yesterdayBrasilia) return false;
-      } else if (dateFilter === '7days') {
-        if (orderDateBrasilia < sevenDaysAgoBrasilia) return false;
+      const isPendingActive = order.status === 'received' || order.status === 'preparing' || order.status === 'ready' || order.status === 'out_for_delivery';
+      if (!isPendingActive) {
+        if (dateFilter === 'today') {
+          if (orderDateBrasilia !== todayBrasilia && !isTodayDelivered) return false;
+        } else if (dateFilter === 'yesterday') {
+          if (orderDateBrasilia !== yesterdayBrasilia) return false;
+        } else if (dateFilter === '7days') {
+          if (orderDateBrasilia < sevenDaysAgoBrasilia) return false;
+        }
       }
     }
 
@@ -1032,15 +1049,18 @@ function renderKanban() {
   // Atualiza métricas rápidas no header
   updateHeaderKPIs();
 
-  const ordersReceived = filteredOrders.filter(o => o.status === 'received');
-  const ordersPreparing = filteredOrders.filter(o => o.status === 'preparing');
-  const ordersOnlyReady = filteredOrders.filter(o => o.status === 'ready');
-  const ordersOnlyOutForDelivery = filteredOrders.filter(o => o.status === 'out_for_delivery');
-  const ordersReady = filteredOrders.filter(o => o.status === 'ready' || o.status === 'out_for_delivery');
-  const ordersDelivered = filteredOrders.filter(o => o.status === 'delivered' && !o.archivedToHistory && getBrasiliaDateString(o.deliveredAt || o.createdAt) === todayBrasilia);
-  const ordersHistory = filteredOrders.filter(o => o.status === 'delivered' && (o.archivedToHistory || getBrasiliaDateString(o.deliveredAt || o.createdAt) < todayBrasilia));
-  const ordersReturned = filteredOrders.filter(o => o.status === 'returned');
-  const ordersCancelled = filteredOrders.filter(o => o.status === 'cancelled');
+  // Ordena pedidos: do mais recente para o mais antigo (o pedido recém-criado/recém-movido sempre fica no topo!)
+  const sortedOrders = [...filteredOrders].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+  const ordersReceived = sortedOrders.filter(o => o.status === 'received');
+  const ordersPreparing = sortedOrders.filter(o => o.status === 'preparing');
+  const ordersOnlyReady = sortedOrders.filter(o => o.status === 'ready');
+  const ordersOnlyOutForDelivery = sortedOrders.filter(o => o.status === 'out_for_delivery');
+  const ordersReady = sortedOrders.filter(o => o.status === 'ready' || o.status === 'out_for_delivery');
+  const ordersDelivered = sortedOrders.filter(o => o.status === 'delivered' && !o.archivedToHistory && getBrasiliaDateString(o.deliveredAt || o.createdAt) === todayBrasilia);
+  const ordersHistory = sortedOrders.filter(o => o.status === 'delivered' && (o.archivedToHistory || getBrasiliaDateString(o.deliveredAt || o.createdAt) < todayBrasilia));
+  const ordersReturned = sortedOrders.filter(o => o.status === 'returned');
+  const ordersCancelled = sortedOrders.filter(o => o.status === 'cancelled');
 
   // Atualiza contadores do menu OPERAÇÃO e pílulas rápidas no Mobile
   if (typeof window.updateMobileStageCounts === 'function') {
@@ -1592,6 +1612,7 @@ window.advanceOrderStatus = async function(orderId, newStatus) {
         renderKanban();
       }
 
+      window.highlightOrderCard(orderId);
       updateOrdersBadge();
       adminToast(`Status do Pedido #${data.order.orderNo} atualizado!`, 'info');
       promptWppStatusNotice(data.order);
@@ -1765,6 +1786,7 @@ window.confirmOrderDeliveryAndPayment = function(orderId) {
             renderKanban();
           }
           updateOrdersBadge();
+          window.highlightOrderCard(orderId);
           const periodSelect = $('#report-period-select');
           loadSalesReport({ period: periodSelect ? periodSelect.value : 'today' });
           adminToast(`Pedido #${data.order.orderNo} finalizado e pagamento confirmado!`, 'success');
@@ -1806,6 +1828,7 @@ window.confirmPickupOrder = function(orderId) {
             renderKanban();
           }
           updateOrdersBadge();
+          window.highlightOrderCard(orderId);
           const periodSelect = $('#report-period-select');
           loadSalesReport({ period: periodSelect ? periodSelect.value : 'today' });
           adminToast(`Pedido #${data.order.orderNo} retirado e pagamento concluído com sucesso!`, 'success');

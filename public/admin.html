@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/admin.css?v=3.2">
+  <link rel="stylesheet" href="css/admin.css?v=3.3">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
@@ -198,8 +198,8 @@
         <div class="date-filter-wrap">
           <span class="date-filter-icon">📅 ▾</span>
           <select id="kanban-date-filter" onchange="handleKanbanFilterChange()">
-            <option value="all">📅 Todos os Dias (Geral)</option>
-            <option value="today" selected>📅 Apenas Hoje</option>
+            <option value="all" selected>📅 Todos os Dias (Geral)</option>
+            <option value="today">📅 Apenas Hoje</option>
             <option value="yesterday">📅 Ontem</option>
             <option value="7days">📅 Últimos 7 Dias</option>
           </select>
@@ -1574,6 +1574,6 @@
   <div id="recipe-pdf-area"></div>
 
   <!-- Scripts -->
-  <script src="js/admin.js?v=3.3"></script>
+  <script src="js/admin.js?v=3.5"></script>
 </body>
 </html>

@@ -2051,6 +2051,17 @@ input:checked + .slider:before {
   box-shadow: 0 4px 18px rgba(16, 185, 129, 0.2);
 }
 
+@keyframes orderGlowHighlight {
+  0% { box-shadow: 0 0 0 3px #fde047, 0 0 24px rgba(250, 204, 21, 0.9); transform: scale(1.02); }
+  50% { box-shadow: 0 0 0 3px #10b981, 0 0 24px rgba(16, 185, 129, 0.9); transform: scale(1.02); }
+  100% { box-shadow: none; transform: scale(1); }
+}
+
+.order-card.order-card-highlight {
+  animation: orderGlowHighlight 2.5s ease-out !important;
+  border-color: #fde047 !important;
+}
+
 .col-history .order-card {
   border: 1.5px solid rgba(20, 184, 166, 0.35);
 }
