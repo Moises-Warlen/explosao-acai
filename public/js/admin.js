@@ -1576,10 +1576,27 @@ window.advanceOrderStatus = async function(orderId, newStatus) {
     if (data.ok) {
       const idx = ORDERS.findIndex(o => o.id === orderId);
       if (idx !== -1) ORDERS[idx] = data.order;
-      renderKanban();
+
+      // No mobile: transição automática da visualização para acompanhar o pedido
+      if (window.innerWidth <= 860 && typeof window.setMobileActiveStage === 'function') {
+        if (newStatus === 'preparing') {
+          window.setMobileActiveStage('preparing');
+        } else if (newStatus === 'ready') {
+          window.setMobileActiveStage('ready');
+        } else if (newStatus === 'out_for_delivery') {
+          window.setMobileActiveStage('out_for_delivery');
+        } else {
+          renderKanban();
+        }
+      } else {
+        renderKanban();
+      }
+
       updateOrdersBadge();
       adminToast(`Status do Pedido #${data.order.orderNo} atualizado!`, 'info');
       promptWppStatusNotice(data.order);
+    } else {
+      adminToast(data.error || 'Erro ao atualizar status.', 'danger');
     }
   } catch (e) {
     adminToast('Erro ao atualizar status.', 'danger');
@@ -1742,7 +1759,11 @@ window.confirmOrderDeliveryAndPayment = function(orderId) {
         if (data.ok) {
           const idx = ORDERS.findIndex(o => o.id === orderId);
           if (idx !== -1) ORDERS[idx] = data.order;
-          renderKanban();
+          if (window.innerWidth <= 860 && typeof window.setMobileActiveStage === 'function') {
+            window.setMobileActiveStage('delivered');
+          } else {
+            renderKanban();
+          }
           updateOrdersBadge();
           const periodSelect = $('#report-period-select');
           loadSalesReport({ period: periodSelect ? periodSelect.value : 'today' });
@@ -1779,7 +1800,11 @@ window.confirmPickupOrder = function(orderId) {
         if (data.ok) {
           const idx = ORDERS.findIndex(o => o.id === orderId);
           if (idx !== -1) ORDERS[idx] = data.order;
-          renderKanban();
+          if (window.innerWidth <= 860 && typeof window.setMobileActiveStage === 'function') {
+            window.setMobileActiveStage('delivered');
+          } else {
+            renderKanban();
+          }
           updateOrdersBadge();
           const periodSelect = $('#report-period-select');
           loadSalesReport({ period: periodSelect ? periodSelect.value : 'today' });
