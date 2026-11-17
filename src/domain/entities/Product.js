@@ -48,6 +48,7 @@ export class Product {
       const isLoss = costPrice > price;
       return {
         ...pr,
+        allowExtras: pr.allowExtras !== false,
         price,
         costPrice,
         isLoss,

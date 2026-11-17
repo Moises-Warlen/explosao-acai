@@ -3073,25 +3073,110 @@ function defaultMaxAcompForSize(size) {
   return 5;
 }
 
+window.formatSizeLabel = function(size) {
+  const num = Number(size);
+  if (!Number.isFinite(num) || num <= 0) return 'Tamanho';
+  if (num >= 1000 && num % 100 === 0) {
+    const l = num / 1000;
+    return `${l} Litro${l > 1 ? 's' : ''}`;
+  }
+  return `${num} ml`;
+};
+
+function parseSizeDisplay(size) {
+  const num = Number(size);
+  if (!Number.isFinite(num) || num <= 0) {
+    return { val: '', unit: 'ml', label: 'Tamanho do copo' };
+  }
+  if (num >= 1000 && num % 100 === 0) {
+    const l = num / 1000;
+    return { val: l, unit: 'l', label: `${l} Litro${l > 1 ? 's' : ''}` };
+  }
+  return { val: num, unit: 'ml', label: `${num} ml` };
+}
+
 function productSizeRowHtml(r) {
   const val = (v) => (v === null || v === undefined || Number.isNaN(v)) ? '' : v;
+  const parsed = parseSizeDisplay(r.size);
+  const allowExtras = r.allowExtras !== false;
+
   return `
-    <div class="p-size-row" data-promo="${val(r.promoPrice)}" style="background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:10px">
+    <div class="p-size-row" data-promo="${val(r.promoPrice)}" style="background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-        <b style="color:var(--y)">Tamanho do copo</b>
+        <b class="p-size-title" style="color:var(--y)">${parsed.label}</b>
         <button type="button" class="btn-sm btn-danger" style="font-size:11px;padding:2px 8px" onclick="removeProductSizeRow(this)">Remover</button>
       </div>
-      <label style="margin-top:4px">Tamanho (ml)</label>
-      <input type="number" min="1" step="1" class="p-size-ml" value="${val(r.size)}" placeholder="Ex: 400" oninput="checkFormPrejuizo()">
-      <label style="margin-top:4px">Preço Venda (R$)</label>
-      <input type="number" min="0" step="0.01" class="p-size-price" value="${val(r.price)}" oninput="checkFormPrejuizo()">
-      <label style="margin-top:4px">Custo Insumos (R$)</label>
-      <input type="number" min="0" step="0.01" class="p-size-cost" value="${val(r.costPrice)}" oninput="checkFormPrejuizo()">
-      <label style="margin-top:4px">Acomp. Inclusos</label>
-      <input type="number" min="0" step="1" class="p-size-max" value="${val(r.maxAccompaniments)}">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <label style="margin:0 0 3px 0;font-size:12px">Volume / Medida</label>
+          <div style="display:flex;gap:4px">
+            <input type="number" min="0.1" step="any" class="p-size-num p-size-ml" value="${parsed.val}" placeholder="Ex: 500 ou 1" style="flex:1" oninput="updateSizeRowBadge(this); checkFormPrejuizo()">
+            <select class="p-size-unit" style="width:80px;padding:6px;border-radius:8px;font-size:12px" onchange="handleSizeUnitChange(this)">
+              <option value="ml" ${parsed.unit === 'ml' ? 'selected' : ''}>ml</option>
+              <option value="l" ${parsed.unit === 'l' ? 'selected' : ''}>Litro(s)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label style="margin:0 0 3px 0;font-size:12px">Acomp. Inclusos</label>
+          <input type="number" min="0" step="1" class="p-size-max" value="${val(r.maxAccompaniments)}">
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <label style="margin:0 0 3px 0;font-size:12px">Preço Venda (R$)</label>
+          <input type="number" min="0" step="0.01" class="p-size-price" value="${val(r.price)}" oninput="checkFormPrejuizo()">
+        </div>
+        <div>
+          <label style="margin:0 0 3px 0;font-size:12px">Custo Insumos (R$)</label>
+          <input type="number" min="0" step="0.01" class="p-size-cost" value="${val(r.costPrice)}" oninput="checkFormPrejuizo()">
+        </div>
+      </div>
+
+      <!-- Controle de Adicionais Extras específico deste tamanho -->
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;margin:4px 0 0 0;padding-top:6px;border-top:1px dashed var(--ln);color:#fff">
+        <input type="checkbox" class="p-size-allow-extras" ${allowExtras ? 'checked' : ''} style="width:auto">
+        <span>Permitir Adicionais Extras neste tamanho</span>
+      </label>
     </div>
   `;
 }
+
+window.updateSizeRowBadge = function(input) {
+  const row = input.closest('.p-size-row');
+  if (!row) return;
+  const num = parseFloat(row.querySelector('.p-size-num')?.value);
+  const unit = row.querySelector('.p-size-unit')?.value || 'ml';
+  const title = row.querySelector('.p-size-title');
+  if (title) {
+    if (!Number.isFinite(num) || num <= 0) {
+      title.textContent = 'Tamanho do copo';
+    } else if (unit === 'l') {
+      title.textContent = `${num} Litro${num > 1 ? 's' : ''}`;
+    } else {
+      title.textContent = `${num} ml`;
+    }
+  }
+};
+
+window.handleSizeUnitChange = function(select) {
+  const row = select.closest('.p-size-row');
+  if (!row) return;
+  const numInput = row.querySelector('.p-size-num');
+  const val = parseFloat(numInput.value);
+  if (Number.isFinite(val) && val > 0) {
+    if (select.value === 'l' && val >= 1000) {
+      numInput.value = (val / 1000);
+    } else if (select.value === 'ml' && val <= 10) {
+      numInput.value = Math.round(val * 1000);
+    }
+  }
+  updateSizeRowBadge(select);
+  checkFormPrejuizo();
+};
 
 window.renderProductSizeRows = function(list) {
   const box = $('#p-sizes-list');
@@ -3102,12 +3187,30 @@ window.renderProductSizeRows = function(list) {
 
 window.getProductSizeRows = function() {
   return Array.from($$('#p-sizes-list .p-size-row')).map(row => {
-    const size = parseInt(row.querySelector('.p-size-ml').value, 10);
+    const unitEl = row.querySelector('.p-size-unit');
+    const unit = unitEl ? unitEl.value : 'ml';
+    const rawVal = parseFloat(row.querySelector('.p-size-num')?.value || row.querySelector('.p-size-ml')?.value);
+    let size = Number.isFinite(rawVal) ? rawVal : 500;
+    if (unit === 'l') {
+      size = Math.round(size * 1000);
+    } else {
+      size = Math.round(size);
+    }
+
     const price = parseFloat(row.querySelector('.p-size-price').value);
     const cost = parseFloat(row.querySelector('.p-size-cost').value) || 0;
     const max = parseInt(row.querySelector('.p-size-max').value, 10) || (Number.isFinite(size) ? defaultMaxAcompForSize(size) : 4);
     const promo = parseFloat(row.dataset.promo);
-    return { size, price, cost, max, promoPrice: Number.isFinite(promo) ? promo : null };
+    const allowExtras = row.querySelector('.p-size-allow-extras') ? row.querySelector('.p-size-allow-extras').checked : true;
+
+    return {
+      size,
+      price,
+      cost,
+      max,
+      allowExtras,
+      promoPrice: Number.isFinite(promo) ? promo : null
+    };
   });
 };
 
@@ -3116,12 +3219,13 @@ window.addProductSizeRow = function() {
   if (!box) return;
   const current = getProductSizeRows().filter(r => Number.isFinite(r.size));
   const biggest = current.reduce((m, r) => Math.max(m, r.size), 0);
-  const nextSize = biggest > 0 ? biggest + 200 : 300;
+  const nextSize = biggest > 0 ? (biggest >= 1000 ? biggest + 1000 : biggest + 200) : 300;
   box.insertAdjacentHTML('beforeend', productSizeRowHtml({
     size: nextSize,
     price: '',
     costPrice: '',
     maxAccompaniments: defaultMaxAcompForSize(nextSize),
+    allowExtras: true,
     promoPrice: null
   }));
   const rows = Array.from($$('#p-sizes-list .p-size-row'));
@@ -3152,7 +3256,8 @@ window.checkFormPrejuizo = function() {
   getProductSizeRows().forEach(r => {
     const price = Number.isFinite(r.price) ? r.price : 0;
     if (price > 0 && r.cost > price) {
-      losses.push(`Tamanho ${r.size || '?'}ml: Custo R$ ${r.cost.toFixed(2)} é MAIOR que Preço R$ ${price.toFixed(2)} (Prejuízo de R$ ${(r.cost - price).toFixed(2)})`);
+      const label = formatSizeLabel(r.size);
+      losses.push(`Tamanho ${label}: Custo R$ ${r.cost.toFixed(2)} é MAIOR que Preço R$ ${price.toFixed(2)} (Prejuízo de R$ ${(r.cost - price).toFixed(2)})`);
     }
   });
 
@@ -3214,11 +3319,18 @@ window.saveProductForm = async function(e) {
   const prices = [];
   const seenSizes = new Set();
   for (const r of sizeRows) {
-    if (!Number.isFinite(r.size) || r.size <= 0) return adminToast('Informe o tamanho em ml de todos os tamanhos.', 'danger');
-    if (seenSizes.has(r.size)) return adminToast(`O tamanho ${r.size} ml está repetido. Cada tamanho deve aparecer uma vez.`, 'danger');
-    if (!Number.isFinite(r.price) || r.price < 0) return adminToast(`Informe o preço de venda do tamanho ${r.size} ml.`, 'danger');
+    if (!Number.isFinite(r.size) || r.size <= 0) return adminToast('Informe um tamanho válido em ml ou Litros.', 'danger');
+    if (seenSizes.has(r.size)) return adminToast(`O tamanho ${formatSizeLabel(r.size)} está repetido. Cada tamanho deve aparecer apenas uma vez.`, 'danger');
+    if (!Number.isFinite(r.price) || r.price < 0) return adminToast(`Informe o preço de venda do tamanho ${formatSizeLabel(r.size)}.`, 'danger');
     seenSizes.add(r.size);
-    prices.push({ size: r.size, price: r.price, costPrice: r.cost, maxAccompaniments: r.max, promoPrice: r.promoPrice });
+    prices.push({
+      size: r.size,
+      price: r.price,
+      costPrice: r.cost,
+      maxAccompaniments: r.max,
+      allowExtras: r.allowExtras !== false,
+      promoPrice: r.promoPrice
+    });
   }
   prices.sort((a, b) => a.size - b.size);
 

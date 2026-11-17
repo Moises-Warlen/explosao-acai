@@ -627,6 +627,16 @@ window.openItemModal = function(productId) {
   if (sheet) sheet.scrollTop = 0;
 };
 
+function formatSizeLabel(size) {
+  const num = Number(size);
+  if (!Number.isFinite(num) || num <= 0) return '';
+  if (num >= 1000 && num % 100 === 0) {
+    const l = num / 1000;
+    return `${l} Litro${l > 1 ? 's' : ''}`;
+  }
+  return `${num} ml`;
+}
+
 function renderItemModal() {
   const st = CURRENT_ITEM_STATE;
   if (!st || !st.product) return;
@@ -664,8 +674,9 @@ function renderItemModal() {
     return isCombo ? e.allowInCombos : e.allowInAcai;
   });
 
-  // REGRA ESPECÍFICA: Controle de adicionais extras (painel administrativo ou Pura Polpa / Combo Kids)
-  if (prod.allowExtras === false || isPolpa || isComboKids) {
+  // REGRA ESPECÍFICA: Controle de adicionais extras (painel por produto ou por tamanho ml/Litro, ou Pura Polpa / Combo Kids)
+  const sizeAllowsExtras = selectedSizeObj ? selectedSizeObj.allowExtras !== false : true;
+  if (prod.allowExtras === false || !sizeAllowsExtras || isPolpa || isComboKids) {
     availableExtras = [];
     st.extras = [];
     st.fruits = [];
@@ -729,7 +740,7 @@ function renderItemModal() {
         const pr = p.promoPrice != null ? p.promoPrice : p.price;
         return `
           <div class="chip ${st.selectedSizeIdx === idx ? 'on' : ''}" onclick="selectSize(${idx})">
-            ${p.size} ml · ${R(pr)}
+            ${formatSizeLabel(p.size)} · ${R(pr)}
           </div>
         `;
       }).join('')}
@@ -830,6 +841,12 @@ window.selectSize = function(idx) {
   const selectedSizeObj = prod.prices[idx] || prod.prices[0];
   const sizeMl = selectedSizeObj?.size || 500;
 
+  // Se o tamanho selecionado não permitir adicionais extras, limpa os extras selecionados
+  if (selectedSizeObj && selectedSizeObj.allowExtras === false) {
+    CURRENT_ITEM_STATE.extras = [];
+    CURRENT_ITEM_STATE.fruits = [];
+  }
+
   let maxAcomp = selectedSizeObj?.maxAccompaniments;
   if (maxAcomp === undefined || maxAcomp === null) {
     if (sizeMl === 300) maxAcomp = 3;
@@ -841,7 +858,7 @@ window.selectSize = function(idx) {
   // Ajusta caso o novo tamanho tenha limite menor que o selecionado
   if (CURRENT_ITEM_STATE.accompaniments.length > maxAcomp) {
     CURRENT_ITEM_STATE.accompaniments = CURRENT_ITEM_STATE.accompaniments.slice(0, maxAcomp);
-    toast(`Tamanho de ${sizeMl}ml permite até ${maxAcomp} acompanhamentos inclusos.`);
+    toast(`Tamanho de ${formatSizeLabel(sizeMl)} permite até ${maxAcomp} acompanhamentos inclusos.`);
   }
 
   renderItemModal();
@@ -873,7 +890,7 @@ window.toggleAccompaniment = function(name) {
     st.accompaniments.splice(idx, 1);
   } else {
     if (st.accompaniments.length >= maxAcomp) {
-      return toast(`No copo de ${sizeMl}ml você pode escolher até ${maxAcomp} acompanhamentos inclusos! Desmarque um para trocar.`);
+      return toast(`No tamanho de ${formatSizeLabel(sizeMl)} você pode escolher até ${maxAcomp} acompanhamentos inclusos! Desmarque um para trocar.`);
     }
     st.accompaniments.push(name);
   }
@@ -945,8 +962,10 @@ window.addItemToCart = function() {
   const isPolpa = prod.id === 'polpa_1l' || prod.id === 'polpa_2l' || prod.categorySlug === 'polpa' || (prod.name && prod.name.toLowerCase().includes('pura polpa'));
   const isComboKids = prod.id === 'combo_kids';
 
+  const sizeAllowsExtras = selectedSizeObj ? selectedSizeObj.allowExtras !== false : true;
+
   let availableExtras = (CATALOG.extras || []).filter(e => isCombo ? e.allowInCombos : e.allowInAcai);
-  if (prod.allowExtras === false || isPolpa || isComboKids) {
+  if (prod.allowExtras === false || !sizeAllowsExtras || isPolpa || isComboKids) {
     availableExtras = [];
     st.extras = [];
     st.fruits = [];
@@ -984,7 +1003,10 @@ window.addItemToCart = function() {
   });
 
   const unitPrice = basePrice + extrasTotal;
-  const itemTitle = `${prod.name} ${selectedSizeObj.size} ml`;
+  const sizeLabel = formatSizeLabel(selectedSizeObj.size);
+  const itemTitle = prod.name.toLowerCase().includes(sizeLabel.toLowerCase())
+    ? prod.name
+    : `${prod.name} ${sizeLabel}`;
 
   // REGRA 2: Cria um novo item no carrinho com ID ÚNICO e combinação exata escolhida
   const cartItemId = 'copo_' + Date.now() + '_' + Math.random().toString(36).substr(2, 7);

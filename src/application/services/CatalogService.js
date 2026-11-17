@@ -225,6 +225,7 @@ export class CatalogService {
 
       return {
         ...pr,
+        allowExtras: pr.allowExtras !== false,
         maxAccompaniments,
         costPrice: Number(calculatedCost.toFixed(2)),
         margin: Number(margin.toFixed(2)),
@@ -311,7 +312,11 @@ export class CatalogService {
         else if (pr.size === 700) maxAcc = 5;
         else maxAcc = productData.maxAccompaniments || 0;
       }
-      return { ...pr, maxAccompaniments: Number(maxAcc) };
+      return {
+        ...pr,
+        allowExtras: pr.allowExtras !== false,
+        maxAccompaniments: Number(maxAcc)
+      };
     });
 
     const newProduct = {
