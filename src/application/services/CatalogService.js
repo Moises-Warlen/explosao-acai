@@ -169,7 +169,7 @@ export class CatalogService {
       categories: this.getCategories(),
       products: enrichedProducts,
       accompaniments: this.getAccompaniments(),
-      fruits: data.fruits || [],
+      fruits: this.getFruits(),
       extras: data.extras || []
     };
   }
@@ -420,6 +420,84 @@ export class CatalogService {
     if (idx === -1) throw new Error('Adicional não encontrado.');
 
     const removed = data.extras.splice(idx, 1);
+    this.db.save();
+    return removed[0];
+  }
+
+  // ================= FRUTAS ADICIONAIS =================
+  getFruits() {
+    const data = this.db.get();
+    return (data.fruits || []).map(f => {
+      if (typeof f === 'string') {
+        return {
+          id: `frt_${f.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+          name: f,
+          price: 3.9,
+          costPrice: 1.0,
+          active: true
+        };
+      }
+      return {
+        id: f.id || `frt_${(f.name || '').toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+        name: f.name || '',
+        price: Number(f.price !== undefined ? f.price : 3.9),
+        costPrice: Number(f.costPrice !== undefined ? f.costPrice : 0),
+        active: f.active !== undefined ? !!f.active : true
+      };
+    });
+  }
+
+  createFruit(fruitData) {
+    const data = this.db.get();
+    if (!data.fruits) data.fruits = [];
+    const name = (fruitData.name || '').trim();
+    if (!name) throw new Error('O nome da fruta é obrigatório.');
+
+    const newFruit = {
+      id: `frt_${Date.now()}`,
+      name,
+      price: Number(fruitData.price !== undefined ? fruitData.price : 3.9),
+      costPrice: Number(fruitData.costPrice !== undefined ? fruitData.costPrice : 0),
+      active: fruitData.active !== undefined ? !!fruitData.active : true
+    };
+
+    data.fruits.push(newFruit);
+    this.db.save();
+    return newFruit;
+  }
+
+  updateFruit(id, updates) {
+    const data = this.db.get();
+    if (!data.fruits) data.fruits = [];
+    const idx = data.fruits.findIndex(f => (typeof f === 'object' && f.id === id) || (typeof f === 'string' && f === id));
+    if (idx === -1) throw new Error('Fruta não encontrada.');
+
+    const current = typeof data.fruits[idx] === 'string'
+      ? { id, name: data.fruits[idx], price: 3.9, costPrice: 1.0, active: true }
+      : data.fruits[idx];
+
+    const updated = {
+      ...current,
+      ...updates,
+      id
+    };
+    if (updates.name !== undefined) updated.name = updates.name.trim();
+    if (updates.price !== undefined) updated.price = Number(updates.price);
+    if (updates.costPrice !== undefined) updated.costPrice = Number(updates.costPrice);
+    if (updates.active !== undefined) updated.active = !!updates.active;
+
+    data.fruits[idx] = updated;
+    this.db.save();
+    return updated;
+  }
+
+  deleteFruit(id) {
+    const data = this.db.get();
+    if (!data.fruits) data.fruits = [];
+    const idx = data.fruits.findIndex(f => (typeof f === 'object' && f.id === id) || (typeof f === 'string' && f === id));
+    if (idx === -1) throw new Error('Fruta não encontrada.');
+
+    const removed = data.fruits.splice(idx, 1);
     this.db.save();
     return removed[0];
   }

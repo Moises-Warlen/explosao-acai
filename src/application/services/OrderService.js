@@ -217,9 +217,29 @@ export class OrderService {
               }
               if (foundExt) {
                 if (foundExt.isFruitExtra) {
-                  extrasTotal += Number(foundExt.price || 0) * fruitCount;
+                  if (Array.isArray(item.fruits) && item.fruits.length > 0) {
+                    item.fruits.forEach(fr => {
+                      const frName = typeof fr === 'string' ? fr.trim() : (fr?.name || '').trim();
+                      const fruitObj = Array.isArray(catalog.fruits) ? catalog.fruits.find(f => {
+                        if (typeof f === 'string') return f.toLowerCase() === frName.toLowerCase();
+                        return (f.name || '').toLowerCase() === frName.toLowerCase() || f.id === frName;
+                      }) : null;
+                      const fPrice = (fruitObj && typeof fruitObj === 'object' && fruitObj.price !== undefined)
+                        ? Number(fruitObj.price)
+                        : Number(foundExt.price || 3.90);
+                      const fCost = (fruitObj && typeof fruitObj === 'object' && fruitObj.costPrice !== undefined)
+                        ? Number(fruitObj.costPrice)
+                        : Number(foundExt.costPrice || 0);
+                      extrasTotal += fPrice;
+                      itemCost += fCost;
+                    });
+                  } else {
+                    extrasTotal += Number(foundExt.price || 0) * fruitCount;
+                    itemCost += Number(foundExt.costPrice || 0) * fruitCount;
+                  }
                 } else {
                   extrasTotal += Number(foundExt.price || 0);
+                  itemCost += Number(foundExt.costPrice || 0);
                 }
               }
             });

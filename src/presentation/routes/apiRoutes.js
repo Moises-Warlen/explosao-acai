@@ -54,6 +54,12 @@ router.post('/catalog/extras', adminAuthMiddleware, (req, res) => catalogControl
 router.put('/catalog/extras/:id', adminAuthMiddleware, (req, res) => catalogController.updateExtra(req, res));
 router.delete('/catalog/extras/:id', adminAuthMiddleware, (req, res) => catalogController.deleteExtra(req, res));
 
+// ================= FRUTAS ADICIONAIS =================
+router.get('/catalog/fruits', (req, res) => catalogController.getFruits(req, res));
+router.post('/catalog/fruits', adminAuthMiddleware, (req, res) => catalogController.createFruit(req, res));
+router.put('/catalog/fruits/:id', adminAuthMiddleware, (req, res) => catalogController.updateFruit(req, res));
+router.delete('/catalog/fruits/:id', adminAuthMiddleware, (req, res) => catalogController.deleteFruit(req, res));
+
 // ================= UPLOAD DE FOTOS DO COMPUTADOR =================
 router.post('/upload', adminAuthMiddleware, upload.single('image'), (req, res) => catalogController.uploadPhoto(req, res));
 

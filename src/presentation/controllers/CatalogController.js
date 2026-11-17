@@ -126,6 +126,43 @@ export class CatalogController {
     }
   }
 
+  // ================= FRUTAS ADICIONAIS =================
+  async getFruits(req, res) {
+    try {
+      const fruits = catalogService.getFruits();
+      return res.json({ ok: true, fruits });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  }
+
+  async createFruit(req, res) {
+    try {
+      const fruit = catalogService.createFruit(req.body);
+      return res.status(201).json({ ok: true, fruit });
+    } catch (err) {
+      return res.status(400).json({ ok: false, error: err.message });
+    }
+  }
+
+  async updateFruit(req, res) {
+    try {
+      const fruit = catalogService.updateFruit(req.params.id, req.body);
+      return res.json({ ok: true, fruit });
+    } catch (err) {
+      return res.status(400).json({ ok: false, error: err.message });
+    }
+  }
+
+  async deleteFruit(req, res) {
+    try {
+      const removed = catalogService.deleteFruit(req.params.id);
+      return res.json({ ok: true, removed });
+    } catch (err) {
+      return res.status(400).json({ ok: false, error: err.message });
+    }
+  }
+
   // ================= ACOMPANHAMENTOS / COMPLEMENTOS =================
   async getAccompaniments(req, res) {
     try {

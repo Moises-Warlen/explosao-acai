@@ -34,6 +34,26 @@ const $$ = (s) => document.querySelectorAll(s);
 const R = (n) => 'R$ ' + Number(n || 0).toFixed(2).replace('.', ',');
 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
+function getFruitObj(fr) {
+  if (!fr) return { name: '', price: 3.90, active: true };
+  if (typeof fr === 'string') {
+    const found = (CATALOG.fruits || []).find(f => typeof f === 'object' && ((f.name && f.name.toLowerCase() === fr.toLowerCase()) || f.id === fr));
+    if (found) return found;
+    return { name: fr, price: 3.90, active: true };
+  }
+  return fr;
+}
+
+function getFruitPrice(frName) {
+  const f = (CATALOG.fruits || []).find(item => {
+    if (typeof item === 'string') return item.toLowerCase() === String(frName).toLowerCase();
+    return (item.name || '').toLowerCase() === String(frName).toLowerCase() || item.id === frName;
+  });
+  if (f && typeof f === 'object' && f.price !== undefined) return Number(f.price);
+  const extFruta = (CATALOG.extras || []).find(e => e.isFruitExtra);
+  return extFruta ? Number(extFruta.price) : 3.90;
+}
+
 function toast(msg) {
   const t = $('#toast');
   if (!t) return;
@@ -708,7 +728,8 @@ function renderItemModal() {
     const ext = availableExtras.find(e => e.id === extId);
     if (ext) {
       if (ext.isFruitExtra) {
-        extrasTotal += ext.price * st.fruits.length;
+        const fruitsCost = (st.fruits || []).reduce((sum, fName) => sum + getFruitPrice(fName), 0);
+        extrasTotal += fruitsCost;
       } else {
         extrasTotal += ext.price;
       }
@@ -781,9 +802,19 @@ function renderItemModal() {
         ${availableExtras.map(ext => {
           const selected = st.extras.includes(ext.id);
           const isFruit = ext.isFruitExtra;
-          const priceLabel = isFruit
-            ? (st.fruits.length > 0 ? `+ ${R(ext.price * st.fruits.length)} (${st.fruits.length} fruta${st.fruits.length > 1 ? 's' : ''})` : `+ ${R(ext.price)} / fruta`)
-            : `+ ${R(ext.price)}`;
+          let priceLabel = `+ ${R(ext.price)}`;
+          if (isFruit) {
+            const fruitsCost = (st.fruits || []).reduce((sum, fName) => sum + getFruitPrice(fName), 0);
+            if (st.fruits.length > 0) {
+              priceLabel = `+ ${R(fruitsCost)} (${st.fruits.length} fruta${st.fruits.length > 1 ? 's' : ''})`;
+            } else {
+              const activeFruits = (CATALOG.fruits || []).filter(f => typeof f === 'string' || f.active !== false);
+              const minPrice = activeFruits.length > 0
+                ? Math.min(...activeFruits.map(f => typeof f === 'object' ? Number(f.price) : 3.90))
+                : ext.price;
+              priceLabel = `+ a partir de ${R(minPrice)} / fruta`;
+            }
+          }
           return `
             <div class="row ${selected ? 'on' : ''}" onclick="toggleExtra('${ext.id}')">
               <span>${esc(ext.name)}</span>
@@ -795,17 +826,22 @@ function renderItemModal() {
     `;
   }
 
-  // Frutas selecionáveis se marcou fruta extra (Cálculo e valor acumulado imediato)
+  // Frutas selecionáveis se marcou fruta extra (Cálculo e valor acumulado imediato por fruta)
   if (hasFruitExtra) {
-    const fruitCostUnit = 3.90;
-    const fruitsCostTotal = fruitCostUnit * st.fruits.length;
+    const fruitsCostTotal = (st.fruits || []).reduce((sum, fName) => sum + getFruitPrice(fName), 0);
+    const fruitList = (CATALOG.fruits || []).filter(fr => {
+      if (typeof fr === 'string') return true;
+      return fr.active !== false;
+    });
     h += `
       <div class="frbox">
         <p>Frutas Adicionais <small style="color:var(--y);font-weight:700">(${st.fruits.length} fruta${st.fruits.length === 1 ? '' : 's'} selecionada${st.fruits.length === 1 ? '' : 's'} · ${R(fruitsCostTotal)})</small></p>
         <div class="chips">
-          ${CATALOG.fruits.map(fr => {
-            const selected = st.fruits.includes(fr);
-            return `<div class="chip ${selected ? 'on' : ''}" onclick="toggleFruit('${esc(fr)}')">${esc(fr)} (+${R(fruitCostUnit)})</div>`;
+          ${fruitList.map(fr => {
+            const frName = typeof fr === 'string' ? fr : fr.name;
+            const frPrice = typeof fr === 'object' && fr.price !== undefined ? Number(fr.price) : getFruitPrice(frName);
+            const selected = st.fruits.includes(frName);
+            return `<div class="chip ${selected ? 'on' : ''}" onclick="toggleFruit('${esc(frName)}')">${esc(frName)} (+${R(frPrice)})</div>`;
           }).join('')}
         </div>
       </div>
@@ -992,9 +1028,13 @@ window.addItemToCart = function() {
     const ext = availableExtras.find(e => e.id === extId);
     if (ext) {
       if (ext.isFruitExtra) {
-        const cost = ext.price * st.fruits.length;
+        const cost = (st.fruits || []).reduce((sum, fName) => sum + getFruitPrice(fName), 0);
         extrasTotal += cost;
-        extrasNames.push(`Frutas: ${st.fruits.join(', ')} (+${R(cost)})`);
+        const fruitLabels = (st.fruits || []).map(fName => {
+          const fp = getFruitPrice(fName);
+          return `${fName} (+${R(fp)})`;
+        }).join(', ');
+        extrasNames.push(`Frutas: ${fruitLabels}`);
       } else {
         extrasTotal += ext.price;
         extrasNames.push(`${ext.name} (+${R(ext.price)})`);

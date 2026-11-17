@@ -19,6 +19,7 @@ let CATEGORIES = [];
 let PRODUCTS = [];
 let ACCOMPANIMENTS = [];
 let EXTRAS = [];
+let FRUITS = [];
 let COUPONS = [];
 let PRINTERS = [];
 let SETTINGS = {};
@@ -214,6 +215,7 @@ async function initDashboard() {
   await loadProducts();
   await loadAccompaniments();
   await loadExtras();
+  await loadFruits();
   await loadCoupons();
   await loadPrinters();
   await loadSalesReport({ period: 'today' });
@@ -3954,6 +3956,147 @@ window.deleteExtra = function(id) {
         adminToast('Adicional excluído.', 'info');
       } catch (e) {
         adminToast('Erro ao excluir adicional.', 'danger');
+      }
+    }
+  });
+};
+
+// ==================== GESTÃO DE FRUTAS ADICIONAIS (PREÇO INDIVIDUAL) ====================
+async function loadFruits() {
+  try {
+    const res = await fetch(`${API_URL}/catalog/fruits`);
+    const data = await res.json();
+    if (data.ok) {
+      FRUITS = data.fruits || [];
+      renderFruitsTable();
+    }
+  } catch (e) {}
+}
+
+function renderFruitsTable() {
+  const tbody = $('#fruits-table-body');
+  if (!tbody) return;
+
+  if (!FRUITS || FRUITS.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--mut);padding:18px">Nenhuma fruta cadastrada. Clique em "+ Nova Fruta" para cadastrar.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = FRUITS.map(f => {
+    const price = Number(f.price !== undefined ? f.price : 3.9);
+    const cost = Number(f.costPrice !== undefined ? f.costPrice : 0);
+    const margin = price - cost;
+    const marginPercent = price > 0 ? ((margin / price) * 100).toFixed(0) : 0;
+    const marginColor = margin < 0 ? 'var(--danger)' : 'var(--green)';
+
+    return `
+      <tr>
+        <td><b>${esc(f.name)}</b></td>
+        <td><b>${R(price)}</b></td>
+        <td>${R(cost)}</td>
+        <td><span style="color:${marginColor};font-weight:700">${R(margin)} (${marginPercent}%)</span></td>
+        <td>${f.active !== false ? '<span style="color:var(--green);font-weight:700">Ativa</span>' : '<span style="color:var(--danger)">Pausada</span>'}</td>
+        <td>
+          <button class="btn-sm btn-print" onclick="openEditFruitModal('${f.id}')">Editar</button>
+          <button class="btn-sm btn-danger" onclick="deleteFruit('${f.id}')">Excluir</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+window.openNewFruitModal = function() {
+  if ($('#fruit-modal-title')) $('#fruit-modal-title').textContent = 'Nova Fruta Adicional';
+  if ($('#fruit-id')) $('#fruit-id').value = '';
+  if ($('#fruit-name')) $('#fruit-name').value = '';
+  if ($('#fruit-price')) $('#fruit-price').value = '3.90';
+  if ($('#fruit-cost')) $('#fruit-cost').value = '1.00';
+  if ($('#fruit-active')) $('#fruit-active').checked = true;
+  const modal = $('#fruit-edit-modal');
+  if (modal) modal.style.display = 'flex';
+};
+
+window.openEditFruitModal = function(id) {
+  const f = FRUITS.find(item => item.id === id);
+  if (!f) return;
+  if ($('#fruit-modal-title')) $('#fruit-modal-title').textContent = `Editar Fruta: ${f.name}`;
+  if ($('#fruit-id')) $('#fruit-id').value = f.id;
+  if ($('#fruit-name')) $('#fruit-name').value = f.name;
+  if ($('#fruit-price')) $('#fruit-price').value = f.price !== undefined ? f.price : 3.90;
+  if ($('#fruit-cost')) $('#fruit-cost').value = f.costPrice !== undefined ? f.costPrice : 1.00;
+  if ($('#fruit-active')) $('#fruit-active').checked = f.active !== false;
+  const modal = $('#fruit-edit-modal');
+  if (modal) modal.style.display = 'flex';
+};
+
+window.closeFruitModal = function() {
+  const modal = $('#fruit-edit-modal');
+  if (modal) modal.style.display = 'none';
+};
+
+window.saveFruitForm = async function(e) {
+  if (e) e.preventDefault();
+  const id = $('#fruit-id')?.value;
+  const name = $('#fruit-name')?.value.trim();
+  const price = parseFloat($('#fruit-price')?.value);
+  const costPrice = parseFloat($('#fruit-cost')?.value) || 0;
+  const active = $('#fruit-active')?.checked ?? true;
+
+  if (!name || isNaN(price)) {
+    return adminToast('Preencha o nome da fruta e o preço adicional.', 'danger');
+  }
+
+  const payload = { name, price, costPrice, active };
+
+  try {
+    let res;
+    if (id) {
+      res = await fetch(`${API_URL}/catalog/fruits/${id}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify(payload)
+      });
+    } else {
+      res = await fetch(`${API_URL}/catalog/fruits`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify(payload)
+      });
+    }
+    const data = await res.json();
+    if (data.ok) {
+      closeFruitModal();
+      await loadFruits();
+      adminToast(id ? 'Fruta atualizada com sucesso!' : 'Fruta cadastrada com sucesso!', 'success');
+    } else {
+      adminToast(data.error || 'Erro ao salvar fruta.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Erro de conexão ao salvar fruta.', 'danger');
+  }
+};
+
+window.deleteFruit = function(id) {
+  const f = FRUITS.find(item => item.id === id);
+  const name = f ? f.name : 'esta fruta';
+
+  openConfirmModal({
+    title: 'Excluir Fruta Adicional',
+    message: `Tem certeza que deseja excluir <b>${name}</b> das opções de frutas adicionais?`,
+    btnText: 'Excluir Fruta',
+    btnClass: 'btn-danger',
+    onConfirm: async () => {
+      try {
+        const res = await fetch(`${API_URL}/catalog/fruits/${id}`, { method: 'DELETE', headers: authHeaders() });
+        const data = await res.json();
+        if (data.ok) {
+          await loadFruits();
+          adminToast('Fruta excluída com sucesso.', 'info');
+        } else {
+          adminToast(data.error || 'Erro ao excluir fruta.', 'danger');
+        }
+      } catch (e) {
+        adminToast('Erro ao excluir fruta.', 'danger');
       }
     }
   });
