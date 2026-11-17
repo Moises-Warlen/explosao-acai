@@ -155,6 +155,9 @@
       <button class="nav-tab" data-tab="tab-extras">
         Adicionais
       </button>
+      <button class="nav-tab" id="nav-tab-fruits" data-tab="tab-extras" onclick="openFruitsAdminTab(event)">
+        🍓 Frutas
+      </button>
       <button class="nav-tab" data-tab="tab-categories">
         Categorias
       </button>
@@ -547,6 +550,14 @@
 
     <!-- ABA 3: CARDÁPIO & FICHA TÉCNICA -->
     <div class="tab-pane" id="tab-products">
+      <!-- Seletor de Sub-Abas do Cardápio (Padrão Gestor Pro) -->
+      <div class="catalog-subnav-bar">
+        <button type="button" class="subnav-pill active" onclick="switchAdminTab('tab-products')">Cardápio & Estoque</button>
+        <button type="button" class="subnav-pill" onclick="switchAdminTab('tab-accompaniments')">Acompanhamentos</button>
+        <button type="button" class="subnav-pill" onclick="switchAdminTab('tab-extras')">Adicionais</button>
+        <button type="button" class="subnav-pill" onclick="openFruitsAdminTab(event)">🍓 Frutas Adicionais</button>
+      </div>
+
       <div class="admin-card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
           <div>
@@ -604,6 +615,14 @@
 
     <!-- ABA 4: ACOMPANHAMENTOS (CRUD COMPLETO) -->
     <div class="tab-pane" id="tab-accompaniments">
+      <!-- Seletor de Sub-Abas do Cardápio (Padrão Gestor Pro) -->
+      <div class="catalog-subnav-bar">
+        <button type="button" class="subnav-pill" onclick="switchAdminTab('tab-products')">Cardápio & Estoque</button>
+        <button type="button" class="subnav-pill active" onclick="switchAdminTab('tab-accompaniments')">Acompanhamentos</button>
+        <button type="button" class="subnav-pill" onclick="switchAdminTab('tab-extras')">Adicionais</button>
+        <button type="button" class="subnav-pill" onclick="openFruitsAdminTab(event)">🍓 Frutas Adicionais</button>
+      </div>
+
       <div class="admin-card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
           <div>
@@ -649,7 +668,15 @@
 
     <!-- ABA 6: ADICIONAIS & VÍNCULOS -->
     <div class="tab-pane" id="tab-extras">
-      <div class="admin-card">
+      <!-- Seletor de Sub-Abas do Cardápio (Padrão Gestor Pro) -->
+      <div class="catalog-subnav-bar">
+        <button type="button" class="subnav-pill" onclick="switchAdminTab('tab-products')">Cardápio & Estoque</button>
+        <button type="button" class="subnav-pill" onclick="switchAdminTab('tab-accompaniments')">Acompanhamentos</button>
+        <button type="button" class="subnav-pill active" id="subnav-pill-extras" onclick="setExtrasSubView('extras')">Adicionais</button>
+        <button type="button" class="subnav-pill" id="subnav-pill-fruits" onclick="setExtrasSubView('fruits')">🍓 Frutas Adicionais</button>
+      </div>
+
+      <div class="admin-card" id="card-section-extras">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
           <div>
             <h2 style="margin:0">Gestão de Adicionais & Extras</h2>
@@ -666,7 +693,7 @@
       </div>
 
       <!-- GESTÃO DE FRUTAS ADICIONAIS (PREÇO INDIVIDUAL POR FRUTA) -->
-      <div class="admin-card" style="margin-top:24px">
+      <div class="admin-card" id="card-section-fruits" style="margin-top:24px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
           <div>
             <h2 style="margin:0">Frutas Adicionais (Preço Individual por Fruta)</h2>

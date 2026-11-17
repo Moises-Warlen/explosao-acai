@@ -70,7 +70,8 @@
       "prod_classico",
       "prod_ninhomorango",
       "prod_docetentacao",
-      "prod_monte"
+      "prod_monte",
+      "prod_kids_chocobanana"
     ],
     "autoReplyClosedEnabled": true,
     "autoReplyClosedMessage": "Olá! A loja está fechada agora. Responderemos em breve."
@@ -1207,7 +1208,7 @@
     {
       "id": "frt_banana",
       "name": "Banana",
-      "price": 3.9,
+      "price": 5,
       "costPrice": 1,
       "active": true
     },
@@ -1221,7 +1222,7 @@
     {
       "id": "frt_uva",
       "name": "Uva",
-      "price": 3.9,
+      "price": 6,
       "costPrice": 1.2,
       "active": true
     },
@@ -1235,7 +1236,7 @@
     {
       "id": "frt_kiwi",
       "name": "Kiwi",
-      "price": 3.9,
+      "price": 70,
       "costPrice": 1.8,
       "active": true
     }
@@ -5373,11 +5374,14 @@
       "freight": 0,
       "total": 19.9,
       "costTotal": 7.5,
-      "status": "received",
-      "printed": false,
-      "printedStations": [],
+      "status": "preparing",
+      "printed": true,
+      "printedStations": [
+        "kitchen"
+      ],
       "notifiedStatuses": [
-        "received"
+        "received",
+        "preparing"
       ],
       "archivedToHistory": false,
       "archivedAt": null,
@@ -5390,7 +5394,7 @@
       "returnReason": null,
       "returnedAt": null,
       "createdAt": "2026-11-17T17:34:00.680Z",
-      "updatedAt": "2026-11-17T17:34:00.680Z"
+      "updatedAt": "2026-11-17T21:03:53.970Z"
     },
     {
       "id": "ord_1794936840715_njn0z",
@@ -5442,24 +5446,28 @@
       "freight": 6,
       "total": 25.9,
       "costTotal": 7.5,
-      "status": "received",
-      "printed": false,
-      "printedStations": [],
+      "status": "out_for_delivery",
+      "printed": true,
+      "printedStations": [
+        "kitchen"
+      ],
       "notifiedStatuses": [
-        "received"
+        "received",
+        "preparing",
+        "out_for_delivery"
       ],
       "archivedToHistory": false,
       "archivedAt": null,
-      "preparedAt": null,
+      "preparedAt": "2026-11-17T21:03:46.248Z",
       "deliveredAt": null,
-      "preparationTimeMinutes": null,
+      "preparationTimeMinutes": 210,
       "deliveryTimeMinutes": null,
       "cancellationReason": null,
       "cancelledAt": null,
       "returnReason": null,
       "returnedAt": null,
       "createdAt": "2026-11-17T17:34:00.715Z",
-      "updatedAt": "2026-11-17T17:34:00.715Z"
+      "updatedAt": "2026-11-17T21:03:46.248Z"
     },
     {
       "id": "ord_1794936840791_jnw8g",

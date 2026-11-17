@@ -369,6 +369,7 @@ function bindNavigation() {
   const tabs = $$('.nav-tab');
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
+      if (tab.id === 'nav-tab-fruits') return;
       if (typeof window.closeAdminMobileNav === 'function') window.closeAdminMobileNav();
       tabs.forEach(t => t.classList.remove('active'));
       $$('.tab-pane').forEach(p => p.classList.remove('active'));
@@ -381,6 +382,10 @@ function bindNavigation() {
       $$('.dock-btn').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('data-tab-target') === tab.dataset.tab);
       });
+
+      if (tab.dataset.tab === 'tab-extras' && typeof window.setExtrasSubView === 'function') {
+        window.setExtrasSubView('extras');
+      }
 
       if (tab.dataset.tab === 'tab-reports') {
         const period = $('#report-period-select')?.value || 'today';
@@ -3809,6 +3814,68 @@ window.setExtrasPerPage = function(perPage) {
   renderExtrasTable();
 };
 
+window.openFruitsAdminTab = function(e) {
+  if (e) {
+    if (typeof e.preventDefault === 'function') e.preventDefault();
+    if (typeof e.stopPropagation === 'function') e.stopPropagation();
+  }
+  const tabs = $$('.nav-tab');
+  tabs.forEach(t => t.classList.remove('active'));
+  const fruitTabBtn = $('#nav-tab-fruits');
+  if (fruitTabBtn) fruitTabBtn.classList.add('active');
+
+  $$('.tab-pane').forEach(p => p.classList.remove('active'));
+  const extrasPane = $('#tab-extras');
+  if (extrasPane) extrasPane.classList.add('active');
+
+  $$('.dock-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-tab-target') === 'tab-extras');
+  });
+
+  if (typeof window.setExtrasSubView === 'function') {
+    window.setExtrasSubView('fruits');
+  }
+  if (typeof window.closeAdminMobileNav === 'function') {
+    window.closeAdminMobileNav();
+  }
+};
+
+window.setExtrasSubView = function(view) {
+  const cardExtras = $('#card-section-extras');
+  const cardFruits = $('#card-section-fruits');
+  const pillExtras = $('#subnav-pill-extras');
+  const pillFruits = $('#subnav-pill-fruits');
+
+  if (view === 'fruits') {
+    if (cardExtras) cardExtras.style.display = 'none';
+    if (cardFruits) {
+      cardFruits.style.display = 'block';
+      cardFruits.style.marginTop = '0';
+      try { cardFruits.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(e){}
+    }
+    if (pillExtras) pillExtras.classList.remove('active');
+    if (pillFruits) pillFruits.classList.add('active');
+    const navFruits = $('#nav-tab-fruits');
+    if (navFruits) {
+      $$('.nav-tab').forEach(t => t.classList.remove('active'));
+      navFruits.classList.add('active');
+    }
+  } else {
+    if (cardExtras) cardExtras.style.display = 'block';
+    if (cardFruits) {
+      cardFruits.style.display = 'block';
+      cardFruits.style.marginTop = '24px';
+    }
+    if (pillExtras) pillExtras.classList.add('active');
+    if (pillFruits) pillFruits.classList.remove('active');
+    const navExtras = $(`.nav-tab[data-tab="tab-extras"]:not(#nav-tab-fruits)`);
+    if (navExtras) {
+      $$('.nav-tab').forEach(t => t.classList.remove('active'));
+      navExtras.classList.add('active');
+    }
+  }
+};
+
 function getExtraIcon(name) {
   const n = String(name || '').toLowerCase();
   if (n.includes('fruta') || n.includes('morango') || n.includes('banana') || n.includes('uva') || n.includes('kiwi') || n.includes('manga') || n.includes('abacaxi')) return '🍓';
@@ -3876,6 +3943,15 @@ function renderExtrasTable() {
           <div><b>Custo Insumo:</b> <span>${R(cost)}</span></div>
           <div><b>Margem de Lucro:</b> <span style="color:${margin >= 0 ? 'var(--green)' : 'var(--danger)'};font-weight:700">${margin >= 0 ? '+' : ''}${R(margin)} (${marginPct}%)</span></div>
         </div>
+
+        ${e.isFruitExtra ? `
+          <div style="background:rgba(16,185,129,0.12);border:1px dashed #10b981;border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+            <span style="font-size:12.5px;color:#6ee7b7"><b>🍓 Frutas Adicionais:</b> Gerencie os preços individuais de cada fruta (Banana, Morango, etc.).</span>
+            <button type="button" class="btn-sm" style="background:#059669;color:#fff;font-weight:700;padding:6px 14px;border-radius:8px;font-size:12px;display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="setExtrasSubView('fruits');">
+              🍓 Abrir Lista de Frutas
+            </button>
+          </div>
+        ` : ''}
 
         <div class="extra-card-actions">
           <button class="btn-sm btn-print" onclick="openEditExtraModal('${e.id}')" title="Editar este adicional">
