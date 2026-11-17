@@ -2,6 +2,10 @@ process.env.NODE_ENV = 'test';
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert';
 import { server } from '../src/server.js';
+// Senha de teste: aceita via ADMIN_PASSWORD (as senhas antigas fixas no codigo foram removidas por seguranca)
+process.env.ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'senha-teste-automatizado';
+const TEST_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
 
 describe('Explosão Açaí - Testes das Novas Funcionalidades', () => {
   let baseUrl = '';
@@ -37,11 +41,11 @@ describe('Explosão Açaí - Testes das Novas Funcionalidades', () => {
       payment: { method: 'Dinheiro', timing: 'delivery', paidAt: null, trocoFor: 50.0 },
       items: [
         {
-          productId: 'prod-trad-01',
-          name: 'Açaí Tradicional',
+          productId: 'prod_classico',
+          name: 'Clássico',
           size: 300,
           quantity: 1,
-          unitPrice: 18.90,
+          unitPrice: 19.90,
           accompaniments: ['Granola', 'Leite condensado', 'Ninho'],
           extras: []
         }
@@ -58,7 +62,7 @@ describe('Explosão Açaí - Testes das Novas Funcionalidades', () => {
     assert.strictEqual(res.status, 201);
     assert.strictEqual(data.ok, true);
     assert.strictEqual(data.order.delivery.freight, 0, 'O frete para <= 2km deve ser 0');
-    assert.strictEqual(data.order.total, 18.90, 'O total deve ser apenas o item, sem acréscimo de frete');
+    assert.strictEqual(data.order.total, 19.90, 'O total deve ser apenas o item, sem acréscimo de frete');
   });
 
   test('Frete Normal acima de 2 km: Pedido com km > 2 deve calcular frete padrão', async () => {
@@ -75,11 +79,11 @@ describe('Explosão Açaí - Testes das Novas Funcionalidades', () => {
       payment: { method: 'Dinheiro', timing: 'delivery', paidAt: null },
       items: [
         {
-          productId: 'prod-trad-01',
-          name: 'Açaí Tradicional',
+          productId: 'prod_classico',
+          name: 'Clássico',
           size: 300,
           quantity: 1,
-          unitPrice: 18.90,
+          unitPrice: 19.90,
           accompaniments: ['Granola', 'Leite condensado', 'Ninho'],
           extras: []
         }
@@ -109,11 +113,11 @@ describe('Explosão Açaí - Testes das Novas Funcionalidades', () => {
         payment: { method: 'Pix', timing: 'online', status: 'approved' },
         items: [
           {
-            productId: 'prod-trad-01',
-            name: 'Açaí Tradicional',
+            productId: 'prod_classico',
+            name: 'Clássico',
             size: 500,
             quantity: 1,
-            unitPrice: 24.90,
+            unitPrice: 27.90,
             accompaniments: ['Granola', 'Ninho'],
             extras: []
           }
@@ -128,7 +132,7 @@ describe('Explosão Açaí - Testes das Novas Funcionalidades', () => {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer RafaeLL@2'
+        'Authorization': `Bearer ${TEST_ADMIN_PASSWORD}`
       },
       body: JSON.stringify({
         status: 'cancelled',
@@ -143,13 +147,13 @@ describe('Explosão Açaí - Testes das Novas Funcionalidades', () => {
 
     // 3. Consultar relatório e verificar se o pedido cancelado é contabilizado
     const reportRes = await fetch(`${baseUrl}/api/reports/sales?period=today`, {
-      headers: { 'Authorization': 'Bearer RafaeLL@2' }
+      headers: { 'Authorization': `Bearer ${TEST_ADMIN_PASSWORD}` }
     });
     const reportData = await reportRes.json();
 
     assert.strictEqual(reportRes.status, 200);
     assert.ok(reportData.report.summary.cancelledOrdersCount >= 1, 'Deve conter pelo menos 1 pedido cancelado');
-    assert.ok(reportData.report.summary.cancelledTotal >= 24.90, 'Deve conter o valor cancelado no resumo');
+    assert.ok(reportData.report.summary.cancelledTotal >= 27.90, 'Deve conter o valor cancelado no resumo');
 
     const foundCancelled = reportData.report.orders.find(o => o.orderNo === cancelData.order.orderNo);
     assert.ok(foundCancelled, 'O pedido cancelado deve constar no relatório detalhado');
@@ -170,7 +174,7 @@ describe('Explosão Açaí - Testes das Novas Funcionalidades', () => {
     const okRes = await fetch(`${baseUrl}/api/admin/auth`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: 'RafaeLL@2' })
+      body: JSON.stringify({ password: TEST_ADMIN_PASSWORD })
     });
     const okData = await okRes.json();
     assert.strictEqual(okRes.status, 200);
@@ -241,12 +245,12 @@ describe('Explosão Açaí - Testes das Novas Funcionalidades', () => {
       },
       items: [
         {
-          productId: 'p1',
-          name: 'Copo Tradicional 300ml',
+          productId: 'prod_classico',
+          name: 'Clássico',
           size: 300,
           quantity: 1,
-          unitPrice: 24.90,
-          totalPrice: 24.90
+          unitPrice: 19.90,
+          totalPrice: 19.90
         }
       ]
     };
@@ -290,7 +294,7 @@ describe('Explosão Açaí - Testes das Novas Funcionalidades', () => {
     // 2. Altera o nome do cliente no chat
     const authHeaders = {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer RafaeLL@2'
+      'Authorization': `Bearer ${TEST_ADMIN_PASSWORD}`
     };
 
     const renameRes = await fetch(`${baseUrl}/api/chat/customer-name`, {
@@ -363,12 +367,12 @@ describe('Explosão Açaí - Testes das Novas Funcionalidades', () => {
       },
       items: [
         {
-          productId: 'p1',
-          name: 'Copo Tradicional 500ml',
+          productId: 'prod_classico',
+          name: 'Clássico',
           size: 500,
           quantity: 2,
-          unitPrice: 29.90,
-          totalPrice: 59.80
+          unitPrice: 27.90,
+          totalPrice: 55.80
         }
       ]
     };
@@ -398,13 +402,13 @@ describe('Explosão Açaí - Testes das Novas Funcionalidades', () => {
 
     // 3. Consulta relatório de vendas e verifica contadores de devolvidos
     const authHeaders = {
-      'Authorization': 'Bearer RafaeLL@2'
+      'Authorization': `Bearer ${TEST_ADMIN_PASSWORD}`
     };
     const repRes = await fetch(`${baseUrl}/api/reports/sales?period=today`, { headers: authHeaders });
     const repData = await repRes.json();
     assert.strictEqual(repRes.status, 200);
     assert.ok(repData.report.summary.returnedOrdersCount >= 1, 'Deve registrar ao menos 1 pedido devolvido no sumário');
-    assert.ok(repData.report.summary.returnedTotal >= 59.80, 'Deve contabilizar o valor devolvido no sumário');
+    assert.ok(repData.report.summary.returnedTotal >= 55.80, 'Deve contabilizar o valor devolvido no sumário');
 
     const returnedOrderInReport = repData.report.orders.find(o => o.id === orderId);
     assert.ok(returnedOrderInReport, 'Pedido devolvido deve constar na listagem detalhada do relatório');
@@ -414,7 +418,7 @@ describe('Explosão Açaí - Testes das Novas Funcionalidades', () => {
 
   test('Resposta Automática no Chat quando a Loja estiver Fechada', async () => {
     const authHeaders = {
-      'Authorization': 'Bearer RafaeLL@2',
+      'Authorization': `Bearer ${TEST_ADMIN_PASSWORD}`,
       'Content-Type': 'application/json'
     };
 

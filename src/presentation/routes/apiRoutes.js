@@ -12,7 +12,7 @@ import { printerController } from '../controllers/PrinterController.js';
 import { chatController } from '../controllers/ChatController.js';
 import { webhookController } from '../controllers/WebhookController.js';
 import { reportController } from '../controllers/ReportController.js';
-import { adminAuthMiddleware } from '../middlewares/authMiddleware.js';
+import { adminAuthMiddleware, isValidAdminToken } from '../middlewares/authMiddleware.js';
 import { upload } from '../../infrastructure/storage/UploadService.js';
 
 const router = Router();
@@ -88,15 +88,12 @@ router.put('/chat/customer-name', adminAuthMiddleware, (req, res) => chatControl
 // ================= GATEWAY & WEBHOOKS =================
 router.post('/webhooks/mercadopago', (req, res) => webhookController.handleMercadoPago(req, res));
 router.get('/webhooks/mercadopago', (req, res) => webhookController.handleMercadoPago(req, res));
-router.post('/test/simulate-payment/:orderId', (req, res) => webhookController.simulatePaymentApproval(req, res));
+router.post('/test/simulate-payment/:orderId', adminAuthMiddleware, (req, res) => webhookController.simulatePaymentApproval(req, res));
 
 // ================= AUTENTICAÇÃO DO ADMIN =================
 router.post('/admin/auth', (req, res) => {
-  const { password } = req.body;
-  const currentSaved = storeController.storeService?.getSettings()?.adminPassword;
-  const adminPass = currentSaved || process.env.ADMIN_PASSWORD || 'RafaeLL@2';
-  const isValid = password === adminPass || password === 'RafaeLL@2' || password === 'explosao123';
-  if (isValid) {
+  const { password } = req.body || {};
+  if (isValidAdminToken(password)) {
     return res.json({ ok: true, token: password });
   }
   return res.status(401).json({ ok: false, error: 'Senha incorreta.' });

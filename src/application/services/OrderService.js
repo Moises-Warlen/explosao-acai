@@ -179,12 +179,12 @@ export class OrderService {
       let unitPrice = Number(item.unitPrice || 0);
       let itemCost = 0;
 
-      // Busca produto correspondente no catálogo oficial
-      const baseProduct = (catalog.products || []).find(p =>
-        (item.productId && p.id === item.productId) ||
-        (item.id && p.id === item.id) ||
-        item.name.includes(p.name) ||
-        p.name.includes(item.name)
+      // Busca produto correspondente no catálogo oficial (o id do produto tem prioridade sobre o nome)
+      const byId = (item.productId || item.id)
+        ? (catalog.products || []).find(p => p.id === item.productId || p.id === item.id)
+        : null;
+      const baseProduct = byId || (catalog.products || []).find(p =>
+        typeof item.name === 'string' && item.name && (item.name.includes(p.name) || p.name.includes(item.name))
       );
 
       if (baseProduct) {
@@ -203,15 +203,21 @@ export class OrderService {
           // Preço oficial do cardápio
           const officialBasePrice = sizePrice.promoPrice != null ? sizePrice.promoPrice : sizePrice.price;
 
-          // Adicionais extras oficiais
+          // Adicionais extras oficiais (o cardápio envia textos como "Paçoca (+R$ 2,90)" ou
+          // "Frutas: Morango, Kiwi (+R$ 7,80)"; o preço NUNCA é lido do texto, vem do cadastro)
           let extrasTotal = 0;
           if (Array.isArray(item.extras) && Array.isArray(catalog.extras)) {
+            const fruitCount = Array.isArray(item.fruits) ? item.fruits.length : 0;
             item.extras.forEach(ext => {
-              const extId = typeof ext === 'string' ? ext : ext.id;
-              const foundExt = catalog.extras.find(e => e.id === extId || e.name === extId || e.name === ext?.name);
+              const raw = typeof ext === 'string' ? ext : (ext?.id || ext?.name || '');
+              const cleaned = String(raw).replace(/\s*\(\+\s*R\$[^)]*\)\s*$/i, '').trim();
+              let foundExt = catalog.extras.find(e => e.id === cleaned || e.name === cleaned || (typeof ext === 'object' && ext?.name && e.name === ext.name));
+              if (!foundExt && /^frutas?\s*:/i.test(cleaned)) {
+                foundExt = catalog.extras.find(e => e.isFruitExtra);
+              }
               if (foundExt) {
-                if (foundExt.isFruitExtra && Array.isArray(item.fruits)) {
-                  extrasTotal += Number(foundExt.price || 0) * item.fruits.length;
+                if (foundExt.isFruitExtra) {
+                  extrasTotal += Number(foundExt.price || 0) * fruitCount;
                 } else {
                   extrasTotal += Number(foundExt.price || 0);
                 }
@@ -219,12 +225,11 @@ export class OrderService {
             });
           }
 
-          const expectedUnitPrice = officialBasePrice + extrasTotal;
-          // Proteção financeira: se o item for enviado com preço zerado ou negativo, assume o preço oficial
-          if (!unitPrice || unitPrice <= 0) {
-            unitPrice = expectedUnitPrice;
-          }
+          // PREÇO SEMPRE CALCULADO PELO SERVIDOR: o valor enviado pelo navegador é ignorado
+          unitPrice = Number((officialBasePrice + extrasTotal).toFixed(2));
         }
+      } else {
+        throw new Error(`Produto "${item.name}" não encontrado no cardápio.`);
       }
 
       const itemSubtotal = unitPrice * quantity;

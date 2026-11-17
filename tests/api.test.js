@@ -2,6 +2,10 @@ process.env.NODE_ENV = 'test';
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert';
 import { server } from '../src/server.js';
+// Senha de teste: aceita via ADMIN_PASSWORD (as senhas antigas fixas no codigo foram removidas por seguranca)
+process.env.ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'senha-teste-automatizado';
+const TEST_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
 
 describe('Explosão Açaí - Testes de Integração da API', () => {
   let baseUrl = '';
@@ -67,7 +71,7 @@ describe('Explosão Açaí - Testes de Integração da API', () => {
           name: 'Ninho com Morango 500 ml',
           size: 500,
           quantity: 1,
-          unitPrice: 30.90,
+          unitPrice: 27.90,
           accompaniments: ['Morango', 'Ninho'],
           extras: ['Nutella'],
           note: 'Colher separada'
@@ -91,9 +95,9 @@ describe('Explosão Açaí - Testes de Integração da API', () => {
     assert.ok(data.order.orderNo);
     assert.strictEqual(data.order.discount, 5.0);
 
-    // Subtotal: 30.90 - 5.00 + 5.00 frete = 30.90 total
-    // Troco para R$ 50,00: 50 - 30.90 = 19.10
-    assert.strictEqual(data.order.payment.trocoValue, 19.10);
+    // Subtotal (Ninho 500 ml 27,90 + Nutella 5,90) 33,80 - 5,00 + 5,00 frete = 33,80 total
+    // Troco para R$ 50,00: 50 - 33,80 = 16,20
+    assert.strictEqual(data.order.payment.trocoValue, 16.20);
   });
 
   test('Regra de Impressão Rígida: Bloqueia impressão de Pix pendente e libera após confirmação bancária', async () => {
@@ -104,7 +108,7 @@ describe('Explosão Açaí - Testes de Integração da API', () => {
       body: JSON.stringify({
         customer: { name: 'Ana Beatriz', phone: '16991112233' },
         delivery: { type: 'pickup' },
-        items: [{ name: 'Combo Casal 500 ml', quantity: 1, unitPrice: 64.90 }],
+        items: [{ name: 'Combo Casal 500 ml', quantity: 1, unitPrice: 54.90 }],
         payment: { method: 'Pix' }
       })
     });
@@ -115,7 +119,7 @@ describe('Explosão Açaí - Testes de Integração da API', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-admin-token': 'explosao123'
+        'x-admin-token': TEST_ADMIN_PASSWORD
       },
       body: JSON.stringify({ target: 'kitchen' })
     });
@@ -128,7 +132,7 @@ describe('Explosão Açaí - Testes de Integração da API', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-admin-token': 'explosao123'
+        'x-admin-token': TEST_ADMIN_PASSWORD
       }
     });
     assert.strictEqual(approveRes.status, 200);
@@ -138,7 +142,7 @@ describe('Explosão Açaí - Testes de Integração da API', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-admin-token': 'explosao123'
+        'x-admin-token': TEST_ADMIN_PASSWORD
       },
       body: JSON.stringify({ target: 'kitchen' })
     });
@@ -172,7 +176,7 @@ describe('Explosão Açaí - Testes de Integração da API', () => {
   test('GET /api/reports/sales - Deve retornar consolidação financeira de vendas', async () => {
     const res = await fetch(`${baseUrl}/api/reports/sales?period=all`, {
       headers: {
-        'x-admin-token': 'explosao123'
+        'x-admin-token': TEST_ADMIN_PASSWORD
       }
     });
     assert.strictEqual(res.status, 200);
@@ -190,7 +194,7 @@ describe('Explosão Açaí - Testes de Integração da API', () => {
   test('CRUD de Acompanhamentos e Regras de Limites', async () => {
     // 1. Lista acompanhamentos
     const listRes = await fetch(`${baseUrl}/api/catalog/accompaniments`, {
-      headers: { 'x-admin-token': 'explosao123' }
+      headers: { 'x-admin-token': TEST_ADMIN_PASSWORD }
     });
     assert.strictEqual(listRes.status, 200);
     const listData = await listRes.json();
@@ -202,7 +206,7 @@ describe('Explosão Açaí - Testes de Integração da API', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-admin-token': 'explosao123'
+        'x-admin-token': TEST_ADMIN_PASSWORD
       },
       body: JSON.stringify({
         name: 'Castanha de Caju',
@@ -217,7 +221,7 @@ describe('Explosão Açaí - Testes de Integração da API', () => {
     // 3. Deleta o acompanhamento criado
     const delRes = await fetch(`${baseUrl}/api/catalog/accompaniments/${createData.accompaniment.id}`, {
       method: 'DELETE',
-      headers: { 'x-admin-token': 'explosao123' }
+      headers: { 'x-admin-token': TEST_ADMIN_PASSWORD }
     });
     assert.strictEqual(delRes.status, 200);
   });
@@ -236,7 +240,7 @@ describe('Explosão Açaí - Testes de Integração da API', () => {
           freight: 5.5,
           km: 4.0
         },
-        items: [{ name: 'Ninho com Morango 500 ml', size: 500, quantity: 1, unitPrice: 30.90 }],
+        items: [{ name: 'Ninho com Morango 500 ml', size: 500, quantity: 1, unitPrice: 27.90 }],
         payment: {
           method: 'Cartão de crédito',
           timing: 'delivery'
@@ -253,7 +257,7 @@ describe('Explosão Açaí - Testes de Integração da API', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-admin-token': 'explosao123'
+        'x-admin-token': TEST_ADMIN_PASSWORD
       },
       body: JSON.stringify({ target: 'counter' })
     });

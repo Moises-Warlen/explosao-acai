@@ -11,7 +11,6 @@
 
 import { db } from '../../infrastructure/database/JsonDatabase.js';
 import { wsHub } from '../../infrastructure/websockets/WebSocketHub.js';
-import { applyProductStandard, normalizeProductPrices } from '../../domain/entities/ProductStandard.js';
 
 export class CatalogService {
   constructor() {
@@ -164,10 +163,7 @@ export class CatalogService {
     const data = this.db.get();
     
     // Enriquece os produtos com análise de margem e custos de combos
-    // Todo produto servido ao cardápio passa pelo padrão único (cadastrados, importados ou futuros)
-    const enrichedProducts = (data.products || []).map(p =>
-      this.enrichProductWithCosts(applyProductStandard(p, data.categories), data.products)
-    );
+    const enrichedProducts = (data.products || []).map(p => this.enrichProductWithCosts(p, data.products));
 
     return {
       categories: this.getCategories(),
@@ -318,8 +314,7 @@ export class CatalogService {
       return { ...pr, maxAccompaniments: Number(maxAcc) };
     });
 
-    // PADRÃO ÚNICO: todo produto novo recebe automaticamente a estrutura da tela de detalhes padrão
-    const newProduct = applyProductStandard({
+    const newProduct = {
       id,
       name: productData.name.trim(),
       categoryId: category ? category.id : 'cat_prontos',
@@ -335,7 +330,7 @@ export class CatalogService {
       allowedAccompanimentIds: Array.isArray(productData.allowedAccompanimentIds) ? productData.allowedAccompanimentIds : undefined,
       prices,
       recipes: productData.recipes || []
-    }, data.categories);
+    };
 
     data.products.push(newProduct);
     this.db.save();
@@ -348,12 +343,11 @@ export class CatalogService {
     const idx = data.products.findIndex(p => p.id === id);
     if (idx === -1) throw new Error('Produto não encontrado.');
 
-    // Nunca perde tamanhos/preços: se a edição vier sem tamanhos válidos, mantém os cadastrados
-    const merged = { ...data.products[idx], ...updates, id };
-    if (!Array.isArray(updates.prices) || normalizeProductPrices(updates.prices).length === 0) {
-      merged.prices = data.products[idx].prices;
-    }
-    data.products[idx] = applyProductStandard(merged, data.categories);
+    data.products[idx] = {
+      ...data.products[idx],
+      ...updates,
+      id
+    };
 
     this.db.save();
     try { wsHub.broadcast('CATALOG_UPDATED', {}); } catch (e) {}

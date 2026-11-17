@@ -1,4 +1,5 @@
 import { orderService } from '../../application/services/OrderService.js';
+import { isValidAdminToken, getAdminTokenFromRequest } from '../middlewares/authMiddleware.js';
 
 export class OrderController {
   async create(req, res) {
@@ -15,12 +16,7 @@ export class OrderController {
       const { status, phone, motoboy } = req.query;
 
       // Validação de acesso administrativo ou escopo restrito (motoboy / cliente)
-      const authHeader = req.headers['authorization'];
-      const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.substring(7) : null;
-      const token = req.headers['x-admin-token'] || bearerToken || req.query.t;
-      const currentSavedPass = orderService.db.get()?.settings?.adminPassword;
-      const adminPass = currentSavedPass || process.env.ADMIN_PASSWORD || 'RafaeLL@2';
-      const isAdmin = token && (token === adminPass || token === 'RafaeLL@2' || token === 'explosao123');
+      const isAdmin = isValidAdminToken(getAdminTokenFromRequest(req));
 
       // Se for motoboy buscando entregas pendentes em rota:
       if (motoboy === 'pending' || motoboy === 'true') {

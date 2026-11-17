@@ -1,5 +1,12 @@
 import { storeService } from '../../application/services/StoreService.js';
 import { freightService } from '../../application/services/FreightService.js';
+import { isValidAdminToken } from '../middlewares/authMiddleware.js';
+
+// Nunca devolve a senha do painel (nem outros segredos) em respostas de configurações
+function publicSettings(settings) {
+  const { adminPassword, ...safe } = settings || {};
+  return safe;
+}
 
 export class StoreController {
   constructor() {
@@ -28,7 +35,7 @@ export class StoreController {
   async getSettings(req, res) {
     try {
       const settings = storeService.getSettings();
-      return res.json({ ok: true, settings });
+      return res.json({ ok: true, settings: publicSettings(settings) });
     } catch (err) {
       return res.status(500).json({ ok: false, error: err.message });
     }
@@ -37,7 +44,7 @@ export class StoreController {
   async updateSettings(req, res) {
     try {
       const settings = storeService.updateSettings(req.body);
-      return res.json({ ok: true, settings });
+      return res.json({ ok: true, settings: publicSettings(settings) });
     } catch (err) {
       return res.status(400).json({ ok: false, error: err.message });
     }
@@ -60,10 +67,7 @@ export class StoreController {
         return res.status(400).json({ ok: false, error: 'A nova senha deve ter no mínimo 4 caracteres.' });
       }
 
-      const settings = storeService.getSettings();
-      const currentSaved = settings.adminPassword || process.env.ADMIN_PASSWORD || 'RafaeLL@2';
-
-      if (currentPassword !== currentSaved && currentPassword !== 'RafaeLL@2' && currentPassword !== 'explosao123') {
+      if (!isValidAdminToken(currentPassword)) {
         return res.status(400).json({ ok: false, error: 'A senha atual informada está incorreta.' });
       }
 

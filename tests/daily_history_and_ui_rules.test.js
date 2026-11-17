@@ -54,7 +54,7 @@ describe('Explosão Açaí — Automação do Histórico Diário e Regras de UI'
       customer: { name: 'Cliente Teste Histórico', phone: '16999998888' },
       delivery: { type: 'pickup' },
       items: [
-        { name: 'Copo Açaí 500 ml', size: 500, quantity: 2, unitPrice: 19.90, accompaniments: ['Banana', 'Leite em Pó'], extras: ['Nutella'], note: 'Caprichado' }
+        { productId: 'prod_classico', name: 'Clássico 500 ml', size: 500, quantity: 2, unitPrice: 33.80, accompaniments: ['Banana', 'Leite em Pó'], extras: ['Nutella'], note: 'Caprichado' }
       ],
       payment: { method: 'Dinheiro', timing: 'delivery', changeFor: '50' },
       bypassStoreClosed: true
@@ -94,8 +94,8 @@ describe('Explosão Açaí — Automação do Histórico Diário e Regras de UI'
     assert.ok(inHistory, 'Pedido antigo deve estar disponível na coluna Pedidos Concluídos');
     assert.equal(reloaded.customer.name, 'Cliente Teste Histórico', 'Nome do cliente preservado');
     assert.equal(reloaded.items.length, 1, 'Itens preservados');
-    assert.equal(reloaded.items[0].name, 'Copo Açaí 500 ml', 'Produto preservado');
-    assert.equal(reloaded.total, 39.80, 'Valor preservado');
+    assert.equal(reloaded.items[0].name, 'Clássico 500 ml', 'Produto preservado');
+    assert.equal(reloaded.total, 67.60, 'Valor preservado');
     assert.ok(reloaded.deliveredAt, 'Data e horário preservados');
   });
 

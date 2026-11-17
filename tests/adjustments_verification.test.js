@@ -47,7 +47,7 @@ describe('Explosão Açaí — Testes das 4 Correções Finais', () => {
       customer: { name: 'Cliente Pix Teste', phone: '16998877665' },
       delivery: { type: 'pickup' },
       items: [
-        { name: 'Puro Polpa 500 ml', size: 500, quantity: 1, unitPrice: 19.90, accompaniments: [], extras: [], fruits: [] }
+        { productId: 'prod_classico', name: 'Clássico 500 ml', size: 500, quantity: 1, unitPrice: 27.90, accompaniments: [], extras: [], fruits: [] }
       ],
       payment: { method: 'Pix', timing: 'online' },
       bypassStoreClosed: true
