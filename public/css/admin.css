@@ -697,15 +697,65 @@ input:checked + .slider:before {
     border: 1.5px solid rgba(168, 85, 247, 0.35) !important;
   }
 
-  /* Linha 2: Cápsula de Métricas Centralizada */
+  /* Linha 2: Cápsula de Métricas Centralizada (Idêntico à Imagem 1) */
   .header-kpis-capsule {
     grid-column: 1 / -1 !important;
     grid-row: 2 !important;
     width: 100% !important;
     max-width: 100% !important;
-    margin: 4px auto !important;
+    margin: 4px 0 !important;
     justify-content: center !important;
-    padding: 6px 12px !important;
+    align-items: center !important;
+    padding: 6px 10px !important;
+    border-radius: 99px !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(168, 85, 247, 0.28) !important;
+    display: flex !important;
+    box-sizing: border-box !important;
+  }
+
+  .header-kpis-capsule .kpi-cap-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 0 2px !important;
+  }
+
+  .header-kpis-capsule .kpi-cap-lbl {
+    font-size: 11px !important;
+    color: rgba(255, 255, 255, 0.65) !important;
+    white-space: nowrap !important;
+  }
+
+  .header-kpis-capsule .kpi-cap-val {
+    font-size: 13.5px !important;
+    font-weight: 800 !important;
+    white-space: nowrap !important;
+  }
+
+  .header-kpis-capsule .kpi-cap-val.green {
+    color: #34d399 !important;
+  }
+
+  .header-kpis-capsule .kpi-cap-val.yellow {
+    color: #facc15 !important;
+  }
+
+  .header-kpis-capsule .kpi-cap-divider {
+    display: block !important;
+    width: 1px !important;
+    height: 16px !important;
+    background: rgba(168, 85, 247, 0.3) !important;
+    margin: 0 8px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .header-kpis-capsule .kpi-eye-icon {
+    font-size: 14px !important;
+    margin-right: 3px !important;
+    cursor: pointer !important;
+    display: inline-block !important;
+    opacity: 1 !important;
   }
 
   #kpi-tempo-divider,
@@ -713,64 +763,63 @@ input:checked + .slider:before {
     display: none !important;
   }
 
-  /* Linha 3: Segunda Linha de Controles (Loja + Rotas à esquerda, Sino à direita) */
+  /* Linha 3: Ordem Exata da Imagem 1: Notificações -> Loja -> Rotas -> Espaço -> Mensagens */
   .header-actions-row3 {
     grid-column: 1 / -1 !important;
     grid-row: 3 !important;
     display: flex !important;
-    justify-content: space-between !important;
     align-items: center !important;
     width: 100% !important;
     margin-top: 4px !important;
-  }
-
-  .header-controls-left {
-    display: flex !important;
-    align-items: center !important;
     gap: 8px !important;
   }
 
+  .header-controls-left,
   .header-controls-right {
-    display: flex !important;
-    align-items: center !important;
-    gap: 6px !important;
+    display: contents !important;
   }
 
-  /* Botão da Central de Notificações Mobile (Próximo ao Sino) */
-  .notif-center-btn {
-    display: inline-flex !important;
-    width: 38px !important;
-    height: 38px !important;
-    border-radius: 10px !important;
+  /* 1. Notificações, com contador */
+  .bell-alert-btn {
+    order: 1 !important;
+    width: 46px !important;
+    height: 42px !important;
+    border-radius: 12px !important;
     background: rgba(255, 255, 255, 0.08) !important;
-    border: 1.5px solid rgba(168, 85, 247, 0.4) !important;
-    color: #fff !important;
+    border: 1.5px solid rgba(168, 85, 247, 0.35) !important;
+    display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     position: relative !important;
     cursor: pointer !important;
-    transition: all 0.2s ease !important;
+    flex-shrink: 0 !important;
   }
 
-  .notif-center-btn:hover {
-    background: rgba(168, 85, 247, 0.2) !important;
-    border-color: #a855f7 !important;
+  .bell-emoji {
+    font-size: 19px !important;
   }
 
-  .notif-center-icon {
-    font-size: 16px !important;
-    display: inline-block !important;
-  }
-
-  /* Loja no Mobile: Apenas Ícone da Loja com Moldura Luminosa */
+  /* 2. Botão de acesso à função já existente (Loja) */
   .store-glow-pill {
-    width: 52px !important;
-    height: 38px !important;
+    order: 2 !important;
+    width: 54px !important;
+    height: 42px !important;
     padding: 0 !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    border-radius: 10px !important;
+    border-radius: 12px !important;
+    background: rgba(16, 185, 129, 0.1) !important;
+    border: 1.5px solid #10b981 !important;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.2) !important;
+    flex-shrink: 0 !important;
+    cursor: pointer !important;
+  }
+
+  .store-glow-pill.closed {
+    background: rgba(239, 68, 68, 0.1) !important;
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.2) !important;
   }
 
   .store-glow-pill .dot-glow,
@@ -780,32 +829,84 @@ input:checked + .slider:before {
 
   .store-glow-pill .store-shop-icon {
     display: inline-flex !important;
-    color: #fff !important;
+    color: #ffffff !important;
+    width: 22px !important;
+    height: 22px !important;
   }
 
-  /* Botão Rotas Mobile */
+  /* 3. Botão Rotas */
   .btn-routes-mobile {
+    order: 3 !important;
     display: inline-flex !important;
     align-items: center !important;
     gap: 6px !important;
-    height: 38px !important;
-    padding: 0 14px !important;
-    font-size: 13px !important;
+    height: 42px !important;
+    padding: 0 16px !important;
+    font-size: 13.5px !important;
     font-weight: 800 !important;
     color: #facc15 !important;
     background: rgba(250, 204, 21, 0.08) !important;
     border: 1.5px solid #facc15 !important;
-    border-radius: 10px !important;
-    box-shadow: 0 0 12px rgba(250, 204, 21, 0.2) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 0 10px rgba(250, 204, 21, 0.18) !important;
     cursor: pointer !important;
+    flex-shrink: 0 !important;
     transition: all 0.2s ease !important;
   }
 
-  /* Sino de Notificações */
-  .bell-alert-btn {
-    width: 38px !important;
-    height: 38px !important;
-    border-radius: 10px !important;
+  .btn-routes-mobile .routes-icon {
+    font-size: 16px !important;
+  }
+
+  /* 5. Mensagens, com contador (order 4 + margin-left: auto cria o espaço livre na 4ª posição) */
+  .notif-center-btn {
+    order: 4 !important;
+    margin-left: auto !important;
+    display: inline-flex !important;
+    width: 46px !important;
+    height: 42px !important;
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1.5px solid rgba(168, 85, 247, 0.35) !important;
+    color: #ffffff !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    transition: all 0.2s ease !important;
+  }
+
+  .notif-center-btn:hover {
+    background: rgba(168, 85, 247, 0.2) !important;
+    border-color: #a855f7 !important;
+  }
+
+  .notif-center-icon {
+    font-size: 18px !important;
+    display: inline-block !important;
+  }
+
+  /* Badges de Contadores em Azul com Borda Escura (Idêntico à Imagem 1) */
+  .bell-num-badge {
+    position: absolute !important;
+    top: -5px !important;
+    right: -5px !important;
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    border-radius: 99px !important;
+    min-width: 18px !important;
+    height: 18px !important;
+    padding: 0 4px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 2px solid #140726 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+    z-index: 2 !important;
+    box-sizing: border-box !important;
   }
 
   /* Busca do Header (Desktop): oculto no mobile, pois busca fica na 3ª linha de filtros */
