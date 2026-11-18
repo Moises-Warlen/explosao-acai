@@ -4042,8 +4042,10 @@ window.setExtrasSubView = function(view) {
   const cardFruits = $('#card-section-fruits');
   const pillExtras = $('#subnav-pill-extras');
   const pillFruits = $('#subnav-pill-fruits');
+  const tabExtras = $('#tab-extras');
 
   if (view === 'fruits') {
+    if (tabExtras) tabExtras.classList.add('fruits-subview-active');
     if (cardExtras) cardExtras.style.display = 'none';
     if (cardFruits) {
       cardFruits.style.display = 'block';
@@ -4058,6 +4060,7 @@ window.setExtrasSubView = function(view) {
       navFruits.classList.add('active');
     }
   } else {
+    if (tabExtras) tabExtras.classList.remove('fruits-subview-active');
     if (cardExtras) cardExtras.style.display = 'block';
     if (cardFruits) {
       cardFruits.style.display = 'block';
@@ -4143,9 +4146,9 @@ function renderExtrasTable() {
 
         ${e.isFruitExtra ? `
           <div style="background:rgba(16,185,129,0.12);border:1px dashed #10b981;border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-            <span style="font-size:12.5px;color:#6ee7b7"><b>🍓 Frutas Adicionais:</b> Gerencie os preços individuais de cada fruta (Banana, Morango, etc.).</span>
+            <span style="font-size:12.5px;color:#6ee7b7"><b>Frutas Adicionais:</b> Gerencie os preços individuais de cada fruta (Banana, Morango, etc.).</span>
             <button type="button" class="btn-sm" style="background:#059669;color:#fff;font-weight:700;padding:6px 14px;border-radius:8px;font-size:12px;display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="setExtrasSubView('fruits');">
-              🍓 Abrir Lista de Frutas
+              Abrir Lista de Frutas
             </button>
           </div>
         ` : ''}
@@ -4295,6 +4298,29 @@ async function loadFruits() {
   } catch (e) {}
 }
 
+window.toggleFruitActive = async function(id) {
+  const f = (FRUITS || []).find(item => item.id === id);
+  if (!f) return;
+  const newActive = !(f.active !== false);
+  try {
+    const res = await fetch(`${API_URL}/catalog/fruits/${id}`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({ active: newActive })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      f.active = newActive;
+      renderFruitsTable();
+      adminToast(`Fruta "${f.name}" ${newActive ? 'ativada' : 'pausada'}.`, 'info');
+    } else {
+      adminToast(data.error || 'Erro ao alternar status da fruta.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Erro de conexão ao alternar status da fruta.', 'danger');
+  }
+};
+
 function renderFruitsTable() {
   const container = $('#fruits-table-body');
   if (!container) return;
@@ -4309,38 +4335,39 @@ function renderFruitsTable() {
     const cost = Number(f.costPrice !== undefined ? f.costPrice : 0);
     const margin = price - cost;
     const marginPercent = price > 0 ? Math.round((margin / price) * 100) : 0;
-    const marginColor = margin < 0 ? 'var(--danger)' : 'var(--green)';
+    const marginColor = margin < 0 ? '#ef4444' : '#10b981';
+    const isActive = f.active !== false;
 
     return `
-      <div class="extra-item-card ${f.active !== false ? '' : 'paused'}">
-        <div class="extra-card-header">
-          <div class="extra-card-info">
-            <div class="extra-card-avatar" aria-hidden="true">🍓</div>
-            <div class="extra-card-text">
-              <h4 class="extra-card-title" title="${esc(f.name)}">${esc(f.name)}</h4>
-              <div class="extra-card-tags">
-                <span class="profit-badge">Fruta Adicional</span>
-              </div>
-            </div>
+      <div class="fruit-item-card extra-item-card ${isActive ? '' : 'paused'}" id="fruit-card-${f.id}">
+        <div class="fruit-card-top">
+          <h4 class="fruit-card-name" title="${esc(f.name)}">${esc(f.name)}</h4>
+          <span class="fruit-badge-tag">Fruta Adicional</span>
+        </div>
+
+        <div class="fruit-card-pricing-block">
+          <div class="fruit-pricing-row">
+            <span class="fruit-pricing-label">Preço Adicional:</span>
+            <span class="fruit-pricing-val">${R(price)}</span>
           </div>
-          <div class="extra-card-status-wrap">
-            <span class="badge ${f.active !== false ? 'badge-active' : 'badge-paused'}" style="background:${f.active !== false ? 'var(--green)' : 'var(--danger)'};color:#fff;font-weight:700;padding:4px 10px;border-radius:8px;font-size:11.5px">
-              ${f.active !== false ? '● Ativa' : '⏸ Pausada'}
-            </span>
+          <div class="fruit-pricing-row">
+            <span class="fruit-pricing-label">Custo Insumo:</span>
+            <span class="fruit-pricing-cost">${R(cost)}</span>
+          </div>
+          <div class="fruit-pricing-row">
+            <span class="fruit-pricing-label">Margem Bruta:</span>
+            <span class="fruit-pricing-margin" style="color:${marginColor}">${margin >= 0 ? '+' : ''}${R(margin)} (${marginPercent}%)</span>
           </div>
         </div>
 
-        <div class="extra-card-pricing-block">
-          <div><b>Preço Adicional:</b> <span class="extra-card-pricing-val">${R(price)}</span></div>
-          <div><b>Custo Insumo:</b> <span>${R(cost)}</span></div>
-          <div><b>Margem Bruta:</b> <span style="color:${marginColor};font-weight:700">${margin >= 0 ? '+' : ''}${R(margin)} (${marginPercent}%)</span></div>
-        </div>
-
-        <div class="extra-card-actions">
-          <button class="btn-sm btn-print" onclick="openEditFruitModal('${f.id}')" title="Editar fruta">
-            ✏️ Editar
+        <div class="fruit-card-actions">
+          <button type="button" class="fruit-btn-action fruit-btn-status ${isActive ? 'active' : 'paused'}" onclick="toggleFruitActive('${f.id}')" title="Alternar status (Ativa/Pausada)">
+            ${isActive ? '● Ativa' : '⏸ Pausada'}
           </button>
-          <button class="btn-sm btn-danger" onclick="deleteFruit('${f.id}')" title="Excluir fruta">
+          <button type="button" class="fruit-btn-action fruit-btn-edit" onclick="openEditFruitModal('${f.id}')" title="Editar fruta">
+            Editar
+          </button>
+          <button type="button" class="fruit-btn-action fruit-btn-delete" onclick="deleteFruit('${f.id}')" title="Excluir fruta">
             🗑️ Excluir
           </button>
         </div>

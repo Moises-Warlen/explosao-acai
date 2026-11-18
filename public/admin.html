@@ -158,7 +158,7 @@
         <span class="nav-tab-label"><span class="mobile-nav-icon">🍫</span> Adicionais</span>
       </button>
       <button class="nav-tab" id="nav-tab-fruits" data-tab="tab-extras" onclick="openFruitsAdminTab(event)">
-        <span class="nav-tab-label"><span class="mobile-nav-icon">🍓</span> Frutas</span>
+        <span class="nav-tab-label">Frutas</span>
       </button>
       <button class="nav-tab" data-tab="tab-categories">
         <span class="nav-tab-label"><span class="mobile-nav-icon">🏷️</span> Categorias</span>
@@ -565,7 +565,7 @@
         <button type="button" class="subnav-pill active" onclick="switchAdminTab('tab-products')">Cardápio & Estoque</button>
         <button type="button" class="subnav-pill" onclick="switchAdminTab('tab-accompaniments')">Acompanhamentos</button>
         <button type="button" class="subnav-pill" onclick="switchAdminTab('tab-extras')">Adicionais</button>
-        <button type="button" class="subnav-pill" onclick="openFruitsAdminTab(event)">🍓 Frutas Adicionais</button>
+        <button type="button" class="subnav-pill" onclick="openFruitsAdminTab(event)">Frutas Adicionais</button>
       </div>
 
       <div class="admin-card">
@@ -630,7 +630,7 @@
         <button type="button" class="subnav-pill" onclick="switchAdminTab('tab-products')">Cardápio & Estoque</button>
         <button type="button" class="subnav-pill active" onclick="switchAdminTab('tab-accompaniments')">Acompanhamentos</button>
         <button type="button" class="subnav-pill" onclick="switchAdminTab('tab-extras')">Adicionais</button>
-        <button type="button" class="subnav-pill" onclick="openFruitsAdminTab(event)">🍓 Frutas Adicionais</button>
+        <button type="button" class="subnav-pill" onclick="openFruitsAdminTab(event)">Frutas Adicionais</button>
       </div>
 
       <div class="admin-card acomp-admin-card">
@@ -687,7 +687,7 @@
         <button type="button" class="subnav-pill" onclick="switchAdminTab('tab-products')">Cardápio & Estoque</button>
         <button type="button" class="subnav-pill" onclick="switchAdminTab('tab-accompaniments')">Acompanhamentos</button>
         <button type="button" class="subnav-pill active" id="subnav-pill-extras" onclick="setExtrasSubView('extras')">Adicionais</button>
-        <button type="button" class="subnav-pill" id="subnav-pill-fruits" onclick="setExtrasSubView('fruits')">🍓 Frutas Adicionais</button>
+        <button type="button" class="subnav-pill" id="subnav-pill-fruits" onclick="setExtrasSubView('fruits')">Frutas Adicionais</button>
       </div>
 
       <div class="admin-card" id="card-section-extras">
@@ -707,19 +707,29 @@
       </div>
 
       <!-- GESTÃO DE FRUTAS ADICIONAIS (PREÇO INDIVIDUAL POR FRUTA) -->
-      <div class="admin-card" id="card-section-fruits" style="margin-top:24px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
-          <div>
-            <h2 style="margin:0">Frutas Adicionais (Preço Individual por Fruta)</h2>
-            <p style="color:var(--mut);font-size:13px;margin:4px 0 0">
-              Defina o preço de venda e custo individual de cada fruta adicional quando o cliente escolhe "Acrescentar fruta".
-            </p>
+      <div class="admin-card fruit-admin-card" id="card-section-fruits" style="margin-top:24px">
+        <div class="fruit-header-block">
+          <div class="fruit-header-top-row">
+            <div class="fruit-title-col">
+              <span class="fruit-title-p1">Frutas Adicionais (Preço</span>
+              <div class="fruit-title-p2-row">
+                <h2 class="fruit-main-title">Individual por Fruta)</h2>
+                <button type="button" class="fruit-btn-new fruit-btn-new-mobile" onclick="openNewFruitModal()">
+                  + Nova Fruta
+                </button>
+              </div>
+            </div>
+            <button type="button" class="fruit-btn-new fruit-btn-new-desktop" onclick="openNewFruitModal()">
+              + Nova Fruta
+            </button>
           </div>
-          <button class="btn-sm btn-next" onclick="openNewFruitModal()">+ Nova Fruta</button>
+          <p class="fruit-main-subtitle">
+            Defina o preço de venda e custo individual de cada fruta adicional quando o cliente escolhe "Acrescentar fruta".
+          </p>
         </div>
 
-        <!-- Lista de Cards de Frutas Adicionais Padronizada conforme Gestor Pro -->
-        <div id="fruits-table-body" class="extras-cards-list"></div>
+        <!-- Lista de Cards de Frutas Adicionais Padronizada conforme Gestor Pro (Imagem 2) -->
+        <div id="fruits-table-body" class="fruit-cards-container extras-cards-list"></div>
       </div>
     </div>
 
@@ -1676,6 +1686,6 @@
 
   <!-- Scripts -->
   <script src="js/global-modal.js?v=1.0"></script>
-  <script src="js/admin.js?v=3.6"></script>
+  <script src="js/admin.js?v=3.7"></script>
 </body>
 </html>
