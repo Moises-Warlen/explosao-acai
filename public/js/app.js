@@ -565,6 +565,41 @@ function renderCatalog() {
   main.innerHTML = html;
 }
 
+function formatProductSizesText(prod) {
+  if (!prod) return '';
+  let rawSizes = [];
+  if (Array.isArray(prod.prices) && prod.prices.length > 0) {
+    rawSizes = prod.prices.map(p => (p && p.size != null ? p.size : (p && p.label ? p.label : p)));
+  } else if (Array.isArray(prod.sizes) && prod.sizes.length > 0) {
+    rawSizes = prod.sizes;
+  } else if (prod.size != null) {
+    rawSizes = [prod.size];
+  }
+
+  rawSizes = rawSizes.filter(s => s !== null && s !== undefined && String(s).trim() !== '');
+  if (rawSizes.length === 0) return '';
+
+  const allNumeric = rawSizes.every(s => !isNaN(Number(s)));
+  if (allNumeric) {
+    rawSizes.sort((a, b) => Number(a) - Number(b));
+  }
+
+  const formatted = rawSizes.map(s => {
+    if (typeof s === 'string' && isNaN(Number(s))) {
+      return s.trim();
+    }
+    const num = Number(s);
+    if (!Number.isFinite(num) || num <= 0) return String(s).trim();
+    if (num >= 1000 && num % 1000 === 0) {
+      const l = num / 1000;
+      return `${l} Litro${l > 1 ? 's' : ''}`;
+    }
+    return `${num}ml`;
+  });
+
+  return [...new Set(formatted)].join(' • ');
+}
+
 function renderProductCard(prod) {
   const firstPriceObj = prod.prices && prod.prices.length > 0 ? prod.prices[0] : null;
   const price = firstPriceObj ? firstPriceObj.price : 0;
@@ -582,6 +617,16 @@ function renderProductCard(prod) {
   } else if (isPromo) {
     badgeHtml = `<span class="badge-discount">Promoção</span>`;
   }
+
+  const sizesText = formatProductSizesText(prod);
+  const sizesHtml = sizesText ? `
+    <div class="card-sizes-bar">
+      <svg class="card-sizes-icon" viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true">
+        <path d="M5 5h14l-1.8 14.2A2 2 0 0 1 15.2 21H8.8a2 2 0 0 1-1.99-1.8L5 5zm-1-2h16a1 1 0 0 1 1 1v1H3V4a1 1 0 0 1 1-1z"/>
+      </svg>
+      <span class="card-sizes-text">Tamanhos: ${esc(sizesText)}</span>
+    </div>
+  ` : '';
 
   let priceHtml = '';
   if (isPromo && promoPrice != null && promoPrice < price) {
@@ -611,6 +656,7 @@ function renderProductCard(prod) {
         ${badgeHtml}
         <img src="${encodeURI(imgUrl)}" alt="${esc(prod.name)}" loading="lazy" onerror="this.src='imagens/do seu jeitinho.png'">
       </div>
+      ${sizesHtml}
       <h3 class="card-title">${esc(prod.name)}</h3>
       <p class="card-desc">${esc(prod.description || '')}</p>
       <div class="card-ft">
