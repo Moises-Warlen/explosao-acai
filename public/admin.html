@@ -364,17 +364,18 @@
 
     <!-- ABA 2: RELATÓRIOS GERENCIAIS & EXPORTAÇÃO PDF COM FOTOS E RANKINGS -->
     <div class="tab-pane" id="tab-reports">
-      <div class="admin-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:14px">
-          <div>
-            <h2 style="margin:0">Relatório Executivo de Vendas & Logística</h2>
-            <p style="color:var(--mut);font-size:13px;margin:4px 0 0">
+      <div class="admin-card report-admin-card">
+        <!-- Header & Filtro de Período -->
+        <div class="report-top-bar">
+          <div class="report-heading">
+            <h2 class="report-title">Relatório Executivo de Vendas & Logística</h2>
+            <p class="report-subtitle">
               Filtre por dia, mês, ano ou intervalo entre datas. Tempo de preparo e entrega, faturamento de frete e custos reais de insumos.
             </p>
           </div>
           
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-            <select id="report-period-select" style="width:auto;padding:8px 14px" onchange="handlePeriodSelectChange(this.value)">
+          <div class="report-actions-bar">
+            <select id="report-period-select" class="report-period-select" onchange="handlePeriodSelectChange(this.value)">
               <option value="today">Hoje (Dia)</option>
               <option value="month">Este Mês</option>
               <option value="year">Este Ano</option>
@@ -382,20 +383,20 @@
               <option value="custom">Período Personalizado...</option>
             </select>
 
-            <div id="date-range-box" style="display:none;align-items:center;gap:6px">
-              <input type="date" id="report-start-date" style="width:auto;padding:6px 10px">
+            <div id="date-range-box" class="report-date-range-box" style="display:none;align-items:center;gap:6px">
+              <input type="date" id="report-start-date" class="report-date-input">
               <span style="font-size:12px;color:var(--mut)">até</span>
-              <input type="date" id="report-end-date" style="width:auto;padding:6px 10px">
+              <input type="date" id="report-end-date" class="report-date-input">
               <button class="btn-sm btn-next" onclick="applyCustomDateFilter()">Filtrar</button>
             </div>
 
-            <button class="btn-sm btn-print" style="padding:10px 18px" onclick="exportReportToPdf()">
-              Exportar Relatório em PDF
+            <button class="btn-sm report-export-btn" onclick="exportReportToPdf()">
+              <span class="export-icon">+</span> Exportar Relatório em PDF
             </button>
           </div>
         </div>
 
-        <!-- KPI Cards Executivos -->
+        <!-- KPI Cards Executivos (3 colunas compactas no Mobile como na Imagem 2) -->
         <div class="kpi-grid">
           <div class="kpi-card">
             <span class="kpi-title">Faturamento Líquido</span>
@@ -433,11 +434,6 @@
             <span class="kpi-sub" id="kpi-profit-margin">Margem de Lucro: 0%</span>
           </div>
           <div class="kpi-card">
-            <span class="kpi-title">Tempo Médio de Preparo</span>
-            <span class="kpi-value" id="kpi-prep-time">0 min</span>
-            <span class="kpi-sub" style="color:var(--mut)">Cozinha e montagem</span>
-          </div>
-          <div class="kpi-card">
             <span class="kpi-title">Tempo Médio de Entrega</span>
             <span class="kpi-value" id="kpi-delivery-time">0 min</span>
             <span class="kpi-sub" style="color:var(--mut)">Despacho ao cliente</span>
@@ -447,10 +443,15 @@
             <span class="kpi-value" id="kpi-avg-ticket">R$ 0,00</span>
             <span class="kpi-sub" style="color:var(--mut)">Média por pedido</span>
           </div>
+          <div class="kpi-card kpi-prep-card">
+            <span class="kpi-title">Tempo Médio de Preparo</span>
+            <span class="kpi-value" id="kpi-prep-time">0 min</span>
+            <span class="kpi-sub" style="color:var(--mut)">Cozinha e montagem</span>
+          </div>
         </div>
 
-        <!-- Gráficos Visuais de Produtos Mais Vendidos e Menos Vendidos -->
-        <h3 style="margin:28px 0 12px;font-size:17px">Performance de Produtos (Mais e Menos Vendidos)</h3>
+        <!-- Gráficos Visuais de Produtos Mais Vendidos e Menos Vendidos (2 colunas lado a lado) -->
+        <h3 class="report-section-title">Performance de Produtos (Mais e Menos Vendidos)</h3>
         <div class="sales-ranking-grid">
           <!-- Caixa Mais Vendidos -->
           <div class="ranking-box">
@@ -476,7 +477,7 @@
         </div>
 
         <!-- Inteligência de Vendas: Horários de Pico & Top Acompanhamentos -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:16px;margin:24px 0">
+        <div class="report-intelligence-grid">
           <!-- Horários de Pico -->
           <div class="ranking-box" style="margin:0">
             <h4 style="color:#38bdf8;display:flex;justify-content:space-between;align-items:center">
@@ -491,7 +492,7 @@
           <!-- Top Acompanhamentos Mais Consumidos -->
           <div class="ranking-box" style="margin:0">
             <h4 style="color:var(--green);display:flex;justify-content:space-between;align-items:center">
-              <span>🍓 Top 5 Acompanhamentos Mais Pedidos</span>
+              <span>🏆 Top 5 Acompanhamentos Mais Pedidos</span>
               <small style="color:var(--mut);font-weight:normal;font-size:12px">Saída de insumos</small>
             </h4>
             <div id="report-top-acomp-container" style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
@@ -501,25 +502,25 @@
         </div>
 
         <!-- Quebra por Forma de Pagamento -->
-        <h3 style="margin:24px 0 10px;font-size:16px">Vendas por Forma de Pagamento</h3>
-        <div class="form-grid" id="report-payments-breakdown"></div>
+        <h3 class="report-section-title">Vendas por Forma de Pagamento</h3>
+        <div class="report-payments-grid" id="report-payments-breakdown"></div>
 
-        <!-- Tabela Detalhada de Transações com Busca e Filtros -->
-        <div style="display:flex;justify-content:space-between;align-items:center;margin:28px 0 12px;flex-wrap:wrap;gap:10px">
+        <!-- Histórico Detalhado de Transações -->
+        <div class="report-tx-heading-box">
           <div>
-            <h3 style="margin:0;font-size:17px">Histórico Detalhado de Transações</h3>
-            <p style="color:var(--mut);font-size:12px;margin:2px 0 0">Filtre por número do pedido, cliente, status ou pagamento:</p>
+            <h3 class="report-section-title" style="margin:0">Histórico Detalhado de Transações</h3>
+            <p class="report-tx-subtitle">Filtre por número do pedido, cliente, status ou pagamento:</p>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <input type="text" id="report-search-input" placeholder="🔍 Nº do pedido ou cliente..." style="width:auto;min-width:180px;padding:6px 10px;font-size:12px" oninput="applyReportTableFilters(true)">
-            <select id="report-status-filter" style="width:auto;padding:6px 10px;font-size:12px" onchange="applyReportTableFilters(true)">
+          <div class="report-tx-filters">
+            <input type="text" id="report-search-input" placeholder="🔍 Nº do pedido ou cliente..." oninput="applyReportTableFilters(true)">
+            <select id="report-status-filter" onchange="applyReportTableFilters(true)">
               <option value="all">Todos os Status</option>
               <option value="delivered">Apenas Concluídos</option>
               <option value="returned">Apenas Devolvidos</option>
               <option value="cancelled">Apenas Cancelados</option>
               <option value="open">Em Andamento</option>
             </select>
-            <select id="report-pay-filter" style="width:auto;padding:6px 10px;font-size:12px" onchange="applyReportTableFilters(true)">
+            <select id="report-pay-filter" onchange="applyReportTableFilters(true)">
               <option value="all">Todas as Formas</option>
               <option value="Pix">Pix</option>
               <option value="Dinheiro">Dinheiro</option>
@@ -527,7 +528,9 @@
             </select>
           </div>
         </div>
-        <div class="table-responsive">
+
+        <!-- Tabela Desktop -->
+        <div class="table-responsive report-table-desktop">
           <table>
             <thead>
               <tr>
@@ -546,7 +549,12 @@
             <tbody id="report-orders-table-body"></tbody>
           </table>
         </div>
-        <div id="report-orders-pagination" style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;flex-wrap:wrap;gap:10px"></div>
+
+        <!-- Cards Mobile -->
+        <div id="report-orders-cards-container" class="report-orders-cards-container"></div>
+
+        <!-- Paginação -->
+        <div id="report-orders-pagination" class="report-pagination-box"></div>
       </div>
     </div>
 

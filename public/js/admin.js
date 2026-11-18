@@ -2094,10 +2094,10 @@ function renderReportDashboard(rep) {
   if (payBox) {
     const pb = rep.paymentBreakdown;
     payBox.innerHTML = Object.entries(pb).map(([method, val]) => `
-      <div style="background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:12px">
-        <div style="font-size:12px;color:var(--mut)">${method}</div>
-        <div style="font-size:18px;font-weight:700;color:#fff">${R(val.total)}</div>
-        <div style="font-size:11px;color:var(--mut)">${val.count} pedidos</div>
+      <div class="report-pay-card">
+        <div class="report-pay-title">${method}</div>
+        <div class="report-pay-val">${R(val.total)}</div>
+        <div class="report-pay-count">${val.count} pedidos</div>
       </div>
     `).join('');
   }
@@ -2147,8 +2147,9 @@ window.setReportPage = function(page) {
 window.applyReportTableFilters = function(resetPage = false) {
   if (!CURRENT_REPORT) return;
   const tbody = $('#report-orders-table-body');
+  const cardsContainer = $('#report-orders-cards-container');
   const paginationBox = $('#report-orders-pagination');
-  if (!tbody) return;
+  if (!tbody && !cardsContainer) return;
 
   if (resetPage) {
     REPORT_PAGE = 1;
@@ -2158,7 +2159,8 @@ window.applyReportTableFilters = function(resetPage = false) {
   const total = filtered.length;
 
   if (total === 0) {
-    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:18px;color:var(--mut)">Nenhum pedido encontrado para os filtros selecionados.</td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:18px;color:var(--mut)">Nenhum pedido encontrado para os filtros selecionados.</td></tr>`;
+    if (cardsContainer) cardsContainer.innerHTML = `<div style="text-align:center;padding:18px;color:var(--mut);font-size:13px">Nenhum pedido encontrado para os filtros selecionados.</div>`;
     if (paginationBox) paginationBox.innerHTML = '';
     return;
   }
@@ -2170,55 +2172,114 @@ window.applyReportTableFilters = function(resetPage = false) {
   const start = (REPORT_PAGE - 1) * REPORT_PER_PAGE;
   const pageOrders = filtered.slice(start, start + REPORT_PER_PAGE);
 
-  tbody.innerHTML = pageOrders.map(o => `
-    <tr style="${o.isCancelled ? 'opacity:0.8;background:rgba(239,68,68,0.06)' : (o.isReturned ? 'opacity:0.85;background:rgba(245,158,11,0.06)' : '')}">
-      <td><b>#${o.orderNo}</b></td>
-      <td>
-        ${o.isCancelled 
-          ? `<span class="order-badge danger" style="font-size:10px">Cancelado</span>${o.cancellationReason ? `<div style="font-size:10px;color:var(--danger);max-width:140px;line-height:1.2;margin-top:2px">${esc(o.cancellationReason)}</div>` : ''}` 
-          : (o.isReturned
-            ? `<span class="order-badge" style="background:#b45309;color:#fff;font-size:10px">Devolvido</span>${o.returnReason ? `<div style="font-size:10px;color:#f59e0b;max-width:140px;line-height:1.2;margin-top:2px">${esc(o.returnReason)}</div>` : ''}`
-            : (o.status === 'delivered'
-              ? `<span class="order-badge success" style="font-size:10px">Concluído</span>`
-              : `<span class="order-badge warning" style="font-size:10px">Em Andamento</span>`
+  // Renderiza Tabela Desktop
+  if (tbody) {
+    tbody.innerHTML = pageOrders.map(o => `
+      <tr style="${o.isCancelled ? 'opacity:0.8;background:rgba(239,68,68,0.06)' : (o.isReturned ? 'opacity:0.85;background:rgba(245,158,11,0.06)' : '')}">
+        <td><b>#${o.orderNo}</b></td>
+        <td>
+          ${o.isCancelled 
+            ? `<span class="order-badge danger" style="font-size:10px">Cancelado</span>${o.cancellationReason ? `<div style="font-size:10px;color:var(--danger);max-width:140px;line-height:1.2;margin-top:2px">${esc(o.cancellationReason)}</div>` : ''}` 
+            : (o.isReturned
+              ? `<span class="order-badge" style="background:#b45309;color:#fff;font-size:10px">Devolvido</span>${o.returnReason ? `<div style="font-size:10px;color:#f59e0b;max-width:140px;line-height:1.2;margin-top:2px">${esc(o.returnReason)}</div>` : ''}`
+              : (o.status === 'delivered'
+                ? `<span class="order-badge success" style="font-size:10px">Concluído</span>`
+                : `<span class="order-badge warning" style="font-size:10px">Em Andamento</span>`
+              )
             )
-          )
-        }
-      </td>
-      <td>${esc(o.customerName)}</td>
-      <td>
-        <span class="order-badge ${o.paymentMethod === 'Pix' ? 'pix' : (o.paymentMethod === 'Dinheiro' ? 'money' : 'card')}">
-          ${o.paymentMethod}
-        </span>
-        <div style="font-size:11px;color:var(--mut)">${o.paymentTiming === 'delivery' ? 'Na Entrega' : 'Online'}</div>
-      </td>
-      <td>${o.deliveryType} (${esc(o.bairro)})</td>
-      <td>${R(o.freight)}</td>
-      <td><b>${R(o.total)}</b></td>
-      <td>${R(o.costTotal)}</td>
-      <td style="color:${o.profit >= 0 ? 'var(--green)' : 'var(--danger)'};font-weight:700">${R(o.profit)}</td>
-      <td>${new Date(o.createdAt).toLocaleString('pt-BR')}</td>
-    </tr>
-  `).join('');
+          }
+        </td>
+        <td>${esc(o.customerName)}</td>
+        <td>
+          <span class="order-badge ${o.paymentMethod === 'Pix' ? 'pix' : (o.paymentMethod === 'Dinheiro' ? 'money' : 'card')}">
+            ${o.paymentMethod}
+          </span>
+          <div style="font-size:11px;color:var(--mut)">${o.paymentTiming === 'delivery' ? 'Na Entrega' : 'Online'}</div>
+        </td>
+        <td>${o.deliveryType} (${esc(o.bairro)})</td>
+        <td>${R(o.freight)}</td>
+        <td><b>${R(o.total)}</b></td>
+        <td>${R(o.costTotal)}</td>
+        <td style="color:${o.profit >= 0 ? 'var(--green)' : 'var(--danger)'};font-weight:700">${R(o.profit)}</td>
+        <td>${new Date(o.createdAt).toLocaleString('pt-BR')}</td>
+      </tr>
+    `).join('');
+  }
 
+  // Renderiza Cards Mobile (Idêntico à Imagem 2 de Referência)
+  if (cardsContainer) {
+    cardsContainer.innerHTML = pageOrders.map(o => {
+      const d = new Date(o.createdAt);
+      const dateStr = !isNaN(d) ? `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}` : '';
+
+      let statusBadge = '';
+      if (o.isCancelled) {
+        statusBadge = `<span class="report-tx-badge status-cancelado">Cancelado</span>`;
+      } else if (o.isReturned) {
+        statusBadge = `<span class="report-tx-badge status-devolvido">Devolvido</span>`;
+      } else if (o.status === 'delivered') {
+        statusBadge = `<span class="report-tx-badge status-concluido">Concluído</span>`;
+      } else {
+        statusBadge = `<span class="report-tx-badge status-andamento">Em Andamento</span>`;
+      }
+
+      const payMethodLabel = o.paymentMethod || 'Outro';
+      const reasonHtml = o.isCancelled && o.cancellationReason 
+        ? `<div style="font-size:10px;color:var(--danger);line-height:1.2;margin-top:4px">${esc(o.cancellationReason)}</div>` 
+        : (o.isReturned && o.returnReason 
+          ? `<div style="font-size:10px;color:#f59e0b;line-height:1.2;margin-top:4px">${esc(o.returnReason)}</div>` 
+          : '');
+
+      return `
+        <div class="report-tx-card" style="${o.isCancelled ? 'opacity:0.85;border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.06)' : (o.isReturned ? 'opacity:0.85;border-color:rgba(245,158,11,0.4);background:rgba(245,158,11,0.06)' : '')}">
+          <div class="report-tx-card-header">
+            <div class="report-tx-card-left">
+              <div class="report-tx-no">Pedido #${o.orderNo}</div>
+              <div class="report-tx-client">${esc(o.customerName)}</div>
+            </div>
+            <div class="report-tx-card-right">
+              <div class="report-tx-date">${dateStr}</div>
+              <div class="report-tx-total">${R(o.total)}</div>
+              <div class="report-tx-profit" style="color:${o.profit >= 0 ? '#34d399' : '#ef4444'}">Lucro: ${R(o.profit)}</div>
+            </div>
+          </div>
+          <div class="report-tx-card-badges">
+            ${statusBadge}
+            <span class="report-tx-badge pay-badge">${payMethodLabel}</span>
+            ${o.deliveryType ? `<span class="report-tx-badge" style="background:rgba(255,255,255,0.08);color:var(--mut)">${o.deliveryType}</span>` : ''}
+          </div>
+          ${reasonHtml}
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Renderiza Paginação com Controles Compactos
   if (paginationBox) {
+    let startPage = Math.max(1, REPORT_PAGE - 1);
+    let endPage = Math.min(totalPages, REPORT_PAGE + 1);
+    if (REPORT_PAGE === 1) endPage = Math.min(totalPages, 3);
+    if (REPORT_PAGE === totalPages) startPage = Math.max(1, totalPages - 2);
+
     let pageNumbersHtml = '';
-    for (let p = 1; p <= totalPages; p++) {
+    for (let p = startPage; p <= endPage; p++) {
       pageNumbersHtml += `
         <button class="btn-sm ${p === REPORT_PAGE ? 'btn-next' : 'btn-secondary'}" 
-                style="padding:4px 9px;min-width:30px;font-size:12px;font-weight:${p === REPORT_PAGE ? 'bold' : 'normal'}" 
+                style="padding:4px 9px;min-width:28px;font-size:12px;font-weight:${p === REPORT_PAGE ? 'bold' : 'normal'}" 
                 onclick="setReportPage(${p})">${p}</button>
       `;
     }
 
     paginationBox.innerHTML = `
-      <div style="font-size:13px;color:var(--mut)">
+      <div class="report-pagination-info" style="font-size:13px;color:var(--mut)">
         Mostrando <b>${start + 1} - ${Math.min(start + REPORT_PER_PAGE, total)}</b> de <b>${total}</b> pedidos (6 por página)
       </div>
-      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-        <button class="btn-sm btn-secondary" style="padding:4px 10px;font-size:12px" onclick="setReportPage(${REPORT_PAGE - 1})" ${REPORT_PAGE <= 1 ? 'disabled' : ''}>◀ Anterior</button>
+      <div class="report-pagination-controls" style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+        <button class="btn-sm btn-secondary" style="padding:4px 8px;font-size:12px" onclick="setReportPage(1)" ${REPORT_PAGE <= 1 ? 'disabled' : ''} title="Primeira página">≪</button>
+        <button class="btn-sm btn-secondary" style="padding:4px 8px;font-size:12px" onclick="setReportPage(${REPORT_PAGE - 1})" ${REPORT_PAGE <= 1 ? 'disabled' : ''} title="Página anterior">‹</button>
         <div style="display:flex;gap:4px">${pageNumbersHtml}</div>
-        <button class="btn-sm btn-secondary" style="padding:4px 10px;font-size:12px" onclick="setReportPage(${REPORT_PAGE + 1})" ${REPORT_PAGE >= totalPages ? 'disabled' : ''}>Próximo ▶</button>
+        <button class="btn-sm btn-secondary" style="padding:4px 8px;font-size:12px" onclick="setReportPage(${REPORT_PAGE + 1})" ${REPORT_PAGE >= totalPages ? 'disabled' : ''} title="Próxima página">›</button>
+        <button class="btn-sm btn-secondary" style="padding:4px 8px;font-size:12px" onclick="setReportPage(${totalPages})" ${REPORT_PAGE >= totalPages ? 'disabled' : ''} title="Última página">≫</button>
       </div>
     `;
   }
