@@ -512,6 +512,11 @@ class JsonDatabase {
         if (!Array.isArray(this.data.feedbacks)) {
           this.data.feedbacks = [];
         }
+
+        // Usuários do Sistema e Permissões (RBAC)
+        if (!Array.isArray(this.data.users)) {
+          this.data.users = [];
+        }
       } catch (err) {
         console.error("Erro ao ler database.json, restaurando inicial:", err);
         this.data = JSON.parse(JSON.stringify(INITIAL_DATA));

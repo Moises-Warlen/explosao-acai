@@ -29,6 +29,8 @@ let CURRENT_REPORT = null;
 let CURRENT_REPORT_SECTION = 'sales';
 let CURRENT_DELIVERY_REPORT = null;
 let WS = null;
+let CURRENT_USER = null;
+let USERS_LIST = [];
 
 // Áudio de Notificação de Novo Pedido ou Mensagem
 let audioCtx = null;
@@ -116,14 +118,17 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (dash) dash.style.display = 'none';
     showLoginModal();
   } else {
-    // Valida o token com o backend para evitar que o painel abra bloqueado ou sem permissão
+    // Valida o usuário e permissões com o backend
     try {
-      const checkRes = await fetch(`${API_URL}/orders`, { headers: authHeaders() });
-      if (checkRes.status === 401) {
+      const me = await loadCurrentUser();
+      if (!me) {
         handleUnauthorized();
         return;
       }
-    } catch (e) {}
+    } catch (e) {
+      handleUnauthorized();
+      return;
+    }
 
     if (dash) dash.style.display = 'block';
     window.syncTopbarHeight();
@@ -131,7 +136,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-// Autenticação do Administrador
+// Autenticação do Administrador e Operador
 function showLoginModal() {
   const modal = $('#login-modal');
   if (modal) modal.style.display = 'flex';
@@ -141,30 +146,36 @@ window.handleUnauthorized = function() {
   localStorage.removeItem('admin_token');
   sessionStorage.removeItem('explosao_admin_token');
   ADMIN_TOKEN = null;
+  CURRENT_USER = null;
   if (WS) {
     try { WS.close(); } catch (e) {}
   }
   const dash = $('#dashboard-wrapper');
   if (dash) dash.style.display = 'none';
+  const loginInput = $('#admin-login-input');
+  if (loginInput) loginInput.value = '';
   const passInput = $('#admin-pass-input');
   if (passInput) passInput.value = '';
   showLoginModal();
-  adminToast('Sua sessão expirou ou a senha é inválida. Por favor, faça login com a senha de admin.', 'danger');
+  adminToast('Sua sessão expirou ou o acesso foi alterado. Por favor, faça login com suas credenciais.', 'danger');
 };
 
 window.doLogin = async function() {
+  const loginInput = $('#admin-login-input');
+  const login = loginInput ? loginInput.value.trim() : '';
   const pass = $('#admin-pass-input').value.trim();
-  if (!pass) return adminToast('Digite a senha de administrador.', 'danger');
+  if (!pass) return adminToast('Digite a senha de acesso.', 'danger');
 
   try {
     const res = await fetch(`${API_URL}/admin/auth`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: pass })
+      body: JSON.stringify({ login: login || undefined, password: pass })
     });
     const data = await res.json();
     if (data.ok) {
       ADMIN_TOKEN = data.token;
+      CURRENT_USER = data.user || null;
       localStorage.setItem('admin_token', ADMIN_TOKEN);
       sessionStorage.setItem('explosao_admin_token', ADMIN_TOKEN);
       if (WS && WS.readyState === WebSocket.OPEN) {
@@ -174,10 +185,11 @@ window.doLogin = async function() {
       const dash = $('#dashboard-wrapper');
       if (dash) dash.style.display = 'block';
       window.syncTopbarHeight();
-      adminToast('Painel administrativo autenticado com sucesso!', 'success');
+      adminToast('Painel autenticado com sucesso!', 'success');
+      applyUserPermissionsUI(CURRENT_USER);
       initDashboard();
     } else {
-      adminToast(data.error || 'Senha incorreta.', 'danger');
+      adminToast(data.error || 'Senha ou login incorreto.', 'danger');
     }
   } catch (e) {
     adminToast('Erro de conexão ao autenticar.', 'danger');
@@ -188,11 +200,14 @@ window.logout = function() {
   localStorage.removeItem('admin_token');
   sessionStorage.removeItem('explosao_admin_token');
   ADMIN_TOKEN = null;
+  CURRENT_USER = null;
   if (WS) {
     try { WS.close(); } catch (e) {}
   }
   const dash = $('#dashboard-wrapper');
   if (dash) dash.style.display = 'none';
+  const loginInput = $('#admin-login-input');
+  if (loginInput) loginInput.value = '';
   const passInput = $('#admin-pass-input');
   if (passInput) passInput.value = '';
   showLoginModal();
@@ -211,6 +226,7 @@ async function initDashboard() {
   initWebSocket();
   startRealtimeClock();
   setKanbanViewMode('live');
+  await loadCurrentUser();
   await loadStoreStatus();
   await loadOrders();
   await loadCategories();
@@ -222,6 +238,9 @@ async function initDashboard() {
   await loadPrinters();
   await loadSalesReport({ period: 'today' });
   await loadChatConversations();
+  if (CURRENT_USER?.role === 'admin') {
+    loadUsersList();
+  }
   bindNavigation();
   updateHeaderKPIs();
   window.syncTopbarHeight();
@@ -440,6 +459,11 @@ function bindNavigation() {
         });
       }
 
+      if (tab.dataset.tab === 'tab-store') {
+        if (CURRENT_USER?.role === 'admin') {
+          loadUsersList();
+        }
+      }
       if (tab.dataset.tab === 'tab-bot') {
         loadWhatsAppBotStatus();
       }
@@ -7728,6 +7752,493 @@ window.clearSecurityLogs = async function() {
     }
   } catch (err) {
     adminToast('Erro de comunicação.', 'danger');
+  }
+};
+
+// ==================== GERENCIAMENTO DE USUÁRIOS & PERMISSÕES (RBAC) ====================
+
+/**
+ * Consulta os dados do usuário autenticado atual e suas permissões
+ */
+async function loadCurrentUser() {
+  if (!ADMIN_TOKEN) return null;
+  try {
+    const res = await fetch(`${API_URL}/auth/me`, {
+      headers: authHeaders()
+    });
+    if (res.status === 401) {
+      handleUnauthorized();
+      return null;
+    }
+    const data = await res.json();
+    if (data.ok && data.user) {
+      CURRENT_USER = data.user;
+      applyUserPermissionsUI(CURRENT_USER);
+      return CURRENT_USER;
+    }
+  } catch (err) {
+    console.error('Erro ao verificar usuário atual:', err);
+  }
+  return null;
+}
+
+/**
+ * Aplica controle de acesso granular na interface (RBAC)
+ */
+function applyUserPermissionsUI(user) {
+  // Atualiza pílula de identificação do usuário no cabeçalho
+  const userBtn = $('.btn-pass-pill');
+  if (userBtn && user) {
+    userBtn.textContent = user.name || user.email || (user.role === 'admin' ? 'admin' : 'operador');
+    userBtn.title = `Perfil: ${user.role === 'admin' ? 'Administrador (Acesso Total)' : 'Operador'} (${user.email || ''})`;
+  }
+
+  // Administrador possui acesso irrestrito a todas as abas e botões
+  if (!user || user.role === 'admin') {
+    $$('.nav-tab').forEach(t => t.style.display = '');
+    $$('.dock-btn').forEach(b => b.style.display = '');
+    const userCard = $('#card-users-management');
+    if (userCard) userCard.style.display = '';
+    return;
+  }
+
+  // Perfil Operador: oculta gerenciamento de usuários
+  const userCard = $('#card-users-management');
+  if (userCard) userCard.style.display = 'none';
+
+  const userPerms = Array.isArray(user.permissions) ? user.permissions : [];
+
+  // Mapeamento de abas para permissões necessárias
+  const tabPermMap = {
+    'tab-kanban': 'orders',
+    'tab-chat': 'chat',
+    'tab-products': 'catalog',
+    'tab-accompaniments': ['accompaniments', 'catalog'],
+    'tab-extras': ['accompaniments', 'catalog'],
+    'nav-tab-fruits': ['accompaniments', 'catalog'],
+    'tab-categories': 'catalog',
+    'tab-reports': 'reports',
+    'tab-coupons': 'coupons',
+    'tab-printers': 'printers',
+    'tab-store': 'store',
+    'tab-bot': 'bot',
+    'tab-security': 'security'
+  };
+
+  // Aplica nas abas do menu de navegação
+  $$('.nav-tab').forEach(tab => {
+    const tabKey = tab.id === 'nav-tab-fruits' ? 'nav-tab-fruits' : tab.dataset.tab;
+    const required = tabPermMap[tabKey];
+
+    if (!required) return;
+
+    let hasPerm = false;
+    if (userPerms.includes('*')) {
+      hasPerm = true;
+    } else if (Array.isArray(required)) {
+      hasPerm = required.some(r => userPerms.includes(r));
+    } else {
+      hasPerm = userPerms.includes(required);
+    }
+
+    tab.style.display = hasPerm ? '' : 'none';
+  });
+
+  // Sincroniza visibilidade no dock lateral esquerdo (mobile/desktop)
+  $$('.dock-btn').forEach(dockBtn => {
+    const target = dockBtn.getAttribute('data-tab-target');
+    const matchingTab = $(`.nav-tab[data-tab="${target}"]`);
+    if (matchingTab && matchingTab.style.display === 'none') {
+      dockBtn.style.display = 'none';
+    } else {
+      dockBtn.style.display = '';
+    }
+  });
+
+  // Se a aba atualmente ativa foi ocultada, redireciona para a primeira aba permitida
+  const activeTab = $('.nav-tab.active');
+  if (activeTab && activeTab.style.display === 'none') {
+    const firstAllowed = Array.from($$('.nav-tab')).find(t => t.style.display !== 'none');
+    if (firstAllowed) {
+      firstAllowed.click();
+    }
+  }
+}
+
+/**
+ * Carrega a lista de usuários cadastrados (Admin Only)
+ */
+window.loadUsersList = async function() {
+  const tbody = $('#users-table-body');
+  if (!tbody) return;
+  if (CURRENT_USER && CURRENT_USER.role !== 'admin') return;
+
+  try {
+    const res = await fetch(`${API_URL}/users`, { headers: authHeaders() });
+    if (res.status === 403) {
+      const card = $('#card-users-management');
+      if (card) card.style.display = 'none';
+      return;
+    }
+    const data = await res.json();
+    if (data.ok && Array.isArray(data.users)) {
+      USERS_LIST = data.users;
+      renderUsersTable(USERS_LIST);
+    } else {
+      tbody.innerHTML = `<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--danger)">Erro ao listar usuários: ${escapeHtml(data.error || 'Falha')}</td></tr>`;
+    }
+  } catch (err) {
+    console.error('Erro ao carregar lista de usuários:', err);
+    tbody.innerHTML = `<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--danger)">Erro de conexão ao consultar usuários.</td></tr>`;
+  }
+};
+
+/**
+ * Renderiza a tabela de usuários com badges, switches e travas de segurança
+ */
+function renderUsersTable(users) {
+  const tbody = $('#users-table-body');
+  if (!tbody) return;
+
+  if (!users || users.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="padding:32px 16px;text-align:center;color:var(--mut)">
+          Nenhum usuário cadastrado além do administrador mestre.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  // Contagem de administradores ativos para aplicar trava do último administrador
+  const activeAdminsCount = users.filter(u => u.role === 'admin' && u.active).length;
+
+  const permLabels = {
+    orders: '📋 Pedidos & PDV',
+    chat: '💬 Chat',
+    catalog: '🍱 Cardápio',
+    accompaniments: '🥣 Acomp.',
+    reports: '📊 Relatórios',
+    coupons: '🎟️ Cupons',
+    printers: '🖨️ Impressoras',
+    store: '⚙️ Loja',
+    bot: '🤖 Bot WhatsApp',
+    security: '🛡️ Segurança'
+  };
+
+  tbody.innerHTML = users.map(u => {
+    const isSelf = CURRENT_USER && (CURRENT_USER.id === u.id || CURRENT_USER.userId === u.id || CURRENT_USER.email === u.email);
+    const isLastAdmin = (u.role === 'admin' && u.active && activeAdminsCount <= 1);
+    const cannotDisableOrDelete = isSelf || isLastAdmin;
+
+    // Badge de Perfil
+    const roleBadge = u.role === 'admin'
+      ? `<span style="background:linear-gradient(135deg,rgba(234,179,8,0.2),rgba(245,158,11,0.25));color:var(--y);border:1px solid rgba(234,179,8,0.4);border-radius:12px;padding:3px 10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px">👑 Administrador</span>`
+      : `<span style="background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);border-radius:12px;padding:3px 10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px">👤 Operador</span>`;
+
+    // Badges de Permissões Granulares
+    let permsHtml = '';
+    if (u.role === 'admin') {
+      permsHtml = `<span style="color:var(--mut);font-size:11.5px">Acesso Total Irrestrito (Todos os Módulos)</span>`;
+    } else {
+      const uPerms = Array.isArray(u.permissions) ? u.permissions : [];
+      if (uPerms.length === 0) {
+        permsHtml = `<span style="color:var(--danger);font-size:11px;font-weight:600">Nenhum módulo liberado</span>`;
+      } else if (uPerms.includes('*')) {
+        permsHtml = `<span style="color:var(--mut);font-size:11.5px">Todos os módulos (*)</span>`;
+      } else {
+        permsHtml = `<div style="display:flex;flex-wrap:wrap;gap:4px">` +
+          uPerms.map(p => `<span style="background:var(--card);border:1px solid var(--ln);color:#cbd5e1;padding:2px 6px;border-radius:6px;font-size:10.5px">${permLabels[p] || p}</span>`).join('') +
+          `</div>`;
+      }
+    }
+
+    // Status Pill
+    const statusPill = u.active
+      ? `<span style="color:#22c55e;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.3);padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700">● Ativo</span>`
+      : `<span style="color:#ef4444;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700">○ Inativo</span>`;
+
+    const toggleBtnTitle = cannotDisableOrDelete
+      ? (isSelf ? 'Trava de Segurança: você não pode desativar o seu próprio usuário logado' : 'Trava de Segurança: não é possível desativar o único Administrador ativo')
+      : (u.active ? 'Clique para desativar acesso (soft disable)' : 'Clique para reativar acesso');
+
+    return `
+      <tr style="border-bottom:1px solid var(--ln);transition:background 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+        <td style="padding:12px;vertical-align:middle">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--p),var(--p-dk));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:1.5px solid var(--ln);flex-shrink:0">
+              ${escapeHtml((u.name || 'U').charAt(0).toUpperCase())}
+            </div>
+            <div>
+              <div style="font-weight:700;color:#fff;display:flex;align-items:center;gap:6px">
+                ${escapeHtml(u.name || 'Sem Nome')}
+                ${isSelf ? '<span style="font-size:10px;background:rgba(167,139,250,0.2);color:#c4b5fd;border:1px solid rgba(167,139,250,0.4);border-radius:6px;padding:1px 5px">Você</span>' : ''}
+              </div>
+              <div style="font-size:11px;color:var(--mut)">Cadastro: ${u.createdAt ? new Date(u.createdAt).toLocaleDateString('pt-BR') : '-'}</div>
+            </div>
+          </div>
+        </td>
+        <td style="padding:12px;vertical-align:middle;font-family:monospace;font-size:12px;color:var(--mut)">
+          ${escapeHtml(u.email || u.login || '-')}
+        </td>
+        <td style="padding:12px;vertical-align:middle">
+          ${roleBadge}
+        </td>
+        <td style="padding:12px;vertical-align:middle;max-width:280px">
+          ${permsHtml}
+        </td>
+        <td style="padding:12px;vertical-align:middle">
+          <div style="display:flex;align-items:center;gap:8px">
+            ${statusPill}
+            <button type="button" 
+                    onclick="toggleUserStatusAction('${u.id}')" 
+                    ${cannotDisableOrDelete ? 'disabled' : ''}
+                    title="${toggleBtnTitle}"
+                    style="background:none;border:none;cursor:${cannotDisableOrDelete ? 'not-allowed' : 'pointer'};opacity:${cannotDisableOrDelete ? '0.35' : '1'};font-size:14px;padding:2px">
+              ${u.active ? '⏸️' : '▶️'}
+            </button>
+          </div>
+        </td>
+        <td style="padding:12px;vertical-align:middle;text-align:right">
+          <div style="display:inline-flex;align-items:center;gap:6px">
+            <button type="button" class="btn btn-secondary" onclick="openUserModal('${u.id}')" title="Editar usuário e permissões" style="padding:5px 10px;font-size:12px">
+              ✏️ Editar
+            </button>
+            <button type="button" 
+                    class="btn btn-danger" 
+                    onclick="deleteUserPrompt('${u.id}', '${escapeHtml(u.name || u.email)}')" 
+                    ${cannotDisableOrDelete ? 'disabled' : ''}
+                    title="${cannotDisableOrDelete ? (isSelf ? 'Trava de Segurança: não pode excluir a si mesmo' : 'Trava de Segurança: não pode excluir o único Administrador ativo') : 'Remover usuário com proteção e anonimização LGPD'}"
+                    style="padding:5px 10px;font-size:12px;cursor:${cannotDisableOrDelete ? 'not-allowed' : 'pointer'};opacity:${cannotDisableOrDelete ? '0.4' : '1'}">
+              🗑️
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+/**
+ * Abre o modal de cadastro ou edição de usuário
+ */
+window.openUserModal = function(userId) {
+  const modal = $('#user-form-modal');
+  if (!modal) return;
+
+  const idInput = $('#user-form-id');
+  const nameInput = $('#user-form-name');
+  const emailInput = $('#user-form-email');
+  const passInput = $('#user-form-password');
+  const passHint = $('#user-form-password-hint');
+  const roleSelect = $('#user-form-role');
+  const activeInput = $('#user-form-active');
+  const modalTitle = $('#user-modal-title');
+
+  idInput.value = '';
+  nameInput.value = '';
+  emailInput.value = '';
+  passInput.value = '';
+  activeInput.checked = true;
+
+  if (userId) {
+    const user = USERS_LIST.find(u => u.id === userId);
+    if (!user) return;
+
+    modalTitle.innerHTML = '<span>✏️</span> Editar Usuário';
+    idInput.value = user.id;
+    nameInput.value = user.name || '';
+    emailInput.value = user.email || '';
+    roleSelect.value = user.role || 'operator';
+    activeInput.checked = user.active !== false;
+
+    passInput.required = false;
+    if (passHint) passHint.textContent = 'Deixe em branco para manter a senha atual. Digite apenas se desejar redefinir.';
+
+    // Checkboxes de permissões
+    const uPerms = Array.isArray(user.permissions) ? user.permissions : [];
+    $$('input[name="user-perm"]').forEach(cb => {
+      cb.checked = uPerms.includes('*') || uPerms.includes(cb.value);
+    });
+  } else {
+    modalTitle.innerHTML = '<span>👤</span> Novo Usuário';
+    roleSelect.value = 'operator';
+    passInput.required = true;
+    if (passHint) passHint.textContent = 'Senha obrigatória para o primeiro acesso (mínimo 4 caracteres).';
+
+    // Padrão para novo operador: marca pedidos e chat
+    $$('input[name="user-perm"]').forEach(cb => {
+      cb.checked = (cb.value === 'orders' || cb.value === 'chat');
+    });
+  }
+
+  handleUserRoleChange();
+  modal.style.display = 'flex';
+};
+
+/**
+ * Fecha o modal de usuário
+ */
+window.closeUserModal = function() {
+  const modal = $('#user-form-modal');
+  if (modal) modal.style.display = 'none';
+};
+
+/**
+ * Trata alternância de Perfil (Admin vs Operador) no formulário
+ */
+window.handleUserRoleChange = function() {
+  const role = $('#user-form-role')?.value;
+  const permSec = $('#user-permissions-section');
+  const adminBadge = $('#user-admin-info-badge');
+
+  if (role === 'admin') {
+    if (permSec) permSec.style.display = 'none';
+    if (adminBadge) adminBadge.style.display = 'block';
+  } else {
+    if (permSec) permSec.style.display = 'block';
+    if (adminBadge) adminBadge.style.display = 'none';
+  }
+};
+
+/**
+ * Seleciona ou desmarca todas as permissões no formulário
+ */
+window.toggleAllPermissions = function(checked) {
+  $$('input[name="user-perm"]').forEach(cb => {
+    cb.checked = checked;
+  });
+};
+
+/**
+ * Salva usuário (POST para criar ou PUT para atualizar)
+ */
+window.handleSaveUser = async function(event) {
+  event.preventDefault();
+  const id = $('#user-form-id').value.trim();
+  const name = $('#user-form-name').value.trim();
+  const email = $('#user-form-email').value.trim();
+  const password = $('#user-form-password').value.trim();
+  const role = $('#user-form-role').value;
+  const active = $('#user-form-active').checked;
+
+  if (!name || !email) {
+    return adminToast('Por favor, preencha o nome e login/e-mail.', 'danger');
+  }
+
+  if (!id && !password) {
+    return adminToast('Por favor, defina a senha para o novo usuário.', 'danger');
+  }
+
+  let permissions = [];
+  if (role === 'admin') {
+    permissions = ['*'];
+  } else {
+    $$('input[name="user-perm"]:checked').forEach(cb => {
+      permissions.push(cb.value);
+    });
+    if (permissions.length === 0) {
+      if (!confirm('Atenção: este operador não possui nenhuma permissão marcada e não conseguirá acessar nenhum módulo operacional. Deseja salvar mesmo assim?')) {
+        return;
+      }
+    }
+  }
+
+  const payload = {
+    name,
+    email,
+    role,
+    permissions,
+    active
+  };
+  if (password) {
+    payload.password = password;
+  }
+
+  const saveBtn = $('#btn-save-user');
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Salvando...';
+  }
+
+  try {
+    const url = id ? `${API_URL}/users/${id}` : `${API_URL}/users`;
+    const method = id ? 'PUT' : 'POST';
+
+    const res = await fetch(url, {
+      method,
+      headers: authHeaders(),
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (data.ok) {
+      adminToast(id ? 'Usuário atualizado com sucesso!' : 'Usuário cadastrado com sucesso!', 'success');
+      closeUserModal();
+      loadUsersList();
+
+      // Se editou o próprio usuário conectado, sincroniza a interface
+      if (id && CURRENT_USER && (CURRENT_USER.id === id || CURRENT_USER.userId === id)) {
+        loadCurrentUser();
+      }
+    } else {
+      adminToast(data.error || 'Erro ao salvar usuário.', 'danger');
+    }
+  } catch (err) {
+    console.error('Erro ao salvar usuário:', err);
+    adminToast('Erro de comunicação ao salvar usuário.', 'danger');
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = '💾 Salvar Usuário';
+    }
+  }
+};
+
+/**
+ * Ativa ou desativa rapidamente o acesso do usuário (Soft Disable)
+ */
+window.toggleUserStatusAction = async function(userId) {
+  try {
+    const res = await fetch(`${API_URL}/users/${userId}/toggle-status`, {
+      method: 'PATCH',
+      headers: authHeaders()
+    });
+    const data = await res.json();
+    if (data.ok) {
+      adminToast(`Status do usuário atualizado para: ${data.user.active ? 'Ativo' : 'Inativo'}.`, 'info');
+      loadUsersList();
+    } else {
+      adminToast(data.error || 'Não foi possível alterar o status do usuário.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Erro de comunicação ao alterar status.', 'danger');
+  }
+};
+
+/**
+ * Remove usuário aplicando soft delete e anonimização de dados LGPD
+ */
+window.deleteUserPrompt = async function(userId, userName) {
+  if (!confirm(`Tem certeza de que deseja remover o usuário "${userName}"?\n\nConforme as diretrizes da LGPD, o acesso será revogado e os dados pessoais anonimizados, preservando o histórico de pedidos e auditoria do sistema.`)) {
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/users/${userId}`, {
+      method: 'DELETE',
+      headers: authHeaders()
+    });
+    const data = await res.json();
+    if (data.ok) {
+      adminToast('Usuário removido com sucesso (Soft Delete LGPD).', 'success');
+      loadUsersList();
+    } else {
+      adminToast(data.error || 'Não foi possível remover o usuário.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Erro de comunicação ao remover usuário.', 'danger');
   }
 };
 

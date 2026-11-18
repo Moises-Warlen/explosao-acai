@@ -1143,6 +1143,46 @@
           <button class="btn-sm btn-next" type="submit" style="padding:10px 20px;font-size:14px;margin-top:14px">Atualizar Senha de Acesso</button>
         </form>
       </div>
+
+      <!-- Card de Gerenciamento de Usuários & Permissões (RBAC) -->
+      <div class="admin-card" id="card-users-management" style="margin-top:20px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;border-bottom:1.5px solid var(--ln);padding-bottom:16px;margin-bottom:16px">
+          <div>
+            <h2 style="margin:0;font-size:18px;display:flex;align-items:center;gap:8px;color:var(--y)">
+              <span>👥</span> Gerenciamento de Usuários & Permissões (RBAC)
+            </h2>
+            <p style="color:var(--mut);font-size:12px;margin:4px 0 0">
+              Cadastre operadores, defina perfis de acesso e configure permissões granulares por módulo com segurança e conformidade LGPD.
+            </p>
+          </div>
+          <button type="button" class="btn btn-primary" onclick="openUserModal()" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:8px 16px">
+            <span>➕</span> Novo Usuário
+          </button>
+        </div>
+
+        <!-- Tabela Responsiva de Usuários -->
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;text-align:left">
+            <thead>
+              <tr style="border-bottom:1px solid var(--ln);color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:0.5px">
+                <th style="padding:10px 12px">Usuário</th>
+                <th style="padding:10px 12px">Login / E-mail</th>
+                <th style="padding:10px 12px">Perfil</th>
+                <th style="padding:10px 12px">Permissões de Acesso</th>
+                <th style="padding:10px 12px">Status</th>
+                <th style="padding:10px 12px;text-align:right">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body">
+              <tr>
+                <td colspan="6" style="padding:24px;text-align:center;color:var(--mut)">
+                  Carregando usuários...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- ABA 11: BOT WHATSAPP & INTELIGÊNCIA ARTIFICIAL -->
@@ -2072,7 +2112,8 @@
     <div style="background:var(--panel);border:1.5px solid var(--ln);border-radius:20px;padding:28px;width:min(400px,90vw);text-align:center">
       <img src="imagens/Logo.webp" alt="Logo" style="height:55px;margin-bottom:12px" onerror="this.style.display='none'">
       <h2 style="margin:0 0 8px;font-family:'Lilita One'">Acesso Restrito</h2>
-      <p style="color:var(--mut);font-size:13px;margin:0 0 18px">Digite a senha do painel administrativo:</p>
+      <p style="color:var(--mut);font-size:13px;margin:0 0 16px">Identifique-se para acessar o painel:</p>
+      <input type="text" id="admin-login-input" placeholder="E-mail ou Usuário (opcional p/ Admin)" style="text-align:center;font-size:14px;margin-bottom:10px" onkeydown="if(event.key==='Enter') doLogin()">
       <input type="password" id="admin-pass-input" placeholder="Senha do painel" style="text-align:center;font-size:16px;margin-bottom:16px" onkeydown="if(event.key==='Enter') doLogin()">
       <button class="btn-sm btn-next" style="width:100%;padding:12px;font-size:15px;justify-content:center" onclick="doLogin()">Acessar Painel</button>
     </div>
@@ -2098,6 +2139,116 @@
         <div style="display:flex;gap:10px;margin-top:20px">
           <button type="submit" class="btn-sm btn-next" style="flex:1;padding:12px">Atualizar Senha</button>
           <button type="button" class="btn-sm btn-secondary" style="padding:12px" onclick="closeAdminPasswordModal()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de Cadastro e Edição de Usuário (RBAC) -->
+  <div id="user-form-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center;z-index:230;backdrop-filter:blur(5px)">
+    <div style="background:var(--panel);border:1.5px solid var(--ln);border-radius:20px;padding:24px;width:min(520px,95vw);max-height:92vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid var(--ln);padding-bottom:10px">
+        <h3 id="user-modal-title" style="margin:0;font-size:18px;color:#fff;display:flex;align-items:center;gap:8px">
+          <span>👤</span> Novo Usuário
+        </h3>
+        <button type="button" onclick="closeUserModal()" style="background:transparent;border:none;color:var(--mut);font-size:20px;cursor:pointer;padding:0 4px">✕</button>
+      </div>
+
+      <form onsubmit="handleSaveUser(event)">
+        <input type="hidden" id="user-form-id">
+
+        <div style="margin-bottom:12px">
+          <label style="font-size:12px;font-weight:700;display:block;margin-bottom:4px">Nome Completo *</label>
+          <input type="text" id="user-form-name" required placeholder="Ex: Carlos Silva" style="width:100%">
+        </div>
+
+        <div style="margin-bottom:12px">
+          <label style="font-size:12px;font-weight:700;display:block;margin-bottom:4px">Login / E-mail de Acesso *</label>
+          <input type="text" id="user-form-email" required placeholder="Ex: carlos@explosaoacai.com.br ou operador1" style="width:100%">
+        </div>
+
+        <div style="margin-bottom:14px">
+          <label style="font-size:12px;font-weight:700;display:block;margin-bottom:4px">Senha de Acesso *</label>
+          <input type="password" id="user-form-password" placeholder="Mínimo 4 caracteres" autocomplete="new-password" style="width:100%">
+          <small id="user-form-password-hint" style="color:var(--mut);font-size:11px;display:block;margin-top:4px">
+            Para novos usuários a senha é obrigatória.
+          </small>
+        </div>
+
+        <div style="margin-bottom:14px">
+          <label style="font-size:12px;font-weight:700;display:block;margin-bottom:4px">Perfil de Acesso *</label>
+          <select id="user-form-role" onchange="handleUserRoleChange()" style="width:100%;background:var(--card);color:#fff;border:1px solid var(--ln);border-radius:8px;padding:8px 10px;font-size:13px">
+            <option value="operator">Operador (Acesso restrito por permissões)</option>
+            <option value="admin">Administrador (Acesso total irrestrito)</option>
+          </select>
+        </div>
+
+        <!-- Seção de Permissões Granulares (Exibida para Operador) -->
+        <div id="user-permissions-section" style="margin-bottom:16px;background:var(--card);border:1px solid var(--ln);border-radius:10px;padding:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <label style="font-size:12px;font-weight:700;color:var(--y)">Permissões do Operador (Módulos Liberados):</label>
+            <button type="button" onclick="toggleAllPermissions(true)" style="background:none;border:none;color:#a78bfa;font-size:11px;cursor:pointer;text-decoration:underline">Marcar Todos</button>
+          </div>
+          <p style="font-size:11px;color:var(--mut);margin:0 0 10px">Selecione as telas e funcionalidades que este operador pode acessar:</p>
+          
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px" id="user-permissions-grid">
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+              <input type="checkbox" name="user-perm" value="orders" checked>
+              <span>📋 Pedidos & Cozinha (PDV)</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+              <input type="checkbox" name="user-perm" value="chat" checked>
+              <span>💬 Chat de Clientes</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+              <input type="checkbox" name="user-perm" value="catalog">
+              <span>🍱 Cardápio & Produtos</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+              <input type="checkbox" name="user-perm" value="accompaniments">
+              <span>🥣 Acompanhamentos & Adicionais</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+              <input type="checkbox" name="user-perm" value="reports">
+              <span>📊 Relatórios & Vendas</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+              <input type="checkbox" name="user-perm" value="coupons">
+              <span>🎟️ Cupons de Desconto</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+              <input type="checkbox" name="user-perm" value="printers">
+              <span>🖨️ Impressoras Térmicas</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+              <input type="checkbox" name="user-perm" value="store">
+              <span>⚙️ Configurações da Loja</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+              <input type="checkbox" name="user-perm" value="bot">
+              <span>🤖 Bot WhatsApp & IA</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+              <input type="checkbox" name="user-perm" value="security">
+              <span>🛡️ Logs de Segurança</span>
+            </label>
+          </div>
+        </div>
+
+        <div id="user-admin-info-badge" style="display:none;margin-bottom:16px;padding:12px;background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.4);border-radius:10px;font-size:12px;color:#c4b5fd">
+          👑 <b>Acesso Total:</b> Usuários com perfil <b>Administrador</b> possuem permissão irrestrita a todos os módulos, configurações e gerenciamento de usuários.
+        </div>
+
+        <div style="margin-bottom:16px">
+          <label style="display:inline-flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;font-weight:700">
+            <input type="checkbox" id="user-form-active" checked style="width:auto">
+            <span>Usuário ativo (liberado para login)</span>
+          </label>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--ln);padding-top:14px">
+          <button type="button" class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-user">💾 Salvar Usuário</button>
         </div>
       </form>
     </div>

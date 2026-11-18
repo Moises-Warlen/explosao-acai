@@ -16,6 +16,28 @@ export function hashPassword(plainPassword) {
 }
 
 /**
+ * Valida a senha contra o hash scrypt com proteção contra timing attacks
+ */
+export function verifyPasswordHash(plainPassword, storedHash) {
+  if (!plainPassword || typeof plainPassword !== 'string' || !storedHash || typeof storedHash !== 'string') return false;
+  if (!storedHash.startsWith('$scrypt$')) return false;
+  try {
+    const parts = storedHash.split('$');
+    if (parts.length >= 5) {
+      const salt = parts[3];
+      const expectedHex = parts[4];
+      const derivedKey = crypto.scryptSync(plainPassword, salt, 64);
+      const keyBuf = Buffer.from(derivedKey.toString('hex'), 'hex');
+      const expectedBuf = Buffer.from(expectedHex, 'hex');
+      if (keyBuf.length === expectedBuf.length && crypto.timingSafeEqual(keyBuf, expectedBuf)) {
+        return true;
+      }
+    }
+  } catch (err) {}
+  return false;
+}
+
+/**
  * Valida a senha contra o hash ou realiza migração automática caso esteja em texto puro
  */
 export function verifyAndMigratePassword(plainPassword, storedPassword) {
@@ -28,19 +50,9 @@ export function verifyAndMigratePassword(plainPassword, storedPassword) {
 
   // 1. Validação contra hash scrypt armazenado
   if (storedPassword && typeof storedPassword === 'string' && storedPassword.startsWith('$scrypt$')) {
-    try {
-      const parts = storedPassword.split('$');
-      if (parts.length >= 5) {
-        const salt = parts[3];
-        const expectedHex = parts[4];
-        const derivedKey = crypto.scryptSync(plainPassword, salt, 64);
-        const keyBuf = Buffer.from(derivedKey.toString('hex'), 'hex');
-        const expectedBuf = Buffer.from(expectedHex, 'hex');
-        if (keyBuf.length === expectedBuf.length && crypto.timingSafeEqual(keyBuf, expectedBuf)) {
-          return true;
-        }
-      }
-    } catch (err) {}
+    if (verifyPasswordHash(plainPassword, storedPassword)) {
+      return true;
+    }
   }
 
   // 2. Validação contra senha legada em texto puro no banco de dados
@@ -81,11 +93,15 @@ export function verifyAndMigratePassword(plainPassword, storedPassword) {
 }
 
 /**
- * Cria token de sessão administrativo assinado (HMAC-SHA256) com expiração de 12 horas
+ * Cria token de sessão administrativo ou de operador assinado (HMAC-SHA256) com expiração de 12 horas
  */
-export function createAdminToken() {
+export function createAdminToken(user = null) {
   const payload = {
-    role: 'admin',
+    userId: user?.id || 'usr_admin_default',
+    name: user?.name || 'Administrador',
+    email: user?.email || 'admin@explosaoacai.com.br',
+    role: user?.role || 'admin',
+    permissions: user?.role === 'admin' ? ['*'] : (user?.permissions || []),
     iat: Date.now(),
     exp: Date.now() + 12 * 60 * 60 * 1000 // 12 horas
   };
@@ -95,7 +111,7 @@ export function createAdminToken() {
 }
 
 /**
- * Valida se um token administrativo é autêntico e não está expirado
+ * Valida se um token é autêntico e não está expirado, retornando o payload ou false
  */
 export function verifyAdminToken(token) {
   if (!token || typeof token !== 'string') return false;
@@ -111,8 +127,8 @@ export function verifyAdminToken(token) {
     if (sigBuf.length === expSigBuf.length && crypto.timingSafeEqual(sigBuf, expSigBuf)) {
       try {
         const payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf-8'));
-        if (payload.role === 'admin' && (!payload.exp || Date.now() <= payload.exp)) {
-          return true;
+        if ((payload.role === 'admin' || payload.role === 'operator') && (!payload.exp || Date.now() <= payload.exp)) {
+          return payload;
         }
       } catch (err) {}
     }
@@ -120,7 +136,7 @@ export function verifyAdminToken(token) {
 
   // 2. Em ambiente de teste de integração, aceita token de teste se for idêntico a process.env.ADMIN_PASSWORD
   if (process.env.NODE_ENV === 'test' && process.env.ADMIN_PASSWORD && raw === process.env.ADMIN_PASSWORD) {
-    return true;
+    return { userId: 'usr_admin_default', name: 'Administrador', email: 'admin@explosaoacai.com.br', role: 'admin', permissions: ['*'] };
   }
 
   return false;
@@ -167,11 +183,12 @@ export function getMotoboyTokenFromRequest(req) {
 }
 
 /**
- * Middleware para rotas restritas exclusivamente a Administradores
+ * Middleware para rotas restritas a usuários autenticados (Admin ou Operador com permissão)
  */
 export function adminAuthMiddleware(req, res, next) {
   const token = getAdminTokenFromRequest(req);
-  if (!verifyAdminToken(token)) {
+  const userPayload = verifyAdminToken(token);
+  if (!userPayload) {
     try {
       securityAuditService.recordEvent({
         type: SecurityEventType.UNAUTHORIZED_401,
@@ -189,7 +206,48 @@ export function adminAuthMiddleware(req, res, next) {
       error: 'Acesso não autorizado ao painel administrativo. Token inválido ou expirado.'
     });
   }
+  req.user = userPayload;
   next();
+}
+
+/**
+ * Middleware restrito EXCLUSIVAMENTE a Administradores (ex: Gerenciamento de Usuários)
+ */
+export function requireAdminOnlyMiddleware(req, res, next) {
+  adminAuthMiddleware(req, res, () => {
+    if (req.user && req.user.role === 'admin') {
+      return next();
+    }
+    return res.status(403).json({
+      ok: false,
+      error: 'Acesso negado: apenas Administradores possuem permissão para gerenciar usuários e permissões.'
+    });
+  });
+}
+
+/**
+ * Middleware para controle de permissões granular por módulo (RBAC)
+ */
+export function requirePermission(permissionKeyOrKeys) {
+  const required = Array.isArray(permissionKeyOrKeys) ? permissionKeyOrKeys : [permissionKeyOrKeys];
+  return (req, res, next) => {
+    adminAuthMiddleware(req, res, () => {
+      if (!req.user) {
+        return res.status(401).json({ ok: false, error: 'Acesso não autenticado.' });
+      }
+      if (req.user.role === 'admin') {
+        return next();
+      }
+      const userPerms = Array.isArray(req.user.permissions) ? req.user.permissions : [];
+      if (userPerms.includes('*') || required.some(k => userPerms.includes(k))) {
+        return next();
+      }
+      return res.status(403).json({
+        ok: false,
+        error: `Acesso negado: seu usuário não possui permissão para acessar o módulo (${required.join(', ')}).`
+      });
+    });
+  };
 }
 
 /**
