@@ -77,7 +77,13 @@
         <!-- Segunda Linha de Controles Mobile / Controles do Header -->
         <div class="header-actions-row3">
           <div class="header-controls-left">
-            <!-- Status Loja com Botão Luminoso -->
+            <!-- 1. Botão do Sino (Notificações) -->
+            <div class="bell-alert-btn" id="btn-sound-toggle" onclick="toggleAudioNotifications()" title="Clique para alternar alerta sonoro de novos pedidos">
+              <span class="bell-emoji">🔔</span>
+              <span class="bell-num-badge" id="badge-bell-count">0</span>
+            </div>
+
+            <!-- 2. Status Loja com Botão Luminoso -->
             <button id="store-status-glow-btn" class="store-glow-pill open" onclick="toggleStoreStatus()" title="Clique para abrir ou fechar a loja">
               <span class="dot-glow"></span>
               <svg class="store-shop-icon" viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
@@ -88,7 +94,7 @@
             <!-- Toggle oculto para compatibilidade com scripts existentes -->
             <input type="checkbox" id="store-toggle-switch" checked style="display:none" onchange="toggleStoreStatus()">
 
-            <!-- Botão Rotas Mobile (Exclusivo da Segunda Linha de Controles Mobile) -->
+            <!-- 3. Botão Rotas Mobile -->
             <button type="button" class="btn-routes-gps btn-routes-mobile" onclick="openDeliveryMapModal()" title="Visualizar pedidos no mapa e criar rotas de entrega">
               <span class="routes-icon">📍</span>
               <span>Rotas</span>
@@ -96,13 +102,7 @@
           </div>
 
           <div class="header-controls-right">
-            <!-- Sino de Alertas Sonoros -->
-            <div class="bell-alert-btn" id="btn-sound-toggle" onclick="toggleAudioNotifications()" title="Clique para alternar alerta sonoro de novos pedidos">
-              <span class="bell-emoji">🔔</span>
-              <span class="bell-num-badge" id="badge-bell-count">0</span>
-            </div>
-
-            <!-- Central Inteligente de Notificações Mobile (Próximo ao Sino) -->
+            <!-- 5. Central Inteligente de Notificações Mobile (Chat/Mensagens) -->
             <div class="bell-alert-btn notif-center-btn" id="btn-notifications-drawer-toggle" onclick="toggleNotificationsDrawer()" title="Central Inteligente de Notificações">
               <span class="notif-center-icon">💬</span>
               <span class="bell-num-badge" id="badge-unread-notifications" style="display:none">0</span>
@@ -158,7 +158,7 @@
         <span class="nav-tab-label"><span class="mobile-nav-icon">🍫</span> Adicionais</span>
       </button>
       <button class="nav-tab" id="nav-tab-fruits" data-tab="tab-extras" onclick="openFruitsAdminTab(event)">
-        <span class="nav-tab-label">Frutas</span>
+        <span class="nav-tab-label"><span class="mobile-nav-icon">🍓</span> Frutas</span>
       </button>
       <button class="nav-tab" data-tab="tab-categories">
         <span class="nav-tab-label"><span class="mobile-nav-icon">🏷️</span> Categorias</span>
@@ -712,14 +712,14 @@
       </div>
 
       <div class="admin-card" id="card-section-extras">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
-          <div>
-            <h2 style="margin:0">Gestão de Adicionais & Extras</h2>
-            <p style="color:var(--mut);font-size:13px;margin:4px 0 0">
-              Defina preços de venda, custos e vincule os adicionais a Copos de Açaí ou Combos específicos.
-            </p>
+        <div class="extras-header-block" style="margin-bottom:18px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <h2 style="margin:0;font-size:1.35rem;font-weight:800;color:#fff;letter-spacing:-0.3px">Gestão de Adicionais & Extras</h2>
+            <button type="button" class="btn-sm btn-next" onclick="openNewExtraModal()" style="padding:6px 14px;font-size:12px;font-weight:700;border-radius:8px;white-space:nowrap;flex-shrink:0">+ Novo Adicional</button>
           </div>
-          <button class="btn-sm btn-next" onclick="openNewExtraModal()">+ Novo Adicional</button>
+          <p style="color:var(--mut);font-size:12px;margin:4px 0 0">
+            Defina preços de venda, custos e vincule os adicionais a Copos de Açaí ou Combos específicos.
+          </p>
         </div>
 
         <!-- Lista de Cards de Adicionais Padronizada conforme Gestor Pro -->
@@ -1707,6 +1707,6 @@
 
   <!-- Scripts -->
   <script src="js/global-modal.js?v=1.0"></script>
-  <script src="js/admin.js?v=3.8"></script>
+  <script src="js/admin.js?v=3.9"></script>
 </body>
 </html>

@@ -4176,6 +4176,29 @@ function getExtraIcon(name) {
   return '🍧';
 }
 
+window.toggleExtraActive = async function(id) {
+  const e = (EXTRAS || []).find(item => item.id === id);
+  if (!e) return;
+  const newActive = !(e.active !== false);
+  try {
+    const res = await fetch(`${API_URL}/catalog/extras/${id}`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({ active: newActive })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      e.active = newActive;
+      renderExtrasTable();
+      adminToast(`Adicional "${e.name}" ${newActive ? 'ativado' : 'pausado'}.`, 'info');
+    } else {
+      adminToast(data.error || 'Erro ao alternar status do adicional.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Erro de conexão ao alternar status do adicional.', 'danger');
+  }
+};
+
 function renderExtrasTable() {
   const container = $('#extras-table-body');
   const paginationBox = $('#extras-pagination');
@@ -4200,53 +4223,55 @@ function renderExtrasTable() {
     const cost = Number(e.costPrice || 0);
     const margin = price - cost;
     const marginPct = price > 0 ? Math.round((margin / price) * 100) : 0;
-    const icon = getExtraIcon(e.name);
+    const isActive = e.active !== false;
 
     const vinculos = [];
-    if (e.allowInAcai) vinculos.push('<span class="profit-badge">Copos de Açaí</span>');
-    if (e.allowInCombos) vinculos.push('<span class="profit-badge">Combos</span>');
-    if (!vinculos.length) vinculos.push('<span style="color:var(--mut);font-size:11px">Geral</span>');
+    if (e.allowInAcai) vinculos.push('<span class="fruit-badge-tag">Copos de Açaí</span>');
+    if (e.allowInCombos) vinculos.push('<span class="fruit-badge-tag">Combos</span>');
+    if (!vinculos.length) vinculos.push('<span class="fruit-badge-tag" style="background:rgba(255,255,255,0.08);color:var(--mut)">Geral</span>');
 
     return `
-      <div class="extra-item-card ${e.active ? '' : 'paused'}">
-        <div class="extra-card-header">
-          <div class="extra-card-info">
-            <div class="extra-card-avatar" aria-hidden="true">${icon}</div>
-            <div class="extra-card-text">
-              <h4 class="extra-card-title" title="${esc(e.name)}">${esc(e.name)}</h4>
-              <div class="extra-card-tags">
-                ${vinculos.join(' ')}
-              </div>
-            </div>
-          </div>
-          <div class="extra-card-status-wrap">
-            <span class="badge ${e.active ? 'badge-active' : 'badge-paused'}" style="background:${e.active ? 'var(--green)' : 'var(--danger)'};color:#fff;font-weight:700;padding:4px 10px;border-radius:8px;font-size:11.5px">
-              ${e.active ? '● Ativo' : '⏸ Pausado'}
-            </span>
+      <div class="fruit-item-card extra-item-card ${isActive ? '' : 'paused'}" id="extra-card-${e.id}">
+        <div class="fruit-card-top" style="display:flex;flex-direction:column;align-items:flex-start;gap:4px">
+          <h4 class="fruit-card-name" title="${esc(e.name)}">${esc(e.name)}</h4>
+          <div class="extra-card-tags" style="display:flex;gap:6px;flex-wrap:wrap">
+            ${vinculos.join(' ')}
           </div>
         </div>
 
-        <div class="extra-card-pricing-block">
-          <div><b>Preço de Venda:</b> <span class="extra-card-pricing-val">${R(price)}</span></div>
-          <div><b>Custo Insumo:</b> <span>${R(cost)}</span></div>
-          <div><b>Margem de Lucro:</b> <span style="color:${margin >= 0 ? 'var(--green)' : 'var(--danger)'};font-weight:700">${margin >= 0 ? '+' : ''}${R(margin)} (${marginPct}%)</span></div>
+        <div class="fruit-card-pricing-block">
+          <div class="fruit-pricing-row">
+            <span class="fruit-pricing-label">Preço de Venda:</span>
+            <span class="fruit-pricing-val">${R(price)}</span>
+          </div>
+          <div class="fruit-pricing-row">
+            <span class="fruit-pricing-label">Custo Insumo:</span>
+            <span class="fruit-pricing-cost">${R(cost)}</span>
+          </div>
+          <div class="fruit-pricing-row">
+            <span class="fruit-pricing-label">Margem de Lucro:</span>
+            <span class="fruit-pricing-margin" style="color:${margin >= 0 ? '#10b981' : '#ef4444'}">${margin >= 0 ? '+' : ''}${R(margin)} (${marginPct}%)</span>
+          </div>
         </div>
 
         ${e.isFruitExtra ? `
-          <div style="background:rgba(16,185,129,0.12);border:1px dashed #10b981;border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-            <span style="font-size:12.5px;color:#6ee7b7"><b>Frutas Adicionais:</b> Gerencie os preços individuais de cada fruta (Banana, Morango, etc.).</span>
-            <button type="button" class="btn-sm" style="background:#059669;color:#fff;font-weight:700;padding:6px 14px;border-radius:8px;font-size:12px;display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="setExtrasSubView('fruits');">
-              Abrir Lista de Frutas
+          <div style="background:rgba(16,185,129,0.12);border:1px dashed #10b981;border-radius:10px;padding:8px 10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+            <span style="font-size:11.5px;color:#6ee7b7"><b>Frutas:</b> Gerencie os preços individuais de cada fruta.</span>
+            <button type="button" class="btn-sm" style="background:#059669;color:#fff;font-weight:700;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer" onclick="setExtrasSubView('fruits');">
+              Abrir Lista
             </button>
           </div>
         ` : ''}
 
-        <div class="extra-card-actions">
-          <button class="btn-sm btn-print" onclick="openEditExtraModal('${e.id}')" title="Editar este adicional">
-            ✏️ Editar
+        <div class="fruit-card-actions extra-card-actions">
+          <button type="button" class="fruit-btn-action fruit-btn-status ${isActive ? 'active' : 'paused'}" onclick="toggleExtraActive('${e.id}')" title="Alternar status (Ativo/Pausado)">
+            ${isActive ? '● Ativo' : '⏸ Pausado'}
           </button>
-          <button class="btn-sm btn-danger" onclick="deleteExtra('${e.id}')" title="Excluir este adicional">
-            🗑️ Excluir
+          <button type="button" class="fruit-btn-action fruit-btn-edit" onclick="openEditExtraModal('${e.id}')" title="Editar adicional">
+            Editar
+          </button>
+          <button type="button" class="fruit-btn-action fruit-btn-delete" onclick="deleteExtra('${e.id}')" title="Excluir adicional">
+            Excluir
           </button>
         </div>
       </div>

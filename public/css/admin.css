@@ -789,9 +789,30 @@ input:checked + .slider:before {
     display: contents !important;
   }
 
-  /* 1. Botão de acesso à função já existente (Loja) */
-  .store-glow-pill {
+  /* 1. Botão do Sino (Notificações) */
+  #btn-sound-toggle.bell-alert-btn {
     order: 1 !important;
+    margin-left: 0 !important;
+    width: 46px !important;
+    height: 42px !important;
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1.5px solid rgba(168, 85, 247, 0.35) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+  }
+
+  .bell-emoji {
+    font-size: 19px !important;
+  }
+
+  /* 2. Botão da Loja (Vitrine/Status) */
+  .store-glow-pill {
+    order: 2 !important;
     width: 54px !important;
     height: 42px !important;
     padding: 0 !important;
@@ -824,9 +845,9 @@ input:checked + .slider:before {
     height: 22px !important;
   }
 
-  /* 2. Botão Rotas */
+  /* 3. Botão Rotas */
   .btn-routes-mobile {
-    order: 2 !important;
+    order: 3 !important;
     display: inline-flex !important;
     align-items: center !important;
     gap: 6px !important;
@@ -848,31 +869,10 @@ input:checked + .slider:before {
     font-size: 16px !important;
   }
 
-  /* 3. Notificações, com contador (margin-left: auto cria o espaçamento livre central) */
-  #btn-sound-toggle.bell-alert-btn {
-    order: 3 !important;
-    margin-left: auto !important;
-    width: 46px !important;
-    height: 42px !important;
-    border-radius: 12px !important;
-    background: rgba(255, 255, 255, 0.08) !important;
-    border: 1.5px solid rgba(168, 85, 247, 0.35) !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    position: relative !important;
-    cursor: pointer !important;
-    flex-shrink: 0 !important;
-  }
-
-  .bell-emoji {
-    font-size: 19px !important;
-  }
-
-  /* 4. Mensagens, com contador */
+  /* 4. Espaço flexível (margin-left: auto) e Botão de Chat/Mensagens na extrema direita */
   .notif-center-btn {
     order: 4 !important;
-    margin-left: 0 !important;
+    margin-left: auto !important;
     display: inline-flex !important;
     width: 46px !important;
     height: 42px !important;
@@ -4007,21 +4007,23 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   gap: 8px;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  width: 100%;
   padding-top: 4px;
 }
 
 .extra-card-actions button {
   flex: 1;
-  min-width: 100px;
-  padding: 8px 14px;
+  min-width: 0;
+  padding: 8px 10px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
+  white-space: nowrap;
 }
 
 @media (max-width: 600px) {
@@ -4042,8 +4044,9 @@ input:focus, select:focus, textarea:focus {
     gap: 4px 10px;
   }
   .extra-card-actions button {
-    padding: 9px 12px;
-    font-size: 12px;
+    padding: 8px 6px;
+    font-size: 11.5px;
+    min-width: 0;
   }
 }
 
@@ -4702,8 +4705,8 @@ input:focus, select:focus, textarea:focus {
 }
 
 @media (max-width: 860px) {
-  /* Ocultar abas do cardápio na tela mobile de Frutas Adicionais */
-  #tab-extras.fruits-subview-active .catalog-subnav-bar {
+  /* 1. Ocultar barra de abas internas horizontal SOMENTE no Mobile em todas as telas */
+  .catalog-subnav-bar {
     display: none !important;
   }
 }
