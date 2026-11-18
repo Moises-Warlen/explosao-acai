@@ -252,6 +252,14 @@ async function initDashboard() {
   }
 }
 
+// Atualiza mapa de entregas em tempo real se a modal estiver aberta
+window.refreshDeliveryMapIfOpen = function() {
+  const mapModal = $('#delivery-map-modal');
+  if (mapModal && mapModal.style.display !== 'none' && typeof window.renderDeliveryMapMarkers === 'function') {
+    window.renderDeliveryMapMarkers();
+  }
+};
+
 // Conexão WebSocket para Atualizações em Tempo Real
 function initWebSocket() {
   try {
@@ -276,6 +284,7 @@ function initWebSocket() {
           updateOrdersBadge();
           window.highlightOrderCard(data.payload.id);
           loadSalesReport({ period: $('#report-period-select')?.value || 'today' });
+          window.refreshDeliveryMapIfOpen();
           if (typeof window.addAdminNotification === 'function') {
             window.addAdminNotification({
               type: 'order',
@@ -299,6 +308,7 @@ function initWebSocket() {
           updateOrdersBadge();
           window.highlightOrderCard(data.payload.id);
           loadSalesReport({ period: $('#report-period-select')?.value || 'today' });
+          window.refreshDeliveryMapIfOpen();
 
           if (data.payload.payment?.status === 'approved' && data.payload.payment?.method === 'Pix' && typeof window.addAdminNotification === 'function') {
             window.addAdminNotification({
@@ -314,6 +324,7 @@ function initWebSocket() {
         }
         if (data.event === 'ORDERS_ARCHIVED') {
           await loadOrders();
+          window.refreshDeliveryMapIfOpen();
         }
         if (data.event === 'CHAT_MESSAGE') {
           playNotificationChime();
@@ -1565,6 +1576,7 @@ window.confirmCancelOrder = async function(e) {
       if (idx !== -1) ORDERS[idx] = data.order;
       renderKanban();
       updateOrdersBadge();
+      window.refreshDeliveryMapIfOpen();
       const periodSelect = $('#report-period-select');
       loadSalesReport({ period: periodSelect ? periodSelect.value : 'today' });
       adminToast(`Pedido #${data.order.orderNo} cancelado com sucesso.`, 'info');
@@ -1611,6 +1623,7 @@ window.confirmReturnOrder = async function(e) {
       if (idx !== -1) ORDERS[idx] = data.order;
       renderKanban();
       updateOrdersBadge();
+      window.refreshDeliveryMapIfOpen();
       const periodSelect = $('#report-period-select');
       loadSalesReport({ period: periodSelect ? periodSelect.value : 'today' });
       adminToast(`Pedido #${data.order.orderNo} registrado como Devolvido!`, 'info');
@@ -1664,6 +1677,7 @@ window.advanceOrderStatus = async function(orderId, newStatus) {
 
       window.highlightOrderCard(orderId);
       updateOrdersBadge();
+      window.refreshDeliveryMapIfOpen();
       adminToast(`Status do Pedido #${data.order.orderNo} atualizado!`, 'info');
       promptWppStatusNotice(data.order);
     } else {
@@ -1844,6 +1858,7 @@ window.confirmOrderDeliveryAndPayment = function(orderId) {
           }
           updateOrdersBadge();
           window.highlightOrderCard(orderId);
+          window.refreshDeliveryMapIfOpen();
           const periodSelect = $('#report-period-select');
           loadSalesReport({ period: periodSelect ? periodSelect.value : 'today' });
           adminToast(`Pedido #${data.order.orderNo} finalizado e pagamento confirmado!`, 'success');
@@ -1886,6 +1901,7 @@ window.confirmPickupOrder = function(orderId) {
           }
           updateOrdersBadge();
           window.highlightOrderCard(orderId);
+          window.refreshDeliveryMapIfOpen();
           const periodSelect = $('#report-period-select');
           loadSalesReport({ period: periodSelect ? periodSelect.value : 'today' });
           adminToast(`Pedido #${data.order.orderNo} retirado e pagamento concluído com sucesso!`, 'success');
@@ -4950,6 +4966,19 @@ function initLeafletDeliveryMap() {
   }
 }
 
+const ROUTE_PALETTE = [
+  { name: 'Verde Esmeralda', hex: '#10b981', border: '#059669', bgBadge: '#065f46' },
+  { name: 'Azul Elétrico',   hex: '#2563eb', border: '#1d4ed8', bgBadge: '#1e3a8a' },
+  { name: 'Laranja Vivo',    hex: '#f97316', border: '#ea580c', bgBadge: '#9a3412' },
+  { name: 'Roxo Vibrante',   hex: '#a855f7', border: '#9333ea', bgBadge: '#6b21a8' },
+  { name: 'Rosa Choque',     hex: '#ec4899', border: '#db2777', bgBadge: '#9d174d' },
+  { name: 'Ciano Turquesa',  hex: '#06b6d4', border: '#0891b2', bgBadge: '#164e63' },
+  { name: 'Amarelo Dourado', hex: '#eab308', border: '#ca8a04', bgBadge: '#713f12' },
+  { name: 'Verde-Água',      hex: '#14b8a6', border: '#0f766e', bgBadge: '#134e4a' },
+  { name: 'Índigo',          hex: '#6366f1', border: '#4f46e5', bgBadge: '#312e81' },
+  { name: 'Vermelho Coral',  hex: '#f43f5e', border: '#e11d48', bgBadge: '#881337' }
+];
+
 window.renderDeliveryMapMarkers = function() {
   if (!DELIVERY_MAP || !DELIVERY_MARKERS_LAYER) return;
 
@@ -4990,97 +5019,114 @@ window.renderDeliveryMapMarkers = function() {
   DELIVERY_MARKERS_LAYER.addLayer(storeMarker);
 
   const bounds = L.latLngBounds([[STORE_COORDINATES.lat, STORE_COORDINATES.lon]]);
-  const routePoints = [[STORE_COORDINATES.lat, STORE_COORDINATES.lon]];
-
   const counterEl = $('#map-orders-counter');
   if (counterEl) counterEl.textContent = `${deliveryOrders.length} parada${deliveryOrders.length === 1 ? '' : 's'}`;
 
   const stopsListEl = $('#map-stops-list');
   const btnGoogleRoute = $('#btn-full-google-route');
+  const splitContainer = $('#map-split-routes-container');
+  const splitButtonsBox = $('#map-split-routes-buttons');
 
   if (deliveryOrders.length === 0) {
     if (stopsListEl) {
-      stopsListEl.innerHTML = `<div style="text-align:center;padding:24px 10px;color:var(--mut);font-size:12px">Nenhum pedido de delivery para o filtro selecionado.</div>`;
+      stopsListEl.innerHTML = `<div style="text-align:center;padding:24px 10px;color:var(--mut);font-size:12px">Nenhum pedido de delivery pendente para o filtro selecionado.</div>`;
     }
     if (btnGoogleRoute) btnGoogleRoute.style.display = 'none';
+    if (splitContainer) splitContainer.style.display = 'none';
     DELIVERY_MAP.setView([STORE_COORDINATES.lat, STORE_COORDINATES.lon], 14);
+    updateSelectedMapRoute();
     return;
   }
 
   const sortedOrders = [...deliveryOrders].sort((a, b) => (a.freight || 0) - (b.freight || 0));
   CURRENT_MAP_SORTED_ORDERS = sortedOrders;
 
+  const numMotoboys = Math.max(1, parseInt($('#map-num-motoboys')?.value || localStorage.getItem('explosao_num_motoboys') || '1', 10));
+  const total = sortedOrders.length;
+  const chunkSize = Math.ceil(total / numMotoboys);
+
+  // Atribui a cada pedido sua rota e cor correspondente
+  sortedOrders.forEach((order, idx) => {
+    const routeIndex = numMotoboys > 1 ? Math.min(Math.floor(idx / chunkSize), numMotoboys - 1) : 0;
+    const routeNum = routeIndex + 1;
+    const colorObj = ROUTE_PALETTE[routeIndex % ROUTE_PALETTE.length];
+    order._routeIndex = routeIndex;
+    order._routeNumber = routeNum;
+    order._routeColor = colorObj.hex;
+    order._routeColorObj = colorObj;
+  });
+
   let stopsHtml = '';
-  const waypoints = [];
 
   sortedOrders.forEach((order, idx) => {
     const coords = resolveOrderCoordinates(order, idx);
     const stopNumber = idx + 1;
     bounds.extend([coords.lat, coords.lon]);
-    routePoints.push([coords.lat, coords.lon]);
 
     const del = order.delivery || {};
     const fullAddress = `${del.street || 'Rua'}, ${del.number || 'S/N'}, ${del.bairro || 'Bairro'}, Franca - SP`;
-    waypoints.push(fullAddress);
 
     const googleMapsSingleUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
     const wazeSingleUrl = `https://waze.com/ul?q=${encodeURIComponent(fullAddress)}&navigate=yes`;
 
-    const statusBadgeColor = order.status === 'ready' || order.status === 'out_for_delivery'
-      ? '#3b82f6'
-      : (order.status === 'preparing' ? '#f59e0b' : '#10b981');
-
-    const statusBadgeLabel = order.status === 'ready' || order.status === 'out_for_delivery'
-      ? 'Pronto / Em Rota'
-      : (order.status === 'preparing' ? 'Em Preparo' : 'Novo Pedido');
+    const markerColor = numMotoboys > 1 ? order._routeColor : '#10b981';
 
     const orderIcon = L.divIcon({
       className: 'custom-map-pin-order',
       html: `
-        <div style="background:${statusBadgeColor};color:#fff;font-weight:900;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,0.5);border:2px solid #fff;font-size:13px">
+        <div style="background:${markerColor};color:#fff;font-weight:900;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,0.6);border:2.5px solid #fff;font-size:13px;position:relative">
           ${stopNumber}
+          ${numMotoboys > 1 ? `<span style="position:absolute;bottom:-6px;right:-6px;background:#1a0b2e;border:1.5px solid ${markerColor};color:${markerColor};font-size:9px;font-weight:900;border-radius:10px;padding:0 4px;line-height:13px">R${order._routeNumber}</span>` : ''}
         </div>
       `,
-      iconSize: [32, 32],
-      iconAnchor: [16, 16]
+      iconSize: [34, 34],
+      iconAnchor: [17, 17]
     });
 
     const marker = L.marker([coords.lat, coords.lon], { icon: orderIcon })
       .bindPopup(`
-        <div style="font-family:sans-serif;font-size:12px;color:#000;min-width:200px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <div style="font-family:sans-serif;font-size:12px;color:#000;min-width:220px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
             <b style="font-size:14px;color:#7c3aed">#${order.orderNo} · Parada ${stopNumber}</b>
-            <span style="font-size:10px;background:${statusBadgeColor};color:#fff;padding:2px 6px;border-radius:4px">${statusBadgeLabel}</span>
+            <span style="font-size:11px;background:${markerColor};color:#fff;font-weight:800;padding:2px 8px;border-radius:12px">🛵 Rota ${order._routeNumber}</span>
           </div>
           <b>Cliente:</b> ${esc(order.customer?.name || 'Cliente')}<br>
           <b>Endereço:</b> ${esc(fullAddress)}<br>
           ${del.reference ? `<b>Ref:</b> ${esc(del.reference)}<br>` : ''}
           <b>Total:</b> ${R(order.total)} (${esc(order.payment?.method || 'Dinheiro')})<br>
-          <div style="display:flex;gap:6px;margin-top:8px">
+          <div style="display:flex;gap:6px;margin-top:10px">
             <a href="${googleMapsSingleUrl}" target="_blank" style="flex:1;background:#2563eb;color:#fff;text-align:center;padding:5px 8px;border-radius:6px;text-decoration:none;font-weight:700;font-size:11px">📍 Google Maps</a>
             <a href="${wazeSingleUrl}" target="_blank" style="flex:1;background:#059669;color:#fff;text-align:center;padding:5px 8px;border-radius:6px;text-decoration:none;font-weight:700;font-size:11px">🚗 Waze</a>
+          </div>
+          <div style="margin-top:8px;padding-top:6px;border-top:1px solid #eee">
+            <button type="button" onclick="window.confirmDeliveryFromMap('${order.id}')" style="width:100%;background:#16a34a;color:#fff;border:none;border-radius:6px;padding:6px;font-size:11px;font-weight:800;cursor:pointer">
+              ✓ Concluir Entrega (Remover do Mapa)
+            </button>
           </div>
         </div>
       `);
     DELIVERY_MARKERS_LAYER.addLayer(marker);
 
     stopsHtml += `
-      <div style="background:rgba(255,255,255,0.05);border:1px solid var(--ln);border-radius:10px;padding:10px;transition:0.2s">
+      <div style="background:rgba(255,255,255,0.05);border:1.5px solid ${order._routeColor || 'var(--ln)'};border-radius:12px;padding:12px;transition:0.2s">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
             <input type="checkbox" class="map-stop-checkbox" data-order-id="${order.id}" checked onchange="updateSelectedMapRoute()">
-            <span style="background:${statusBadgeColor};color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:12px">
-              Parada ${stopNumber} · Pedido #${order.orderNo}
+            <span style="background:${order._routeColor || '#10b981'};color:#fff;font-size:11px;font-weight:800;padding:3px 10px;border-radius:12px;display:inline-flex;align-items:center;gap:4px">
+              ${numMotoboys > 1 ? `🛵 Rota ${order._routeNumber} · ` : ''}Parada ${stopNumber} · Pedido #${order.orderNo}
             </span>
           </label>
-          <b style="font-size:12px;color:var(--y)">${R(order.total)}</b>
+          <b style="font-size:13px;color:var(--y)">${R(order.total)}</b>
         </div>
         <div style="font-size:12px;font-weight:700;color:#fff;margin-top:6px">${esc(order.customer?.name || 'Cliente')}</div>
         <div style="font-size:11px;color:var(--mut);line-height:1.3;margin-top:2px">${esc(fullAddress)}</div>
         ${del.reference ? `<div style="font-size:11px;color:#fef08a;margin-top:2px">Ref: ${esc(del.reference)}</div>` : ''}
-        <div style="display:flex;gap:6px;margin-top:8px">
-          <a href="${googleMapsSingleUrl}" target="_blank" style="flex:1;background:#1e40af;color:#fff;text-align:center;padding:4px 6px;border-radius:6px;text-decoration:none;font-size:11px;font-weight:700">📍 Google Maps</a>
-          <a href="${wazeSingleUrl}" target="_blank" style="flex:1;background:#047857;color:#fff;text-align:center;padding:4px 6px;border-radius:6px;text-decoration:none;font-size:11px;font-weight:700">🚗 Waze</a>
+        <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+          <a href="${googleMapsSingleUrl}" target="_blank" style="flex:1;min-width:110px;background:#1e40af;color:#fff;text-align:center;padding:6px 8px;border-radius:8px;text-decoration:none;font-size:11px;font-weight:700">📍 Google Maps</a>
+          <a href="${wazeSingleUrl}" target="_blank" style="flex:1;min-width:90px;background:#047857;color:#fff;text-align:center;padding:6px 8px;border-radius:8px;text-decoration:none;font-size:11px;font-weight:700">🚗 Waze</a>
+          <button type="button" class="btn-sm" style="flex:1;min-width:140px;background:#16a34a;color:#fff;text-align:center;padding:6px 8px;border-radius:8px;border:none;cursor:pointer;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:4px" onclick="window.confirmDeliveryFromMap('${order.id}')">
+            ✓ Concluir Entrega
+          </button>
         </div>
       </div>
     `;
@@ -5088,14 +5134,67 @@ window.renderDeliveryMapMarkers = function() {
 
   if (stopsListEl) stopsListEl.innerHTML = stopsHtml;
 
-  if (routePoints.length > 1) {
-    const routeLine = L.polyline(routePoints, {
-      color: '#a855f7',
-      weight: 3,
-      opacity: 0.8,
+  // Traçado das rotas no mapa: desenha cada rota na sua própria cor correspondente
+  if (numMotoboys > 1) {
+    for (let r = 0; r < numMotoboys; r++) {
+      const rOrders = sortedOrders.filter(o => o._routeIndex === r);
+      if (rOrders.length > 0) {
+        const color = ROUTE_PALETTE[r % ROUTE_PALETTE.length].hex;
+        const pts = [[STORE_COORDINATES.lat, STORE_COORDINATES.lon]];
+        rOrders.forEach(o => {
+          const c = resolveOrderCoordinates(o, sortedOrders.indexOf(o));
+          pts.push([c.lat, c.lon]);
+        });
+        const rLine = L.polyline(pts, {
+          color: color,
+          weight: 4,
+          opacity: 0.85,
+          dashArray: '8, 8'
+        });
+        DELIVERY_ROUTE_LAYER.addLayer(rLine);
+      }
+    }
+  } else if (sortedOrders.length > 0) {
+    const pts = [[STORE_COORDINATES.lat, STORE_COORDINATES.lon]];
+    sortedOrders.forEach((o, i) => {
+      const c = resolveOrderCoordinates(o, i);
+      pts.push([c.lat, c.lon]);
+    });
+    const routeLine = L.polyline(pts, {
+      color: '#10b981',
+      weight: 4,
+      opacity: 0.85,
       dashArray: '8, 8'
     });
     DELIVERY_ROUTE_LAYER.addLayer(routeLine);
+  }
+
+  // Renderiza abas de seleção rápida de rotas por cor
+  if (splitContainer && splitButtonsBox) {
+    if (numMotoboys > 1) {
+      splitContainer.style.display = 'block';
+      let bHtml = '';
+      for (let r = 0; r < numMotoboys; r++) {
+        const rNum = r + 1;
+        const rOrders = sortedOrders.filter(o => o._routeIndex === r);
+        const col = ROUTE_PALETTE[r % ROUTE_PALETTE.length];
+        const rOrderIds = JSON.stringify(rOrders.map(o => o.id)).replace(/"/g, '&quot;');
+        bHtml += `
+          <button type="button" class="btn-sm btn-route-tab" data-route-num="${rNum}" data-color="${col.hex}" style="background:rgba(255,255,255,0.08);border:1.5px solid ${col.hex};color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px" onclick="selectSpecificOrdersList(${rOrderIds}, 'Rota ${rNum}', this, '${col.hex}')">
+            <span style="width:10px;height:10px;border-radius:50%;background:${col.hex};display:inline-block;box-shadow:0 0 6px ${col.hex}"></span>
+            Rota ${rNum} (${rOrders.length} entrega${rOrders.length > 1 ? 's' : ''})
+          </button>
+        `;
+      }
+      bHtml += `
+        <button type="button" class="btn-sm btn-route-tab" data-color="#7c3aed" style="background:#7c3aed;border:1.5px solid #ffffff;color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(124,58,237,0.5)" onclick="toggleSelectAllMapStops(true, this)">
+          🗺️ Todas as Rotas (${total})
+        </button>
+      `;
+      splitButtonsBox.innerHTML = bHtml;
+    } else {
+      splitContainer.style.display = 'none';
+    }
   }
 
   DELIVERY_MAP.fitBounds(bounds, { padding: [40, 40] });
@@ -5113,7 +5212,14 @@ window.changeMotoboyCount = function(delta) {
   if (val > 25) val = 25;
   inp.value = val;
   localStorage.setItem('explosao_num_motoboys', String(val));
-  splitRoutesEqually();
+  renderDeliveryMapMarkers();
+};
+
+window.splitRoutesEqually = function() {
+  const numMotoboys = Math.max(1, parseInt($('#map-num-motoboys')?.value || '1', 10));
+  localStorage.setItem('explosao_num_motoboys', String(numMotoboys));
+  renderDeliveryMapMarkers();
+  adminToast(`✓ Rotas geradas e separadas por cores para ${numMotoboys} motoboy${numMotoboys > 1 ? 's' : ''}!`, 'success');
 };
 
 window.getSelectedMapOrders = function() {
@@ -5130,82 +5236,29 @@ window.toggleSelectAllMapStops = function(isChecked, btnEl = null) {
   if (btnEl) {
     const allBtns = document.querySelectorAll('#map-split-routes-buttons button');
     allBtns.forEach(b => {
-      b.style.background = b.textContent.includes('Todas') || b.textContent.includes('Todos') ? 'rgba(255,255,255,0.1)' : '#2563eb';
-      b.style.border = '1px solid transparent';
+      const bColor = b.dataset.color || 'var(--ln)';
+      b.style.background = 'rgba(255,255,255,0.08)';
+      b.style.border = `1.5px solid ${bColor}`;
       b.style.boxShadow = 'none';
     });
     btnEl.style.background = '#7c3aed';
-    btnEl.style.border = '1.5px solid #fff';
+    btnEl.style.border = '1.5px solid #ffffff';
     btnEl.style.boxShadow = '0 2px 8px rgba(124,58,237,0.5)';
+  }
+
+  if (CURRENT_MAP_SORTED_ORDERS && CURRENT_MAP_SORTED_ORDERS.length > 0 && DELIVERY_MAP) {
+    const bounds = L.latLngBounds([[STORE_COORDINATES.lat, STORE_COORDINATES.lon]]);
+    CURRENT_MAP_SORTED_ORDERS.forEach((o, idx) => {
+      const c = resolveOrderCoordinates(o, idx);
+      bounds.extend([c.lat, c.lon]);
+    });
+    DELIVERY_MAP.fitBounds(bounds, { padding: [40, 40] });
   }
 
   updateSelectedMapRoute();
 };
 
-window.splitRoutesEqually = function() {
-  const numMotoboys = Math.max(1, parseInt($('#map-num-motoboys')?.value || '1', 10));
-  localStorage.setItem('explosao_num_motoboys', String(numMotoboys));
-  const container = $('#map-split-routes-container');
-  const buttonsBox = $('#map-split-routes-buttons');
-  if (!container || !buttonsBox) return;
-
-  const total = (CURRENT_MAP_SORTED_ORDERS || []).length;
-  if (total === 0) {
-    return adminToast('Nenhum pedido disponível para criar rotas.', 'warning');
-  }
-
-  // Caso tenha apenas 1 motoboy disponível hoje
-  if (numMotoboys === 1) {
-    const allIds = JSON.stringify(CURRENT_MAP_SORTED_ORDERS.map(o => o.id)).replace(/"/g, '&quot;');
-    buttonsBox.innerHTML = `
-      <button type="button" class="btn-sm" style="background:#7c3aed;color:#fff;border:1.5px solid #fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(124,58,237,0.5)" onclick="selectSpecificOrdersList(${allIds}, 'Rota Única (Todas as ${total} entregas)', this)">
-        🛵 Rota Única (Todas as ${total} entregas)
-      </button>
-    `;
-    container.style.display = 'block';
-    const activeBtn = buttonsBox.querySelector('button');
-    selectSpecificOrdersList(CURRENT_MAP_SORTED_ORDERS.map(o => o.id), 'Rota Única', activeBtn);
-    adminToast(`✓ Rota única configurada com todos os ${total} pedidos!`, 'success');
-    return;
-  }
-
-  // Divisão equilibrada para múltiplos motoboys (2, 3, 4, 5... quantos tiver!)
-  const chunkSize = Math.ceil(total / numMotoboys);
-  const groups = [];
-  for (let i = 0; i < total; i += chunkSize) {
-    groups.push(CURRENT_MAP_SORTED_ORDERS.slice(i, i + chunkSize));
-  }
-
-  let html = '';
-  groups.forEach((group, idx) => {
-    const routeNum = idx + 1;
-    const orderIds = JSON.stringify(group.map(o => o.id)).replace(/"/g, '&quot;');
-    const isFirst = idx === 0;
-    html += `
-      <button type="button" class="btn-sm" style="${isFirst ? 'background:#7c3aed;color:#fff;border:1.5px solid #fff;box-shadow:0 2px 8px rgba(124,58,237,0.5)' : 'background:#2563eb;color:#fff;border:1px solid transparent'};border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap" onclick="selectSpecificOrdersList(${orderIds}, 'Rota ${routeNum}', this)">
-        🛵 Rota ${routeNum} (${group.length} entrega${group.length > 1 ? 's' : ''})
-      </button>
-    `;
-  });
-
-  html += `
-    <button type="button" class="btn-sm" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid var(--ln);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;white-space:nowrap" onclick="toggleSelectAllMapStops(true, this)">
-      Todas (${total})
-    </button>
-  `;
-
-  buttonsBox.innerHTML = html;
-  container.style.display = 'block';
-
-  // Seleciona a Rota 1 por padrão
-  if (groups.length > 0) {
-    const firstBtn = buttonsBox.querySelector('button');
-    selectSpecificOrdersList(groups[0].map(o => o.id), 'Rota 1', firstBtn);
-    adminToast(`✓ Pedidos divididos em ${groups.length} rotas para ${numMotoboys} motoboy${numMotoboys > 1 ? 's' : ''}!`, 'success');
-  }
-};
-
-window.selectSpecificOrdersList = function(orderIds, routeLabel = 'Rota', btnEl = null) {
+window.selectSpecificOrdersList = function(orderIds, routeLabel = 'Rota', btnEl = null, routeColor = '#7c3aed') {
   CURRENT_SELECTED_ROUTE_LABEL = routeLabel;
   const checkboxes = document.querySelectorAll('.map-stop-checkbox');
   checkboxes.forEach(cb => {
@@ -5214,20 +5267,70 @@ window.selectSpecificOrdersList = function(orderIds, routeLabel = 'Rota', btnEl 
   const selectAllCb = $('#map-select-all-stops');
   if (selectAllCb) selectAllCb.checked = (orderIds.length === (CURRENT_MAP_SORTED_ORDERS || []).length);
 
-  // Destaca o botão da rota selecionada
+  // Destaca o botão da rota selecionada com sua respectiva cor
   if (btnEl) {
     const allBtns = document.querySelectorAll('#map-split-routes-buttons button');
     allBtns.forEach(b => {
-      b.style.background = (b.textContent.includes('Todas') || b.textContent.includes('Todos')) ? 'rgba(255,255,255,0.1)' : '#2563eb';
-      b.style.border = '1px solid transparent';
+      const bColor = b.dataset.color || 'var(--ln)';
+      b.style.background = 'rgba(255,255,255,0.08)';
+      b.style.border = `1.5px solid ${bColor}`;
       b.style.boxShadow = 'none';
     });
-    btnEl.style.background = '#7c3aed';
-    btnEl.style.border = '1.5px solid #fff';
-    btnEl.style.boxShadow = '0 2px 8px rgba(124,58,237,0.5)';
+    btnEl.style.background = routeColor;
+    btnEl.style.border = '1.5px solid #ffffff';
+    btnEl.style.boxShadow = `0 3px 12px ${routeColor}80`;
+  }
+
+  // Foca o mapa nos pontos da rota selecionada
+  const selectedOrders = (CURRENT_MAP_SORTED_ORDERS || []).filter(o => orderIds.includes(o.id));
+  if (selectedOrders.length > 0 && DELIVERY_MAP) {
+    const b = L.latLngBounds([[STORE_COORDINATES.lat, STORE_COORDINATES.lon]]);
+    selectedOrders.forEach((o) => {
+      const c = resolveOrderCoordinates(o, CURRENT_MAP_SORTED_ORDERS.indexOf(o));
+      b.extend([c.lat, c.lon]);
+    });
+    DELIVERY_MAP.fitBounds(b, { padding: [40, 40] });
   }
 
   updateSelectedMapRoute();
+};
+
+window.confirmDeliveryFromMap = async function(orderId) {
+  const ord = (ORDERS || []).find(o => o.id === orderId);
+  const orderNo = ord ? ord.orderNo : '';
+  const customerName = ord ? ord.customer?.name : 'Cliente';
+
+  const confirmed = await window.customConfirm({
+    icon: '🛵',
+    title: `Concluir Entrega #${orderNo}`,
+    message: `Confirmar que o pedido de <b>${esc(customerName)}</b> foi entregue pelo motoboy e o pagamento recebido?<br><br><small style="color:var(--mut)">Ao concluir, este pedido sairá automaticamente do mapa.</small>`,
+    confirmText: '✓ Sim, Concluir Entrega',
+    confirmClass: 'btn-whatsapp'
+  });
+
+  if (!confirmed) return;
+
+  try {
+    const res = await fetch(`${API_URL}/orders/${orderId}/confirm-delivery`, {
+      method: 'POST',
+      headers: authHeaders()
+    });
+    const data = await res.json();
+    if (data.ok) {
+      const idx = ORDERS.findIndex(o => o.id === orderId);
+      if (idx !== -1) ORDERS[idx] = data.order;
+      renderKanban();
+      updateOrdersBadge();
+      const periodSelect = $('#report-period-select');
+      loadSalesReport({ period: periodSelect ? periodSelect.value : 'today' });
+      adminToast(`✓ Pedido #${data.order.orderNo} entregue! Removido do mapa.`, 'success');
+      renderDeliveryMapMarkers();
+    } else {
+      adminToast(data.error || 'Erro ao confirmar entrega.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Erro de conexão ao confirmar entrega.', 'danger');
+  }
 };
 
 window.updateSelectedMapRoute = function() {
