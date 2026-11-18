@@ -42,6 +42,21 @@
     </aside>
 
     <div class="admin-main-wrap">
+    <!-- Banner de Alerta Crítico se o Bot WhatsApp Parar ou Falhar -->
+    <div id="bot-connection-alert-banner" style="display:none;background:linear-gradient(90deg, #991b1b, #b91c1c);color:#fff;padding:12px 18px;font-size:13px;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 4px 14px rgba(185,28,28,0.5);border-bottom:1.5px solid rgba(255,255,255,0.25);position:sticky;top:0;z-index:99999">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:22px">⚠️</span>
+        <div>
+          <b style="font-size:14px;display:block">Alerta: A Conexão do Bot WhatsApp foi Interrompida ou Falhou!</b>
+          <span id="bot-alert-banner-reason" style="font-size:12px;opacity:0.9">O atendimento virtual está pausado. Verifique a conexão com o WhatsApp.</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button type="button" class="btn-sm" style="background:#fff;color:#991b1b;font-weight:700;padding:6px 14px;border:none;border-radius:8px;cursor:pointer" onclick="goToBotTab()">🤖 Ver Bot</button>
+        <button type="button" class="btn-sm" style="background:rgba(0,0,0,0.25);color:#fff;padding:6px 10px;border:none;border-radius:8px;cursor:pointer" onclick="dismissBotAlertBanner()" title="Dispensar aviso">✕</button>
+      </div>
+    </div>
+
     <!-- Topbar Fixa: Header + Abas de Navegação Fixos ao Rolar a Página -->
     <div class="admin-topbar-wrapper" id="admin-topbar">
     <!-- Header Administrativo -->
@@ -180,6 +195,10 @@
       </button>
       <button class="nav-tab" data-tab="tab-bot">
         <span class="nav-tab-label"><span class="mobile-nav-icon">🤖</span> Bot WhatsApp</span>
+      </button>
+      <button class="nav-tab" data-tab="tab-security">
+        <span class="nav-tab-label"><span class="mobile-nav-icon">🛡️</span> Segurança</span>
+        <span class="badge" id="badge-security-alerts" style="display:none;background:#ef4444">0</span>
       </button>
     </nav>
   </div>
@@ -1531,10 +1550,144 @@
       </div>
     </div>
 
+    <!-- ABA 11: LOGS DE SEGURANÇA & AUDITORIA CONTRA ATAQUES -->
+    <div class="tab-pane" id="tab-security">
+      <div class="admin-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;border-bottom:1.5px solid var(--ln);padding-bottom:16px;margin-bottom:20px">
+          <div>
+            <h2 style="margin:0;font-size:20px;display:flex;align-items:center;gap:10px;color:#ef4444">
+              <span>🛡️</span> Firewall, Auditoria & Logs de Segurança
+            </h2>
+            <p style="margin:6px 0 0;font-size:13px;color:var(--mut)">
+              Monitoramento ativo de tentativas de força bruta (429), acessos 401 não autorizados, injeções, bloqueios de palavrões e proteção de dados LGPD.
+            </p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button type="button" class="btn-sm btn-secondary" onclick="loadSecurityLogs(true)" style="padding:8px 14px">
+              🔄 Atualizar Logs
+            </button>
+            <button type="button" class="btn-sm" style="background:rgba(239,68,68,0.2);color:#ef4444;border:1px solid rgba(239,68,68,0.4);padding:8px 14px" onclick="clearSecurityLogs()">
+              🗑️ Limpar Histórico
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Cards de Métricas de Segurança -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px">
+          <div style="background:var(--card);border:1.5px solid rgba(239,68,68,0.3);border-radius:12px;padding:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:12px;color:var(--mut)">Bloqueios Críticos (Força Bruta)</span>
+              <span style="font-size:18px">🔴</span>
+            </div>
+            <div id="sec-kpi-critical" style="font-size:24px;font-weight:800;color:#ef4444;margin-top:6px">0</div>
+          </div>
+          <div style="background:var(--card);border:1.5px solid rgba(245,158,11,0.3);border-radius:12px;padding:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:12px;color:var(--mut)">Tentativas de Senha Falha</span>
+              <span style="font-size:18px">🟠</span>
+            </div>
+            <div id="sec-kpi-high" style="font-size:24px;font-weight:800;color:#f59e0b;margin-top:6px">0</div>
+          </div>
+          <div style="background:var(--card);border:1.5px solid rgba(59,130,246,0.3);border-radius:12px;padding:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:12px;color:var(--mut)">Acessos 401 / Palavrões</span>
+              <span style="font-size:18px">🟡</span>
+            </div>
+            <div id="sec-kpi-medium" style="font-size:24px;font-weight:800;color:#60a5fa;margin-top:6px">0</div>
+          </div>
+          <div style="background:var(--card);border:1.5px solid var(--ln);border-radius:12px;padding:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:12px;color:var(--mut)">Total de Eventos (24h)</span>
+              <span style="font-size:18px">🕒</span>
+            </div>
+            <div id="sec-kpi-last24h" style="font-size:24px;font-weight:800;color:#fff;margin-top:6px">0</div>
+          </div>
+        </div>
+
+        <!-- Filtros Rápidos -->
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+          <span style="font-size:12px;color:var(--mut);font-weight:600">Filtrar por:</span>
+          <button type="button" class="btn-sm sec-filter-btn active" data-filter="all" onclick="filterSecurityLogs('all', this)">Todos</button>
+          <button type="button" class="btn-sm sec-filter-btn" data-filter="critical" onclick="filterSecurityLogs('critical', this)">🔴 Críticos (429)</button>
+          <button type="button" class="btn-sm sec-filter-btn" data-filter="high" onclick="filterSecurityLogs('high', this)">🟠 Falhas de Senha</button>
+          <button type="button" class="btn-sm sec-filter-btn" data-filter="medium" onclick="filterSecurityLogs('medium', this)">🟡 Médios</button>
+        </div>
+
+        <!-- Tabela Responsiva de Logs com Overflow Controlado (Sem scroll horizontal quebre a página) -->
+        <div style="width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--ln);border-radius:12px;background:var(--card)">
+          <table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:650px;text-align:left">
+            <thead>
+              <tr style="background:rgba(255,255,255,0.03);border-bottom:1px solid var(--ln);color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:0.5px">
+                <th style="padding:10px 14px">Data/Hora</th>
+                <th style="padding:10px 14px">Severidade</th>
+                <th style="padding:10px 14px">Tipo de Evento</th>
+                <th style="padding:10px 14px">IP de Origem</th>
+                <th style="padding:10px 14px">Rota / Método</th>
+                <th style="padding:10px 14px">Detalhes da Ação</th>
+              </tr>
+            </thead>
+            <tbody id="sec-logs-table-body">
+              <tr>
+                <td colspan="6" style="padding:24px;text-align:center;color:var(--mut)">Carregando logs de segurança...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div> <!-- Fim de .admin-content -->
 
   </div> <!-- Fim de .admin-main-wrap -->
   </div> <!-- Fim de #dashboard-wrapper -->
+
+  <!-- Modal Rápido de Seleção e Auto-Cadastro de Motoboys -->
+  <div id="motoboy-selector-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;z-index:2000;backdrop-filter:blur(4px);padding:16px">
+    <div style="background:var(--panel);border:1.5px solid var(--ln);border-radius:20px;padding:22px;width:min(480px,96vw);max-height:90vh;overflow-y:auto;box-shadow:0 20px 40px rgba(0,0,0,0.6)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;border-bottom:1px solid var(--ln);padding-bottom:12px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:26px">🛵</span>
+          <div>
+            <h3 id="motoboy-modal-title" style="margin:0;font-size:17px;color:#fff;font-weight:800">Despachar Entrega</h3>
+            <span id="motoboy-modal-subtitle" style="font-size:12px;color:var(--mut)">Selecione o entregador responsável</span>
+          </div>
+        </div>
+        <button type="button" class="btn-sm" onclick="closeMotoboySelectorModal()" style="background:transparent;border:none;font-size:18px;color:var(--mut);cursor:pointer;padding:4px 8px">✕</button>
+      </div>
+
+      <div style="margin-bottom:16px">
+        <label style="font-size:12px;color:var(--mut);display:block;margin-bottom:8px;font-weight:600">Entregadores Frequentes (1 clique):</label>
+        <div id="motoboy-chips-container" style="display:flex;flex-wrap:wrap;gap:8px;min-height:36px">
+          <!-- Chips gerados dinamicamente via JS -->
+        </div>
+      </div>
+
+      <!-- Seção para Adicionar / Digitar Novo Entregador -->
+      <div style="margin-bottom:18px;background:rgba(255,255,255,0.03);padding:14px;border-radius:12px;border:1px solid var(--ln)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:12px;font-weight:700;color:var(--y)">➕ Outro / Novo Entregador</span>
+          <span style="font-size:10px;color:var(--mut)">Salva automaticamente</span>
+        </div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="new-motoboy-name-input" placeholder="Ex: Lucas Freelancer, João Diarista..." 
+                 style="flex:1;padding:8px 12px;font-size:13px;border-radius:8px;border:1px solid var(--ln);background:var(--bg);color:#fff"
+                 onkeydown="if(event.key==='Enter'){event.preventDefault();confirmCustomMotoboyDispatch();}">
+          <button type="button" class="btn-sm btn-next" onclick="confirmCustomMotoboyDispatch()" style="padding:8px 14px;white-space:nowrap;font-weight:700">
+            Despachar
+          </button>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--ln);padding-top:14px">
+        <button type="button" class="btn-sm btn-secondary" onclick="confirmDispatchWithoutMotoboy()" style="font-size:11.5px;color:var(--mut);padding:6px 12px">
+          Despachar sem Entregador
+        </button>
+        <button type="button" class="btn-sm" onclick="closeMotoboySelectorModal()" style="background:var(--ln);color:#fff;padding:6px 14px">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Modal de Edição de Produto (com Upload, Acompanhamentos por Tamanho, Combos e Prejuízo) -->
   <div id="product-edit-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px)">

@@ -5,6 +5,7 @@ import { storeService } from './StoreService.js';
 import { couponService } from './CouponService.js';
 import { freightService } from './FreightService.js';
 import { db } from '../../infrastructure/database/JsonDatabase.js';
+import { securityAuditService, SecurityEventType, SecuritySeverity } from '../../infrastructure/security/SecurityAuditService.js';
 
 class GeminiAssistantService {
   constructor() {
@@ -320,6 +321,19 @@ _(Monte seu açaí, escolha acompanhamentos e pague no Pix ou Cartão)_
     // 1. FILTRO DE PALAVRÕES, OFENSAS E CONTEÚDO IMPRÓPRIO
     if (this.checkProfanityAndExplicit(cleanText)) {
       this.stats.profanityBlocked++;
+      try {
+        const maskedPhone = phone ? String(phone).replace(/(\d{4})\d+(\d{4})/, '$1****$2') : 'Desconhecido';
+        securityAuditService.recordEvent({
+          type: SecurityEventType.PROFANITY_OFFENSE,
+          severity: SecuritySeverity.MEDIUM,
+          ip: 'WhatsApp-Client',
+          endpoint: '/bot/webhook',
+          method: 'MESSAGE',
+          details: `Linguagem inapropriada bloqueada do remetente ${maskedPhone}.`,
+          userAgent: 'WhatsApp-Baileys'
+        });
+      } catch (e) {}
+
       const reply = `Olá${customerName ? ` ${customerName}` : ''}! 🍇 Prezamos por um atendimento respeitoso e harmonioso para todos os nossos clientes e atendentes.\n\nPedimos gentilmente que evite o uso de termos ofensivos. Como posso te ajudar com o cardápio ou seu pedido hoje?\n\n💡 _Dica: Digite *menu* para ver as opções._`;
       this.saveHistory(phone, 'user', cleanText);
       this.saveHistory(phone, 'assistant', reply);

@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { db } from '../../infrastructure/database/JsonDatabase.js';
+import { securityAuditService, SecurityEventType, SecuritySeverity } from '../../infrastructure/security/SecurityAuditService.js';
 
 // Segredo para assinatura de tokens de sessão (JWT simplificado HMAC-SHA256)
 const TOKEN_SECRET = process.env.JWT_SECRET || process.env.ADMIN_SECRET || 'explosao-acai-secure-hmac-sha256-key-2026';
@@ -171,6 +172,18 @@ export function getMotoboyTokenFromRequest(req) {
 export function adminAuthMiddleware(req, res, next) {
   const token = getAdminTokenFromRequest(req);
   if (!verifyAdminToken(token)) {
+    try {
+      securityAuditService.recordEvent({
+        type: SecurityEventType.UNAUTHORIZED_401,
+        severity: SecuritySeverity.MEDIUM,
+        ip: securityAuditService.extractClientIp(req),
+        endpoint: req.originalUrl || req.url,
+        method: req.method,
+        details: 'Tentativa de acesso a endpoint administrativo sem autenticação válida.',
+        userAgent: req.headers['user-agent']
+      });
+    } catch (e) {}
+
     return res.status(401).json({
       ok: false,
       error: 'Acesso não autorizado ao painel administrativo. Token inválido ou expirado.'
@@ -185,6 +198,18 @@ export function adminAuthMiddleware(req, res, next) {
 export function motoboyOrAdminAuthMiddleware(req, res, next) {
   const token = getMotoboyTokenFromRequest(req);
   if (!verifyMotoboyToken(token)) {
+    try {
+      securityAuditService.recordEvent({
+        type: SecurityEventType.UNAUTHORIZED_401,
+        severity: SecuritySeverity.LOW,
+        ip: securityAuditService.extractClientIp(req),
+        endpoint: req.originalUrl || req.url,
+        method: req.method,
+        details: 'Tentativa de acesso a endpoint de entregador sem token autorizado.',
+        userAgent: req.headers['user-agent']
+      });
+    } catch (e) {}
+
     return res.status(401).json({
       ok: false,
       error: 'Acesso restrito ao entregador ou administrador. Token inválido.'

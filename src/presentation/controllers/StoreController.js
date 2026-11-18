@@ -85,6 +85,39 @@ export class StoreController {
       return res.status(500).json({ ok: false, error: err.message });
     }
   }
+
+  async getMotoboys(req, res) {
+    try {
+      const motoboys = storeService.getMotoboys();
+      return res.json({ ok: true, motoboys });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  }
+
+  async addMotoboy(req, res) {
+    try {
+      const { name } = req.body || {};
+      if (!name || typeof name !== 'string' || !name.trim()) {
+        return res.status(400).json({ ok: false, error: 'Nome do motoboy é obrigatório.' });
+      }
+      const motoboys = storeService.addMotoboy(name.trim());
+      return res.json({ ok: true, motoboys });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  }
+
+  async removeMotoboy(req, res) {
+    try {
+      const name = decodeURIComponent(req.params.name || '');
+      if (!name) return res.status(400).json({ ok: false, error: 'Nome é obrigatório.' });
+      const motoboys = storeService.removeMotoboy(name);
+      return res.json({ ok: true, motoboys });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  }
 }
 
 export const storeController = new StoreController();

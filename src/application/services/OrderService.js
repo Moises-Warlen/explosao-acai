@@ -471,8 +471,10 @@ export class OrderService {
     }
 
     if (motoboyName && typeof motoboyName === 'string' && motoboyName.trim()) {
+      const cleanMotoboy = motoboyName.trim();
       if (!order.delivery) order.delivery = {};
-      order.delivery.motoboyName = motoboyName.trim();
+      order.delivery.motoboyName = cleanMotoboy;
+      try { storeService.addMotoboy(cleanMotoboy); } catch (e) {}
     }
 
     order.status = newStatus;
@@ -559,7 +561,11 @@ export class OrderService {
 
     const order = data.orders[orderIndex];
     if (!order.delivery) order.delivery = {};
-    order.delivery.motoboyName = (motoboyName || '').trim();
+    const cleanMotoboy = (motoboyName || '').trim();
+    order.delivery.motoboyName = cleanMotoboy;
+    if (cleanMotoboy) {
+      try { storeService.addMotoboy(cleanMotoboy); } catch (e) {}
+    }
     order.updatedAt = new Date().toISOString();
     this.db.save();
     return order;
@@ -581,8 +587,10 @@ export class OrderService {
     order.deliveredAt = now.toISOString();
 
     if (motoboyName && typeof motoboyName === 'string' && motoboyName.trim()) {
+      const cleanMotoboy = motoboyName.trim();
       if (!order.delivery) order.delivery = {};
-      order.delivery.motoboyName = motoboyName.trim();
+      order.delivery.motoboyName = cleanMotoboy;
+      try { storeService.addMotoboy(cleanMotoboy); } catch (e) {}
     }
 
     const baseTime = order.preparedAt ? new Date(order.preparedAt).getTime() : new Date(order.createdAt).getTime();

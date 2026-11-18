@@ -206,11 +206,26 @@ class WhatsAppBotService {
         }
 
         if (connection === 'close') {
-          const shouldReconnect = (lastDisconnect?.error)?.output?.statusCode !== DisconnectReason.loggedOut;
+          const statusCode = (lastDisconnect?.error)?.output?.statusCode;
+          const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
           this.status = 'disconnected';
           this.connectedPhone = null;
           this.qrCodeDataUrl = null;
           this.broadcastStatus();
+
+          try {
+            if (wsHub && typeof wsHub.broadcast === 'function') {
+              wsHub.broadcast({
+                type: 'BOT_CONNECTION_LOST',
+                payload: {
+                  reason: (lastDisconnect?.error)?.message || 'A conexão com o WhatsApp foi interrompida ou caiu.',
+                  statusCode,
+                  willReconnect: shouldReconnect,
+                  timestamp: new Date().toISOString()
+                }
+              });
+            }
+          } catch (e) {}
 
           if (shouldReconnect) {
             console.log('[WhatsApp Bot] Conexão encerrada temporariamente. Reconectando em 5 segundos...');
@@ -345,6 +360,18 @@ class WhatsAppBotService {
       this.status = 'disconnected';
       console.error('[WhatsApp Bot] Falha ao iniciar Baileys:', err.message);
       this.broadcastStatus();
+      try {
+        if (wsHub && typeof wsHub.broadcast === 'function') {
+          wsHub.broadcast({
+            type: 'BOT_CONNECTION_LOST',
+            payload: {
+              reason: err.message || 'Falha ao inicializar a conexão com o WhatsApp',
+              willReconnect: false,
+              timestamp: new Date().toISOString()
+            }
+          });
+        }
+      } catch (e) {}
       throw err;
     }
   }

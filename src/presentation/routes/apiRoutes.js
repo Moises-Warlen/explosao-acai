@@ -21,6 +21,7 @@ import {
 } from '../middlewares/authMiddleware.js';
 import { upload } from '../../infrastructure/storage/UploadService.js';
 import { db } from '../../infrastructure/database/JsonDatabase.js';
+import { securityAuditService, SecurityEventType, SecuritySeverity } from '../../infrastructure/security/SecurityAuditService.js';
 
 const router = Router();
 
@@ -124,6 +125,31 @@ router.get('/bot/knowledge', adminAuthMiddleware, (req, res) => botController.ge
 router.post('/bot/knowledge', adminAuthMiddleware, (req, res) => botController.addKnowledge(req, res));
 router.delete('/bot/knowledge/:id', adminAuthMiddleware, (req, res) => botController.deleteKnowledge(req, res));
 
+// ================= GESTÃO DE MOTOBOYS =================
+router.get('/store/motoboys', (req, res) => storeController.getMotoboys(req, res));
+router.post('/store/motoboys', adminAuthMiddleware, (req, res) => storeController.addMotoboy(req, res));
+router.delete('/store/motoboys/:name', adminAuthMiddleware, (req, res) => storeController.removeMotoboy(req, res));
+
+// ================= LOGS DE SEGURANÇA & AUDITORIA =================
+router.get('/admin/security-logs', adminAuthMiddleware, (req, res) => {
+  try {
+    const { limit, severity, type } = req.query;
+    const result = securityAuditService.getLogs({ limit, severity, type });
+    return res.json({ ok: true, ...result });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+router.post('/admin/security-logs/clear', adminAuthMiddleware, (req, res) => {
+  try {
+    securityAuditService.clearLogs();
+    return res.json({ ok: true, message: 'Logs de auditoria e segurança limpos com sucesso.' });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // ================= AUTENTICAÇÃO DO ADMIN =================
 router.post('/admin/auth', (req, res) => {
   const { password } = req.body || {};
@@ -134,6 +160,19 @@ router.post('/admin/auth', (req, res) => {
     const token = createAdminToken();
     return res.json({ ok: true, token });
   }
+
+  try {
+    securityAuditService.recordEvent({
+      type: SecurityEventType.AUTH_FAILURE,
+      severity: SecuritySeverity.HIGH,
+      ip: securityAuditService.extractClientIp(req),
+      endpoint: '/api/admin/auth',
+      method: 'POST',
+      details: 'Falha na autenticação do painel administrativo: senha incorreta informada.',
+      userAgent: req.headers['user-agent']
+    });
+  } catch (e) {}
+
   return res.status(401).json({ ok: false, error: 'Senha incorreta.' });
 });
 

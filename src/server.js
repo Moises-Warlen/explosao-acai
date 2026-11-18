@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 
 import apiRoutes from './presentation/routes/apiRoutes.js';
 import { wsHub } from './infrastructure/websockets/WebSocketHub.js';
+import { securityAuditService, SecurityEventType, SecuritySeverity } from './infrastructure/security/SecurityAuditService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -104,7 +105,21 @@ const authLimiter = rateLimit({
   skipSuccessfulRequests: true,
   message: { ok: false, error: 'Muitas tentativas de login incorretas. Tente novamente em 15 minutos.' },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  handler: (req, res, next, options) => {
+    try {
+      securityAuditService.recordEvent({
+        type: SecurityEventType.RATE_LIMIT_EXCEEDED,
+        severity: SecuritySeverity.CRITICAL,
+        ip: securityAuditService.extractClientIp(req),
+        endpoint: req.originalUrl || req.url,
+        method: req.method,
+        details: 'Força Bruta Bloqueada: Mais de 5 tentativas incorretas de login em 15 minutos.',
+        userAgent: req.headers['user-agent']
+      });
+    } catch (e) {}
+    res.status(429).json({ ok: false, error: 'Muitas tentativas de login incorretas. Tente novamente em 15 minutos.' });
+  }
 });
 
 const ordersLimiter = rateLimit({
@@ -112,7 +127,21 @@ const ordersLimiter = rateLimit({
   max: 10, // máx 10 pedidos por minuto por IP
   message: { ok: false, error: 'Limite de pedidos por minuto atingido. Aguarde um instante.' },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  handler: (req, res, next, options) => {
+    try {
+      securityAuditService.recordEvent({
+        type: SecurityEventType.RATE_LIMIT_EXCEEDED,
+        severity: SecuritySeverity.HIGH,
+        ip: securityAuditService.extractClientIp(req),
+        endpoint: req.originalUrl || req.url,
+        method: req.method,
+        details: 'Possível Flood/Script de Pedidos: Limite de 10 pedidos por minuto excedido.',
+        userAgent: req.headers['user-agent']
+      });
+    } catch (e) {}
+    res.status(429).json({ ok: false, error: 'Limite de pedidos por minuto atingido. Aguarde um instante.' });
+  }
 });
 
 const generalApiLimiter = rateLimit({
@@ -120,7 +149,21 @@ const generalApiLimiter = rateLimit({
   max: 120, // máx 120 requisições por minuto por IP
   message: { ok: false, error: 'Muitas requisições ao servidor. Reduza o ritmo.' },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  handler: (req, res, next, options) => {
+    try {
+      securityAuditService.recordEvent({
+        type: SecurityEventType.RATE_LIMIT_EXCEEDED,
+        severity: SecuritySeverity.MEDIUM,
+        ip: securityAuditService.extractClientIp(req),
+        endpoint: req.originalUrl || req.url,
+        method: req.method,
+        details: 'Muitas requisições por minuto ao servidor (possível varredura automatizada).',
+        userAgent: req.headers['user-agent']
+      });
+    } catch (e) {}
+    res.status(429).json({ ok: false, error: 'Muitas requisições ao servidor. Reduza o ritmo.' });
+  }
 });
 
 // Parsers de requisição

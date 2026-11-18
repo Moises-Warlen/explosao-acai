@@ -84,6 +84,46 @@ export class StoreService {
     this.updateSettings(settings);
     return this.isStoreOpen();
   }
+
+  /**
+   * Retorna a lista de entregadores/motoboys cadastrados e ativos na loja
+   */
+  getMotoboys() {
+    const settings = this.getSettings();
+    if (!Array.isArray(settings.motoboys) || settings.motoboys.length === 0) {
+      // Padrões iniciais para conveniência
+      settings.motoboys = ['Carlos', 'João', 'Matheus'];
+      this.updateSettings({ motoboys: settings.motoboys });
+    }
+    return settings.motoboys;
+  }
+
+  /**
+   * Cadastra ou garante a existência de um motoboy na lista rápida
+   */
+  addMotoboy(name) {
+    if (!name || typeof name !== 'string') return this.getMotoboys();
+    const clean = name.trim();
+    if (!clean) return this.getMotoboys();
+
+    const list = this.getMotoboys();
+    if (!list.some(m => m.toLowerCase() === clean.toLowerCase())) {
+      list.push(clean);
+      this.updateSettings({ motoboys: list });
+    }
+    return list;
+  }
+
+  /**
+   * Remove um motoboy da lista rápida
+   */
+  removeMotoboy(name) {
+    if (!name || typeof name !== 'string') return this.getMotoboys();
+    const clean = name.trim().toLowerCase();
+    const list = this.getMotoboys().filter(m => m.toLowerCase() !== clean);
+    this.updateSettings({ motoboys: list });
+    return list;
+  }
 }
 
 export const storeService = new StoreService();

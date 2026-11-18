@@ -374,6 +374,11 @@ function initWebSocket() {
             window.handleBotStatusEvent(data.payload);
           }
         }
+        if (data.type === 'BOT_CONNECTION_LOST' || data.event === 'BOT_CONNECTION_LOST') {
+          if (typeof window.handleBotConnectionLost === 'function') {
+            window.handleBotConnectionLost(data.payload);
+          }
+        }
         if (data.type === 'HUMAN_TAKEOVER_REQUESTED' || data.event === 'HUMAN_TAKEOVER_REQUESTED') {
           playNotificationChime();
           adminToast(`🚨 Cliente ${data.payload.customerName || data.payload.phone} solicitou atendente humano no WhatsApp!`, 'warning');
@@ -431,6 +436,9 @@ function bindNavigation() {
 
       if (tab.dataset.tab === 'tab-bot') {
         loadWhatsAppBotStatus();
+      }
+      if (tab.dataset.tab === 'tab-security') {
+        loadSecurityLogs();
       }
     });
   });
@@ -1269,7 +1277,7 @@ function createOrderCardHtml(order, isHistory = false) {
     } else if (order.status === 'preparing') {
       // 2. Em Preparo: move para a coluna de Pronto / Saiu para Entrega
       nextAction = isDelivery 
-        ? `<button class="btn-sm btn-next btn-next-preparing" onclick="advanceOrderStatus('${order.id}', 'out_for_delivery')">Pronto p/ Entrega</button>`
+        ? `<button class="btn-sm btn-next btn-next-preparing" onclick="openMotoboySelectorModal('${order.id}', 'out_for_delivery')">Pronto p/ Entrega</button>`
         : `<button class="btn-sm btn-next btn-next-preparing" onclick="advanceOrderStatus('${order.id}', 'ready')">Pronto no Balcão</button>`;
     } else if (order.status === 'out_for_delivery' || order.status === 'ready') {
       // 3. Pronto / Saiu para Entrega: confirma entrega/retirada e move para Concluídos
@@ -1681,12 +1689,16 @@ window.confirmReturnOrder = async function(e) {
   }
 };
 
-window.advanceOrderStatus = async function(orderId, newStatus) {
+window.advanceOrderStatus = async function(orderId, newStatus, motoboyName) {
   try {
+    const payload = { status: newStatus };
+    if (motoboyName && typeof motoboyName === 'string' && motoboyName.trim()) {
+      payload.motoboyName = motoboyName.trim();
+    }
     const res = await fetch(`${API_URL}/orders/${orderId}/status`, {
       method: 'PATCH',
       headers: authHeaders(),
-      body: JSON.stringify({ status: newStatus })
+      body: JSON.stringify(payload)
     });
     const data = await res.json();
     if (data.ok) {
@@ -1875,22 +1887,33 @@ window.closeConfirmModal = function() {
   CONFIRM_MODAL_CALLBACK = null;
 };
 
-window.confirmOrderDeliveryAndPayment = function(orderId) {
+window.confirmOrderDeliveryAndPayment = function(orderId, motoboyName = null) {
   const ord = ORDERS.find(o => o.id === orderId);
   const orderNo = ord ? ord.orderNo : '';
   const customerName = ord ? ord.customer?.name : '';
 
+  // Se for entrega e o pedido AINDA estiver sem entregador ou como "Geral", pergunta quem entregou!
+  const currentMotoboy = ord?.delivery?.motoboyName?.trim();
+  if (ord?.delivery?.type === 'delivery' && (!currentMotoboy || currentMotoboy.toLowerCase() === 'geral') && !motoboyName) {
+    return window.openMotoboySelectorModal(orderId, 'confirm_delivery');
+  }
+
+  const assignedMotoboy = motoboyName || currentMotoboy || '';
+  const motoboyMention = assignedMotoboy ? ` pelo entregador <b>${esc(assignedMotoboy)}</b>` : '';
+
   showConfirmModal({
     icon: '🛵',
     title: `Confirmar Entrega #${orderNo}`,
-    message: `Confirmar que o pedido de <b>${esc(customerName)}</b> foi entregue pelo motoboy e o pagamento foi devidamente recebido?`,
+    message: `Confirmar que o pedido de <b>${esc(customerName)}</b> foi entregue${motoboyMention} e o pagamento foi devidamente recebido?`,
     btnText: '✓ Sim, Finalizar Pedido',
     btnClass: 'btn-next',
     onConfirm: async () => {
       try {
+        const bodyPayload = assignedMotoboy ? JSON.stringify({ motoboyName: assignedMotoboy }) : undefined;
         const res = await fetch(`${API_URL}/orders/${orderId}/confirm-delivery`, {
           method: 'POST',
-          headers: authHeaders()
+          headers: authHeaders(),
+          body: bodyPayload
         });
         const data = await res.json();
         if (data.ok) {
@@ -6891,6 +6914,9 @@ function updateBotUI(data) {
 
   // Estado da Conexão
   if (data.status === 'connected') {
+    if (typeof window.dismissBotAlertBanner === 'function') {
+      window.dismissBotAlertBanner();
+    }
     if (badge) {
       badge.style.background = 'rgba(16,185,129,0.15)';
       badge.style.color = '#10b981';
@@ -7371,6 +7397,331 @@ window.deleteBotKnowledge = async function(id) {
     }
   } catch (err) {
     adminToast('Erro ao remover conhecimento.', 'danger');
+  }
+};
+
+// ==================== SELETOR RÁPIDO & AUTO-CADASTRO DE MOTOBOYS ====================
+let SAVED_MOTOBOYS = ['Carlos', 'João', 'Matheus'];
+let CURRENT_MOTOBOY_DISPATCH_ORDER_ID = null;
+let CURRENT_MOTOBOY_DISPATCH_ACTION = 'out_for_delivery';
+
+async function loadSavedMotoboys() {
+  try {
+    const res = await fetch(`${API_URL}/store/motoboys`, { headers: authHeaders() });
+    const data = await res.json();
+    if (data.ok && Array.isArray(data.motoboys) && data.motoboys.length > 0) {
+      SAVED_MOTOBOYS = data.motoboys;
+    } else {
+      const local = localStorage.getItem('explosa_saved_motoboys');
+      if (local) {
+        try { SAVED_MOTOBOYS = JSON.parse(local); } catch (e) {}
+      }
+    }
+  } catch (e) {
+    const local = localStorage.getItem('explosa_saved_motoboys');
+    if (local) {
+      try { SAVED_MOTOBOYS = JSON.parse(local); } catch (e) {}
+    }
+  }
+}
+
+window.openMotoboySelectorModal = async function(orderId, action = 'out_for_delivery') {
+  CURRENT_MOTOBOY_DISPATCH_ORDER_ID = orderId;
+  CURRENT_MOTOBOY_DISPATCH_ACTION = action;
+
+  await loadSavedMotoboys();
+
+  const ord = ORDERS.find(o => o.id === orderId);
+  const orderNo = ord ? ord.orderNo : '';
+  const customerName = ord ? (ord.customer?.name || 'Cliente') : '';
+  const bairro = ord?.delivery?.bairro || 'Entrega';
+  const total = ord ? R(ord.total || 0) : '';
+
+  const titleEl = $('#motoboy-modal-title');
+  const subEl = $('#motoboy-modal-subtitle');
+  if (titleEl) {
+    titleEl.textContent = action === 'confirm_delivery' 
+      ? `Confirmar Entrega — Pedido #${orderNo}`
+      : `Despachar Entrega — Pedido #${orderNo}`;
+  }
+  if (subEl) {
+    subEl.textContent = `${customerName} • ${bairro} (${total})`;
+  }
+
+  const inputEl = $('#new-motoboy-name-input');
+  if (inputEl) inputEl.value = '';
+
+  renderMotoboyChips();
+
+  const modal = $('#motoboy-selector-modal');
+  if (modal) modal.style.display = 'flex';
+};
+
+function renderMotoboyChips() {
+  const container = $('#motoboy-chips-container');
+  if (!container) return;
+
+  if (!SAVED_MOTOBOYS || SAVED_MOTOBOYS.length === 0) {
+    SAVED_MOTOBOYS = ['Carlos', 'João', 'Matheus'];
+  }
+
+  container.innerHTML = SAVED_MOTOBOYS.map(name => {
+    const safeName = (name || '').trim();
+    return `
+      <div style="display:inline-flex;align-items:center;background:var(--card);border:1.5px solid var(--ln);border-radius:24px;padding:4px 12px;gap:6px">
+        <button type="button" onclick="selectMotoboyAndDispatch('${escapeHtml(safeName)}')" 
+                style="background:none;border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;padding:0">
+          <span>🛵</span> ${escapeHtml(safeName)}
+        </button>
+        <button type="button" onclick="removeMotoboyFromSaved('${escapeHtml(safeName)}', event)" 
+                style="background:none;border:none;color:var(--mut);font-size:14px;cursor:pointer;padding:0 2px;line-height:1" title="Remover da lista rápida">
+          ✕
+        </button>
+      </div>
+    `;
+  }).join('');
+}
+
+window.selectMotoboyAndDispatch = async function(motoboyName) {
+  const orderId = CURRENT_MOTOBOY_DISPATCH_ORDER_ID;
+  const action = CURRENT_MOTOBOY_DISPATCH_ACTION;
+  closeMotoboySelectorModal();
+
+  if (!orderId) return;
+
+  if (action === 'confirm_delivery') {
+    window.confirmOrderDeliveryAndPayment(orderId, motoboyName);
+  } else {
+    await window.advanceOrderStatus(orderId, 'out_for_delivery', motoboyName);
+  }
+};
+
+window.confirmCustomMotoboyDispatch = async function() {
+  const input = $('#new-motoboy-name-input');
+  const name = (input ? input.value : '').trim();
+  if (!name) {
+    adminToast('Informe o nome do entregador.', 'warning');
+    if (input) input.focus();
+    return;
+  }
+
+  // Auto-cadastro de motoboy no backend e localStorage
+  try {
+    await fetch(`${API_URL}/store/motoboys`, {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    });
+  } catch (e) {}
+
+  if (!SAVED_MOTOBOYS.some(m => m.toLowerCase() === name.toLowerCase())) {
+    SAVED_MOTOBOYS.push(name);
+    try { localStorage.setItem('explosa_saved_motoboys', JSON.stringify(SAVED_MOTOBOYS)); } catch (e) {}
+  }
+
+  const orderId = CURRENT_MOTOBOY_DISPATCH_ORDER_ID;
+  const action = CURRENT_MOTOBOY_DISPATCH_ACTION;
+  closeMotoboySelectorModal();
+
+  if (!orderId) return;
+
+  if (action === 'confirm_delivery') {
+    window.confirmOrderDeliveryAndPayment(orderId, name);
+  } else {
+    await window.advanceOrderStatus(orderId, 'out_for_delivery', name);
+  }
+};
+
+window.confirmDispatchWithoutMotoboy = async function() {
+  const orderId = CURRENT_MOTOBOY_DISPATCH_ORDER_ID;
+  const action = CURRENT_MOTOBOY_DISPATCH_ACTION;
+  closeMotoboySelectorModal();
+
+  if (!orderId) return;
+
+  if (action === 'confirm_delivery') {
+    window.confirmOrderDeliveryAndPayment(orderId, 'Geral');
+  } else {
+    await window.advanceOrderStatus(orderId, 'out_for_delivery');
+  }
+};
+
+window.removeMotoboyFromSaved = async function(motoboyName, event) {
+  if (event) event.stopPropagation();
+  if (!confirm(`Remover "${motoboyName}" da lista rápida de entregadores?`)) return;
+
+  SAVED_MOTOBOYS = SAVED_MOTOBOYS.filter(m => m.toLowerCase() !== motoboyName.toLowerCase());
+  try { localStorage.setItem('explosa_saved_motoboys', JSON.stringify(SAVED_MOTOBOYS)); } catch (e) {}
+
+  try {
+    await fetch(`${API_URL}/store/motoboys/${encodeURIComponent(motoboyName)}`, {
+      method: 'DELETE',
+      headers: authHeaders()
+    });
+  } catch (e) {}
+
+  renderMotoboyChips();
+};
+
+window.closeMotoboySelectorModal = function() {
+  const modal = $('#motoboy-selector-modal');
+  if (modal) modal.style.display = 'none';
+  CURRENT_MOTOBOY_DISPATCH_ORDER_ID = null;
+};
+
+// ==================== ALERTA DE QUEDA DO BOT WHATSAPP ====================
+window.handleBotConnectionLost = function(payload) {
+  const banner = $('#bot-connection-alert-banner');
+  const reasonEl = $('#bot-alert-banner-reason');
+  if (banner) {
+    banner.style.display = 'flex';
+  }
+  if (reasonEl && payload && payload.reason) {
+    reasonEl.textContent = String(payload.reason);
+  }
+  playNotificationChime();
+  adminToast('⚠️ Atenção: A conexão do Bot WhatsApp caiu ou falhou!', 'danger', 10000);
+};
+
+window.dismissBotAlertBanner = function() {
+  const banner = $('#bot-connection-alert-banner');
+  if (banner) banner.style.display = 'none';
+};
+
+window.goToBotTab = function() {
+  window.dismissBotAlertBanner();
+  const botTabBtn = $('.nav-tab[data-tab="tab-bot"]');
+  if (botTabBtn) botTabBtn.click();
+};
+
+// ==================== LOGS DE SEGURANÇA & AUDITORIA ====================
+let ALL_SECURITY_LOGS = [];
+let CURRENT_SECURITY_FILTER = 'all';
+
+window.loadSecurityLogs = async function(isManual = false) {
+  try {
+    const res = await fetch(`${API_URL}/admin/security-logs?limit=100`, {
+      headers: authHeaders()
+    });
+    const data = await res.json();
+    if (data.ok) {
+      ALL_SECURITY_LOGS = data.logs || [];
+      const sum = data.summary || {};
+
+      if ($('#sec-kpi-critical')) $('#sec-kpi-critical').textContent = sum.critical || 0;
+      if ($('#sec-kpi-high')) $('#sec-kpi-high').textContent = sum.high || 0;
+      if ($('#sec-kpi-medium')) $('#sec-kpi-medium').textContent = (sum.medium || 0) + (sum.low || 0);
+      if ($('#sec-kpi-last24h')) $('#sec-kpi-last24h').textContent = sum.last24h || 0;
+
+      const badge = $('#badge-security-alerts');
+      if (badge) {
+        if ((sum.critical || 0) > 0) {
+          badge.textContent = sum.critical;
+          badge.style.display = 'inline-block';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+
+      window.filterSecurityLogs(CURRENT_SECURITY_FILTER);
+
+      if (isManual) {
+        adminToast('Logs de segurança atualizados com sucesso!', 'info');
+      }
+    }
+  } catch (err) {
+    console.warn('Erro ao carregar logs de segurança:', err);
+  }
+};
+
+window.filterSecurityLogs = function(filterType, btnEl) {
+  CURRENT_SECURITY_FILTER = filterType;
+  if (btnEl) {
+    $$('.sec-filter-btn').forEach(b => b.classList.remove('active'));
+    btnEl.classList.add('active');
+  }
+
+  let filtered = ALL_SECURITY_LOGS;
+  if (filterType !== 'all') {
+    filtered = ALL_SECURITY_LOGS.filter(l => l.severity === filterType);
+  }
+
+  renderSecurityLogsTable(filtered);
+};
+
+function renderSecurityLogsTable(logs) {
+  const tbody = $('#sec-logs-table-body');
+  if (!tbody) return;
+
+  if (!logs || logs.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="padding:28px;text-align:center;color:var(--mut)">
+          🛡️ Nenhum alerta ou incidente de segurança registrado para o filtro atual. Sistema 100% seguro!
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = logs.map(log => {
+    let sevBadge = '';
+    if (log.severity === 'critical') {
+      sevBadge = '<span style="background:rgba(239,68,68,0.2);color:#ef4444;border:1px solid rgba(239,68,68,0.4);padding:2px 8px;border-radius:12px;font-weight:700;font-size:11px">🔴 Crítico</span>';
+    } else if (log.severity === 'high') {
+      sevBadge = '<span style="background:rgba(245,158,11,0.2);color:#f59e0b;border:1px solid rgba(245,158,11,0.4);padding:2px 8px;border-radius:12px;font-weight:700;font-size:11px">🟠 Alto</span>';
+    } else if (log.severity === 'medium') {
+      sevBadge = '<span style="background:rgba(59,130,246,0.2);color:#60a5fa;border:1px solid rgba(59,130,246,0.4);padding:2px 8px;border-radius:12px;font-weight:700;font-size:11px">🟡 Médio</span>';
+    } else {
+      sevBadge = '<span style="background:rgba(16,185,129,0.2);color:#10b981;border:1px solid rgba(16,185,129,0.4);padding:2px 8px;border-radius:12px;font-weight:700;font-size:11px">🟢 Baixo</span>';
+    }
+
+    const d = new Date(log.timestamp);
+    const dateStr = !isNaN(d.getTime()) 
+      ? `${d.toLocaleDateString('pt-BR')} ${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
+      : 'Agora';
+
+    const typeLabels = {
+      'RATE_LIMIT_EXCEEDED': 'Bloqueio Força Bruta (429)',
+      'AUTH_FAILURE': 'Senha Incorreta (Login)',
+      'UNAUTHORIZED_401': 'Acesso Não Autorizado (401)',
+      'MOTOBOY_INVALID_PIN': 'PIN Motoboy Inválido',
+      'PROFANITY_OFFENSE': 'Linguagem Ofensiva Barrada',
+      'SUSPICIOUS_PAYLOAD': 'Carga Suspeita Bloqueada',
+      'ORDER_TAMPERING_ATTEMPT': 'Tentativa Fraude em Pedido',
+      'SYSTEM_WARNING': 'Alerta do Sistema'
+    };
+    const friendlyType = typeLabels[log.type] || log.type;
+
+    return `
+      <tr style="border-bottom:1px solid var(--ln);transition:background 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+        <td style="padding:10px 14px;white-space:nowrap;font-size:12px;color:#ccc">${dateStr}</td>
+        <td style="padding:10px 14px;white-space:nowrap">${sevBadge}</td>
+        <td style="padding:10px 14px;font-weight:600;color:#fff">${escapeHtml(friendlyType)}</td>
+        <td style="padding:10px 14px;font-family:monospace;font-size:11.5px;color:#60a5fa">${escapeHtml(log.ip || '127.0.0.1')}</td>
+        <td style="padding:10px 14px;font-family:monospace;font-size:11.5px;color:var(--mut)"><span style="color:var(--y)">${escapeHtml(log.method || 'GET')}</span> ${escapeHtml(log.endpoint || '')}</td>
+        <td style="padding:10px 14px;font-size:12px;color:#e2e8f0;line-height:1.3">${escapeHtml(log.details || '')}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+window.clearSecurityLogs = async function() {
+  if (!confirm('Deseja realmente limpar todo o histórico de logs de auditoria de segurança?')) return;
+  try {
+    const res = await fetch(`${API_URL}/admin/security-logs/clear`, {
+      method: 'POST',
+      headers: authHeaders()
+    });
+    const data = await res.json();
+    if (data.ok) {
+      adminToast('Histórico de segurança limpo com sucesso!', 'info');
+      loadSecurityLogs();
+    } else {
+      adminToast(data.error || 'Erro ao limpar logs.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Erro de comunicação.', 'danger');
   }
 };
 
