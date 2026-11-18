@@ -6849,7 +6849,43 @@ function updateBotUI(data) {
     if ($('#bot-stat-ai')) $('#bot-stat-ai').textContent = data.stats.aiReplies || 0;
     if ($('#bot-stat-sent')) $('#bot-stat-sent').textContent = data.stats.messagesSent || 0;
     if ($('#bot-stat-human')) $('#bot-stat-human').textContent = data.stats.humanTransfers || 0;
+    if ($('#bot-stat-profanity')) $('#bot-stat-profanity').textContent = data.stats.profanityBlocked || 0;
+    if ($('#bot-stat-menu')) $('#bot-stat-menu').textContent = data.stats.menuRequests || 0;
   }
+  if ($('#bot-stat-campaign-clients')) $('#bot-stat-campaign-clients').textContent = data.eligibleCustomersCount || 0;
+  if ($('#bot-stat-optout')) $('#bot-stat-optout').textContent = data.optOutCount || 0;
+  if ($('#bot-campaign-eligible-badge')) $('#bot-campaign-eligible-badge').textContent = data.eligibleCustomersCount || 0;
+  if ($('#bot-campaign-btn-count')) $('#bot-campaign-btn-count').textContent = data.eligibleCustomersCount || 0;
+  if ($('#bot-campaign-optout-badge')) $('#bot-campaign-optout-badge').textContent = data.optOutCount || 0;
+
+  // Campanha semanal
+  if (data.weeklyCampaign) {
+    const autoSw = $('#bot-campaign-auto-enabled');
+    const daySel = $('#bot-campaign-day');
+    const hourSel = $('#bot-campaign-hour');
+    const lastSent = $('#bot-campaign-last-sent');
+    const msgArea = $('#bot-campaign-message');
+
+    if (autoSw && !autoSw.dataset.touched) autoSw.checked = Boolean(data.weeklyCampaign.enabled);
+    if (daySel && !daySel.dataset.touched) daySel.value = data.weeklyCampaign.scheduledDay ?? 5;
+    if (hourSel && !hourSel.dataset.touched) hourSel.value = data.weeklyCampaign.scheduledHour ?? 17;
+    if (msgArea && !msgArea.value && data.weeklyCampaign.customMessage) {
+      msgArea.value = data.weeklyCampaign.customMessage;
+    }
+    if (lastSent) {
+      if (data.weeklyCampaign.lastDispatchedAt) {
+        const d = new Date(data.weeklyCampaign.lastDispatchedAt);
+        lastSent.textContent = `${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} (${data.weeklyCampaign.lastDispatchedCount || 0} envios)`;
+      } else {
+        lastSent.textContent = 'Nunca realizado';
+      }
+    }
+  }
+
+  const progBadge = $('#bot-campaign-progress-badge');
+  const btnSendCampaign = $('#btn-bot-campaign-send');
+  if (progBadge) progBadge.style.display = data.campaignInProgress ? 'inline-block' : 'none';
+  if (btnSendCampaign) btnSendCampaign.disabled = Boolean(data.campaignInProgress);
 
   // Estado da Conexão
   if (data.status === 'connected') {
@@ -7045,6 +7081,129 @@ window.sendTestWhatsAppMessage = async function() {
     }
   } catch (err) {
     adminToast('Falha ao enviar mensagem de teste.', 'danger');
+  }
+};
+
+window.generateAICampaignText = async function() {
+  const prodInput = $('#bot-campaign-product');
+  const couponInput = $('#bot-campaign-coupon');
+  const msgArea = $('#bot-campaign-message');
+
+  const productName = prodInput ? prodInput.value.trim() : '';
+  const couponCode = couponInput ? couponInput.value.trim() : '';
+
+  try {
+    adminToast('Gerando texto promocional com Inteligência Artificial...', 'info');
+    const res = await fetch(`${API_URL}/bot/campaign/preview`, {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productName, couponCode })
+    });
+    const data = await res.json();
+    if (data.ok && data.message) {
+      if (msgArea) msgArea.value = data.message;
+      adminToast('✨ Texto promocional gerado com sucesso!', 'success');
+    } else {
+      adminToast(data.error || 'Não foi possível gerar o texto.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Erro ao conectar com gerador de IA.', 'danger');
+  }
+};
+
+window.saveWeeklyCampaignSettings = async function() {
+  const autoSw = $('#bot-campaign-auto-enabled');
+  const daySel = $('#bot-campaign-day');
+  const hourSel = $('#bot-campaign-hour');
+  const msgArea = $('#bot-campaign-message');
+
+  const payload = {
+    enabled: autoSw ? autoSw.checked : false,
+    scheduledDay: daySel ? parseInt(daySel.value, 10) : 5,
+    scheduledHour: hourSel ? parseInt(hourSel.value, 10) : 17,
+    customMessage: msgArea ? msgArea.value.trim() : ''
+  };
+
+  try {
+    const res = await fetch(`${API_URL}/bot/campaign/settings`, {
+      method: 'PUT',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.ok) {
+      adminToast('Configuração da campanha semanal salva com sucesso!', 'success');
+      loadWhatsAppBotStatus();
+    } else {
+      adminToast(data.error || 'Erro ao salvar.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Erro de comunicação ao salvar programação.', 'danger');
+  }
+};
+
+window.sendWeeklyCampaignNow = async function() {
+  const msgArea = $('#bot-campaign-message');
+  const prodInput = $('#bot-campaign-product');
+  const couponInput = $('#bot-campaign-coupon');
+
+  const message = msgArea ? msgArea.value.trim() : '';
+  const productName = prodInput ? prodInput.value.trim() : '';
+  const couponCode = couponInput ? couponInput.value.trim() : '';
+
+  const countBadge = $('#bot-campaign-btn-count');
+  const count = countBadge ? countBadge.textContent : '0';
+
+  if (!confirm(`Deseja realmente disparar esta campanha promocional agora para ${count} clientes da base?`)) {
+    return;
+  }
+
+  try {
+    adminToast('Iniciando disparo da campanha semanal...', 'info');
+    const res = await fetch(`${API_URL}/bot/campaign/send`, {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, productName, couponCode })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      adminToast(data.message, 'success');
+      loadWhatsAppBotStatus();
+    } else {
+      adminToast(data.error || 'Erro ao disparar campanha.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Erro ao solicitar disparo de campanha.', 'danger');
+  }
+};
+
+window.sendTestWeeklyCampaign = async function() {
+  const phone = prompt('Digite o número para receber o teste da campanha (ex: 16991098863):');
+  if (!phone) return;
+
+  const msgArea = $('#bot-campaign-message');
+  const prodInput = $('#bot-campaign-product');
+  const couponInput = $('#bot-campaign-coupon');
+
+  const message = msgArea ? msgArea.value.trim() : '';
+  const productName = prodInput ? prodInput.value.trim() : '';
+  const couponCode = couponInput ? couponInput.value.trim() : '';
+
+  try {
+    adminToast(`Enviando teste de campanha para ${phone}...`, 'info');
+    const res = await fetch(`${API_URL}/bot/campaign/send`, {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, productName, couponCode, testPhone: phone })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      adminToast('✓ Teste da campanha enviado com sucesso!', 'success');
+    } else {
+      adminToast(data.error || 'Erro ao enviar teste.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Erro ao enviar teste da campanha.', 'danger');
   }
 };
 

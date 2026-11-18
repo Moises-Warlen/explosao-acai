@@ -1249,7 +1249,7 @@
           <h4 style="margin:0 0 12px;font-size:14px;color:var(--mut);text-transform:uppercase;letter-spacing:0.5px">
             📊 Desempenho do Atendimento Automático
           </h4>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;text-align:center">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;text-align:center">
             <div style="background:rgba(255,255,255,0.04);padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.05)">
               <div style="font-size:11px;color:var(--mut)">Mensagens Recebidas</div>
               <div id="bot-stat-received" style="font-size:20px;font-weight:800;color:#fff;margin-top:2px">0</div>
@@ -1265,6 +1265,138 @@
             <div style="background:rgba(255,255,255,0.04);padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.05)">
               <div style="font-size:11px;color:var(--mut)">Transbordos Humanos</div>
               <div id="bot-stat-human" style="font-size:20px;font-weight:800;color:#f59e0b;margin-top:2px">0</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.04);padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.05)">
+              <div style="font-size:11px;color:var(--mut)">Filtro de Ofensas</div>
+              <div id="bot-stat-profanity" style="font-size:20px;font-weight:800;color:#ef4444;margin-top:2px">0</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.04);padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.05)">
+              <div style="font-size:11px;color:var(--mut)">Retornos ao Menu</div>
+              <div id="bot-stat-menu" style="font-size:20px;font-weight:800;color:#38bdf8;margin-top:2px">0</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.04);padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.05)">
+              <div style="font-size:11px;color:var(--mut)">Clientes na Base</div>
+              <div id="bot-stat-campaign-clients" style="font-size:20px;font-weight:800;color:#a855f7;margin-top:2px">0</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.04);padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.05)">
+              <div style="font-size:11px;color:var(--mut)">Descadastros (sair)</div>
+              <div id="bot-stat-optout" style="font-size:20px;font-weight:800;color:var(--mut);margin-top:2px">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Campanhas Promocionais Semanais & Reengajamento Inteligente -->
+        <div style="margin-top:24px;background:var(--card);border:1.5px solid var(--ln);border-radius:16px;padding:20px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--ln);padding-bottom:14px;margin-bottom:18px">
+            <div>
+              <h3 style="margin:0;font-size:17px;color:#fff;display:flex;align-items:center;gap:10px">
+                <span>📢</span> Campanhas Semanais & Reengajamento com IA
+              </h3>
+              <p style="margin:4px 0 0;font-size:12px;color:var(--mut)">
+                Dispare ofertas exclusivas para os clientes que já compraram na loja. Totalmente compatível com a LGPD (opção "sair") e proteção com intervalo anti-spam.
+              </p>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span id="bot-campaign-progress-badge" style="display:none;background:rgba(234,179,8,0.2);color:#facc15;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700">
+                ⏳ Disparo em andamento...
+              </span>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px">
+            <!-- Coluna 1: Programação Semanal Automática -->
+            <div style="background:rgba(0,0,0,0.2);border:1px solid var(--ln);border-radius:12px;padding:16px;display:flex;flex-direction:column;justify-content:space-between">
+              <div>
+                <h4 style="margin:0 0 12px;font-size:14px;color:var(--y);display:flex;align-items:center;gap:8px">
+                  <span>⏰</span> Programação Automática Semanal
+                </h4>
+                <p style="font-size:12px;color:var(--mut);margin:0 0 14px">
+                  O bot enviará automaticamente a promoção configurada toda semana para os clientes da base no horário agendado.
+                </p>
+
+                <div style="margin-bottom:12px">
+                  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:700;color:#fff">
+                    <input type="checkbox" id="bot-campaign-auto-enabled" style="transform:scale(1.2)">
+                    <span>Ativar Disparo Automático Semanal</span>
+                  </label>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+                  <div>
+                    <label style="font-size:11px;color:var(--mut);display:block;margin-bottom:4px">Dia da Semana:</label>
+                    <select id="bot-campaign-day" style="width:100%;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid var(--ln);color:#fff;font-size:12px">
+                      <option value="5">Sexta-feira (Recomendado)</option>
+                      <option value="6">Sábado</option>
+                      <option value="0">Domingo</option>
+                      <option value="4">Quinta-feira</option>
+                      <option value="3">Quarta-feira</option>
+                      <option value="2">Terça-feira</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="font-size:11px;color:var(--mut);display:block;margin-bottom:4px">Horário:</label>
+                    <select id="bot-campaign-hour" style="width:100%;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid var(--ln);color:#fff;font-size:12px">
+                      <option value="17">17:00 (Horário do Açaí)</option>
+                      <option value="18">18:00</option>
+                      <option value="19">19:00</option>
+                      <option value="20">20:00</option>
+                      <option value="14">14:00</option>
+                      <option value="15">15:00</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:10px;font-size:11px;color:var(--mut);margin-bottom:14px">
+                  <div>📅 <b>Último Disparo:</b> <span id="bot-campaign-last-sent" style="color:#fff">Nunca realizado</span></div>
+                  <div style="margin-top:4px">👥 <b>Clientes na Lista:</b> <span id="bot-campaign-eligible-badge" style="color:var(--green);font-weight:700">0</span></div>
+                  <div style="margin-top:4px">🚫 <b>Opt-out (pediram para sair):</b> <span id="bot-campaign-optout-badge" style="color:var(--mut)">0</span></div>
+                </div>
+              </div>
+
+              <button type="button" class="btn-sm btn-next" style="width:100%;padding:9px;font-size:12px;font-weight:700" onclick="saveWeeklyCampaignSettings()">
+                💾 Salvar Programação
+              </button>
+            </div>
+
+            <!-- Coluna 2: Criador e Disparador de Mensagem com IA -->
+            <div style="background:rgba(0,0,0,0.2);border:1px solid var(--ln);border-radius:12px;padding:16px;display:flex;flex-direction:column">
+              <h4 style="margin:0 0 12px;font-size:14px;color:var(--green);display:flex;align-items:center;gap:8px">
+                <span>✨</span> Criador de Ofertas & Redator com IA
+              </h4>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+                <div>
+                  <label style="font-size:11px;color:var(--mut);display:block;margin-bottom:4px">Produto em Destaque:</label>
+                  <input type="text" id="bot-campaign-product" placeholder="Ex: Copo Especial 500ml" style="width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid var(--ln);color:#fff;font-size:12px">
+                </div>
+                <div>
+                  <label style="font-size:11px;color:var(--mut);display:block;margin-bottom:4px">Cupom / Desconto:</label>
+                  <input type="text" id="bot-campaign-coupon" placeholder="Ex: SEXTOU10 ou 10% OFF" style="width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid var(--ln);color:#fff;font-size:12px">
+                </div>
+              </div>
+
+              <div style="margin-bottom:10px;display:flex;justify-content:flex-end">
+                <button type="button" class="btn-sm btn-secondary" style="padding:6px 12px;font-size:11px;display:flex;align-items:center;gap:6px" onclick="generateAICampaignText()">
+                  <span>✨</span> Gerar Texto com IA (Gemini)
+                </button>
+              </div>
+
+              <div style="margin-bottom:12px;flex:1">
+                <label style="font-size:11px;color:var(--mut);display:block;margin-bottom:4px">Mensagem a ser enviada no WhatsApp:</label>
+                <textarea id="bot-campaign-message" rows="5" placeholder="Digite ou gere o texto promocional com IA..." style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid var(--ln);color:#fff;font-size:12px;line-height:1.4;resize:vertical"></textarea>
+                <small style="font-size:10px;color:var(--mut);display:block;margin-top:4px">
+                  * A nota legal LGPD "(Caso não queira mais receber nossas ofertas, responda 'sair')" é adicionada automaticamente.
+                </small>
+              </div>
+
+              <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <button type="button" id="btn-bot-campaign-send" class="btn-sm btn-whatsapp" style="flex:2;min-width:180px;padding:10px 14px;font-size:13px;font-weight:700" onclick="sendWeeklyCampaignNow()">
+                  🚀 Disparar Campanha Agora (<span id="bot-campaign-btn-count">0</span>)
+                </button>
+                <button type="button" class="btn-sm btn-secondary" style="flex:1;min-width:120px;padding:10px 12px;font-size:12px" onclick="sendTestWeeklyCampaign()">
+                  📱 Testar no meu Tel
+                </button>
+              </div>
             </div>
           </div>
         </div>

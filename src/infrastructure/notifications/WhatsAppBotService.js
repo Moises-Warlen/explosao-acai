@@ -10,6 +10,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { geminiAssistantService } from '../../application/services/GeminiAssistantService.js';
 import { wsHub } from '../websockets/WebSocketHub.js';
+import { db } from '../database/JsonDatabase.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,6 +23,9 @@ class WhatsAppBotService {
     this.qrCodeDataUrl = null;
     this.aiEnabled = true;
     this.humanTakeoverPhones = new Set();
+    this.optOutPhones = new Set();
+    this.campaignInProgress = false;
+    this._scheduleInterval = null;
     this.stats = {
       messagesReceived: 0,
       messagesSent: 0,
@@ -34,6 +38,90 @@ class WhatsAppBotService {
     if (!fs.existsSync(this.authDir)) {
       fs.mkdirSync(this.authDir, { recursive: true });
     }
+
+    this.loadBotSettings();
+    this.startScheduleChecker();
+  }
+
+  loadBotSettings() {
+    try {
+      const botData = db.get()?.botSettings || {};
+      if (Array.isArray(botData.optOutPhones)) {
+        this.optOutPhones = new Set(botData.optOutPhones.map(p => String(p).replace(/\D/g, '')));
+      }
+    } catch (e) {
+      console.warn('[WhatsApp Bot] Erro ao carregar botSettings:', e.message);
+    }
+  }
+
+  saveBotSettings() {
+    try {
+      const data = db.get();
+      if (!data.botSettings) data.botSettings = {};
+      data.botSettings.optOutPhones = Array.from(this.optOutPhones);
+      if (!data.botSettings.weeklyCampaign) {
+        data.botSettings.weeklyCampaign = {
+          enabled: false,
+          scheduledDay: 5, // Sexta-feira
+          scheduledHour: 17, // 17h
+          customMessage: '',
+          lastDispatchedAt: null,
+          lastDispatchedCount: 0
+        };
+      }
+      db.saveLocal();
+    } catch (e) {
+      console.warn('[WhatsApp Bot] Erro ao salvar botSettings:', e.message);
+    }
+  }
+
+  getCampaignSettings() {
+    const botData = db.get()?.botSettings?.weeklyCampaign || {};
+    return {
+      enabled: Boolean(botData.enabled),
+      scheduledDay: Number.isInteger(botData.scheduledDay) ? botData.scheduledDay : 5,
+      scheduledHour: Number.isInteger(botData.scheduledHour) ? botData.scheduledHour : 17,
+      customMessage: botData.customMessage || '',
+      lastDispatchedAt: botData.lastDispatchedAt || null,
+      lastDispatchedCount: botData.lastDispatchedCount || 0
+    };
+  }
+
+  updateCampaignSettings(settings = {}) {
+    const data = db.get();
+    if (!data.botSettings) data.botSettings = {};
+    data.botSettings.weeklyCampaign = {
+      ...this.getCampaignSettings(),
+      ...settings
+    };
+    db.saveLocal();
+    this.broadcastStatus();
+    return data.botSettings.weeklyCampaign;
+  }
+
+  getEligibleCustomers() {
+    try {
+      const orders = db.get()?.orders || [];
+      const customerMap = new Map();
+
+      for (const order of orders) {
+        const rawPhone = order.customer?.phone;
+        if (!rawPhone) continue;
+        const clean = rawPhone.replace(/\D/g, '');
+        if (clean.length < 10) continue; // Mínimo DDD + 8 dígitos
+
+        // Respeito à LGPD: se o cliente solicitou saída da lista de promoções
+        if (this.optOutPhones.has(clean)) continue;
+
+        const name = order.customer?.name || 'Cliente';
+        customerMap.set(clean, { phone: clean, name });
+      }
+
+      return Array.from(customerMap.values());
+    } catch (err) {
+      console.warn('[WhatsApp Bot] Erro ao listar clientes elegíveis:', err.message);
+      return [];
+    }
   }
 
   getStatus() {
@@ -43,8 +131,16 @@ class WhatsAppBotService {
       phone: this.connectedPhone,
       qrCode: this.qrCodeDataUrl,
       aiEnabled: this.aiEnabled,
-      stats: this.stats,
-      humanTakeoverCount: this.humanTakeoverPhones.size
+      stats: {
+        ...this.stats,
+        profanityBlocked: geminiAssistantService.stats?.profanityBlocked || 0,
+        menuRequests: geminiAssistantService.stats?.menuRequests || 0
+      },
+      humanTakeoverCount: this.humanTakeoverPhones.size,
+      optOutCount: this.optOutPhones.size,
+      eligibleCustomersCount: this.getEligibleCustomers().length,
+      weeklyCampaign: this.getCampaignSettings(),
+      campaignInProgress: this.campaignInProgress
     };
   }
 
@@ -157,7 +253,24 @@ class WhatsAppBotService {
 
           this.stats.messagesReceived++;
 
-          // Se este telefone estiver em atendimento humano, não interfere
+          // 1. LGPD: Descadastro / Opt-out de ofertas promocionais ("sair", "cancelar", "parar", etc.)
+          const isOptOut = /^(sair|cancelar|descadastrar|parar|stop|remover|desinscrever)\b/i.test(textMessage.trim());
+          if (isOptOut) {
+            this.optOutPhones.add(cleanPhone);
+            this.saveBotSettings();
+            const reply = "Tudo bem! Você foi removido da lista de novidades e promoções da *Explosão Açaí*. 🍇\n\nCaso queira fazer um pedido ou ver o cardápio no futuro, basta digitar *menu* a qualquer momento!";
+            await this.sendTextMessage(remoteJid, reply);
+            continue;
+          }
+
+          // 2. Retorno ao Menu Principal (reativa o bot se estava em transbordo humano)
+          const isMenu = geminiAssistantService.isMenuCommand(textMessage);
+          const wasInHuman = this.humanTakeoverPhones.has(cleanPhone);
+          if (wasInHuman && isMenu) {
+            this.releaseHumanTakeover(cleanPhone);
+          }
+
+          // Se este telefone ainda estiver em atendimento humano e não pediu menu, não interfere
           if (this.humanTakeoverPhones.has(cleanPhone)) {
             continue;
           }
@@ -172,7 +285,8 @@ class WhatsAppBotService {
             const aiResponse = await geminiAssistantService.processMessage({
               phone: cleanPhone,
               customerName: pushName,
-              text: textMessage
+              text: textMessage,
+              wasInHumanTakeover: wasInHuman
             });
 
             if (aiResponse && aiResponse.reply) {
@@ -258,6 +372,153 @@ class WhatsAppBotService {
       return this.sendTextMessage(targetJid, msg);
     }
     return false;
+  }
+
+  /**
+   * Disparo seguro de campanhas promocionais semanais e reengajamento
+   */
+  async sendWeeklyPromotionCampaign({ message = '', productName = '', couponCode = '', testPhone = null, dryRun = false } = {}) {
+    const eligible = this.getEligibleCustomers();
+
+    let finalMessage = (message || '').trim();
+    if (!finalMessage) {
+      finalMessage = await geminiAssistantService.generateWeeklyPromotionText({ productName, couponCode });
+    }
+
+    // Garante a cláusula de descadastro da LGPD
+    if (!finalMessage.toLowerCase().includes('sair')) {
+      finalMessage += "\n\n_(Caso não queira mais receber nossas ofertas, responda 'sair')_";
+    }
+
+    if (dryRun) {
+      return {
+        dryRun: true,
+        totalEligible: eligible.length,
+        optOutCount: this.optOutPhones.size,
+        sampleMessage: finalMessage
+      };
+    }
+
+    if (this.status !== 'connected' || !this.sock) {
+      throw new Error('O bot do WhatsApp não está conectado. Conecte antes de disparar a campanha.');
+    }
+
+    if (this.campaignInProgress) {
+      throw new Error('Uma campanha já está em andamento. Aguarde a conclusão do disparo atual.');
+    }
+
+    // Se for teste, envia apenas para o telefone informado
+    const targetList = testPhone
+      ? [{ phone: testPhone.replace(/\D/g, ''), name: 'Teste' }]
+      : eligible;
+
+    if (targetList.length === 0) {
+      return {
+        ok: true,
+        message: 'Nenhum cliente elegível encontrado na base para disparo.',
+        sentCount: 0,
+        totalEligible: 0
+      };
+    }
+
+    this.campaignInProgress = true;
+    this.broadcastStatus();
+
+    // Executa em segundo plano com intervalo seguro de 2s para evitar restrições do WhatsApp
+    (async () => {
+      let sentCount = 0;
+      let failedCount = 0;
+
+      for (const client of targetList) {
+        try {
+          const ddiPhone = client.phone.startsWith('55') ? client.phone : '55' + client.phone;
+          const targetJid = `${ddiPhone}@s.whatsapp.net`;
+          const personalizedMsg = finalMessage.replace(/\{nome\}/gi, client.name || 'Cliente');
+
+          await this.sock.sendMessage(targetJid, { text: personalizedMsg });
+          this.stats.messagesSent++;
+          sentCount++;
+
+          // Intervalo anti-spam de 2 segundos
+          await new Promise(r => setTimeout(r, 2000));
+        } catch (sendErr) {
+          console.warn(`[WhatsApp Bot Campaign] Falha ao enviar para ${client.phone}:`, sendErr.message);
+          failedCount++;
+        }
+      }
+
+      this.campaignInProgress = false;
+
+      // Se não for teste, atualiza o histórico do último disparo
+      if (!testPhone) {
+        const data = db.get();
+        if (!data.botSettings) data.botSettings = {};
+        if (!data.botSettings.weeklyCampaign) data.botSettings.weeklyCampaign = this.getCampaignSettings();
+        data.botSettings.weeklyCampaign.lastDispatchedAt = new Date().toISOString();
+        data.botSettings.weeklyCampaign.lastDispatchedCount = sentCount;
+        db.saveLocal();
+      }
+
+      this.broadcastStatus();
+      console.log(`[WhatsApp Bot Campaign] Disparo finalizado: ${sentCount} enviados com sucesso, ${failedCount} falhas.`);
+    })().catch(err => {
+      this.campaignInProgress = false;
+      this.broadcastStatus();
+      console.error('[WhatsApp Bot Campaign] Erro inesperado no ciclo de disparo:', err);
+    });
+
+    return {
+      ok: true,
+      message: `Disparo da campanha iniciado para ${targetList.length} clientes. As mensagens estão sendo enviadas com segurança.`,
+      totalEligible: targetList.length
+    };
+  }
+
+  /**
+   * Monitora e dispara campanhas semanais agendadas automaticamente
+   */
+  startScheduleChecker() {
+    if (this._scheduleInterval) return;
+    // Checagem a cada 30 minutos
+    this._scheduleInterval = setInterval(() => {
+      try {
+        this.checkWeeklyCampaignSchedule();
+      } catch (e) {
+        console.warn('[WhatsApp Bot] Erro na verificação de agendamento:', e.message);
+      }
+    }, 30 * 60 * 1000);
+
+    if (this._scheduleInterval && typeof this._scheduleInterval.unref === 'function') {
+      this._scheduleInterval.unref();
+    }
+  }
+
+  checkWeeklyCampaignSchedule() {
+    const settings = this.getCampaignSettings();
+    if (!settings.enabled || this.status !== 'connected' || this.campaignInProgress) {
+      return;
+    }
+
+    const now = new Date();
+    const currentDay = now.getDay();
+    const currentHour = now.getHours();
+
+    if (currentDay === settings.scheduledDay && currentHour === settings.scheduledHour) {
+      if (settings.lastDispatchedAt) {
+        const last = new Date(settings.lastDispatchedAt);
+        const diffDays = (now - last) / (1000 * 60 * 60 * 24);
+        if (diffDays < 5) {
+          return; // Já enviado nos últimos 5 dias
+        }
+      }
+
+      console.log('[WhatsApp Bot] ⏰ Horário da campanha semanal atingido! Iniciando disparo programado...');
+      this.sendWeeklyPromotionCampaign({
+        message: settings.customMessage
+      }).catch(err => {
+        console.error('[WhatsApp Bot] Falha no disparo programado semanal:', err.message);
+      });
+    }
   }
 
   /**

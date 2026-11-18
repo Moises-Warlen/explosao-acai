@@ -114,6 +114,10 @@ router.post('/bot/toggle-ai', adminAuthMiddleware, (req, res) => botController.t
 router.post('/bot/set-gemini-key', adminAuthMiddleware, (req, res) => botController.setGeminiKey(req, res));
 router.post('/bot/release-human/:phone', adminAuthMiddleware, (req, res) => botController.releaseHuman(req, res));
 router.post('/bot/test-message', adminAuthMiddleware, (req, res) => botController.sendTestMessage(req, res));
+router.get('/bot/campaign/info', adminAuthMiddleware, (req, res) => botController.getCampaignInfo(req, res));
+router.post('/bot/campaign/preview', adminAuthMiddleware, (req, res) => botController.previewCampaign(req, res));
+router.post('/bot/campaign/send', adminAuthMiddleware, (req, res) => botController.sendCampaign(req, res));
+router.put('/bot/campaign/settings', adminAuthMiddleware, (req, res) => botController.saveCampaignSettings(req, res));
 
 // ================= AUTENTICAÇÃO DO ADMIN =================
 router.post('/admin/auth', (req, res) => {

@@ -165,4 +165,109 @@ describe('Explosão Açaí — Testes do Bot WhatsApp & Inteligência Artificial
     geminiAssistantService.setApiKey('');
   });
 
+  test('10. GeminiAssistantService: Filtro de palavrões e ofensas explícitas bloqueia e responde educadamente', async () => {
+    // 1. Testa detecção direta
+    assert.strictEqual(geminiAssistantService.checkProfanityAndExplicit('porra de açaí'), true);
+    assert.strictEqual(geminiAssistantService.checkProfanityAndExplicit('vai se foder'), true);
+    assert.strictEqual(geminiAssistantService.checkProfanityAndExplicit('bom dia quero comprar'), false);
+
+    // 2. Testa processamento da mensagem com ofensa
+    const res = await geminiAssistantService.processMessage({
+      phone: '16999990005',
+      customerName: 'Cliente Bravo',
+      text: 'seu açaí é uma merda caralho'
+    });
+
+    assert.ok(res.reply);
+    assert.strictEqual(res.isProfanity, true);
+    assert.strictEqual(res.needsHumanTakeover, false);
+    assert.ok(res.reply.includes('respeitoso') || res.reply.includes('ofensivos'), 'Deve pedir respeito de forma cortês');
+    assert.ok(!res.reply.toLowerCase().includes('merda') && !res.reply.toLowerCase().includes('caralho'), 'Nunca deve repetir ofensas');
+  });
+
+  test('11. GeminiAssistantService: Comando de voltar ao menu principal reativa o bot e lista opções', async () => {
+    // 1. Testa detecção do comando
+    assert.strictEqual(geminiAssistantService.isMenuCommand('menu'), true);
+    assert.strictEqual(geminiAssistantService.isMenuCommand('0'), true);
+    assert.strictEqual(geminiAssistantService.isMenuCommand('voltar'), true);
+    assert.strictEqual(geminiAssistantService.isMenuCommand('início'), true);
+
+    // 2. Processa com retorno ao menu após estar em transbordo humano
+    const res = await geminiAssistantService.processMessage({
+      phone: '16999990006',
+      customerName: 'Larissa',
+      text: 'menu',
+      wasInHumanTakeover: true
+    });
+
+    assert.ok(res.reply);
+    assert.ok(res.reply.includes('Cardápio Digital Completo'));
+    assert.ok(res.reply.includes('reativado'), 'Deve avisar que o bot foi reativado');
+    assert.strictEqual(res.needsHumanTakeover, false);
+    assert.strictEqual(res.resetHumanTakeover, true);
+  });
+
+  test('12. GeminiAssistantService & WhatsAppBot: Geração de texto promocional semanal com opt-out LGPD', async () => {
+    const promoText = await geminiAssistantService.generateWeeklyPromotionText({
+      productName: 'Copo Especial 500ml',
+      couponCode: 'SEXTOU10'
+    });
+
+    assert.ok(promoText);
+    assert.ok(promoText.includes('Explosão Açaí'));
+    assert.ok(promoText.toLowerCase().includes('sair'), 'Deve conter orientação de descadastro (LGPD)');
+
+    // Testa gestão de opt-out no serviço do WhatsApp
+    whatsAppBotService.optOutPhones.add('16999990007');
+    assert.strictEqual(whatsAppBotService.optOutPhones.has('16999990007'), true);
+    whatsAppBotService.optOutPhones.delete('16999990007');
+  });
+
+  test('13. Rotas da API: Endpoints de Campanha Semanal (/info, /preview, /settings)', async () => {
+    // 1. Info da Campanha
+    const infoRes = await fetch(`${baseUrl}/api/bot/campaign/info`, {
+      headers: { 'x-admin-token': TEST_ADMIN_PASSWORD }
+    });
+    assert.strictEqual(infoRes.status, 200);
+    const infoData = await infoRes.json();
+    assert.strictEqual(infoData.ok, true);
+    assert.ok(typeof infoData.eligibleCount === 'number');
+    assert.ok(typeof infoData.optOutCount === 'number');
+    assert.ok(infoData.settings);
+
+    // 2. Preview de Texto Promocional com IA
+    const prevRes = await fetch(`${baseUrl}/api/bot/campaign/preview`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-token': TEST_ADMIN_PASSWORD
+      },
+      body: JSON.stringify({ productName: 'Combo Casal', couponCode: 'AMORDEACAI' })
+    });
+    assert.strictEqual(prevRes.status, 200);
+    const prevData = await prevRes.json();
+    assert.strictEqual(prevData.ok, true);
+    assert.ok(prevData.message.length > 20);
+
+    // 3. Atualizar configurações de agendamento da campanha
+    const setRes = await fetch(`${baseUrl}/api/bot/campaign/settings`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-token': TEST_ADMIN_PASSWORD
+      },
+      body: JSON.stringify({
+        enabled: true,
+        scheduledDay: 5,
+        scheduledHour: 18,
+        customMessage: 'Oferta especial de sexta!'
+      })
+    });
+    assert.strictEqual(setRes.status, 200);
+    const setData = await setRes.json();
+    assert.strictEqual(setData.ok, true);
+    assert.strictEqual(setData.settings.enabled, true);
+    assert.strictEqual(setData.settings.scheduledHour, 18);
+  });
+
 });

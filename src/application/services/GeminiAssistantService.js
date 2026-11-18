@@ -9,6 +9,12 @@ class GeminiAssistantService {
   constructor() {
     this.apiKey = process.env.GEMINI_API_KEY || '';
     this.client = null;
+    this.history = new Map(); // Memória de curto prazo por telefone: Map<phone, Array<{role, text}>>
+    this.stats = {
+      profanityBlocked: 0,
+      menuRequests: 0,
+      aiGenerations: 0
+    };
     this.initClient();
   }
 
@@ -28,6 +34,87 @@ class GeminiAssistantService {
     this.apiKey = (key || '').trim();
     process.env.GEMINI_API_KEY = this.apiKey;
     this.initClient();
+  }
+
+  /**
+   * Salva mensagem no histórico de conversa (mantém até 6 turnos para contextualização)
+   */
+  saveHistory(phone, role, text) {
+    if (!phone) return;
+    const clean = phone.replace(/\D/g, '');
+    const list = this.history.get(clean) || [];
+    list.push({ role, text: String(text).slice(0, 500), timestamp: Date.now() });
+    if (list.length > 6) {
+      list.splice(0, list.length - 6);
+    }
+    this.history.set(clean, list);
+  }
+
+  getHistory(phone) {
+    if (!phone) return [];
+    const clean = phone.replace(/\D/g, '');
+    return this.history.get(clean) || [];
+  }
+
+  clearHistory(phone) {
+    if (!phone) return;
+    const clean = phone.replace(/\D/g, '');
+    this.history.delete(clean);
+  }
+
+  /**
+   * Filtro de Palavrões, Ofensas e Conteúdo Explícito
+   */
+  checkProfanityAndExplicit(text) {
+    if (!text || typeof text !== 'string') return false;
+    
+    // Expressões regulares com variações fonéticas e abreviações comuns
+    const profanityPatterns = [
+      /\b(p+o+r+r+a+|c+a+r+a+l+h+o+|m+e+r+d+a+|p+u+t+a+|p+u+t+o+)\b/i,
+      /\b(f+i+l+h+o+\s*d+a+\s*p+u+t+a+|f+d+p+|p+q+p+)\b/i,
+      /\b(v+a+g+a+b+u+n+d+[ao]|v+i+a+d+o+|a+r+r+o+m+b+a+d+[ao])\b/i,
+      /\b(c+u+|b+u+c+e+t+a+|b+o+c+e+t+a+|c+u+z+a+o+|c+u+z+[aã]o)\b/i,
+      /\b(f+o+d+a+\-?s+e+|v+s+f+|v+a+i+\s*s+e+\s*f+o+d+e+r+|t+o+m+a+\s*n+o+\s*c+u+)\b/i,
+      /\b(d+e+s+g+r+a+c+[ao]|d+e+s+g+r+a+[çc]+a+d+[ao]|o+t+[aá]+r+i+[ao]|c+o+r+n+o+)\b/i,
+      /\b(n+u+d+e+s?|s+e+x+o+\s*a+g+o+r+a+|p+i+r+o+c+a+|p+a+u+\s*z+[aã]o)\b/i
+    ];
+
+    return profanityPatterns.some(pattern => pattern.test(text));
+  }
+
+  /**
+   * Verifica se o comando é para voltar ao Menu Principal
+   */
+  isMenuCommand(text) {
+    if (!text) return false;
+    const clean = text.toLowerCase().trim().replace(/[!.,?]/g, '');
+    const menuCommands = ['menu', 'voltar', 'inicio', 'início', 'comeco', 'começo', '0', 'ajuda', 'opcoes', 'opções', 'oi menu', 'ver menu'];
+    return menuCommands.includes(clean);
+  }
+
+  /**
+   * Renderiza a resposta formatada do Menu Principal
+   */
+  renderMainMenu(ctx, customerName, isReactivated = false) {
+    this.stats.menuRequests++;
+    const nameStr = customerName ? ` ${customerName}` : '';
+    const reactivationNotice = isReactivated ? '🔄 *Atendimento automático do bot reativado!*\n\n' : '';
+
+    return `${reactivationNotice}🍇 *Menu Principal — Explosão Açaí* 🍇
+${ctx.isOpen ? '🟢 *Loja Aberta e Entregando!*' : '🔴 *Loja Fechada no Momento* (' + ctx.openingHours + ')'}
+
+Olá${nameStr}! Como posso te ajudar hoje?
+
+📱 *1️⃣ Cardápio Digital Completo:*
+👉 ${ctx.publicUrl}
+_(Monte seu açaí, escolha acompanhamentos e pague no Pix ou Cartão)_
+
+🛵 *2️⃣ Rastrear meu Pedido*
+🍧 *3️⃣ Combos & Promoções da Semana*
+📍 *4️⃣ Horário de Funcionamento & Endereço*
+👤 *5️⃣ Falar com um Atendente Humano*
+
+💡 _Dica: Digite *menu* ou *0* a qualquer momento para voltar aqui!_`;
   }
 
   /**
@@ -93,31 +180,59 @@ class GeminiAssistantService {
   /**
    * Processa a mensagem do cliente via Gemini IA ou fallback inteligente
    */
-  async processMessage({ phone = '', customerName = '', text = '' }) {
-    const ctx = this.buildLiveContext(phone);
+  async processMessage({ phone = '', customerName = '', text = '', wasInHumanTakeover = false }) {
     const cleanText = (text || '').trim();
+    const ctx = this.buildLiveContext(phone);
 
-    // 1. Detecção imediata de pedido de atendente humano
-    const humanKeywords = ['atendente', 'humano', 'falar com pessoa', 'gerente', 'falar com alguem', 'pessoa real'];
-    if (humanKeywords.some(k => cleanText.toLowerCase().includes(k))) {
+    // 1. FILTRO DE PALAVRÕES, OFENSAS E CONTEÚDO IMPRÓPRIO
+    if (this.checkProfanityAndExplicit(cleanText)) {
+      this.stats.profanityBlocked++;
+      const reply = `Olá${customerName ? ` ${customerName}` : ''}! 🍇 Prezamos por um atendimento respeitoso e harmonioso para todos os nossos clientes e atendentes.\n\nPedimos gentilmente que evite o uso de termos ofensivos. Como posso te ajudar com o cardápio ou seu pedido hoje?\n\n💡 _Dica: Digite *menu* para ver as opções._`;
+      this.saveHistory(phone, 'user', cleanText);
+      this.saveHistory(phone, 'assistant', reply);
       return {
-        reply: `Entendido, ${customerName ? customerName : 'amigo(a)'}! 👤 Estou transferindo você para um de nossos atendentes humanos agora mesmo. Por favor, aguarde só um momento que já vamos te responder!`,
+        reply,
+        needsHumanTakeover: false,
+        isProfanity: true
+      };
+    }
+
+    // 2. COMANDO DE VOLTAR AO MENU PRINCIPAL
+    if (this.isMenuCommand(cleanText)) {
+      const reply = this.renderMainMenu(ctx, customerName, wasInHumanTakeover);
+      this.saveHistory(phone, 'user', cleanText);
+      this.saveHistory(phone, 'assistant', reply);
+      return {
+        reply,
+        needsHumanTakeover: false,
+        resetHumanTakeover: wasInHumanTakeover
+      };
+    }
+
+    // 3. DETECÇÃO DE PEDIDO EXPLÍCITO DE ATENDENTE HUMANO
+    const humanKeywords = ['atendente', 'humano', 'falar com pessoa', 'gerente', 'falar com alguem', 'pessoa real', '5'];
+    if (humanKeywords.some(k => cleanText.toLowerCase() === k || cleanText.toLowerCase().includes(k))) {
+      const reply = `Entendido${customerName ? `, ${customerName}` : ''}! 👤 Estou transferindo você para um de nossos atendentes humanos agora mesmo. Por favor, aguarde só um momento que já vamos te responder por aqui!\n\n💡 _Se quiser voltar ao atendimento automático, basta digitar *menu*._`;
+      this.saveHistory(phone, 'user', cleanText);
+      this.saveHistory(phone, 'assistant', reply);
+      return {
+        reply,
         needsHumanTakeover: true
       };
     }
 
-    // 2. Se a chave do Gemini estiver configurada, usa a IA
+    // 4. ATENDIMENTO AVANÇADO COM GOOGLE GEMINI 2.0 FLASH (COM MEMÓRIA CONVERSACIONAL)
     if (this.client && this.apiKey) {
       try {
         const systemInstruction = `
-Você é a atendente virtual oficial e especialista da "Explosão Açaí", delivery de açaí artesanal em Franca - SP.
-Seu objetivo é encantar o cliente, tirar dúvidas com simpatia, vender ativamente e facilitar o pedido.
+Você é a atendente virtual oficial e consultora de açaí da "Explosão Açaí", delivery em Franca - SP.
+Seu objetivo é encantar o cliente, tirar dúvidas com simpatia, sugerir produtos (venda ativa / upsell) e orientar no pedido.
 
 INFORMAÇÕES REAIS DO ESTABELECIMENTO EM TEMPO REAL:
 - Loja: ${ctx.storeName}
-- Status da Loja: ${ctx.isOpen ? 'ABERTA AGORA! 🟢 Aceitando pedidos.' : 'FECHADA NO MOMENTO 🔴'}
-- Horário de Atendimento: ${ctx.openingHours}
-- Endereço da Loja: ${ctx.address}
+- Status: ${ctx.isOpen ? 'ABERTA AGORA! 🟢 Recebendo pedidos.' : 'FECHADA NO MOMENTO 🔴'}
+- Horário: ${ctx.openingHours}
+- Endereço: ${ctx.address}
 - Link do Cardápio Digital Oficial: ${ctx.publicUrl}
 - Cupons Ativos: ${ctx.couponList}
 
@@ -137,22 +252,32 @@ STATUS DE PEDIDO DO CLIENTE ATUAL (${phone}):
 ${ctx.orderStatusText}
 
 REGRAS DE CONDUTA E ESTILO:
-1. Seja acolhedora, animada, use emojis típicos de açaí (🍇, 🍧, 🍫, 🛵, ✨) com bom senso.
-2. Seja concisa: as pessoas no WhatsApp preferem mensagens diretas, fáceis de ler no celular, sem blocos gigantes de texto.
+1. Seja acolhedora, rápida, use emojis típicos de açaí (🍇, 🍧, 🍫, 🛵, ✨) com moderação.
+2. Seja concisa: responda em poucas linhas, sem parágrafos gigantes, ideal para leitura rápida no WhatsApp.
 3. Se perguntarem sobre lactose/vegano: o açaí puro não contém lactose nem glúten. Sugira montar com frutas, paçoca e granola tradicional sem leite.
-4. Se perguntarem sobre pedido ou entrega: use as informações de STATUS DE PEDIDO fornecidas acima.
-5. Sempre que fizer sentido, envie o link do Cardápio Digital (${ctx.publicUrl}) para que o cliente possa montar o copo com facilidade.
-6. Se o cliente demonstrar insatisfação grave (pedido errado, derretido, atraso excessivo) ou pedir explicitamente para falar com uma pessoa, peça desculpas sinceras, diga que chamou o responsável e termine a mensagem com o código: [ACTION:CALL_HUMAN].
+4. Se perguntarem sobre status de entrega: informe o status exato e o entregador com base no STATUS DE PEDIDO acima.
+5. Sempre que fizer sentido, envie o link do Cardápio Digital (${ctx.publicUrl}) para o cliente finalizar.
+6. Sempre inclua ao final de forma sutil: "💡 _Digite *menu* para ver as opções._"
+7. Se o cliente demonstrar insatisfação grave (pedido errado, derretido, atraso excessivo), peça desculpas sinceras, diga que acionou o gerente e finalize com o código: [ACTION:CALL_HUMAN].
         `.trim();
 
+        // Constrói histórico de mensagens anteriores para manter a continuidade
+        const historyList = this.getHistory(phone);
+        const contents = [
+          ...historyList.map(h => ({
+            role: h.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: h.text }]
+          })),
+          {
+            role: 'user',
+            parts: [{ text: `Cliente (${customerName || 'Cliente'}, Tel: ${phone}): ${cleanText}` }]
+          }
+        ];
+
+        this.stats.aiGenerations++;
         const response = await this.client.models.generateContent({
           model: 'gemini-2.0-flash',
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: `Cliente (${customerName || 'Cliente'}, Tel: ${phone}): ${cleanText}` }]
-            }
-          ],
+          contents,
           config: {
             systemInstruction: { parts: [{ text: systemInstruction }] },
             temperature: 0.7,
@@ -164,6 +289,9 @@ REGRAS DE CONDUTA E ESTILO:
         const needsHuman = replyText.includes('[ACTION:CALL_HUMAN]');
         const cleanReply = replyText.replace(/\[ACTION:CALL_HUMAN\]/g, '').trim();
 
+        this.saveHistory(phone, 'user', cleanText);
+        this.saveHistory(phone, 'assistant', cleanReply);
+
         return {
           reply: cleanReply,
           needsHumanTakeover: needsHuman
@@ -173,45 +301,48 @@ REGRAS DE CONDUTA E ESTILO:
       }
     }
 
-    // 3. Fallback Inteligente Local (Regras estruturadas sem custo de API)
-    return this.fallbackSmartRuleEngine(cleanText, ctx, customerName);
+    // 5. MOTOR INTELIGENTE LOCAL (CONTINGÊNCIA SEM CUSTO DE API)
+    const result = this.fallbackSmartRuleEngine(cleanText, ctx, customerName);
+    this.saveHistory(phone, 'user', cleanText);
+    this.saveHistory(phone, 'assistant', result.reply);
+    return result;
   }
 
   /**
-   * Motor inteligente de contingência (quando a chave de IA não está preenchida ou há instabilidade de rede)
+   * Motor inteligente local de contingência
    */
   fallbackSmartRuleEngine(text, ctx, customerName) {
     const t = text.toLowerCase();
     const nameStr = customerName ? ` ${customerName}` : '';
 
-    // Saudação / Cardápio
-    if (t.includes('oi') || t.includes('ola') || t.includes('olá') || t.includes('boa noite') || t.includes('boa tarde') || t.includes('cardapio') || t.includes('cardápio') || t.includes('menu')) {
+    // Opção 1 ou Rastreio de Pedido
+    if (t === '1' || t.includes('pedido') || t.includes('rastrear') || t.includes('onde ta') || t.includes('cade') || t.includes('cadê') || t.includes('demorando')) {
       return {
-        reply: `Olá${nameStr}! 🍇 Bem-vindo(a) à *${ctx.storeName}*!\n\n${ctx.isOpen ? '🟢 *Estamos abertos e aceitando pedidos!*' : '🔴 *No momento estamos fechados.* ' + ctx.openingHours}\n\n📱 *Acesse nosso cardápio completo e monte seu copo:* \n👉 ${ctx.publicUrl}\n\nSe preferir, posso te ajudar com:\n1️⃣ Rastrear meu pedido\n2️⃣ Horários e endereço\n3️⃣ Ver promoções e combos\n4️⃣ Falar com um atendente`,
+        reply: `🛵 *Status do seu Pedido:*\n\n${ctx.orderStatusText}\n\n📱 Acompanhe o pedido ou monte um novo copo:\n👉 ${ctx.publicUrl}\n\n💡 _Digite *menu* para voltar._`,
         needsHumanTakeover: false
       };
     }
 
-    // Rastreio de Pedido
-    if (t.includes('pedido') || t.includes('rastrear') || t.includes('onde ta') || t.includes('cade') || t.includes('cadê') || t.includes('demorando') || t === '1') {
+    // Opção 2 ou Produtos / Preços
+    if (t === '2' || t.includes('preco') || t.includes('preço') || t.includes('quanto custa') || t.includes('sabores')) {
       return {
-        reply: `🛵 *Status da sua Entrega:*\n\n${ctx.orderStatusText}\n\nQualquer dúvida adicional ou alteração urgente, basta me avisar que chamo a gerência! ✨`,
+        reply: `🍧 *Destaques do nosso Cardápio:*\n\n${ctx.productsSummary.split('\n').slice(0, 4).join('\n')}\n\n📱 *Confira todos os tamanhos, adicionais e combos no cardápio digital:*\n👉 ${ctx.publicUrl}\n\n💡 _Digite *menu* para voltar._`,
         needsHumanTakeover: false
       };
     }
 
-    // Horários / Endereço
-    if (t.includes('horario') || t.includes('horário') || t.includes('onde fica') || t.includes('endereco') || t.includes('endereço') || t === '2') {
+    // Opção 3 ou Promoções / Cupons
+    if (t === '3' || t.includes('promo') || t.includes('combo') || t.includes('desconto') || t.includes('cupom')) {
       return {
-        reply: `📍 *Nossa Localização & Horários:*\n\n🏠 *Endereço:* ${ctx.address}\n🕒 *Horário:* ${ctx.openingHours}\n\n📱 Peça direto pelo delivery: ${ctx.publicUrl}`,
+        reply: `🎉 *Promoções & Cupons Ativos:*\n\n🎟️ *Cupons Disponíveis:* ${ctx.couponList}\n\n💥 Temos combos especiais para casal e família com descontos imperdíveis!\n👉 Acesse: ${ctx.publicUrl}\n\n💡 _Digite *menu* para voltar._`,
         needsHumanTakeover: false
       };
     }
 
-    // Promoções e Combos
-    if (t.includes('promo') || t.includes('combo') || t.includes('desconto') || t.includes('cupom') || t === '3') {
+    // Opção 4 ou Horários / Endereço
+    if (t === '4' || t.includes('horario') || t.includes('horário') || t.includes('onde fica') || t.includes('endereco') || t.includes('endereço')) {
       return {
-        reply: `🎉 *Promoções & Cupons Ativos:*\n\n🎟️ *Cupons Disponíveis:* ${ctx.couponList}\n\n💥 Temos combos especiais com preços promocionais para casal e família!\n👉 Confira todos no cardápio digital: ${ctx.publicUrl}`,
+        reply: `📍 *Nossa Localização & Horários:*\n\n🏠 *Endereço:* ${ctx.address}\n🕒 *Horário:* ${ctx.openingHours}\n\n📱 Peça online pelo delivery: ${ctx.publicUrl}\n\n💡 _Digite *menu* para voltar._`,
         needsHumanTakeover: false
       };
     }
@@ -219,16 +350,57 @@ REGRAS DE CONDUTA E ESTILO:
     // Reclamação ou problema
     if (t.includes('errado') || t.includes('derretido') || t.includes('faltou') || t.includes('reclamar') || t.includes('ruim') || t.includes('cancelar')) {
       return {
-        reply: `Sinto muito pelo ocorrido${nameStr}! 😔 Nós levamos a qualidade muito a sério. Já notifiquei o responsável no painel da loja e alguém vai assumir este chat agora mesmo para resolver isso para você!`,
+        reply: `Sinto muito pelo ocorrido${nameStr}! Peço sinceras desculpas pelo transtorno. 😔 Nós levamos a qualidade do seu açaí muito a sério. Já notifiquei a gerência e o responsável da loja no painel e alguém da nossa equipe vai assumir este chat agora mesmo para te ajudar!`,
         needsHumanTakeover: true
       };
     }
 
-    // Resposta padrão amigável direcionando ao cardápio
+    // Resposta padrão simpática
     return {
-      reply: `Oi${nameStr}! 🍇 Para fazer seu pedido e escolher seus acompanhamentos e coberturas favoritas, acesse nosso cardápio online:\n👉 ${ctx.publicUrl}\n\nSe precisar de ajuda com um pedido em andamento ou quiser falar com um atendente humano, é só me responder aqui!`,
+      reply: `Oi${nameStr}! 🍇 Como posso te ajudar hoje?\n\n📱 *Para ver o cardápio e fazer seu pedido, acesse:* \n👉 ${ctx.publicUrl}\n\n💡 _Digite *menu* para ver todas as opções disponíveis!_`,
       needsHumanTakeover: false
     };
+  }
+
+  /**
+   * Gera texto promocional semanal persuasivo com IA para disparo aos clientes
+   */
+  async generateWeeklyPromotionText({ productName = '', discount = '', couponCode = '' } = {}) {
+    const ctx = this.buildLiveContext();
+    const publicUrl = ctx.publicUrl;
+
+    if (this.client && this.apiKey) {
+      try {
+        const prompt = `
+Crie uma mensagem promocional curta, divertida e altamente persuasiva para envio no WhatsApp da "Explosão Açaí".
+Detalhes da oferta:
+- Produto em Destaque: ${productName || 'Nossos Combos e Copos Especiais'}
+- Cupom / Desconto: ${couponCode ? `Cupom ${couponCode}` : (discount || 'Desconto exclusivo')}
+- Link da loja: ${publicUrl}
+
+Regras:
+1. Comece com uma saudação calorosa e um gancho irresistível sobre o calor ou vontade de açaí.
+2. Use emojis típicos (🍇, 🍧, 💥, 🛵).
+3. Mantenha no máximo 5 a 6 linhas para caber perfeitamente na tela do celular.
+4. Inclua chamada para ação com o link.
+5. Termine com nota legal: "(Caso não queira mais receber nossas ofertas, digite 'sair')".
+        `.trim();
+
+        const response = await this.client.models.generateContent({
+          model: 'gemini-2.0-flash',
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          config: { temperature: 0.8, maxOutputTokens: 350 }
+        });
+
+        return response.text || '';
+      } catch (e) {}
+    }
+
+    // Fallback padrão se Gemini não estiver configurado
+    const itemStr = productName ? `o delicioso *${productName}*` : 'nossos melhores copos e combos';
+    const couponStr = couponCode ? `Use o cupom *${couponCode}* e aproveite!` : 'Aproveite nossa promoção especial!';
+
+    return `Oi! 🍇 Passando para adoçar sua semana com a *Explosão Açaí*! 💥\n\nQue tal se refrescar hoje com ${itemStr}? ${couponStr} 🍧\n\n🛵 Peça agora com entrega rápida:\n👉 ${publicUrl}\n\n_(Caso não queira mais receber novidades da loja, basta responder 'sair')_`;
   }
 }
 

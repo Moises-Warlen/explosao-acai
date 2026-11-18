@@ -102,6 +102,65 @@ class BotController {
       return res.status(500).json({ ok: false, error: err.message });
     }
   }
+
+  getCampaignInfo(req, res) {
+    try {
+      const eligible = whatsAppBotService.getEligibleCustomers();
+      const settings = whatsAppBotService.getCampaignSettings();
+      return res.json({
+        ok: true,
+        eligibleCount: eligible.length,
+        optOutCount: whatsAppBotService.optOutPhones.size,
+        campaignInProgress: whatsAppBotService.campaignInProgress,
+        settings
+      });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  }
+
+  async previewCampaign(req, res) {
+    try {
+      const { productName, discount, couponCode } = req.body || {};
+      const message = await geminiAssistantService.generateWeeklyPromotionText({
+        productName,
+        discount,
+        couponCode
+      });
+      return res.json({ ok: true, message });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  }
+
+  async sendCampaign(req, res) {
+    try {
+      const { message, productName, couponCode, testPhone, dryRun } = req.body || {};
+      const result = await whatsAppBotService.sendWeeklyPromotionCampaign({
+        message,
+        productName,
+        couponCode,
+        testPhone,
+        dryRun: Boolean(dryRun)
+      });
+      return res.json({ ok: true, ...result });
+    } catch (err) {
+      return res.status(400).json({ ok: false, error: err.message });
+    }
+  }
+
+  saveCampaignSettings(req, res) {
+    try {
+      const updated = whatsAppBotService.updateCampaignSettings(req.body);
+      return res.json({
+        ok: true,
+        message: 'Configurações de disparo semanal atualizadas com sucesso!',
+        settings: updated
+      });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  }
 }
 
 export const botController = new BotController();
