@@ -1,4 +1,5 @@
 import { orderService } from '../../application/services/OrderService.js';
+import { whatsAppBotService } from '../../infrastructure/notifications/WhatsAppBotService.js';
 import {
   isValidAdminToken,
   getAdminTokenFromRequest,
@@ -124,6 +125,11 @@ export class OrderController {
       const { status, reason, motoboyName } = req.body || {};
       if (!status) return res.status(400).json({ ok: false, error: 'Status é obrigatório.' });
       const order = orderService.updateOrderStatus(req.params.id, status, reason, motoboyName);
+      if (status === 'preparing') {
+        whatsAppBotService.sendOrderStatusNotification(order, 'in_preparation').catch(() => {});
+      } else if (status === 'out_for_delivery') {
+        whatsAppBotService.sendOrderStatusNotification(order, 'out_for_delivery').catch(() => {});
+      }
       return res.json({ ok: true, order });
     } catch (err) {
       return res.status(400).json({ ok: false, error: err.message });
@@ -154,6 +160,7 @@ export class OrderController {
     try {
       const { motoboyName } = req.body || {};
       const order = orderService.confirmDeliveryAndPayment(req.params.id, motoboyName);
+      whatsAppBotService.sendOrderStatusNotification(order, 'delivered').catch(() => {});
       return res.json({ ok: true, order });
     } catch (err) {
       return res.status(400).json({ ok: false, error: err.message });

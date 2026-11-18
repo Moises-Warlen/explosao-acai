@@ -12,6 +12,7 @@ import { printerController } from '../controllers/PrinterController.js';
 import { chatController } from '../controllers/ChatController.js';
 import { webhookController } from '../controllers/WebhookController.js';
 import { reportController } from '../controllers/ReportController.js';
+import { botController } from '../controllers/BotController.js';
 import {
   adminAuthMiddleware,
   motoboyOrAdminAuthMiddleware,
@@ -104,6 +105,15 @@ router.put('/chat/customer-name', adminAuthMiddleware, (req, res) => chatControl
 router.post('/webhooks/mercadopago', (req, res) => webhookController.handleMercadoPago(req, res));
 router.get('/webhooks/mercadopago', (req, res) => webhookController.handleMercadoPago(req, res));
 router.post('/test/simulate-payment/:orderId', adminAuthMiddleware, (req, res) => webhookController.simulatePaymentApproval(req, res));
+
+// ================= BOT WHATSAPP & IA =================
+router.get('/bot/status', adminAuthMiddleware, (req, res) => botController.getStatus(req, res));
+router.post('/bot/connect', adminAuthMiddleware, (req, res) => botController.connect(req, res));
+router.post('/bot/disconnect', adminAuthMiddleware, (req, res) => botController.disconnect(req, res));
+router.post('/bot/toggle-ai', adminAuthMiddleware, (req, res) => botController.toggleAI(req, res));
+router.post('/bot/set-gemini-key', adminAuthMiddleware, (req, res) => botController.setGeminiKey(req, res));
+router.post('/bot/release-human/:phone', adminAuthMiddleware, (req, res) => botController.releaseHuman(req, res));
+router.post('/bot/test-message', adminAuthMiddleware, (req, res) => botController.sendTestMessage(req, res));
 
 // ================= AUTENTICAÇÃO DO ADMIN =================
 router.post('/admin/auth', (req, res) => {

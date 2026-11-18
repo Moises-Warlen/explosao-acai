@@ -369,6 +369,16 @@ function initWebSocket() {
           await loadAccompaniments();
           await loadStoreStatus();
         }
+        if (data.type === 'BOT_STATUS_CHANGED' || data.event === 'BOT_STATUS_CHANGED') {
+          if (typeof window.handleBotStatusEvent === 'function') {
+            window.handleBotStatusEvent(data.payload);
+          }
+        }
+        if (data.type === 'HUMAN_TAKEOVER_REQUESTED' || data.event === 'HUMAN_TAKEOVER_REQUESTED') {
+          playNotificationChime();
+          adminToast(`🚨 Cliente ${data.payload.customerName || data.payload.phone} solicitou atendente humano no WhatsApp!`, 'warning');
+          loadChatConversations();
+        }
       } catch (e) {}
     };
     WS.onclose = () => setTimeout(initWebSocket, 4000);
@@ -417,6 +427,10 @@ function bindNavigation() {
           const inp = $('#admin-chat-input');
           if (inp) inp.focus();
         });
+      }
+
+      if (tab.dataset.tab === 'tab-bot') {
+        loadWhatsAppBotStatus();
       }
     });
   });
@@ -6780,3 +6794,257 @@ window.addEventListener('resize', () => {
     }
   }
 });
+
+// ==================== BOT WHATSAPP & INTELIGÊNCIA ARTIFICIAL ====================
+let BOT_STATUS_POLL_INTERVAL = null;
+
+window.handleBotStatusEvent = function(payload) {
+  if (payload) {
+    updateBotUI(payload);
+  }
+};
+
+window.loadWhatsAppBotStatus = async function(isManualRefresh = false) {
+  try {
+    const res = await fetch(`${API_URL}/bot/status`, { headers: authHeaders() });
+    const data = await res.json();
+    if (data.ok) {
+      updateBotUI(data);
+      if (isManualRefresh) {
+        adminToast('Status do bot atualizado com sucesso!', 'info');
+      }
+    }
+  } catch (err) {
+    console.warn('Erro ao carregar status do bot:', err);
+  }
+};
+
+function updateBotUI(data) {
+  const badge = $('#bot-header-status-badge');
+  const statusText = $('#bot-status-text');
+  const qrImg = $('#bot-qr-image');
+  const qrPlaceholder = $('#bot-qr-placeholder');
+  const connInfo = $('#bot-connected-info');
+  const connPhone = $('#bot-connected-phone');
+  const btnConnect = $('#btn-bot-connect');
+  const btnDisconnect = $('#btn-bot-disconnect');
+  const toggleAI = $('#bot-toggle-ai');
+  const geminiStatusTip = $('#bot-gemini-status-tip');
+
+  if (toggleAI) {
+    toggleAI.checked = Boolean(data.aiEnabled);
+  }
+
+  if (geminiStatusTip) {
+    if (data.hasGeminiKey) {
+      geminiStatusTip.innerHTML = '<span style="color:var(--green)">✓ Ativo com Google Gemini 2.0 Flash 🚀 (Modo Avançado com IA)</span>';
+    } else {
+      geminiStatusTip.innerHTML = '<span style="color:#60a5fa">ℹ️ Operando com Motor Inteligente de Contingência (Sem custos de API)</span>';
+    }
+  }
+
+  // Estatísticas
+  if (data.stats) {
+    if ($('#bot-stat-received')) $('#bot-stat-received').textContent = data.stats.messagesReceived || 0;
+    if ($('#bot-stat-ai')) $('#bot-stat-ai').textContent = data.stats.aiReplies || 0;
+    if ($('#bot-stat-sent')) $('#bot-stat-sent').textContent = data.stats.messagesSent || 0;
+    if ($('#bot-stat-human')) $('#bot-stat-human').textContent = data.stats.humanTransfers || 0;
+  }
+
+  // Estado da Conexão
+  if (data.status === 'connected') {
+    if (badge) {
+      badge.style.background = 'rgba(16,185,129,0.15)';
+      badge.style.color = '#10b981';
+      badge.style.border = '1px solid rgba(16,185,129,0.3)';
+    }
+    if (statusText) statusText.textContent = `Conectado (+${data.phone || ''})`;
+    if (connInfo) connInfo.style.display = 'block';
+    if (connPhone) connPhone.textContent = `+${data.phone || ''}`;
+
+    if (qrImg) qrImg.style.display = 'none';
+    if (qrPlaceholder) {
+      qrPlaceholder.style.display = 'block';
+      qrPlaceholder.innerHTML = '<div style="font-size:36px;margin-bottom:6px">🎉</div><b style="color:var(--green)">WhatsApp Conectado!</b><div style="font-size:11px;color:#666;margin-top:4px">O bot está ativo e atendendo clientes.</div>';
+    }
+    if (btnConnect) btnConnect.style.display = 'none';
+    if (btnDisconnect) btnDisconnect.style.display = 'inline-block';
+
+    if (BOT_STATUS_POLL_INTERVAL) {
+      clearInterval(BOT_STATUS_POLL_INTERVAL);
+      BOT_STATUS_POLL_INTERVAL = null;
+    }
+  } else if (data.status === 'qr_ready' && data.qrCode) {
+    if (badge) {
+      badge.style.background = 'rgba(234,179,8,0.15)';
+      badge.style.color = '#facc15';
+      badge.style.border = '1px solid rgba(234,179,8,0.3)';
+    }
+    if (statusText) statusText.textContent = 'Aguardando Leitura do QR Code';
+    if (connInfo) connInfo.style.display = 'none';
+
+    if (qrImg) {
+      qrImg.src = data.qrCode;
+      qrImg.style.display = 'block';
+    }
+    if (qrPlaceholder) qrPlaceholder.style.display = 'none';
+
+    if (btnConnect) btnConnect.style.display = 'none';
+    if (btnDisconnect) btnDisconnect.style.display = 'inline-block';
+  } else if (data.status === 'connecting') {
+    if (badge) {
+      badge.style.background = 'rgba(59,130,246,0.15)';
+      badge.style.color = '#60a5fa';
+      badge.style.border = '1px solid rgba(59,130,246,0.3)';
+    }
+    if (statusText) statusText.textContent = 'Iniciando Conexão...';
+    if (connInfo) connInfo.style.display = 'none';
+    if (qrImg) qrImg.style.display = 'none';
+    if (qrPlaceholder) {
+      qrPlaceholder.style.display = 'block';
+      qrPlaceholder.innerHTML = '<div style="font-size:32px;margin-bottom:6px">⏳</div>Carregando sessão do WhatsApp...';
+    }
+  } else {
+    // Desconectado
+    if (badge) {
+      badge.style.background = 'rgba(239,68,68,0.15)';
+      badge.style.color = '#ef4444';
+      badge.style.border = '1px solid rgba(239,68,68,0.3)';
+    }
+    if (statusText) statusText.textContent = 'Desconectado';
+    if (connInfo) connInfo.style.display = 'none';
+    if (qrImg) qrImg.style.display = 'none';
+    if (qrPlaceholder) {
+      qrPlaceholder.style.display = 'block';
+      qrPlaceholder.innerHTML = '<div style="font-size:32px;margin-bottom:6px">📲</div>Clique em <b>Conectar WhatsApp</b> para gerar o QR Code.';
+    }
+    if (btnConnect) btnConnect.style.display = 'inline-block';
+    if (btnDisconnect) btnDisconnect.style.display = 'none';
+  }
+}
+
+window.connectWhatsAppBot = async function() {
+  const btn = $('#btn-bot-connect');
+  if (btn) btn.disabled = true;
+  adminToast('Iniciando WhatsApp... O QR Code aparecerá na tela em instantes.', 'info');
+
+  try {
+    const res = await fetch(`${API_URL}/bot/connect`, {
+      method: 'POST',
+      headers: authHeaders()
+    });
+    const data = await res.json();
+    if (data.ok) {
+      updateBotUI(data);
+      if (!BOT_STATUS_POLL_INTERVAL) {
+        BOT_STATUS_POLL_INTERVAL = setInterval(() => {
+          loadWhatsAppBotStatus();
+        }, 2500);
+      }
+    } else {
+      adminToast(data.error || 'Erro ao conectar.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Erro de comunicação ao iniciar WhatsApp.', 'danger');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+};
+
+window.disconnectWhatsAppBot = async function() {
+  if (!confirm('Deseja realmente desconectar o WhatsApp do bot?')) return;
+
+  try {
+    const res = await fetch(`${API_URL}/bot/disconnect`, {
+      method: 'POST',
+      headers: authHeaders()
+    });
+    const data = await res.json();
+    if (data.ok) {
+      updateBotUI(data);
+      adminToast('WhatsApp desconectado.', 'info');
+      if (BOT_STATUS_POLL_INTERVAL) {
+        clearInterval(BOT_STATUS_POLL_INTERVAL);
+        BOT_STATUS_POLL_INTERVAL = null;
+      }
+    } else {
+      adminToast(data.error || 'Erro ao desconectar.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Erro ao desconectar WhatsApp.', 'danger');
+  }
+};
+
+window.refreshWhatsAppBotStatus = function() {
+  loadWhatsAppBotStatus(true);
+};
+
+window.toggleWhatsAppAI = async function(enabled) {
+  try {
+    const res = await fetch(`${API_URL}/bot/toggle-ai`, {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      adminToast(data.message, data.aiEnabled ? 'success' : 'info');
+    }
+  } catch (err) {
+    adminToast('Erro ao alterar status da IA.', 'danger');
+  }
+};
+
+window.saveGeminiApiKey = async function() {
+  const input = $('#bot-gemini-key-input');
+  const apiKey = input ? input.value.trim() : '';
+
+  try {
+    const res = await fetch(`${API_URL}/bot/set-gemini-key`, {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ apiKey })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      adminToast(data.message, 'success');
+      loadWhatsAppBotStatus();
+      if (input) input.value = '';
+    } else {
+      adminToast(data.error || 'Erro ao salvar chave.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Erro de comunicação.', 'danger');
+  }
+};
+
+window.sendTestWhatsAppMessage = async function() {
+  const phoneInput = $('#bot-test-phone');
+  const msgInput = $('#bot-test-message');
+
+  const phone = phoneInput ? phoneInput.value.trim() : '';
+  const text = msgInput ? msgInput.value.trim() : '';
+
+  if (!phone || !text) {
+    return adminToast('Preencha o telefone e a mensagem de teste.', 'warning');
+  }
+
+  try {
+    adminToast('Enviando mensagem de teste...', 'info');
+    const res = await fetch(`${API_URL}/bot/test-message`, {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, text })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      adminToast('✓ Mensagem enviada com sucesso no WhatsApp!', 'success');
+      loadWhatsAppBotStatus();
+    } else {
+      adminToast(data.error || 'Erro ao enviar mensagem.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Falha ao enviar mensagem de teste.', 'danger');
+  }
+};
+

@@ -2,6 +2,8 @@ node_modules/
 .env
 data/database.json
 data/database.json.tmp
+data/baileys_auth/
+auth_info_baileys/
 *.log
 .DS_Store
 backups/
