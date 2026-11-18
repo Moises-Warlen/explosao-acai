@@ -49,6 +49,8 @@ app.use(helmet({
         "https:",
         "http:",
         "https://*.tile.openstreetmap.org",
+        "https://*.tile.openstreetmap.fr",
+        "https://*.basemaps.cartocdn.com",
         "https://unpkg.com"
       ],
       connectSrc: [
@@ -61,7 +63,9 @@ app.use(helmet({
         "https://*.mercadopago.com",
         "https://photon.komoot.io",
         "https://router.project-osrm.org",
-        "https://viacep.com.br"
+        "https://viacep.com.br",
+        "https://*.tile.openstreetmap.fr",
+        "https://*.basemaps.cartocdn.com"
       ],
       frameSrc: [
         "'self'",
@@ -69,7 +73,8 @@ app.use(helmet({
       ]
     }
   },
-  crossOriginEmbedderPolicy: false
+  crossOriginEmbedderPolicy: false,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
 }));
 
 // 2. Política Restrita de CORS (cardapioexplosaoacai.com.br + localhost)

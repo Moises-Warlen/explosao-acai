@@ -1945,7 +1945,10 @@ window.copyMotoboyLink = function(orderId) {
   const ord = ORDERS.find(o => o.id === orderId);
   const orderNo = ord ? ord.orderNo : '';
   const customerName = ord ? ord.customer?.name : '';
-  const link = `${location.origin}/motoboy.html?orderId=${orderId}&orderNo=${encodeURIComponent(orderNo)}&cliente=${encodeURIComponent(customerName)}`;
+  const publicOrigin = (typeof window !== 'undefined' && window.location && window.location.origin && !window.location.origin.includes('localhost') && !window.location.origin.includes('127.0.0.1'))
+    ? window.location.origin
+    : 'https://cardapioexplosaoacai.com.br';
+  const link = `${publicOrigin}/motoboy.html?orderId=${orderId}&orderNo=${encodeURIComponent(orderNo)}&cliente=${encodeURIComponent(customerName)}`;
   const textToCopy = `🛵 *ENTREGA EXPLOSÃO AÇAÍ*\n📦 *Pedido:* #${orderNo}\n👤 *Cliente:* ${customerName}\n🔗 *Link da Entrega & Rota:* ${link}`;
 
   if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -5322,9 +5325,10 @@ function initLeafletDeliveryMap() {
   if (!DELIVERY_MAP) {
     DELIVERY_MAP = L.map('delivery-leaflet-map').setView([STORE_COORDINATES.lat, STORE_COORDINATES.lon], 13);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap'
+    // Camada OpenStreetMap de alta resolução e disponibilidade garantida (sem bloqueio 403 e sem exigir chave de API)
+    L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+      maxZoom: 20,
+      attribution: '&copy; OpenStreetMap France | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(DELIVERY_MAP);
 
     DELIVERY_MARKERS_LAYER = L.layerGroup().addTo(DELIVERY_MAP);
@@ -5753,7 +5757,9 @@ window.updateSelectedMapRoute = function() {
 window.generateRouteWhatsAppText = function(selected) {
   if (!selected || selected.length === 0) return '';
 
-  const originUrl = window.location.origin;
+  const originUrl = (typeof window !== 'undefined' && window.location && window.location.origin && !window.location.origin.includes('localhost') && !window.location.origin.includes('127.0.0.1'))
+    ? window.location.origin
+    : 'https://cardapioexplosaoacai.com.br';
   const now = new Date();
   const dateStr = now.toLocaleDateString('pt-BR');
   const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
