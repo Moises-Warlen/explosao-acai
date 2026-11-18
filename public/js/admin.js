@@ -5550,11 +5550,9 @@ window.generateRouteWhatsAppText = function(selected) {
   let text = `*${routeLabel.toUpperCase()} - EXPLOSÃO AÇAÍ*\n`;
   text += `Data: ${dateStr} às ${timeStr} · Total: ${selected.length} entrega${selected.length > 1 ? 's' : ''}\n\n`;
 
-  const waypoints = [];
   selected.forEach((order, idx) => {
     const del = order.delivery || {};
     const fullAddress = `${del.street || 'Rua'}, ${del.number || 'S/N'}${del.complement ? ' - ' + del.complement : ''}, ${del.bairro || 'Bairro'}`;
-    waypoints.push(`${fullAddress}, Franca - SP`);
 
     const isMoney = order.payment?.method === 'Dinheiro';
     const isDeliveryPayment = order.payment?.timing === 'delivery' || isMoney;
@@ -5581,14 +5579,6 @@ window.generateRouteWhatsAppText = function(selected) {
     text += `Pagamento: ${payStr}\n`;
     text += `Link da Entrega: ${originUrl}/motoboy?id=${order.id}\n\n`;
   });
-
-  if (waypoints.length > 0) {
-    const lastStop = waypoints[waypoints.length - 1];
-    const intermediate = waypoints.slice(0, waypoints.length - 1);
-    const googleRouteUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(STORE_COORDINATES.address)}&destination=${encodeURIComponent(lastStop)}${intermediate.length > 0 ? `&waypoints=${encodeURIComponent(intermediate.join('|'))}` : ''}&travelmode=driving`;
-    text += `------------------------------------\n`;
-    text += `*GPS ROTA COMPLETA (GOOGLE MAPS):*\n${googleRouteUrl}\n`;
-  }
 
   return text;
 };
