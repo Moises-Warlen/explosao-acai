@@ -686,7 +686,7 @@ const KANBAN_PAGE = {
   returned: 1,
   cancelled: 1
 };
-const KANBAN_PER_PAGE = 50;
+const KANBAN_PER_PAGE = 5;
 
 window.highlightOrderCard = function(orderId) {
   if (!orderId) return;
@@ -1189,7 +1189,7 @@ function renderKanbanColumn(colKey, list, containerId, paginationId, headerId, t
   if (!container) return;
 
   const q = ($('#kanban-search')?.value || '').trim();
-  const effectivePerPage = q ? 25 : KANBAN_PER_PAGE;
+  const effectivePerPage = KANBAN_PER_PAGE;
   const total = list.length;
   const totalPages = Math.max(1, Math.ceil(total / effectivePerPage));
   if (KANBAN_PAGE[colKey] > totalPages) KANBAN_PAGE[colKey] = totalPages;
@@ -4232,10 +4232,24 @@ function renderExtrasTable() {
 
     return `
       <div class="fruit-item-card extra-item-card ${isActive ? '' : 'paused'}" id="extra-card-${e.id}">
-        <div class="fruit-card-top" style="display:flex;flex-direction:column;align-items:flex-start;gap:4px">
-          <h4 class="fruit-card-name" title="${esc(e.name)}">${esc(e.name)}</h4>
-          <div class="extra-card-tags" style="display:flex;gap:6px;flex-wrap:wrap">
-            ${vinculos.join(' ')}
+        <div class="fruit-card-header-row">
+          <div class="fruit-card-top" style="display:flex;flex-direction:column;align-items:flex-start;gap:4px">
+            <h4 class="fruit-card-name" title="${esc(e.name)}">${esc(e.name)}</h4>
+            <div class="extra-card-tags" style="display:flex;gap:6px;flex-wrap:wrap">
+              ${vinculos.join(' ')}
+            </div>
+          </div>
+
+          <div class="fruit-card-actions extra-card-actions">
+            <button type="button" class="fruit-btn-action fruit-btn-edit" onclick="openEditExtraModal('${e.id}')" title="Editar adicional">
+              <span class="btn-act-icon">✏️ </span>Editar
+            </button>
+            <button type="button" class="fruit-btn-action fruit-btn-delete" onclick="deleteExtra('${e.id}')" title="Excluir adicional">
+              <span class="btn-act-icon">🗑️ </span>Excluir
+            </button>
+            <button type="button" class="fruit-btn-action fruit-btn-status ${isActive ? 'active' : 'paused'}" onclick="toggleExtraActive('${e.id}')" title="Alternar status (Ativo/Pausado)">
+              ${isActive ? '● Ativo' : '⏸ Pausado'}
+            </button>
           </div>
         </div>
 
@@ -4262,18 +4276,6 @@ function renderExtrasTable() {
             </button>
           </div>
         ` : ''}
-
-        <div class="fruit-card-actions extra-card-actions">
-          <button type="button" class="fruit-btn-action fruit-btn-status ${isActive ? 'active' : 'paused'}" onclick="toggleExtraActive('${e.id}')" title="Alternar status (Ativo/Pausado)">
-            ${isActive ? '● Ativo' : '⏸ Pausado'}
-          </button>
-          <button type="button" class="fruit-btn-action fruit-btn-edit" onclick="openEditExtraModal('${e.id}')" title="Editar adicional">
-            Editar
-          </button>
-          <button type="button" class="fruit-btn-action fruit-btn-delete" onclick="deleteExtra('${e.id}')" title="Excluir adicional">
-            Excluir
-          </button>
-        </div>
       </div>
     `;
   }).join('');
@@ -4453,9 +4455,23 @@ function renderFruitsTable() {
 
     return `
       <div class="fruit-item-card extra-item-card ${isActive ? '' : 'paused'}" id="fruit-card-${f.id}">
-        <div class="fruit-card-top">
-          <h4 class="fruit-card-name" title="${esc(f.name)}">${esc(f.name)}</h4>
-          <span class="fruit-badge-tag">Fruta Adicional</span>
+        <div class="fruit-card-header-row">
+          <div class="fruit-card-top">
+            <h4 class="fruit-card-name" title="${esc(f.name)}">${esc(f.name)}</h4>
+            <span class="fruit-badge-tag">Fruta Adicional</span>
+          </div>
+
+          <div class="fruit-card-actions">
+            <button type="button" class="fruit-btn-action fruit-btn-edit" onclick="openEditFruitModal('${f.id}')" title="Editar fruta">
+              <span class="btn-act-icon">✏️ </span>Editar
+            </button>
+            <button type="button" class="fruit-btn-action fruit-btn-delete" onclick="deleteFruit('${f.id}')" title="Excluir fruta">
+              <span class="btn-act-icon">🗑️ </span>Excluir
+            </button>
+            <button type="button" class="fruit-btn-action fruit-btn-status ${isActive ? 'active' : 'paused'}" onclick="toggleFruitActive('${f.id}')" title="Alternar status (Ativa/Pausada)">
+              ${isActive ? '● Ativa' : '⏸ Pausada'}
+            </button>
+          </div>
         </div>
 
         <div class="fruit-card-pricing-block">
@@ -4471,18 +4487,6 @@ function renderFruitsTable() {
             <span class="fruit-pricing-label">Margem Bruta:</span>
             <span class="fruit-pricing-margin" style="color:${marginColor}">${margin >= 0 ? '+' : ''}${R(margin)} (${marginPercent}%)</span>
           </div>
-        </div>
-
-        <div class="fruit-card-actions">
-          <button type="button" class="fruit-btn-action fruit-btn-status ${isActive ? 'active' : 'paused'}" onclick="toggleFruitActive('${f.id}')" title="Alternar status (Ativa/Pausada)">
-            ${isActive ? '● Ativa' : '⏸ Pausada'}
-          </button>
-          <button type="button" class="fruit-btn-action fruit-btn-edit" onclick="openEditFruitModal('${f.id}')" title="Editar fruta">
-            Editar
-          </button>
-          <button type="button" class="fruit-btn-action fruit-btn-delete" onclick="deleteFruit('${f.id}')" title="Excluir fruta">
-            🗑️ Excluir
-          </button>
         </div>
       </div>
     `;
@@ -4606,22 +4610,67 @@ async function loadCoupons() {
 
 function renderCouponsList() {
   const tbody = $('#coupons-table-body');
-  if (!tbody) return;
+  const cardsList = $('#coupons-cards-list');
 
-  tbody.innerHTML = COUPONS.map(c => `
-    <tr>
-      <td><b style="color:var(--y)">${esc(c.code)}</b></td>
-      <td>${c.type === 'percent' ? `${c.value}%` : R(c.value)}</td>
-      <td>${R(c.minOrder)}</td>
-      <td>${c.uses} / ${c.maxUses || 'Ilimitado'}</td>
-      <td>${c.active ? '<span style="color:var(--green)">Ativo</span>' : '<span style="color:var(--danger)">Inativo</span>'}</td>
-      <td>
-        <button class="btn-sm btn-print" onclick="sendCouponViaChat('${c.code}', '${c.value}', '${c.type}')">Enviar no Chat</button>
-        <button class="btn-sm btn-secondary" onclick="copyCouponText('${c.code}', '${c.value}', '${c.type}')">Copiar Texto</button>
-        <button class="btn-sm btn-danger" onclick="deleteCoupon('${c.id}')">Excluir</button>
-      </td>
-    </tr>
-  `).join('');
+  if (tbody) {
+    tbody.innerHTML = COUPONS.map(c => `
+      <tr>
+        <td><b style="color:var(--y)">${esc(c.code)}</b></td>
+        <td>${c.type === 'percent' ? `${c.value}%` : R(c.value)}</td>
+        <td>${R(c.minOrder)}</td>
+        <td>${c.uses} / ${c.maxUses || 'Ilimitado'}</td>
+        <td>${c.active ? '<span style="color:var(--green)">Ativo</span>' : '<span style="color:var(--danger)">Inativo</span>'}</td>
+        <td>
+          <button class="btn-sm btn-print" onclick="sendCouponViaChat('${c.code}', '${c.value}', '${c.type}')">Enviar no Chat</button>
+          <button class="btn-sm btn-secondary" onclick="copyCouponText('${c.code}', '${c.value}', '${c.type}')">Copiar Texto</button>
+          <button class="btn-sm btn-danger" onclick="deleteCoupon('${c.id}')">Excluir</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  if (cardsList) {
+    if (COUPONS.length === 0) {
+      cardsList.innerHTML = `<div style="text-align:center;padding:24px;color:var(--mut);font-size:13px">Nenhum cupom cadastrado.</div>`;
+    } else {
+      cardsList.innerHTML = COUPONS.map(c => `
+        <div class="coupon-mobile-card" id="coupon-card-${c.id}">
+          <div class="coupon-card-top">
+            <strong class="coupon-card-code">${esc(c.code)}</strong>
+            <span class="coupon-card-badge ${c.active ? 'active' : 'inactive'}">
+              ${c.active ? 'Ativo' : 'Inativo'}
+            </span>
+          </div>
+          <div class="coupon-card-details">
+            <div class="coupon-detail-col">
+              <span class="coupon-detail-label">Desconto:</span>
+              <span class="coupon-detail-val">${c.type === 'percent' ? `${c.value}%` : R(c.value)}</span>
+            </div>
+            <div class="coupon-detail-col">
+              <span class="coupon-detail-label">Pedido Mínimo:</span>
+              <span class="coupon-detail-val">${R(c.minOrder)}</span>
+            </div>
+            <div class="coupon-detail-col">
+              <span class="coupon-detail-label">Usos Realizados:</span>
+              <span class="coupon-detail-val">${c.uses} / ${c.maxUses != null ? c.maxUses : '0'}</span>
+            </div>
+          </div>
+          <div class="coupon-card-actions">
+            <button type="button" class="btn-coupon-action btn-coupon-chat" onclick="sendCouponViaChat('${c.code}', '${c.value}', '${c.type}')">
+              Enviar no Chat
+            </button>
+            <button type="button" class="btn-coupon-action btn-coupon-copy" onclick="copyCouponText('${c.code}', '${c.value}', '${c.type}')">
+              Copiar Texto
+            </button>
+            <button type="button" class="btn-coupon-action btn-coupon-delete" onclick="deleteCoupon('${c.id}')">
+              <svg class="icon-trash" viewBox="0 0 24 24" width="13" height="13" fill="currentColor" style="vertical-align:-1px;margin-right:2px"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+              Excluir
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+  }
 }
 
 window.openNewCouponModal = function() {

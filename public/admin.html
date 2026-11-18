@@ -757,17 +757,18 @@
     <!-- ABA 7: CUPONS DE DESCONTO -->
     <div class="tab-pane" id="tab-coupons">
       <div class="admin-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
-          <div>
-            <h2 style="margin:0">Cupons de Desconto & Compartilhamento</h2>
-            <p style="color:var(--mut);font-size:13px;margin:4px 0 0">
-              Gere cupons e copie a mensagem formatada para enviar diretamente no Chat ou no WhatsApp do cliente.
-            </p>
+        <div class="coupons-header-block" style="margin-bottom:18px">
+          <div class="coupons-header-top-row" style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <h2 style="margin:0;font-size:1.35rem;font-weight:800;color:#fff;letter-spacing:-0.3px">Cupons de Desconto & Compartilhamento</h2>
+            <button type="button" class="btn-sm btn-next" onclick="openNewCouponModal()" style="padding:6px 14px;font-size:12px;font-weight:700;border-radius:8px;white-space:nowrap;flex-shrink:0">+ Criar Novo Cupom</button>
           </div>
-          <button class="btn-sm btn-next" onclick="openNewCouponModal()">+ Criar Novo Cupom</button>
+          <p style="color:var(--mut);font-size:12.5px;margin:6px 0 0;line-height:1.4">
+            Gere cupons e copie a mensagem formatada para enviar diretamente no Chat ou no WhatsApp do cliente.
+          </p>
         </div>
 
-        <div class="table-responsive">
+        <!-- Tabela Desktop -->
+        <div class="table-responsive coupons-desktop-table">
           <table>
             <thead>
               <tr>
@@ -782,6 +783,9 @@
             <tbody id="coupons-table-body"></tbody>
           </table>
         </div>
+
+        <!-- Cards Mobile (Empilhados Conforme Imagem 3) -->
+        <div id="coupons-cards-list" class="coupons-mobile-cards-wrap"></div>
       </div>
     </div>
 
