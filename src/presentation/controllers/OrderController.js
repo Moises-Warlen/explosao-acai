@@ -121,9 +121,19 @@ export class OrderController {
 
   async updateStatus(req, res) {
     try {
-      const { status, reason } = req.body;
+      const { status, reason, motoboyName } = req.body || {};
       if (!status) return res.status(400).json({ ok: false, error: 'Status é obrigatório.' });
-      const order = orderService.updateOrderStatus(req.params.id, status, reason);
+      const order = orderService.updateOrderStatus(req.params.id, status, reason, motoboyName);
+      return res.json({ ok: true, order });
+    } catch (err) {
+      return res.status(400).json({ ok: false, error: err.message });
+    }
+  }
+
+  async assignMotoboy(req, res) {
+    try {
+      const { motoboyName } = req.body || {};
+      const order = orderService.assignMotoboy(req.params.id, motoboyName);
       return res.json({ ok: true, order });
     } catch (err) {
       return res.status(400).json({ ok: false, error: err.message });
@@ -142,7 +152,8 @@ export class OrderController {
 
   async confirmDelivery(req, res) {
     try {
-      const order = orderService.confirmDeliveryAndPayment(req.params.id);
+      const { motoboyName } = req.body || {};
+      const order = orderService.confirmDeliveryAndPayment(req.params.id, motoboyName);
       return res.json({ ok: true, order });
     } catch (err) {
       return res.status(400).json({ ok: false, error: err.message });

@@ -28,6 +28,7 @@ router.post('/orders', (req, res) => orderController.create(req, res));
 router.get('/orders', (req, res) => orderController.getAll(req, res));
 router.get('/orders/:id', (req, res) => orderController.getById(req, res));
 router.patch('/orders/:id/status', adminAuthMiddleware, (req, res) => orderController.updateStatus(req, res));
+router.post('/orders/:id/assign-motoboy', adminAuthMiddleware, (req, res) => orderController.assignMotoboy(req, res));
 router.post('/orders/:id/confirm-delivery', motoboyOrAdminAuthMiddleware, (req, res) => orderController.confirmDelivery(req, res));
 router.post('/orders/:id/return', motoboyOrAdminAuthMiddleware, (req, res) => orderController.returnOrder(req, res));
 router.post('/orders/:id/print', adminAuthMiddleware, (req, res) => orderController.printTicket(req, res));
@@ -72,6 +73,7 @@ router.post('/upload', adminAuthMiddleware, upload.single('image'), (req, res) =
 
 // ================= RELATÓRIOS GERENCIAIS =================
 router.get('/reports/sales', adminAuthMiddleware, (req, res) => reportController.getSalesReport(req, res));
+router.get('/reports/deliveries', adminAuthMiddleware, (req, res) => reportController.getDeliveryReport(req, res));
 
 // ================= CUPONS DE DESCONTO =================
 router.post('/coupons/validate', (req, res) => couponController.validate(req, res));

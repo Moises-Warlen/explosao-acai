@@ -45,7 +45,7 @@ describe('Explosão Açaí - Testes das Novas Funcionalidades', () => {
           name: 'Clássico',
           size: 300,
           quantity: 1,
-          unitPrice: 19.90,
+          unitPrice: 21.90,
           accompaniments: ['Granola', 'Leite condensado', 'Ninho'],
           extras: []
         }
@@ -62,7 +62,7 @@ describe('Explosão Açaí - Testes das Novas Funcionalidades', () => {
     assert.strictEqual(res.status, 201);
     assert.strictEqual(data.ok, true);
     assert.strictEqual(data.order.delivery.freight, 0, 'O frete para <= 2km deve ser 0');
-    assert.strictEqual(data.order.total, 19.90, 'O total deve ser apenas o item, sem acréscimo de frete');
+    assert.strictEqual(data.order.total, 21.90, 'O total deve ser apenas o item, sem acréscimo de frete');
   });
 
   test('Frete Normal acima de 2 km: Pedido com km > 2 deve calcular frete padrão', async () => {

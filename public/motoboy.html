@@ -265,12 +265,50 @@
     </div>
   </div>
 
+  <!-- Modal de Identificação e PIN do Entregador (Sem alertas ou prompts nativos) -->
+  <div id="motoboy-pin-modal" class="modal-overlay">
+    <div class="modal-box">
+      <div style="font-size:44px;margin-bottom:8px">🛵🔑</div>
+      <h3 style="color:var(--y);font-size:19px;margin-bottom:4px">Acesso do Entregador</h3>
+      <p style="color:var(--tx);opacity:0.8;font-size:13px;line-height:1.45;margin-bottom:16px">
+        Identifique-se para registrar as entregas e o acerto de contas:
+      </p>
+
+      <div style="text-align:left;margin-bottom:12px">
+        <label style="font-size:12px;color:var(--mut);display:block;margin-bottom:4px;font-weight:600">Seu Nome / Apelido:</label>
+        <input type="text" id="motoboy-name-input" placeholder="Ex: Lucas, Tiago..." style="width:100%;padding:12px;border-radius:10px;background:var(--card);color:#fff;border:1px solid var(--ln);font-size:14px;box-sizing:border-box">
+      </div>
+
+      <div style="text-align:left;margin-bottom:14px">
+        <label style="font-size:12px;color:var(--mut);display:block;margin-bottom:4px;font-weight:600">PIN de Acesso:</label>
+        <input type="password" id="motoboy-pin-input" placeholder="Digite o PIN do motoboy" style="width:100%;padding:12px;border-radius:10px;background:var(--card);color:#fff;border:1px solid var(--ln);font-size:16px;text-align:center;letter-spacing:2px;box-sizing:border-box" onkeydown="if(event.key==='Enter') saveMotoboyPinFromModal()">
+      </div>
+
+      <div id="motoboy-pin-error" style="color:var(--danger);font-size:12px;margin-bottom:12px;display:none;background:rgba(239,68,68,0.12);padding:8px;border-radius:8px"></div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button id="btn-save-motoboy-pin" class="btn btn-confirm" style="width:100%;padding:13px;font-size:15px;justify-content:center" onclick="saveMotoboyPinFromModal()">
+          ✓ Entrar e Acessar Entregas
+        </button>
+        <button type="button" class="btn" style="background:rgba(255,255,255,0.08);color:#cbd5e1;font-size:13px" onclick="closeMotoboyPinModal()">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="container">
-    <div class="header">
-      <img src="imagens/Logo.webp?v=3" alt="Logo" onerror="this.style.display='none'">
-      <div>
-        <h1>EXPLOSÃO AÇAÍ</h1>
-        <small>Portal do Entregador · Conclusão Rápida</small>
+    <div class="header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <img src="imagens/Logo.webp?v=3" alt="Logo" onerror="this.style.display='none'">
+        <div>
+          <h1>EXPLOSÃO AÇAÍ</h1>
+          <small>Portal do Entregador · Conclusão Rápida</small>
+        </div>
+      </div>
+      <div id="motoboy-user-badge" style="display:none;align-items:center;gap:8px;background:rgba(255,255,255,0.08);padding:6px 12px;border-radius:20px;border:1px solid var(--ln);font-size:12px">
+        <span>🛵 <b id="motoboy-user-name" style="color:var(--y)">Entregador</b></span>
+        <button type="button" onclick="openMotoboyPinModal()" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:11px;text-decoration:underline;padding:0">Alterar</button>
       </div>
     </div>
 
@@ -684,21 +722,111 @@
     }
 
     function getMotoboyToken() {
-      let token = localStorage.getItem('motoboy_token');
-      if (!token) {
-        token = prompt('Digite o PIN / Chave de Acesso do Entregador (padrão: moto123):');
-        if (token) {
-          token = token.trim();
-          localStorage.setItem('motoboy_token', token);
+      return localStorage.getItem('motoboy_token') || '';
+    }
+
+    function getMotoboyName() {
+      return localStorage.getItem('motoboy_name') || 'Entregador';
+    }
+
+    function updateMotoboyBadge() {
+      const badge = document.getElementById('motoboy-user-badge');
+      const nameEl = document.getElementById('motoboy-user-name');
+      const savedName = localStorage.getItem('motoboy_name');
+      if (badge && nameEl) {
+        if (savedName) {
+          nameEl.textContent = savedName;
+          badge.style.display = 'flex';
+        } else {
+          badge.style.display = 'none';
         }
       }
-      return token || 'moto123';
+    }
+
+    function openMotoboyPinModal() {
+      const modal = document.getElementById('motoboy-pin-modal');
+      const nameInput = document.getElementById('motoboy-name-input');
+      const pinInput = document.getElementById('motoboy-pin-input');
+      const errEl = document.getElementById('motoboy-pin-error');
+      if (errEl) errEl.style.display = 'none';
+      if (nameInput) nameInput.value = localStorage.getItem('motoboy_name') || '';
+      if (pinInput) pinInput.value = localStorage.getItem('motoboy_token') || '';
+      if (modal) modal.style.display = 'flex';
+      setTimeout(() => {
+        if (nameInput && !nameInput.value) nameInput.focus();
+        else if (pinInput) pinInput.focus();
+      }, 100);
+    }
+
+    function closeMotoboyPinModal() {
+      const modal = document.getElementById('motoboy-pin-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    async function saveMotoboyPinFromModal() {
+      const nameInput = document.getElementById('motoboy-name-input');
+      const pinInput = document.getElementById('motoboy-pin-input');
+      const errEl = document.getElementById('motoboy-pin-error');
+      const btn = document.getElementById('btn-save-motoboy-pin');
+
+      const name = nameInput ? nameInput.value.trim() : '';
+      const pin = pinInput ? pinInput.value.trim() : '';
+
+      if (!pin) {
+        if (errEl) {
+          errEl.textContent = 'Por favor, digite o PIN de acesso do entregador.';
+          errEl.style.display = 'block';
+        }
+        return;
+      }
+
+      if (btn) btn.disabled = true;
+
+      try {
+        const res = await fetch(`${API_URL}/orders?motoboy=pending`, {
+          headers: {
+            'Content-Type': 'application/json',
+            'x-motoboy-token': pin
+          }
+        });
+
+        if (res.status === 401) {
+          if (errEl) {
+            errEl.textContent = 'PIN de acesso incorreto. Verifique com a loja.';
+            errEl.style.display = 'block';
+          }
+          if (btn) btn.disabled = false;
+          return;
+        }
+
+        localStorage.setItem('motoboy_token', pin);
+        if (name) {
+          localStorage.setItem('motoboy_name', name);
+        }
+        closeMotoboyPinModal();
+        updateMotoboyBadge();
+        showMotoboyToast('✓ Acesso confirmado com sucesso!', 2500);
+
+        if (orderId) {
+          loadOrderDetails();
+        } else {
+          loadActiveOrdersList();
+        }
+      } catch (err) {
+        localStorage.setItem('motoboy_token', pin);
+        if (name) localStorage.setItem('motoboy_name', name);
+        closeMotoboyPinModal();
+        updateMotoboyBadge();
+        if (orderId) loadOrderDetails(); else loadActiveOrdersList();
+      } finally {
+        if (btn) btn.disabled = false;
+      }
     }
 
     function motoboyHeaders(extra = {}) {
       return {
         'Content-Type': 'application/json',
-        'x-motoboy-token': getMotoboyToken(),
+        'x-motoboy-token': getMotoboyToken() || 'moto123',
         ...extra
       };
     }
@@ -710,17 +838,26 @@
       btn.textContent = 'Salvando no sistema...';
 
       try {
+        const motoboyName = localStorage.getItem('motoboy_name') || '';
         const res = await fetch(`${API_URL}/orders/${orderId}/confirm-delivery`, {
           method: 'POST',
-          headers: motoboyHeaders()
+          headers: motoboyHeaders(),
+          body: JSON.stringify({ motoboyName })
         });
         const data = await res.json();
         if (data.ok) {
           playSuccessChime();
           document.getElementById('order-details-box').style.display = 'none';
           document.getElementById('success-screen').style.display = 'block';
+          const successDesc = document.querySelector('#success-screen p');
+          if (successDesc) {
+            successDesc.textContent = `A loja já registrou a conclusão deste pedido${motoboyName ? ' pelo entregador ' + motoboyName : ''}. Bom trabalho! 🚀`;
+          }
         } else {
-          if (res.status === 401) localStorage.removeItem('motoboy_token');
+          if (res.status === 401) {
+            localStorage.removeItem('motoboy_token');
+            openMotoboyPinModal();
+          }
           showMotoboyToast(data.error || 'Erro ao confirmar entrega.');
           btn.disabled = false;
           btn.textContent = '✓ Confirmar Entrega e Recebimento';
@@ -742,7 +879,7 @@
         const data = await res.json();
         if (res.status === 401) {
           localStorage.removeItem('motoboy_token');
-          showMotoboyToast('Chave de acesso inválida.');
+          openMotoboyPinModal();
           return;
         }
         if (data.ok) {
@@ -773,6 +910,14 @@
         }
       } catch (e) {}
     }
+
+    // Inicialização da identificação do motoboy
+    window.addEventListener('DOMContentLoaded', () => {
+      updateMotoboyBadge();
+      if (!getMotoboyToken()) {
+        openMotoboyPinModal();
+      }
+    });
   </script>
 </body>
 </html>

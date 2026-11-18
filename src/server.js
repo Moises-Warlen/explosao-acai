@@ -161,7 +161,7 @@ app.use((req, res) => {
 wsHub.initialize(server);
 
 const PORT = process.env.PORT || 3000;
-const isRunningTests = process.env.npm_lifecycle_event === 'test' || process.argv.includes('--test') || process.env.NODE_ENV === 'test';
+const isRunningTests = process.env.NODE_ENV === 'test' || process.env.npm_lifecycle_event === 'test' || process.argv.some(a => a.toLowerCase().includes('test'));
 
 if (!isRunningTests) {
   server.listen(PORT, () => {

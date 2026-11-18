@@ -95,7 +95,7 @@ describe('Explosão Açaí — Automação do Histórico Diário e Regras de UI'
     assert.equal(reloaded.customer.name, 'Cliente Teste Histórico', 'Nome do cliente preservado');
     assert.equal(reloaded.items.length, 1, 'Itens preservados');
     assert.equal(reloaded.items[0].name, 'Clássico 500 ml', 'Produto preservado');
-    assert.equal(reloaded.total, 67.60, 'Valor preservado');
+    assert.equal(reloaded.total, 65.60, 'Valor preservado (recalculado com base no catálogo: 2x 32.80)');
     assert.ok(reloaded.deliveredAt, 'Data e horário preservados');
   });
 

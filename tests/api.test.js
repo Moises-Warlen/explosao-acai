@@ -95,9 +95,9 @@ describe('Explosão Açaí - Testes de Integração da API', () => {
     assert.ok(data.order.orderNo);
     assert.strictEqual(data.order.discount, 5.0);
 
-    // Subtotal (Ninho 500 ml 27,90 + Nutella 5,90) 33,80 - 5,00 + 5,00 frete = 33,80 total
-    // Troco para R$ 50,00: 50 - 33,80 = 16,20
-    assert.strictEqual(data.order.payment.trocoValue, 16.20);
+    // Subtotal recalculado do catálogo (Ninho 500 ml 30,90 + Nutella 5,90) = 36,80 - 5,00 + 5,00 frete = 36,80 total
+    // Troco para R$ 50,00: 50 - 36,80 = 13,20
+    assert.strictEqual(data.order.payment.trocoValue, 13.20);
   });
 
   test('Regra de Impressão Rígida: Bloqueia impressão de Pix pendente e libera após confirmação bancária', async () => {
@@ -264,6 +264,25 @@ describe('Explosão Açaí - Testes de Integração da API', () => {
     assert.strictEqual(printRes.status, 200);
     const printData = await printRes.json();
     assert.ok(printData.printJob.ticketText.includes('LEVAR MAQUININHA DE CARTÃO'));
+  });
+
+  test('Relatório de Entregas & Motoboys: Retorna métricas agregadas por período e motoqueiro', async () => {
+    const res = await fetch(`${baseUrl}/api/reports/deliveries?period=all&motoboy=all`, {
+      headers: {
+        'x-admin-token': TEST_ADMIN_PASSWORD
+      }
+    });
+    assert.strictEqual(res.status, 200);
+    const data = await res.json();
+    assert.strictEqual(data.ok, true);
+    assert.ok(data.report);
+    assert.ok(data.report.summary);
+    assert.ok(typeof data.report.summary.totalDeliveries === 'number');
+    assert.ok(typeof data.report.summary.totalKm === 'number');
+    assert.ok(typeof data.report.summary.totalFreight === 'number');
+    assert.ok(typeof data.report.summary.totalMoneyCollected === 'number');
+    assert.ok(Array.isArray(data.report.deliveries));
+    assert.ok(Array.isArray(data.report.availableMotoboys));
   });
 
 });

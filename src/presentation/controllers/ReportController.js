@@ -19,6 +19,21 @@ export class ReportController {
       return res.status(500).json({ ok: false, error: err.message });
     }
   }
+
+  async getDeliveryReport(req, res) {
+    try {
+      const { period, startDate, endDate, motoboy } = req.query;
+      const report = reportService.getDeliveryReport({
+        period: period || 'today',
+        startDate: startDate || null,
+        endDate: endDate || null,
+        motoboy: motoboy || 'all'
+      });
+      return res.json({ ok: true, report });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  }
 }
 
 export const reportController = new ReportController();

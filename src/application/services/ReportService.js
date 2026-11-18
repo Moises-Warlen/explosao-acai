@@ -281,6 +281,135 @@ export class ReportService {
       }))
     };
   }
+
+  /**
+   * Gera relatório detalhado de entregas total e por motoqueiro
+   * Filtros: Dia, Semana, Mês, Ano e Personalizado
+   * Métricas: KM rodados, valores de frete, dinheiro recolhido e folha de acerto com assinatura
+   */
+  getDeliveryReport({ period = 'today', startDate = null, endDate = null, motoboy = 'all' } = {}) {
+    const data = this.db.get();
+    const orders = data.orders || [];
+    const now = new Date();
+
+    // 1. Considera pedidos de entrega (ignora retirada em balcão)
+    const deliveryOrders = orders.filter(o => o.delivery && o.delivery.type === 'delivery');
+
+    // 2. Filtra por período de data
+    const periodOrders = deliveryOrders.filter(o => {
+      const orderDate = new Date(o.deliveredAt || o.createdAt);
+
+      if (startDate || endDate) {
+        if (startDate) {
+          const s = new Date(startDate);
+          s.setHours(0, 0, 0, 0);
+          if (orderDate < s) return false;
+        }
+        if (endDate) {
+          const e = new Date(endDate);
+          e.setHours(23, 59, 59, 999);
+          if (orderDate > e) return false;
+        }
+        return true;
+      }
+
+      if (period === 'today' || period === 'day') {
+        return orderDate.toDateString() === now.toDateString();
+      } else if (period === 'week') {
+        const weekAgo = new Date();
+        weekAgo.setDate(now.getDate() - 7);
+        return orderDate >= weekAgo;
+      } else if (period === 'month') {
+        return (
+          orderDate.getMonth() === now.getMonth() &&
+          orderDate.getFullYear() === now.getFullYear()
+        );
+      } else if (period === 'year') {
+        return orderDate.getFullYear() === now.getFullYear();
+      }
+
+      return true; // 'all'
+    });
+
+    // 3. Obter lista única de motoboys para dropdown
+    const motoboySet = new Set();
+    periodOrders.forEach(o => {
+      const name = o.delivery?.motoboyName?.trim() || 'Geral';
+      motoboySet.add(name);
+    });
+    const motoboysList = Array.from(motoboySet).sort();
+
+    // 4. Filtrar por motoboy selecionado se não for 'all'
+    const filteredOrders = motoboy === 'all'
+      ? periodOrders
+      : periodOrders.filter(o => (o.delivery?.motoboyName?.trim() || 'Geral') === motoboy);
+
+    // 5. Totalizadores e métricas
+    const totalDeliveries = filteredOrders.length;
+    const completedDeliveries = filteredOrders.filter(o => o.status === 'delivered').length;
+    let totalKm = 0;
+    let totalFreight = 0;
+    let totalOrdersValue = 0;
+    let totalMoneyCollected = 0;
+
+    const items = filteredOrders.map(o => {
+      const del = o.delivery || {};
+      const km = Number(del.km || 0);
+      const freight = Number(del.freight || 0);
+      const orderTotal = Number(o.total || 0);
+      const isMoney = o.payment?.method === 'Dinheiro';
+
+      totalKm += km;
+      totalFreight += freight;
+      totalOrdersValue += orderTotal;
+      if (isMoney && o.status === 'delivered') {
+        totalMoneyCollected += orderTotal;
+      }
+
+      const fullAddress = `${del.street || 'Rua'}, ${del.number || 'S/N'}${del.complement ? ' - ' + del.complement : ''}, ${del.bairro || 'Bairro'}`;
+
+      return {
+        id: o.id,
+        orderNo: o.orderNo,
+        date: o.deliveredAt || o.createdAt,
+        formattedDate: new Date(o.deliveredAt || o.createdAt).toLocaleString('pt-BR', {
+          day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'
+        }),
+        motoboy: del.motoboyName?.trim() || 'Geral',
+        customerName: o.customer?.name || 'Cliente',
+        address: fullAddress,
+        bairro: del.bairro || '',
+        km: Number(km.toFixed(1)),
+        orderValue: Number(orderTotal.toFixed(2)),
+        freight: Number(freight.toFixed(2)),
+        paymentMethod: o.payment?.method || 'Dinheiro',
+        paymentStatus: o.payment?.status || 'approved',
+        status: o.status,
+        isMoney
+      };
+    });
+
+    const avgKm = totalDeliveries > 0 ? Number((totalKm / totalDeliveries).toFixed(1)) : 0;
+
+    return {
+      period,
+      filter: { period, motoboy, startDate, endDate },
+      motoboyFilter: motoboy,
+      motoboysList,
+      availableMotoboys: motoboysList,
+      summary: {
+        totalDeliveries,
+        completedDeliveries,
+        totalKm: Number(totalKm.toFixed(1)),
+        avgKm,
+        totalFreight: Number(totalFreight.toFixed(2)),
+        totalOrdersValue: Number(totalOrdersValue.toFixed(2)),
+        totalMoneyCollected: Number(totalMoneyCollected.toFixed(2)),
+        balanceToPayOrReceive: Number((totalFreight - totalMoneyCollected).toFixed(2))
+      },
+      deliveries: items
+    };
+  }
 }
 
 export const reportService = new ReportService();

@@ -26,6 +26,8 @@ let SETTINGS = {};
 let CHAT_CONVERSATIONS = [];
 let ACTIVE_CHAT_PHONE = null;
 let CURRENT_REPORT = null;
+let CURRENT_REPORT_SECTION = 'sales';
+let CURRENT_DELIVERY_REPORT = null;
 let WS = null;
 
 // Áudio de Notificação de Novo Pedido ou Mensagem
@@ -399,8 +401,12 @@ function bindNavigation() {
       }
 
       if (tab.dataset.tab === 'tab-reports') {
-        const period = $('#report-period-select')?.value || 'today';
-        loadSalesReport({ period });
+        if (CURRENT_REPORT_SECTION === 'deliveries') {
+          loadDeliveryReport();
+        } else {
+          const period = $('#report-period-select')?.value || 'today';
+          loadSalesReport({ period });
+        }
       }
 
       if (tab.dataset.tab === 'tab-chat') {
@@ -2598,6 +2604,424 @@ window.exportReportToPdf = function() {
         `).join('')}
       </tbody>
     </table>
+  `;
+
+  document.body.classList.remove('printing-recipe');
+  document.body.classList.add('printing-report');
+  setTimeout(() => {
+    window.print();
+    setTimeout(() => {
+      document.body.classList.remove('printing-report');
+    }, 1000);
+  }, 150);
+};
+
+// ==================== SUB-ABA: RELATÓRIO DE ENTREGAS & MOTOBOYS ====================
+window.switchReportSection = function(section) {
+  CURRENT_REPORT_SECTION = section;
+  const btnSales = $('#btn-rep-type-sales');
+  const btnDel = $('#btn-rep-type-deliveries');
+  const secSales = $('#report-sales-section');
+  const secDel = $('#report-deliveries-section');
+
+  if (section === 'deliveries') {
+    if (btnDel) {
+      btnDel.style.background = 'linear-gradient(135deg,#7c3aed,#6d28d9)';
+      btnDel.style.color = '#fff';
+      btnDel.style.border = 'none';
+    }
+    if (btnSales) {
+      btnSales.style.background = 'rgba(255,255,255,0.06)';
+      btnSales.style.color = 'var(--tx)';
+      btnSales.style.border = '1px solid var(--ln)';
+    }
+    if (secSales) secSales.style.display = 'none';
+    if (secDel) secDel.style.display = 'block';
+    loadDeliveryReport();
+  } else {
+    if (btnSales) {
+      btnSales.style.background = 'linear-gradient(135deg,#7c3aed,#6d28d9)';
+      btnSales.style.color = '#fff';
+      btnSales.style.border = 'none';
+    }
+    if (btnDel) {
+      btnDel.style.background = 'rgba(255,255,255,0.06)';
+      btnDel.style.color = 'var(--tx)';
+      btnDel.style.border = '1px solid var(--ln)';
+    }
+    if (secDel) secDel.style.display = 'none';
+    if (secSales) secSales.style.display = 'block';
+    const period = $('#report-period-select')?.value || 'today';
+    loadSalesReport({ period });
+  }
+};
+
+window.handleDeliveryPeriodChange = function(val) {
+  const dateBox = $('#del-date-range-box');
+  if (val === 'custom') {
+    if (dateBox) dateBox.style.display = 'flex';
+  } else {
+    if (dateBox) dateBox.style.display = 'none';
+    loadDeliveryReport({ period: val });
+  }
+};
+
+window.applyDeliveryCustomDateFilter = function() {
+  const start = $('#del-report-start-date')?.value;
+  const end = $('#del-report-end-date')?.value;
+  if (!start && !end) {
+    return adminToast('Selecione ao menos uma data inicial ou final.', 'danger');
+  }
+  loadDeliveryReport({ period: 'custom', startDate: start, endDate: end });
+};
+
+window.handleDeliveryMotoboyFilterChange = function() {
+  loadDeliveryReport();
+};
+
+window.loadDeliveryReport = async function(params = {}) {
+  const periodSelect = $('#del-report-period-select');
+  const motoboySelect = $('#del-rep-motoboy-select');
+  
+  const period = params.period || (periodSelect ? periodSelect.value : 'today');
+  const motoboy = params.motoboy || (motoboySelect ? motoboySelect.value : 'all');
+  const startDate = params.startDate || $('#del-report-start-date')?.value || '';
+  const endDate = params.endDate || $('#del-report-end-date')?.value || '';
+
+  let url = `${API_URL}/reports/deliveries?period=${encodeURIComponent(period)}&motoboy=${encodeURIComponent(motoboy)}`;
+  if (startDate) url += `&startDate=${encodeURIComponent(startDate)}`;
+  if (endDate) url += `&endDate=${encodeURIComponent(endDate)}`;
+
+  try {
+    const res = await fetch(url, { headers: authHeaders() });
+    const data = await res.json();
+    if (data.ok && data.report) {
+      CURRENT_DELIVERY_REPORT = data.report;
+      renderDeliveryReport(data.report);
+    } else {
+      adminToast(data.error || 'Erro ao carregar relatório de entregas.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Falha na comunicação ao carregar entregas.', 'danger');
+  }
+};
+
+window.renderDeliveryReport = function(rep) {
+  if (!rep) return;
+  const sum = rep.summary || {};
+  const filter = rep.filter || {};
+
+  // 1. Atualiza Seletor de Motoboys com lista dinâmica
+  const motoboySelect = $('#del-rep-motoboy-select');
+  if (motoboySelect && Array.isArray(rep.availableMotoboys)) {
+    const currentVal = motoboySelect.value || filter.motoboy || 'all';
+    let optionsHtml = '<option value="all">Todos os Motoqueiros</option>';
+    rep.availableMotoboys.forEach(mb => {
+      const isSel = mb === currentVal ? 'selected' : '';
+      optionsHtml += `<option value="${esc(mb)}" ${isSel}>${esc(mb)}</option>`;
+    });
+    motoboySelect.innerHTML = optionsHtml;
+  }
+
+  // 2. Atualiza KPIs
+  if ($('#kpi-del-count')) {
+    $('#kpi-del-count').textContent = `${sum.completedDeliveries || 0}`;
+    const sub = $('#kpi-del-count').nextElementSibling;
+    if (sub) sub.textContent = `${sum.totalDeliveries || 0} registradas no filtro`;
+  }
+  if ($('#kpi-del-km')) {
+    $('#kpi-del-km').textContent = `${(sum.totalKm || 0).toFixed(1)} km`;
+    const sub = $('#kpi-del-km').nextElementSibling;
+    if (sub) sub.textContent = `Média: ${(sum.avgKm || 0).toFixed(1)} km/corrida`;
+  }
+  if ($('#kpi-del-freight')) {
+    $('#kpi-del-freight').textContent = R(sum.totalFreight || 0);
+  }
+  if ($('#kpi-del-money')) {
+    $('#kpi-del-money').textContent = R(sum.totalMoneyCollected || 0);
+  }
+  if ($('#kpi-del-balance')) {
+    const bal = sum.balanceToPayOrReceive || 0;
+    $('#kpi-del-balance').innerHTML = `${R(Math.abs(bal))}`;
+    const sub = $('#kpi-del-balance').nextElementSibling;
+    if (sub) {
+      if (bal > 0) {
+        sub.innerHTML = '<span style="color:var(--green)">✓ A Pagar ao Entregador (Fretes > Dinheiro)</span>';
+      } else if (bal < 0) {
+        sub.innerHTML = '<span style="color:#f59e0b">⚠️ A Receber do Entregador (Dinheiro retido > Fretes)</span>';
+      } else {
+        sub.innerHTML = '<span style="color:var(--mut)">Contas Zeradas / Quitado</span>';
+      }
+    }
+  }
+
+  // 3. Atualiza Bloco de Fechamento e Assinatura
+  let periodLabel = 'Hoje (Dia)';
+  const currentPeriod = filter.period || rep.period || $('#del-report-period-select')?.value || 'today';
+  if (currentPeriod === 'today') periodLabel = 'Hoje (Dia)';
+  else if (currentPeriod === 'week') periodLabel = 'Esta Semana';
+  else if (currentPeriod === 'month') periodLabel = 'Este Mês';
+  else if (currentPeriod === 'year') periodLabel = 'Este Ano';
+  else if (currentPeriod === 'all') periodLabel = 'Todo o Histórico';
+  else if (filter.startDate || filter.endDate) {
+    periodLabel = `${filter.startDate || 'Início'} até ${filter.endDate || 'Fim'}`;
+  }
+
+  const motoboyNameLabel = filter.motoboy && filter.motoboy !== 'all' ? filter.motoboy : 'Todos os Motoqueiros';
+  if ($('#close-period-label')) $('#close-period-label').textContent = periodLabel;
+  if ($('#close-motoboy-name')) $('#close-motoboy-name').textContent = motoboyNameLabel;
+  if ($('#close-total-trips')) $('#close-total-trips').textContent = `${sum.completedDeliveries || 0} corridas entregues`;
+  if ($('#close-freight-total')) $('#close-freight-total').textContent = R(sum.totalFreight || 0);
+  if ($('#close-cash-total')) $('#close-cash-total').textContent = R(sum.totalMoneyCollected || 0);
+  if ($('#close-final-balance')) {
+    const bal = sum.balanceToPayOrReceive || 0;
+    if (bal > 0) {
+      $('#close-final-balance').innerHTML = `<span style="color:var(--green)">Loja Paga: ${R(bal)}</span>`;
+    } else if (bal < 0) {
+      $('#close-final-balance').innerHTML = `<span style="color:#f59e0b">Entregador Devolve: ${R(Math.abs(bal))}</span>`;
+    } else {
+      $('#close-final-balance').innerHTML = `<span style="color:var(--tx)">R$ 0,00 (Acerto Zerado)</span>`;
+    }
+  }
+  if ($('#sign-motoboy-name')) {
+    $('#sign-motoboy-name').textContent = filter.motoboy && filter.motoboy !== 'all' ? `Entregador: ${esc(filter.motoboy)}` : 'Assinatura do Entregador';
+  }
+
+  // 4. Renderiza Tabela Desktop
+  const tbody = $('#del-report-table-body');
+  const cardsContainer = $('#del-report-cards-container');
+  const deliveries = rep.deliveries || [];
+
+  if (deliveries.length === 0) {
+    if (tbody) tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--mut);padding:24px">Nenhuma entrega registrada para o filtro selecionado.</td></tr>';
+    if (cardsContainer) cardsContainer.innerHTML = '<p style="text-align:center;color:var(--mut);padding:20px">Nenhuma entrega registrada para o filtro selecionado.</p>';
+    return;
+  }
+
+  if (tbody) {
+    tbody.innerHTML = deliveries.map(d => {
+      let statusBadge = '<span style="background:rgba(255,255,255,0.08);color:var(--mut);padding:3px 8px;border-radius:6px;font-size:11px">Pendente</span>';
+      if (d.status === 'delivered') {
+        statusBadge = '<span style="background:rgba(16,185,129,0.15);color:#10b981;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700">Entregue</span>';
+      } else if (d.status === 'out_for_delivery') {
+        statusBadge = '<span style="background:rgba(59,130,246,0.15);color:#60a5fa;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700">Em rota</span>';
+      } else if (d.status === 'returned') {
+        statusBadge = '<span style="background:rgba(239,68,68,0.15);color:#ef4444;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700">Devolvido</span>';
+      } else if (d.status === 'cancelled') {
+        statusBadge = '<span style="background:rgba(239,68,68,0.15);color:#ef4444;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700">Cancelado</span>';
+      } else if (d.status === 'preparing') {
+        statusBadge = '<span style="background:rgba(234,179,8,0.15);color:#facc15;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700">Em Preparo</span>';
+      } else if (d.status === 'received') {
+        statusBadge = '<span style="background:rgba(168,85,247,0.15);color:#c084fc;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700">Recebido</span>';
+      }
+
+      const motoboyPill = `<span style="background:rgba(124,58,237,0.2);color:#c084fc;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px">🛵 ${esc(d.motoboy)}</span>`;
+      const payPill = d.isMoney 
+        ? '<span style="color:#60a5fa;font-weight:700">💵 Dinheiro (Cobrar)</span>' 
+        : `<span style="color:var(--mut)">${esc(d.paymentMethod || 'Online')}</span>`;
+
+      return `
+        <tr class="del-rep-row" data-search="${esc(`${d.orderNo} ${d.motoboy} ${d.customerName} ${d.address} ${d.bairro}`.toLowerCase())}">
+          <td style="font-size:12px;white-space:nowrap;color:var(--mut)">${d.formattedDate}</td>
+          <td>${motoboyPill}</td>
+          <td style="font-weight:800;color:var(--y)">#${esc(d.orderNo)}</td>
+          <td style="font-weight:600">${esc(d.customerName)}</td>
+          <td style="font-size:12px">
+            <div>${esc(d.address)}</div>
+            ${d.bairro ? `<small style="color:var(--y);font-weight:600">${esc(d.bairro)}</small>` : ''}
+          </td>
+          <td style="font-weight:600;white-space:nowrap">${d.km > 0 ? d.km.toFixed(1) + ' km' : '—'}</td>
+          <td style="font-weight:700;white-space:nowrap">${R(d.orderValue)}</td>
+          <td style="font-weight:700;color:var(--green);white-space:nowrap">${R(d.freight)}</td>
+          <td style="font-size:12px">${payPill}</td>
+          <td>${statusBadge}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // 5. Renderiza Cards Mobile
+  if (cardsContainer) {
+    cardsContainer.innerHTML = deliveries.map(d => {
+      let statusBadge = '<span style="background:rgba(255,255,255,0.08);color:var(--mut);padding:2px 8px;border-radius:6px;font-size:11px">Pendente</span>';
+      if (d.status === 'delivered') {
+        statusBadge = '<span style="background:rgba(16,185,129,0.15);color:#10b981;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">Entregue</span>';
+      } else if (d.status === 'out_for_delivery') {
+        statusBadge = '<span style="background:rgba(59,130,246,0.15);color:#60a5fa;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">Em rota</span>';
+      } else if (d.status === 'returned') {
+        statusBadge = '<span style="background:rgba(239,68,68,0.15);color:#ef4444;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">Devolvido</span>';
+      } else if (d.status === 'cancelled') {
+        statusBadge = '<span style="background:rgba(239,68,68,0.15);color:#ef4444;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">Cancelado</span>';
+      } else if (d.status === 'preparing') {
+        statusBadge = '<span style="background:rgba(234,179,8,0.15);color:#facc15;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">Em Preparo</span>';
+      } else if (d.status === 'received') {
+        statusBadge = '<span style="background:rgba(168,85,247,0.15);color:#c084fc;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">Recebido</span>';
+      }
+
+      const payText = d.isMoney ? '💵 Dinheiro (Cobrar)' : esc(d.paymentMethod || 'Online');
+
+      return `
+        <div class="del-rep-card report-order-card" data-search="${esc(`${d.orderNo} ${d.motoboy} ${d.customerName} ${d.address} ${d.bairro}`.toLowerCase())}" style="background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 4px 12px rgba(0,0,0,0.2)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:15px;font-weight:800;color:var(--y)">#${esc(d.orderNo)}</span>
+            ${statusBadge}
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:4px">
+            <span style="background:rgba(124,58,237,0.25);color:#c084fc;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700">🛵 ${esc(d.motoboy)}</span>
+            <span style="font-weight:600;font-size:13px">${esc(d.customerName)}</span>
+          </div>
+          <div style="font-size:12px;color:var(--mut);margin-bottom:10px;background:rgba(0,0,0,0.2);padding:8px;border-radius:8px">
+            <div>📍 <b>${esc(d.address)}</b></div>
+            ${d.bairro ? `<div style="color:var(--y);font-weight:600;margin-top:2px">Bairro: ${esc(d.bairro)}</div>` : ''}
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;border-top:1px solid var(--ln);padding-top:8px">
+            <div><span style="color:var(--mut)">Distância:</span> <b>${d.km > 0 ? d.km.toFixed(1) + ' km' : '—'}</b></div>
+            <div><span style="color:var(--mut)">Total Pedido:</span> <b>${R(d.orderValue)}</b></div>
+            <div><span style="color:var(--mut)">Taxa Frete:</span> <b style="color:var(--green)">${R(d.freight)}</b></div>
+            <div><span style="color:var(--mut)">Pagamento:</span> <b style="${d.isMoney ? 'color:#60a5fa' : ''}">${payText}</b></div>
+          </div>
+          <div style="text-align:right;font-size:11px;color:var(--mut);margin-top:8px">
+            🕒 ${d.formattedDate}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+};
+
+window.filterDeliveryReportTable = function() {
+  const q = ($('#del-rep-search-input')?.value || '').toLowerCase().trim();
+  const rows = document.querySelectorAll('.del-rep-row');
+  const cards = document.querySelectorAll('.del-rep-card');
+
+  rows.forEach(r => {
+    const s = r.dataset.search || '';
+    r.style.display = (!q || s.includes(q)) ? '' : 'none';
+  });
+
+  cards.forEach(c => {
+    const s = c.dataset.search || '';
+    c.style.display = (!q || s.includes(q)) ? '' : 'none';
+  });
+};
+
+window.exportDeliveryReportToPdf = function() {
+  if (!CURRENT_DELIVERY_REPORT) return adminToast('Nenhum relatório de entregas carregado.', 'danger');
+
+  const rep = CURRENT_DELIVERY_REPORT;
+  const sum = rep.summary || {};
+  const filter = rep.filter || {};
+  const printArea = $('#report-pdf-area');
+  if (!printArea) return;
+
+  let filterLabel = 'Hoje';
+  if (filter.period === 'today') filterLabel = 'Hoje (Dia)';
+  else if (filter.period === 'week') filterLabel = 'Esta Semana';
+  else if (filter.period === 'month') filterLabel = 'Este Mês';
+  else if (filter.period === 'year') filterLabel = 'Este Ano';
+  else if (filter.period === 'all') filterLabel = 'Todo o Histórico';
+  else if (filter.startDate || filter.endDate) {
+    filterLabel = `${filter.startDate || 'Início'} até ${filter.endDate || 'Fim'}`;
+  }
+
+  const motoboyLabel = filter.motoboy && filter.motoboy !== 'all' ? filter.motoboy : 'Todos os Motoqueiros';
+  const bal = sum.balanceToPayOrReceive || 0;
+  const balText = bal > 0 ? `A Pagar ao Entregador: ${R(bal)}` : bal < 0 ? `A Devolver à Loja: ${R(Math.abs(bal))}` : 'Quitado / R$ 0,00';
+
+  printArea.innerHTML = `
+    <div style="border-bottom:2px solid #4b0f6b;padding-bottom:12px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+      <div style="display:flex;align-items:center;gap:14px">
+        <img src="imagens/Logo.webp" style="width:55px;height:55px;object-fit:cover;border-radius:50%">
+        <div>
+          <h1 style="margin:0;font-size:22px;color:#4b0f6b">EXPLOSÃO AÇAÍ</h1>
+          <div style="font-size:13px;color:#333;font-weight:bold">Relatório & Prestação de Contas de Entregas</div>
+          <div style="font-size:11px;color:#666">Delivery Próprio · Franca - SP</div>
+        </div>
+      </div>
+      <div style="text-align:right;font-size:11px;color:#444">
+        <div><b>Data de Emissão:</b> ${new Date().toLocaleString('pt-BR')}</div>
+        <div><b>Período:</b> ${filterLabel}</div>
+        <div><b>Entregador:</b> ${esc(motoboyLabel)}</div>
+      </div>
+    </div>
+
+    <!-- Indicadores Principais de Entrega -->
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px;text-align:center">
+      <div style="border:1px solid #ccc;padding:8px;border-radius:6px;background:#f9f9f9">
+        <div style="font-size:10px;color:#666;text-transform:uppercase">Entregas Concluídas</div>
+        <div style="font-size:16px;font-weight:bold;color:#4b0f6b">${sum.completedDeliveries || 0}</div>
+      </div>
+      <div style="border:1px solid #ccc;padding:8px;border-radius:6px;background:#f9f9f9">
+        <div style="font-size:10px;color:#666;text-transform:uppercase">KM Total Rodado</div>
+        <div style="font-size:16px;font-weight:bold;color:#333">${(sum.totalKm || 0).toFixed(1)} km</div>
+      </div>
+      <div style="border:1px solid #ccc;padding:8px;border-radius:6px;background:#f9f9f9">
+        <div style="font-size:10px;color:#666;text-transform:uppercase">Total Fretes (A Pagar)</div>
+        <div style="font-size:16px;font-weight:bold;color:#166534">${R(sum.totalFreight || 0)}</div>
+      </div>
+      <div style="border:1px solid #ccc;padding:8px;border-radius:6px;background:#f9f9f9">
+        <div style="font-size:10px;color:#666;text-transform:uppercase">Dinheiro Recolhido</div>
+        <div style="font-size:16px;font-weight:bold;color:#1d4ed8">${R(sum.totalMoneyCollected || 0)}</div>
+      </div>
+      <div style="border:1px solid #ccc;padding:8px;border-radius:6px;background:#fdf2f8">
+        <div style="font-size:10px;color:#666;text-transform:uppercase">Saldo Final</div>
+        <div style="font-size:14px;font-weight:bold;color:#701a75">${balText}</div>
+      </div>
+    </div>
+
+    <!-- Tabela Detalhada das Entregas -->
+    <h3 style="font-size:13px;margin:0 0 8px;color:#333">Detalhamento das Corridas Realizadas</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:20px">
+      <thead>
+        <tr style="background:#e9d5ff;color:#4b0f6b">
+          <th style="padding:5px;border:1px solid #ccc;text-align:left">Data/Hora</th>
+          <th style="padding:5px;border:1px solid #ccc;text-align:left">Entregador</th>
+          <th style="padding:5px;border:1px solid #ccc;text-align:left">Pedido</th>
+          <th style="padding:5px;border:1px solid #ccc;text-align:left">Cliente</th>
+          <th style="padding:5px;border:1px solid #ccc;text-align:left">Destino (Onde foi)</th>
+          <th style="padding:5px;border:1px solid #ccc;text-align:right">KM</th>
+          <th style="padding:5px;border:1px solid #ccc;text-align:right">Valor Pedido</th>
+          <th style="padding:5px;border:1px solid #ccc;text-align:right">Taxa Frete</th>
+          <th style="padding:5px;border:1px solid #ccc;text-align:center">Forma Pagto</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${(rep.deliveries || []).map(d => `
+          <tr>
+            <td style="padding:4px;border:1px solid #ddd">${d.formattedDate}</td>
+            <td style="padding:4px;border:1px solid #ddd;font-weight:bold">${esc(d.motoboy)}</td>
+            <td style="padding:4px;border:1px solid #ddd">#${esc(d.orderNo)}</td>
+            <td style="padding:4px;border:1px solid #ddd">${esc(d.customerName)}</td>
+            <td style="padding:4px;border:1px solid #ddd">${esc(d.address)}${d.bairro ? ` - ${esc(d.bairro)}` : ''}</td>
+            <td style="padding:4px;border:1px solid #ddd;text-align:right">${d.km > 0 ? d.km.toFixed(1) : '—'}</td>
+            <td style="padding:4px;border:1px solid #ddd;text-align:right">${R(d.orderValue)}</td>
+            <td style="padding:4px;border:1px solid #ddd;text-align:right;font-weight:bold;color:#166534">${R(d.freight)}</td>
+            <td style="padding:4px;border:1px solid #ddd;text-align:center">${d.isMoney ? 'DINHEIRO (Cobrado)' : esc(d.paymentMethod || 'Online')}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+
+    <!-- Canhoto Formal de Fechamento e Assinatura -->
+    <div style="border:1.5px solid #333;border-radius:8px;padding:12px;margin-top:16px;background:#fafafa">
+      <div style="font-size:12px;font-weight:bold;margin-bottom:8px;color:#333">TERMO DE FECHAMENTO E PRESTAÇÃO DE CONTAS</div>
+      <div style="font-size:10px;color:#555;margin-bottom:16px">
+        Declaramos para os devidos fins que as entregas acima descritas foram devidamente executadas, com a conferência dos valores recebidos em espécie e acerto das taxas de entrega correspondentes ao período apurado.
+      </div>
+
+      <div style="display:flex;justify-content:space-between;gap:40px;margin-top:30px;padding-top:10px">
+        <div style="flex:1;text-align:center">
+          <div style="border-bottom:1px solid #000;margin-bottom:4px"></div>
+          <div style="font-size:11px;font-weight:bold">${esc(motoboyLabel)}</div>
+          <div style="font-size:9px;color:#666">Assinatura do Entregador</div>
+        </div>
+        <div style="flex:1;text-align:center">
+          <div style="border-bottom:1px solid #000;margin-bottom:4px"></div>
+          <div style="font-size:11px;font-weight:bold">Explosão Açaí · Caixa / Gerência</div>
+          <div style="font-size:9px;color:#666">Assinatura do Responsável</div>
+        </div>
+      </div>
+    </div>
   `;
 
   document.body.classList.remove('printing-recipe');
@@ -5892,16 +6316,42 @@ window.dispatchSelectedOrdersRoute = async function() {
     return adminToast('Os pedidos selecionados já estão em rota ou entregues.', 'info');
   }
 
+  const routeLabel = CURRENT_SELECTED_ROUTE_LABEL || 'Rota';
+  let motoboyName = localStorage.getItem(`last_motoboy_name_${routeLabel.replace(/\s+/g, '_')}`) || localStorage.getItem('last_motoboy_name') || '';
+
+  if (window.customPrompt) {
+    const inputName = await window.customPrompt({
+      title: 'Despachar Rota',
+      icon: '🛵',
+      message: `Informe o nome do entregador para a <b>[${esc(routeLabel)}]</b> (ou deixe em branco se não quiser identificar agora):`,
+      defaultValue: motoboyName,
+      placeholder: 'Ex: Carlos, João...',
+      confirmText: 'Despachar Rota',
+      confirmClass: 'btn-next'
+    });
+    if (inputName === null) return;
+    motoboyName = inputName.trim();
+  }
+
+  if (motoboyName) {
+    localStorage.setItem(`last_motoboy_name_${routeLabel.replace(/\s+/g, '_')}`, motoboyName);
+    localStorage.setItem('last_motoboy_name', motoboyName);
+  }
+
   try {
     for (const order of toDispatch) {
       await fetch(`${API_URL}/orders/${order.id}/status`, {
         method: 'PATCH',
         headers: authHeaders(),
-        body: JSON.stringify({ status: 'out_for_delivery' })
+        body: JSON.stringify({ status: 'out_for_delivery', motoboyName: motoboyName || undefined })
       });
       order.status = 'out_for_delivery';
+      if (motoboyName) {
+        if (!order.delivery) order.delivery = {};
+        order.delivery.motoboyName = motoboyName;
+      }
     }
-    adminToast(`✓ ${toDispatch.length} pedido(s) despachado(s) para entrega!`, 'success');
+    adminToast(`✓ ${toDispatch.length} pedido(s) despachado(s) para entrega${motoboyName ? ' com ' + esc(motoboyName) : ''}!`, 'success');
     await loadOrders();
     renderDeliveryMapMarkers();
   } catch (e) {

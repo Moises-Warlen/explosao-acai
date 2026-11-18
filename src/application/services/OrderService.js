@@ -431,7 +431,7 @@ export class OrderService {
     return newOrder;
   }
 
-  updateOrderStatus(orderId, newStatus, cancellationReason = null) {
+  updateOrderStatus(orderId, newStatus, cancellationReason = null, motoboyName = null) {
     const data = this.db.get();
     const orderIndex = data.orders.findIndex(o => o.id === orderId || o.orderNo === String(orderId));
     if (orderIndex === -1) throw new Error('Pedido não encontrado.');
@@ -468,6 +468,11 @@ export class OrderService {
     if (newStatus === OrderStatus.RETURNED) {
       order.returnReason = cancellationReason || 'Devolvido pelo entregador / não entregue';
       order.returnedAt = now.toISOString();
+    }
+
+    if (motoboyName && typeof motoboyName === 'string' && motoboyName.trim()) {
+      if (!order.delivery) order.delivery = {};
+      order.delivery.motoboyName = motoboyName.trim();
     }
 
     order.status = newStatus;
@@ -545,10 +550,26 @@ export class OrderService {
   }
 
   /**
+   * Atribui um motoboy específico ao pedido
+   */
+  assignMotoboy(orderId, motoboyName) {
+    const data = this.db.get();
+    const orderIndex = data.orders.findIndex(o => o.id === orderId || o.orderNo === String(orderId));
+    if (orderIndex === -1) throw new Error('Pedido não encontrado.');
+
+    const order = data.orders[orderIndex];
+    if (!order.delivery) order.delivery = {};
+    order.delivery.motoboyName = (motoboyName || '').trim();
+    order.updatedAt = new Date().toISOString();
+    this.db.save();
+    return order;
+  }
+
+  /**
    * Confirmação de Entrega & Recebimento pelo Entregador ou Operador
    * Marca o pedido como entregue (DELIVERED) e pagamento como aprovado (APPROVED).
    */
-  confirmDeliveryAndPayment(orderId) {
+  confirmDeliveryAndPayment(orderId, motoboyName = null) {
     const data = this.db.get();
     const orderIndex = data.orders.findIndex(o => o.id === orderId || o.orderNo === String(orderId));
     if (orderIndex === -1) throw new Error('Pedido não encontrado.');
@@ -558,6 +579,11 @@ export class OrderService {
 
     order.status = OrderStatus.DELIVERED;
     order.deliveredAt = now.toISOString();
+
+    if (motoboyName && typeof motoboyName === 'string' && motoboyName.trim()) {
+      if (!order.delivery) order.delivery = {};
+      order.delivery.motoboyName = motoboyName.trim();
+    }
 
     const baseTime = order.preparedAt ? new Date(order.preparedAt).getTime() : new Date(order.createdAt).getTime();
     order.deliveryTimeMinutes = Math.max(1, Math.round((now.getTime() - baseTime) / 60000));

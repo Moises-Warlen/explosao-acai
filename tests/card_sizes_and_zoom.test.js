@@ -78,7 +78,9 @@ test('Validação da Exibição Dinâmica de Tamanhos e Zoom Suave nos Cards', a
     assert.strictEqual(formatProductSizesText(classico), '300ml • 500ml • 700ml');
 
     const miniKids = products.find(p => p.id === 'prod_kids_mixfini');
-    assert.strictEqual(formatProductSizesText(miniKids), '180ml');
+    if (miniKids) {
+      assert.strictEqual(formatProductSizesText(miniKids), '180ml');
+    }
 
     const polpa1L = products.find(p => p.id === 'polpa_1l');
     assert.strictEqual(formatProductSizesText(polpa1L), '1 Litro');

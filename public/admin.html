@@ -365,36 +365,48 @@
     <!-- ABA 2: RELATÓRIOS GERENCIAIS & EXPORTAÇÃO PDF COM FOTOS E RANKINGS -->
     <div class="tab-pane" id="tab-reports">
       <div class="admin-card report-admin-card">
-        <!-- Header & Filtro de Período -->
-        <div class="report-top-bar">
-          <div class="report-heading">
-            <h2 class="report-title">Relatório Executivo de Vendas & Logística</h2>
-            <p class="report-subtitle">
-              Filtre por dia, mês, ano ou intervalo entre datas. Tempo de preparo e entrega, faturamento de frete e custos reais de insumos.
-            </p>
-          </div>
-          
-          <div class="report-actions-bar">
-            <select id="report-period-select" class="report-period-select" onchange="handlePeriodSelectChange(this.value)">
-              <option value="today">Hoje (Dia)</option>
-              <option value="month">Este Mês</option>
-              <option value="year">Este Ano</option>
-              <option value="all">Todo o Histórico</option>
-              <option value="custom">Período Personalizado...</option>
-            </select>
-
-            <div id="date-range-box" class="report-date-range-box" style="display:none;align-items:center;gap:6px">
-              <input type="date" id="report-start-date" class="report-date-input">
-              <span style="font-size:12px;color:var(--mut)">até</span>
-              <input type="date" id="report-end-date" class="report-date-input">
-              <button class="btn-sm btn-next" onclick="applyCustomDateFilter()">Filtrar</button>
-            </div>
-
-            <button class="btn-sm report-export-btn" onclick="exportReportToPdf()">
-              <span class="export-icon">+</span> Exportar Relatório em PDF
-            </button>
-          </div>
+        <!-- Seletor de Sub-Abas de Relatório -->
+        <div class="report-type-toggle-bar" style="display:flex;gap:10px;margin-bottom:18px;border-bottom:1.5px solid var(--ln);padding-bottom:12px;flex-wrap:wrap">
+          <button type="button" id="btn-rep-type-sales" class="btn-sm active" style="padding:9px 18px;border-radius:10px;font-weight:700;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:6px" onclick="switchReportSection('sales')">
+            <span>📊</span> Faturamento & Vendas Gerais
+          </button>
+          <button type="button" id="btn-rep-type-deliveries" class="btn-sm" style="padding:9px 18px;border-radius:10px;font-weight:700;background:rgba(255,255,255,0.06);color:var(--tx);border:1px solid var(--ln);cursor:pointer;font-size:13px;display:flex;align-items:center;gap:6px" onclick="switchReportSection('deliveries')">
+            <span>🛵</span> Relatório de Entregas & Motoboys
+          </button>
         </div>
+
+        <!-- SEÇÃO 1: FATURAMENTO & VENDAS GERAIS -->
+        <div id="report-sales-section">
+          <!-- Header & Filtro de Período -->
+          <div class="report-top-bar">
+            <div class="report-heading">
+              <h2 class="report-title">Relatório Executivo de Vendas & Logística</h2>
+              <p class="report-subtitle">
+                Filtre por dia, mês, ano ou intervalo entre datas. Tempo de preparo e entrega, faturamento de frete e custos reais de insumos.
+              </p>
+            </div>
+            
+            <div class="report-actions-bar">
+              <select id="report-period-select" class="report-period-select" onchange="handlePeriodSelectChange(this.value)">
+                <option value="today">Hoje (Dia)</option>
+                <option value="month">Este Mês</option>
+                <option value="year">Este Ano</option>
+                <option value="all">Todo o Histórico</option>
+                <option value="custom">Período Personalizado...</option>
+              </select>
+
+              <div id="date-range-box" class="report-date-range-box" style="display:none;align-items:center;gap:6px">
+                <input type="date" id="report-start-date" class="report-date-input">
+                <span style="font-size:12px;color:var(--mut)">até</span>
+                <input type="date" id="report-end-date" class="report-date-input">
+                <button class="btn-sm btn-next" onclick="applyCustomDateFilter()">Filtrar</button>
+              </div>
+
+              <button class="btn-sm report-export-btn" onclick="exportReportToPdf()">
+                <span class="export-icon">+</span> Exportar Relatório em PDF
+              </button>
+            </div>
+          </div>
 
         <!-- KPI Cards Executivos (3 colunas compactas no Mobile como na Imagem 2) -->
         <div class="kpi-grid">
@@ -556,7 +568,178 @@
         <!-- Paginação -->
         <div id="report-orders-pagination" class="report-pagination-box"></div>
       </div>
+      <!-- FIM DA SEÇÃO 1: FATURAMENTO & VENDAS GERAIS -->
+
+      <!-- SEÇÃO 2: RELATÓRIO DE ENTREGAS & MOTOBOYS (ACERTO COM ASSINATURA) -->
+      <div id="report-deliveries-section" style="display:none">
+        <!-- Header & Filtros de Entregas -->
+        <div class="report-top-bar" style="margin-bottom:16px">
+          <div class="report-heading">
+            <h2 class="report-title">Relatório de Entregas & Acerto de Motoboys</h2>
+            <p class="report-subtitle">
+              Filtre por dia, semana, mês ou ano. Acompanhe total de corridas, KM percorrido, taxas de entrega e folha de assinatura para fechamento.
+            </p>
+          </div>
+          
+          <div class="report-actions-bar" style="flex-wrap:wrap;gap:8px">
+            <!-- Filtro de Período -->
+            <select id="del-rep-period-select" class="report-period-select" onchange="handleDeliveryPeriodChange(this.value)">
+              <option value="today">Hoje (Dia)</option>
+              <option value="week">Esta Semana</option>
+              <option value="month">Este Mês</option>
+              <option value="year">Este Ano</option>
+              <option value="all">Todo o Histórico</option>
+              <option value="custom">Período Personalizado...</option>
+            </select>
+
+            <!-- Filtro por Motoboy -->
+            <select id="del-rep-motoboy-select" class="report-period-select" onchange="loadDeliveryReport()">
+              <option value="all">🛵 Todos os Motoqueiros</option>
+            </select>
+
+            <!-- Range de Datas Customizado -->
+            <div id="del-rep-date-range-box" class="report-date-range-box" style="display:none;align-items:center;gap:6px">
+              <input type="date" id="del-rep-start-date" class="report-date-input">
+              <span style="font-size:12px;color:var(--mut)">até</span>
+              <input type="date" id="del-rep-end-date" class="report-date-input">
+              <button class="btn-sm btn-next" onclick="loadDeliveryReport()">Filtrar</button>
+            </div>
+
+            <button type="button" class="btn-sm report-export-btn" onclick="exportDeliveryReportToPdf()">
+              <span class="export-icon">🖨️</span> Imprimir Folha de Acerto (PDF)
+            </button>
+          </div>
+        </div>
+
+        <!-- Cards de KPIs de Entregas (Responsivo) -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-title">Total de Entregas</span>
+            <span class="kpi-value" id="kpi-del-count">0</span>
+            <span class="kpi-sub" id="kpi-del-completed">0 concluídas</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-title">Quilometragem Total</span>
+            <span class="kpi-value" id="kpi-del-km" style="color:var(--y)">0.0 km</span>
+            <span class="kpi-sub" id="kpi-del-avg-km">Média: 0.0 km/corrida</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-title">Taxas de Entrega (Frete)</span>
+            <span class="kpi-value" id="kpi-del-freight" style="color:var(--green)">R$ 0,00</span>
+            <span class="kpi-sub" style="color:var(--mut)">Valor a repassar de corridas</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-title">Dinheiro Recolhido</span>
+            <span class="kpi-value" id="kpi-del-money" style="color:#60a5fa">R$ 0,00</span>
+            <span class="kpi-sub" style="color:var(--mut)">Cobrado na mão dos clientes</span>
+          </div>
+          <div class="kpi-card" style="border-left:3px solid #c084fc">
+            <span class="kpi-title" style="color:#c084fc">Saldo do Acerto</span>
+            <span class="kpi-value" id="kpi-del-balance">R$ 0,00</span>
+            <span class="kpi-sub" id="kpi-del-balance-sub" style="color:var(--mut)">Diferença para conferência</span>
+          </div>
+        </div>
+
+        <!-- Barra de Busca Rápida de Entregas -->
+        <div class="report-tx-heading-box" style="margin-top:24px">
+          <div>
+            <h3 class="report-section-title" style="margin:0">Listagem de Corridas e Paradas</h3>
+            <p class="report-tx-subtitle">Visualize o destino, distância em KM, valor do pedido e frete de cada entrega:</p>
+          </div>
+          <div class="report-tx-filters">
+            <input type="text" id="del-rep-search-input" placeholder="🔍 Buscar por motoboy, pedido, rua..." oninput="filterDeliveryReportTable()">
+          </div>
+        </div>
+
+        <!-- Tabela Desktop -->
+        <div class="table-responsive report-table-desktop">
+          <table>
+            <thead>
+              <tr>
+                <th>Data / Hora</th>
+                <th>Motoqueiro</th>
+                <th>Pedido</th>
+                <th>Cliente</th>
+                <th>Destino (Onde foi)</th>
+                <th>Distância</th>
+                <th>Valor Pedido</th>
+                <th>Taxa Frete</th>
+                <th>Pagamento</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="del-report-table-body">
+              <tr><td colspan="10" style="text-align:center;color:var(--mut);padding:24px">Carregando relatório de entregas...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Cards Mobile Responsivos -->
+        <div id="del-report-cards-container" class="report-orders-cards-container">
+          <p style="text-align:center;color:var(--mut);padding:20px">Carregando relatório de entregas...</p>
+        </div>
+
+        <!-- BLOCO FORMAL DE FECHAMENTO & ASSINATURA -->
+        <div id="delivery-closing-signature-card" style="margin-top:28px;background:var(--card);border:1.5px solid var(--ln);border-radius:18px;padding:24px;box-shadow:0 6px 20px rgba(0,0,0,0.35)">
+          <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--ln);padding-bottom:12px;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+            <div>
+              <h4 style="margin:0;font-size:16px;color:var(--y);display:flex;align-items:center;gap:8px">
+                <span>✍️</span> Fechamento de Diária / Acerto de Contas
+              </h4>
+              <p style="margin:4px 0 0;font-size:12px;color:var(--mut)">
+                Conferência final de entregas e canhoto com campos de assinatura para prestação de contas.
+              </p>
+            </div>
+            <div style="font-size:12px;color:var(--mut);background:rgba(255,255,255,0.06);padding:6px 14px;border-radius:20px;border:1px solid var(--ln)">
+              Período: <b id="close-period-label" style="color:#fff">Hoje</b>
+            </div>
+          </div>
+
+          <!-- Resumo Financeiro do Fechamento -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:24px;background:rgba(0,0,0,0.25);padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.05)">
+            <div>
+              <span style="font-size:11px;color:var(--mut);display:block">Entregador Responsável:</span>
+              <b id="close-motoboy-name" style="font-size:14px;color:var(--tx)">Todos os Motoqueiros</b>
+            </div>
+            <div>
+              <span style="font-size:11px;color:var(--mut);display:block">Total de Corridas Realizadas:</span>
+              <b id="close-total-trips" style="font-size:14px;color:var(--y)">0 corridas</b>
+            </div>
+            <div>
+              <span style="font-size:11px;color:var(--mut);display:block">Total em Fretes a Pagar:</span>
+              <b id="close-freight-total" style="font-size:14px;color:var(--green)">R$ 0,00</b>
+            </div>
+            <div>
+              <span style="font-size:11px;color:var(--mut);display:block">Dinheiro Recolhido (Espécie):</span>
+              <b id="close-cash-total" style="font-size:14px;color:#60a5fa">R$ 0,00</b>
+            </div>
+            <div>
+              <span style="font-size:11px;color:var(--mut);display:block">Saldo Final a Acertar:</span>
+              <b id="close-final-balance" style="font-size:15px;color:#c084fc">R$ 0,00</b>
+            </div>
+          </div>
+
+          <!-- Campos de Assinatura (2 Colunas Responsivas) -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:32px;margin-top:28px;padding-top:10px">
+            <!-- Campo 1: Assinatura do Entregador -->
+            <div style="text-align:center">
+              <div style="border-bottom:1.5px dashed var(--mut);height:32px;margin-bottom:8px"></div>
+              <b style="font-size:13px;display:block;color:#fff" id="sign-motoboy-name">Assinatura do Entregador</b>
+              <span style="font-size:11px;color:var(--mut)">Confirmo que realizei as entregas e conferi os valores</span>
+            </div>
+
+            <!-- Campo 2: Assinatura do Responsável da Loja -->
+            <div style="text-align:center">
+              <div style="border-bottom:1.5px dashed var(--mut);height:32px;margin-bottom:8px"></div>
+              <b style="font-size:13px;display:block;color:#fff">Explosão Açaí — Caixa / Responsável</b>
+              <span style="font-size:11px;color:var(--mut)">Conferência de valores recebidos e baixa de acerto</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- FIM DA SEÇÃO 2: RELATÓRIO DE ENTREGAS & MOTOBOYS -->
     </div>
+  </div>
 
     <!-- ABA 3: CARDÁPIO & FICHA TÉCNICA -->
     <div class="tab-pane" id="tab-products">
@@ -1711,6 +1894,6 @@
 
   <!-- Scripts -->
   <script src="js/global-modal.js?v=1.0"></script>
-  <script src="js/admin.js?v=4.1"></script>
+  <script src="js/admin.js?v=4.2"></script>
 </body>
 </html>
