@@ -566,6 +566,8 @@ describe('Explosão Açaí — Testes do Bot WhatsApp & Inteligência Artificial
     const res3 = await geminiAssistantService.processMessage({ phone: testPhone, customerName: testName, text: '3' });
     assert.ok(res3.reply.includes('Combos & Promoções da Semana'));
     assert.ok(res3.reply.includes('https://cardapioexplosaoacai.com.br'));
+    assert.ok(res3.reply.includes('Combos da Casa') || res3.reply.includes('Combo Econômico'), 'Deve listar os combos reais');
+    assert.ok(res3.reply.includes('Mix Fini') || res3.reply.includes('Promoção'), 'Deve listar promoções reais');
 
     // 4. Opção 4: Horário e Endereço
     const res4 = await geminiAssistantService.processMessage({ phone: testPhone, customerName: testName, text: '4' });

@@ -296,6 +296,64 @@ Digite 0 a qualquer momento para voltar no menu!`;
   }
 
   /**
+   * Retorna a lista detalhada de Combos, Promoções da Semana e Cupons Ativos
+   */
+  getCombosAndPromosText(ctx) {
+    try {
+      const catalog = typeof catalogService.getCatalog === 'function' ? catalogService.getCatalog() : {};
+      const allProducts = (catalog.products || []).filter(p => p.active !== false);
+      const combos = allProducts.filter(p => p.id?.startsWith('combo') || p.categoryId === 'cat_combos' || p.categorySlug === 'combos');
+      const promos = allProducts.filter(p => p.isPromo && !combos.some(c => c.id === p.id));
+      const coupons = (typeof couponService.getCoupons === 'function' ? couponService.getCoupons() : (couponService.getAll ? couponService.getAll() : [])).filter(c => c.active !== false);
+
+      let text = `Confira nossos *Combos & Promoções da Semana* com descontos especiais:\n\n`;
+
+      if (combos.length > 0) {
+        text += `*Combos da Casa:*\n`;
+        combos.forEach(c => {
+          const prices = (c.prices || []);
+          const minPrice = prices.reduce((min, p) => {
+            const val = p.promoPrice || p.price;
+            return val && val < min ? val : min;
+          }, 9999);
+          const priceStr = minPrice < 9999 ? ` - a partir de R$ ${minPrice.toFixed(2).replace('.', ',')}` : '';
+          const promoTag = c.isPromo ? ' *(Em Promoção!)*' : '';
+          text += `• *${c.name}*${promoTag}${priceStr}\n`;
+          if (c.description) text += `  ${c.description}\n`;
+        });
+        text += `\n`;
+      }
+
+      if (promos.length > 0) {
+        text += `*Produtos em Promoção:*\n`;
+        promos.forEach(p => {
+          const promoPrices = (p.prices || []).filter(pr => pr.promoPrice && pr.promoPrice < pr.price);
+          const priceList = promoPrices.length > 0
+            ? promoPrices.map(pr => `${pr.size}ml por R$ ${pr.promoPrice.toFixed(2).replace('.', ',')} (de R$ ${pr.price.toFixed(2).replace('.', ',')})`).join(' | ')
+            : (p.prices || []).map(pr => `${pr.size}ml: R$ ${(pr.promoPrice || pr.price).toFixed(2).replace('.', ',')}`).join(' | ');
+          text += `• *${p.name}*: ${priceList}\n`;
+        });
+        text += `\n`;
+      }
+
+      if (coupons.length > 0) {
+        text += `*Cupons Ativos:*\n`;
+        coupons.slice(0, 3).forEach(cp => {
+          const disc = cp.type === 'percentage' || cp.type === 'percent' ? `${cp.value}% OFF` : `R$ ${Number(cp.value).toFixed(2).replace('.', ',')} OFF`;
+          const min = cp.minOrder || cp.minOrderValue ? ` (em pedidos a partir de R$ ${Number(cp.minOrder || cp.minOrderValue).toFixed(2).replace('.', ',')})` : '';
+          text += `• Cupom *${cp.code}*: ${disc}${min}\n`;
+        });
+        text += `\n`;
+      }
+
+      text += `Peça agora pelo nosso cardápio digital:\n👉 *https://cardapioexplosaoacai.com.br*\nAproveite antes que acabe!\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`;
+      return text;
+    } catch (e) {
+      return `Confira nossos *Combos & Promoções da Semana* com descontos especiais direto na aba de promoções do nosso cardápio digital:\n👉 *https://cardapioexplosaoacai.com.br*\nAproveite antes que acabe!\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`;
+    }
+  }
+
+  /**
    * Constrói o contexto dinâmico do sistema em tempo real a partir do banco
    */
   buildLiveContext(customerPhone) {
@@ -583,7 +641,7 @@ Digite 0 a qualquer momento para voltar no menu!`;
 
     // Opção 3: Combos & Promoções da Semana
     if (t === '3') {
-      const reply = `Confira nossos *Combos & Promoções da Semana* com descontos especiais direto na aba de promoções do nosso cardápio digital:\n👉 *https://cardapioexplosaoacai.com.br*\nAproveite antes que acabe!\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`;
+      const reply = this.getCombosAndPromosText(ctx);
       this.saveHistory(phone, 'user', cleanText);
       this.saveHistory(phone, 'assistant', reply);
       return { reply, needsHumanTakeover: false };
@@ -698,6 +756,7 @@ e conclua internamente com: [ACTION:CALL_HUMAN].
 2. Se o cliente digitar 0 ou pedir menu, envie o Menu Principal.
 3. Se o cliente digitar 8, encerre com a mensagem de encerramento.
 4. Mantenha tom cordial, elegante e sem excesso de emojis.
+5. Quando o cliente escolher a Opção 3 ou perguntar sobre combos e promoções, informe os combos e promoções da semana com preços e composições, os cupons ativos e o link https://cardapioexplosaoacai.com.br.
         `.trim();
 
         const historyList = this.getHistory(phone);
@@ -798,7 +857,7 @@ e conclua internamente com: [ACTION:CALL_HUMAN].
     // Opção 3 ou Promoções / Combos
     if (t === '3' || t.includes('combo') || t.includes('promo') || t.includes('promocoes') || t.includes('promoções') || t.includes('desconto')) {
       return {
-        reply: `Confira nossos *Combos & Promoções da Semana* com descontos especiais direto na aba de promoções do nosso cardápio digital:\n👉 *https://cardapioexplosaoacai.com.br*\nAproveite antes que acabe!\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`,
+        reply: this.getCombosAndPromosText(ctx),
         needsHumanTakeover: false
       };
     }
