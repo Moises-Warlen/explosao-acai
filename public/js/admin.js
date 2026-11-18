@@ -1532,6 +1532,9 @@ function createOrderCardHtml(order, isHistory = false) {
         <button class="btn-sm btn-secondary" style="margin-left:auto;font-size:11px;padding:3px 8px" onclick="toggleOrderCardExpand('${order.id}')" title="Minimizar detalhes deste pedido">
           ▲ Minimizar
         </button>
+        <button type="button" class="btn-sm" style="background:#2b0f47;color:#cdb4e4;border:1px solid rgba(168,85,247,0.4);font-size:10.5px;padding:3px 8px" onclick="anonymizeCustomerOrder('${order.id}', '${order.customer?.phone || ''}')" title="Anonimizar dados pessoais deste cliente (LGPD)">
+          🔒 Anonimizar (LGPD)
+        </button>
         ${canCancel ? `
           <button class="btn-sm btn-danger" style="margin-left:auto;font-size:11px;padding:4px 8px" onclick="openCancelOrderModal('${order.id}', '${order.orderNo}')" title="Cancelar este pedido">
             Cancelar
@@ -1541,6 +1544,28 @@ function createOrderCardHtml(order, isHistory = false) {
     </div>
   `;
 }
+
+window.anonymizeCustomerOrder = async function(orderId, phone) {
+  if (!confirm('Deseja anonimizar os dados pessoais deste cliente em conformidade com a LGPD? O nome, telefone e endereço serão removidos, mantendo os totais financeiros do pedido intactos.')) {
+    return;
+  }
+  try {
+    const res = await fetch(`${API_URL}/admin/customers/anonymize`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ orderId, phone })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      adminToast('Dados do cliente anonimizados com sucesso (LGPD)!', 'success');
+      loadOrders();
+    } else {
+      adminToast(data.error || 'Erro ao anonimizar dados.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Falha de conexão ao anonimizar dados.', 'danger');
+  }
+};
 
 window.openCancelOrderModal = function(orderId, orderNo) {
   if ($('#cancel-order-id')) $('#cancel-order-id').value = orderId;
@@ -1999,7 +2024,7 @@ function executeBrowserPrint(text) {
   if (printArea) {
     printArea.innerHTML = `
       <div style="text-align:center;margin-bottom:6px">
-        <img src="imagens/Logo.png" alt="Logo" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:1.5px solid #000;display:block;margin:0 auto 4px auto" onerror="this.style.display='none'">
+        <img src="imagens/Logo.webp" alt="Logo" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:1.5px solid #000;display:block;margin:0 auto 4px auto" onerror="this.style.display='none'">
         <div style="font-weight:900;font-size:14px;letter-spacing:0.5px">EXPLOSÃO AÇAÍ - DELIVERY</div>
       </div>
       <pre style="font-family:monospace;white-space:pre-wrap;margin:0;font-size:11px;line-height:1.3">${esc(text)}</pre>
@@ -2300,7 +2325,7 @@ function renderRankings(bestSellers, worstSellers) {
         const percent = Math.round((item.quantitySold / maxBestSold) * 100);
         return `
           <div class="ranking-item">
-            <img class="ranking-img" src="${item.image || 'imagens/Logo.png'}" alt="${esc(item.name)}" onerror="this.src='imagens/Logo.png'">
+            <img class="ranking-img" src="${item.image || 'imagens/Logo.webp'}" alt="${esc(item.name)}" onerror="this.src='imagens/Logo.webp'">
             <div class="ranking-info">
               <b>${esc(item.name)}</b>
               <div style="font-size:11px;color:var(--mut)">Faturamento: ${R(item.grossRevenue)} · Lucro: ${R(item.profit)} (${item.marginPercent}%)</div>
@@ -2326,7 +2351,7 @@ function renderRankings(bestSellers, worstSellers) {
         const percent = Math.round((item.quantitySold / maxWorstSold) * 100);
         return `
           <div class="ranking-item">
-            <img class="ranking-img" src="${item.image || 'imagens/Logo.png'}" alt="${esc(item.name)}" onerror="this.src='imagens/Logo.png'">
+            <img class="ranking-img" src="${item.image || 'imagens/Logo.webp'}" alt="${esc(item.name)}" onerror="this.src='imagens/Logo.webp'">
             <div class="ranking-info">
               <b>${esc(item.name)}</b>
               <div style="font-size:11px;color:var(--mut)">Faturamento: ${R(item.grossRevenue)} · Custo: ${R(item.totalCost)}</div>
@@ -2475,7 +2500,7 @@ window.exportReportToPdf = function() {
   printArea.innerHTML = `
     <div style="border-bottom:2px solid #4b0f6b;padding-bottom:14px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center">
       <div style="display:flex;align-items:center;gap:14px">
-        <img src="imagens/Logo.png" style="width:60px;height:60px;object-fit:cover;border-radius:50%">
+        <img src="imagens/Logo.webp" style="width:60px;height:60px;object-fit:cover;border-radius:50%">
         <div>
           <h1 style="margin:0;font-size:24px;color:#4b0f6b">EXPLOSÃO AÇAÍ</h1>
           <div style="font-size:14px;color:#333;font-weight:bold">Relatório Executivo de Vendas & Logística</div>
@@ -2525,7 +2550,7 @@ window.exportReportToPdf = function() {
     <div style="display:grid;grid-template-columns:repeat(2, 1fr);gap:10px;margin-bottom:20px">
       ${(rep.bestSellers || []).slice(0, 6).map(it => `
         <div style="display:flex;align-items:center;gap:10px;border:1px solid #ddd;padding:8px;border-radius:6px">
-          <img src="${it.image || 'imagens/Logo.png'}" style="width:40px;height:40px;object-fit:cover;border-radius:6px">
+          <img src="${it.image || 'imagens/Logo.webp'}" style="width:40px;height:40px;object-fit:cover;border-radius:6px">
           <div style="flex:1;font-size:12px">
             <b>${esc(it.name)}</b>
             <div style="color:#555">Quantidade: <b>${it.quantitySold}</b> · Receita: ${R(it.grossRevenue)} · Lucro: ${R(it.profit)}</div>
@@ -2628,7 +2653,7 @@ function renderBestSellersManager() {
 
   container.innerHTML = currentProducts.map((p, idx) => `
     <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.06);border:1px solid var(--ln);padding:6px 12px;border-radius:8px">
-      <img src="${p.image || 'imagens/do seu jeitinho.png'}" style="width:34px;height:34px;border-radius:6px;object-fit:cover" onerror="this.src='imagens/do seu jeitinho.png'">
+      <img src="${p.image || 'imagens/do seu jeitinho.webp'}" style="width:34px;height:34px;border-radius:6px;object-fit:cover" onerror="this.src='imagens/do seu jeitinho.webp'">
       <div>
         <div style="font-size:12px;font-weight:700;color:#fff">${esc(p.name)}</div>
         <small style="font-size:10px;color:var(--y);font-weight:700">★ #${idx + 1} em Mais Vendidos</small>
@@ -2741,7 +2766,7 @@ function renderProductsVitrineGrid() {
     return `
       <div class="prod-vitrine-card ${p.active ? '' : 'paused'}">
         <div class="prod-vitrine-img-wrap">
-          <img src="${p.image || 'imagens/do seu jeitinho.png'}" alt="${esc(p.name)}" class="prod-vitrine-img" loading="lazy">
+          <img src="${p.image || 'imagens/do seu jeitinho.webp'}" alt="${esc(p.name)}" class="prod-vitrine-img" loading="lazy">
           <span class="prod-vitrine-badge ${p.active ? 'badge-active' : 'badge-paused'}">
             ${p.active ? '● Ativo' : '⏸ Pausado'}
           </span>
@@ -2809,7 +2834,7 @@ function renderProductsTable() {
 
       return `
         <tr>
-          <td><img src="${p.image || 'imagens/do seu jeitinho.png'}" style="width:44px;height:44px;border-radius:10px;object-fit:cover" onerror="this.src='imagens/do seu jeitinho.png'"></td>
+          <td><img src="${p.image || 'imagens/do seu jeitinho.webp'}" style="width:44px;height:44px;border-radius:10px;object-fit:cover" onerror="this.src='imagens/do seu jeitinho.webp'"></td>
           <td>
             <b>${esc(p.name)}</b>
             <br><small style="color:var(--mut)">${esc(p.categorySlug || p.category)}</small>
@@ -2877,7 +2902,7 @@ function renderProductsTable() {
         return `
           <div class="product-stacked-card ${p.active ? '' : 'is-paused'}">
             <div class="product-stacked-card-main">
-              <img src="${p.image || 'imagens/do seu jeitinho.png'}" class="product-stacked-thumb" alt="${esc(p.name)}" onerror="this.src='imagens/do seu jeitinho.png'" loading="lazy">
+              <img src="${p.image || 'imagens/do seu jeitinho.webp'}" class="product-stacked-thumb" alt="${esc(p.name)}" onerror="this.src='imagens/do seu jeitinho.webp'" loading="lazy">
               <div class="product-stacked-info">
                 <div class="product-stacked-title-row">
                   <h4 class="product-stacked-name" title="${esc(p.name)}">${esc(p.name)}</h4>
@@ -2954,7 +2979,7 @@ window.openRecipeModal = function(productId) {
   if (!prod) return;
   CURRENT_RECIPE_PRODUCT = prod;
 
-  $('#recipe-prod-photo').src = prod.image || 'imagens/do seu jeitinho.png';
+  $('#recipe-prod-photo').src = prod.image || 'imagens/do seu jeitinho.webp';
   $('#recipe-prod-name').textContent = prod.name;
   $('#recipe-prod-category').textContent = (prod.categorySlug || prod.category || 'Açaí').toUpperCase();
   $('#recipe-prod-desc').textContent = prod.description || 'Receita padronizada com pesagem e insumos para delivery.';
@@ -3032,7 +3057,7 @@ window.exportRecipeToPdf = function() {
   printArea.innerHTML = `
     <div style="border-bottom:3px solid #4b0f6b;padding-bottom:16px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center">
       <div style="display:flex;align-items:center;gap:16px">
-        <img src="imagens/Logo.png" style="width:70px;height:70px;object-fit:cover;border-radius:50%" onerror="this.style.display='none'">
+        <img src="imagens/Logo.webp" style="width:70px;height:70px;object-fit:cover;border-radius:50%" onerror="this.style.display='none'">
         <div>
           <h1 style="margin:0;font-size:26px;color:#4b0f6b;font-family:Arial,sans-serif">EXPLOSÃO AÇAÍ</h1>
           <div style="font-size:15px;color:#222;font-weight:bold">Ficha Técnica Operacional & Receituário de Insumos</div>
@@ -3048,7 +3073,7 @@ window.exportRecipeToPdf = function() {
 
     <!-- Banner do Produto com Foto em Destaque -->
     <div style="display:flex;gap:20px;align-items:center;background:#fbf8fd;border:1.5px solid #e2d3f0;border-radius:12px;padding:16px;margin-bottom:22px">
-      <img src="${prod.image || 'imagens/do seu jeitinho.png'}" style="width:110px;height:110px;border-radius:10px;object-fit:cover;border:2px solid #4b0f6b">
+      <img src="${prod.image || 'imagens/do seu jeitinho.webp'}" style="width:110px;height:110px;border-radius:10px;object-fit:cover;border:2px solid #4b0f6b">
       <div style="flex:1">
         <span style="background:#4b0f6b;color:#fff;font-size:11px;font-weight:bold;padding:3px 8px;border-radius:4px;text-transform:uppercase">
           ${esc(prod.categorySlug || prod.category || 'Açaí')}
@@ -3216,8 +3241,8 @@ window.openNewProductModal = function() {
   $('#p-desc').value = '';
   $('#p-is-launch').checked = false;
   $('#p-is-promo').checked = false;
-  $('#p-img').value = 'imagens/do seu jeitinho.png';
-  $('#p-photo-preview').src = 'imagens/do seu jeitinho.png';
+  $('#p-img').value = 'imagens/do seu jeitinho.webp';
+  $('#p-photo-preview').src = 'imagens/do seu jeitinho.webp';
   
   renderProductSizeRows([
     { size: 300, price: 15.90, costPrice: 6.80, maxAccompaniments: 3, promoPrice: null },
@@ -3244,7 +3269,7 @@ window.editProductModal = function(id) {
   $('#p-is-promo').checked = !!prod.isPromo;
   $('#p-desc').value = prod.description || '';
   $('#p-img').value = prod.image || '';
-  $('#p-photo-preview').src = prod.image || 'imagens/do seu jeitinho.png';
+  $('#p-photo-preview').src = prod.image || 'imagens/do seu jeitinho.webp';
 
   renderProductSizeRows(prod.prices || []);
 

@@ -1,6 +1,7 @@
 import { storeService } from '../../application/services/StoreService.js';
 import { freightService } from '../../application/services/FreightService.js';
-import { isValidAdminToken } from '../middlewares/authMiddleware.js';
+import { verifyAndMigratePassword, hashPassword, createAdminToken } from '../middlewares/authMiddleware.js';
+import { db } from '../../infrastructure/database/JsonDatabase.js';
 
 // Nunca devolve a senha do painel (nem outros segredos) em respostas de configurações
 function publicSettings(settings) {
@@ -62,12 +63,13 @@ export class StoreController {
 
   async changePassword(req, res) {
     try {
-      const { currentPassword, newPassword } = req.body;
+      const { currentPassword, newPassword } = req.body || {};
       if (!newPassword || newPassword.trim().length < 4) {
         return res.status(400).json({ ok: false, error: 'A nova senha deve ter no mínimo 4 caracteres.' });
       }
 
-      if (!isValidAdminToken(currentPassword)) {
+      const stored = db.get()?.settings?.adminPassword;
+      if (!verifyAndMigratePassword(currentPassword, stored)) {
         return res.status(400).json({ ok: false, error: 'A senha atual informada está incorreta.' });
       }
 
@@ -75,8 +77,10 @@ export class StoreController {
         return res.status(400).json({ ok: false, error: 'A nova senha não pode ser igual à senha atual.' });
       }
 
-      storeService.updateSettings({ adminPassword: newPassword.trim() });
-      return res.json({ ok: true, message: 'Senha administrativa atualizada com sucesso!', newToken: newPassword.trim() });
+      const newHashed = hashPassword(newPassword.trim());
+      storeService.updateSettings({ adminPassword: newHashed });
+      const newToken = createAdminToken();
+      return res.json({ ok: true, message: 'Senha administrativa atualizada com sucesso!', newToken });
     } catch (err) {
       return res.status(500).json({ ok: false, error: err.message });
     }

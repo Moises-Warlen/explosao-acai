@@ -264,9 +264,10 @@ describe('Explosão Açaí - Testes das Novas Funcionalidades', () => {
     assert.strictEqual(createRes.status, 201);
     const orderId = createData.order.id;
 
-    // 2. Confirma entrega e recebimento pelo motoboy
+    // 2. Confirma entrega e recebimento pelo motoboy (autenticado)
     const confirmRes = await fetch(`${baseUrl}/api/orders/${orderId}/confirm-delivery`, {
-      method: 'POST'
+      method: 'POST',
+      headers: { 'x-motoboy-token': 'moto123' }
     });
     const confirmData = await confirmRes.json();
     assert.strictEqual(confirmRes.status, 200);
@@ -386,11 +387,11 @@ describe('Explosão Açaí - Testes das Novas Funcionalidades', () => {
     assert.strictEqual(createRes.status, 201);
     const orderId = createData.order.id;
 
-    // 2. Devolve o pedido informando motivo
+    // 2. Devolve o pedido informando motivo (autenticado como motoboy)
     const returnReason = 'Cliente não atendeu o interfone nem telefone';
     const returnRes = await fetch(`${baseUrl}/api/orders/${orderId}/return`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-motoboy-token': 'moto123' },
       body: JSON.stringify({ reason: returnReason })
     });
     const returnData = await returnRes.json();

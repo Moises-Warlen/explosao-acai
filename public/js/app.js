@@ -609,7 +609,7 @@ function renderProductCard(prod) {
   const isCustom = prod.isCustomizable || prod.categorySlug === 'monte';
   const hasMultiplePrices = prod.prices && prod.prices.length > 1;
   const btnLabel = isCustom ? 'Montar' : 'Pedir';
-  const imgUrl = prod.image || 'imagens/do seu jeitinho.png';
+  const imgUrl = prod.image || 'imagens/do seu jeitinho.webp';
 
   let badgeHtml = '';
   if (prod.isNewLaunch) {
@@ -654,7 +654,7 @@ function renderProductCard(prod) {
     <div class="card ${prod.isNewLaunch ? 'card-launch' : ''}" data-id="${prod.id}" onclick="openItemModal('${prod.id}')" style="cursor:pointer">
       <div class="ic">
         ${badgeHtml}
-        <img src="${encodeURI(imgUrl)}" alt="${esc(prod.name)}" loading="lazy" onerror="this.src='imagens/do seu jeitinho.png'">
+        <img src="${encodeURI(imgUrl)}" alt="${esc(prod.name)}" loading="lazy" onerror="this.src='imagens/do seu jeitinho.webp'">
       </div>
       ${sizesHtml}
       <h3 class="card-title">${esc(prod.name)}</h3>
@@ -796,7 +796,7 @@ function renderItemModal() {
       Voltar para o cardápio
     </button>
     <div class="sheet-photo-wrap">
-      <img src="${prod.image || 'imagens/do seu jeitinho.png'}" alt="${esc(prod.name)}" onerror="this.src='imagens/do seu jeitinho.png'">
+      <img src="${prod.image || 'imagens/do seu jeitinho.webp'}" alt="${esc(prod.name)}" onerror="this.src='imagens/do seu jeitinho.webp'">
     </div>
     <h3>${esc(prod.name)}</h3>
     <p class="mut" style="margin-top:2px;font-size:13px">${esc(prod.description)}</p>
@@ -1479,6 +1479,11 @@ function renderCheckoutModal() {
       ${isDelivery ? `<div class="tot"><span>Frete</span><span style="${freight === 0 ? 'color:var(--green);font-weight:700' : ''}">${freight === 0 ? 'GRÁTIS (Até 2 km)' : R(freight)}</span></div>` : ''}
       <div class="tot g"><span>Total a Pagar</span><b>${R(total)}</b></div>
 
+      <div style="font-size:11px;color:var(--mut);text-align:center;margin:10px 0 6px;line-height:1.4">
+        🔒 Seus dados são protegidos conforme a LGPD e usados exclusivamente para a entrega do seu pedido.
+        <a href="javascript:void(0)" onclick="openPrivacyModal()" style="color:var(--y);text-decoration:underline">Saiba mais</a>
+      </div>
+
       <button class="btn g" id="btn-submit-order" onclick="submitOrder()">Enviar Pedido · ${R(total)}</button>
     </div>
     <div style="display:flex;gap:8px;margin-top:8px">
@@ -1677,9 +1682,23 @@ function updateCheckoutTotalsDisplay() {
     ${isDelivery ? `<div class="tot"><span>Frete</span><span style="${freight === 0 ? 'color:var(--green);font-weight:700' : ''}">${freight === 0 ? 'GRÁTIS (Até 2 km)' : R(freight)}</span></div>` : ''}
     <div class="tot g"><span>Total a Pagar</span><b>${R(total)}</b></div>
 
+    <div style="font-size:11px;color:var(--mut);text-align:center;margin:10px 0 6px;line-height:1.4">
+      🔒 Seus dados são protegidos conforme a LGPD e usados exclusivamente para a entrega do seu pedido.
+      <a href="javascript:void(0)" onclick="openPrivacyModal()" style="color:var(--y);text-decoration:underline">Saiba mais</a>
+    </div>
+
     <button class="btn g" id="btn-submit-order" onclick="submitOrder()">Enviar Pedido · ${R(total)}</button>
   `;
 }
+
+window.openPrivacyModal = function() {
+  const m = document.getElementById('privacy-policy-modal');
+  if (m) m.style.display = 'flex';
+};
+window.closePrivacyModal = function() {
+  const m = document.getElementById('privacy-policy-modal');
+  if (m) m.style.display = 'none';
+};
 
 // Enviar Pedido
 window.submitOrder = async function() {
@@ -2052,7 +2071,7 @@ function renderChatModal(phone, name) {
     <button class="x" onclick="closeSheet()">×</button>
     
     <div class="chat-header-bar">
-      <img src="imagens/Logo.png" alt="Explosão Açaí" class="chat-store-logo" onerror="this.src='imagens/do seu jeitinho.png'">
+      <img src="imagens/Logo.webp" alt="Explosão Açaí" class="chat-store-logo" onerror="this.src='imagens/do seu jeitinho.webp'">
       <div class="chat-store-title">
         <b>Explosão Açaí</b>
         <span>Atendimento Oficial da Loja</span>
@@ -2171,7 +2190,7 @@ function renderChatMessagesList(messages) {
     return `
       <div class="chat-bubble ${isStore ? 'store' : 'customer'}">
         <div class="chat-bubble-author" style="${isStore ? 'color:#6b21a8' : 'color:#fde047;justify-content:flex-end'}">
-          ${isStore ? `<img src="imagens/Logo.png" alt="Logo" onerror="this.style.display='none'"> <b>${esc(storeName)}</b>` : `<b>Você</b>`}
+          ${isStore ? `<img src="imagens/Logo.webp" alt="Logo" onerror="this.style.display='none'"> <b>${esc(storeName)}</b>` : `<b>Você</b>`}
         </div>
         <div>${esc(m.message)}</div>
         <small style="opacity:0.8">${new Date(m.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</small>

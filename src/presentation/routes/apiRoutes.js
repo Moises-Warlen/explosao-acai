@@ -12,8 +12,14 @@ import { printerController } from '../controllers/PrinterController.js';
 import { chatController } from '../controllers/ChatController.js';
 import { webhookController } from '../controllers/WebhookController.js';
 import { reportController } from '../controllers/ReportController.js';
-import { adminAuthMiddleware, isValidAdminToken } from '../middlewares/authMiddleware.js';
+import {
+  adminAuthMiddleware,
+  motoboyOrAdminAuthMiddleware,
+  verifyAndMigratePassword,
+  createAdminToken
+} from '../middlewares/authMiddleware.js';
 import { upload } from '../../infrastructure/storage/UploadService.js';
+import { db } from '../../infrastructure/database/JsonDatabase.js';
 
 const router = Router();
 
@@ -22,10 +28,11 @@ router.post('/orders', (req, res) => orderController.create(req, res));
 router.get('/orders', (req, res) => orderController.getAll(req, res));
 router.get('/orders/:id', (req, res) => orderController.getById(req, res));
 router.patch('/orders/:id/status', adminAuthMiddleware, (req, res) => orderController.updateStatus(req, res));
-router.post('/orders/:id/confirm-delivery', (req, res) => orderController.confirmDelivery(req, res));
-router.post('/orders/:id/return', (req, res) => orderController.returnOrder(req, res));
+router.post('/orders/:id/confirm-delivery', motoboyOrAdminAuthMiddleware, (req, res) => orderController.confirmDelivery(req, res));
+router.post('/orders/:id/return', motoboyOrAdminAuthMiddleware, (req, res) => orderController.returnOrder(req, res));
 router.post('/orders/:id/print', adminAuthMiddleware, (req, res) => orderController.printTicket(req, res));
-router.post('/orders/archive-daily-completed', (req, res) => orderController.archiveDaily(req, res));
+router.post('/orders/archive-daily-completed', adminAuthMiddleware, (req, res) => orderController.archiveDaily(req, res));
+router.post('/admin/customers/anonymize', adminAuthMiddleware, (req, res) => orderController.anonymizeCustomer(req, res));
 
 // ================= CARDÁPIO & PRODUTOS =================
 router.all('/catalog/sync-flyer', (req, res) => catalogController.syncFlyer(req, res));
@@ -99,9 +106,12 @@ router.post('/test/simulate-payment/:orderId', adminAuthMiddleware, (req, res) =
 // ================= AUTENTICAÇÃO DO ADMIN =================
 router.post('/admin/auth', (req, res) => {
   const { password } = req.body || {};
-  if (isValidAdminToken(password)) {
-    const raw = typeof password === 'string' ? password.trim() : password;
-    return res.json({ ok: true, token: raw });
+  const raw = typeof password === 'string' ? password.trim() : '';
+  const stored = db.get()?.settings?.adminPassword || process.env.ADMIN_PASSWORD;
+
+  if (verifyAndMigratePassword(raw, stored)) {
+    const token = createAdminToken();
+    return res.json({ ok: true, token });
   }
   return res.status(401).json({ ok: false, error: 'Senha incorreta.' });
 });

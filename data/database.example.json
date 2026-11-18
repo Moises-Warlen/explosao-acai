@@ -1,0 +1,51 @@
+{
+  "settings": {
+    "storeName": "Explosão Açaí",
+    "adminPassword": "AltereSuaSenha123",
+    "motoboyToken": "moto123",
+    "chatSenderName": "Delivery",
+    "freeKmThreshold": 2,
+    "wpp": "5516999999999",
+    "pixKey": "16999999999",
+    "address": "Rua Exemplo, 100, Centro, Franca - SP",
+    "city": "Franca",
+    "state": "SP",
+    "perKmRate": 1,
+    "minFreight": 4.5,
+    "maxKm": 25,
+    "isOpenManual": true,
+    "useAutoSchedule": false,
+    "bannerPromo": "Peça pelo nosso cardápio próprio!",
+    "schedules": [
+      { "day": 0, "dayName": "Domingo", "open": "13:00", "close": "23:00", "active": true },
+      { "day": 1, "dayName": "Segunda-feira", "open": "14:00", "close": "22:00", "active": false },
+      { "day": 2, "dayName": "Terça-feira", "open": "13:00", "close": "23:00", "active": true },
+      { "day": 3, "dayName": "Quarta-feira", "open": "13:00", "close": "23:00", "active": true },
+      { "day": 4, "dayName": "Quinta-feira", "open": "13:00", "close": "23:00", "active": true },
+      { "day": 5, "dayName": "Sexta-feira", "open": "13:00", "close": "23:30", "active": true },
+      { "day": 6, "dayName": "Sábado", "open": "13:00", "close": "23:30", "active": true }
+    ]
+  },
+  "categories": [
+    { "id": "cat_monte", "name": "Monte seu Açaí", "slug": "monte", "order": 1, "active": true }
+  ],
+  "printers": [
+    {
+      "id": "prt_kitchen",
+      "name": "Impressora Cozinha / Produção (1ª Via)",
+      "target": "kitchen",
+      "paperWidth": 80,
+      "isDefault": true,
+      "autoPrintOnApproved": true,
+      "headerText": "EXPLOSÃO AÇAÍ - PRODUÇÃO"
+    }
+  ],
+  "products": [],
+  "accompaniments": [],
+  "extras": [],
+  "fruits": [],
+  "coupons": [],
+  "orders": [],
+  "chats": [],
+  "catalogVersion": "2026-11-example-v1"
+}

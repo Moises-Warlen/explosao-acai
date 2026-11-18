@@ -237,10 +237,8 @@ export class ChatService {
 
     this.db.save();
     wsHub.notifyChatMessage(closeMsg);
-    wsHub.broadcast({
-      event: 'CHAT_CLOSED',
-      payload: { customerPhone: raw }
-    });
+    // Notifica de forma privada (apenas para Admin e para o cliente do chat, sem broadcast global de telefone)
+    wsHub.notifyChatClosed(raw);
 
     return { ok: true, message: closeMsg };
   }

@@ -122,6 +122,33 @@ export class WebSocketHub {
       }
     }
   }
+
+  notifyChatClosed(customerPhone) {
+    const isTest = process.env.NODE_ENV === 'test';
+    const targetDigits = String(customerPhone || '').replace(/\D/g, '');
+
+    const adminMsg = JSON.stringify({
+      event: 'CHAT_CLOSED',
+      payload: { customerPhone, timestamp: Date.now() },
+      timestamp: Date.now()
+    });
+
+    const clientMsg = JSON.stringify({
+      event: 'CHAT_CLOSED',
+      payload: { closed: true, timestamp: Date.now() },
+      timestamp: Date.now()
+    });
+
+    for (const client of this.clients) {
+      if (client.readyState === WebSocket.OPEN) {
+        if (client.isAdmin) {
+          client.send(adminMsg);
+        } else if (client.registeredPhone && client.registeredPhone === targetDigits) {
+          client.send(clientMsg);
+        }
+      }
+    }
+  }
 }
 
 export const wsHub = new WebSocketHub();

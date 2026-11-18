@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Portal do Entregador · Explosão Açaí</title>
-  <link rel="icon" type="image/png" href="imagens/Logo.png?v=3">
+  <link rel="icon" type="image/png" href="imagens/Logo.webp?v=3">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -267,7 +267,7 @@
 
   <div class="container">
     <div class="header">
-      <img src="imagens/Logo.png?v=3" alt="Logo" onerror="this.style.display='none'">
+      <img src="imagens/Logo.webp?v=3" alt="Logo" onerror="this.style.display='none'">
       <div>
         <h1>EXPLOSÃO AÇAÍ</h1>
         <small>Portal do Entregador · Conclusão Rápida</small>
@@ -454,7 +454,7 @@
       try {
         const res = await fetch(`${API_URL}/orders/${orderId}/return`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: motoboyHeaders(),
           body: JSON.stringify({ reason })
         });
         const data = await res.json();
@@ -481,7 +481,9 @@
 
     async function loadSingleOrder(id) {
       try {
-        const res = await fetch(`${API_URL}/orders/${id}`);
+        const res = await fetch(`${API_URL}/orders/${id}`, {
+          headers: motoboyHeaders()
+        });
         const data = await res.json();
         if (!data.ok || !data.order) {
           const lBox = document.getElementById('loading-box');
@@ -681,6 +683,26 @@
       } catch (e) {}
     }
 
+    function getMotoboyToken() {
+      let token = localStorage.getItem('motoboy_token');
+      if (!token) {
+        token = prompt('Digite o PIN / Chave de Acesso do Entregador (padrão: moto123):');
+        if (token) {
+          token = token.trim();
+          localStorage.setItem('motoboy_token', token);
+        }
+      }
+      return token || 'moto123';
+    }
+
+    function motoboyHeaders(extra = {}) {
+      return {
+        'Content-Type': 'application/json',
+        'x-motoboy-token': getMotoboyToken(),
+        ...extra
+      };
+    }
+
     async function executeConfirmDelivery() {
       closeMotoboyModal();
       const btn = document.getElementById('btn-confirm-delivery');
@@ -690,7 +712,7 @@
       try {
         const res = await fetch(`${API_URL}/orders/${orderId}/confirm-delivery`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
+          headers: motoboyHeaders()
         });
         const data = await res.json();
         if (data.ok) {
@@ -698,6 +720,7 @@
           document.getElementById('order-details-box').style.display = 'none';
           document.getElementById('success-screen').style.display = 'block';
         } else {
+          if (res.status === 401) localStorage.removeItem('motoboy_token');
           showMotoboyToast(data.error || 'Erro ao confirmar entrega.');
           btn.disabled = false;
           btn.textContent = '✓ Confirmar Entrega e Recebimento';
@@ -713,8 +736,15 @@
       const lBox = document.getElementById('loading-box');
       if (lBox) lBox.style.display = 'none';
       try {
-        const res = await fetch(`${API_URL}/orders?motoboy=pending`);
+        const res = await fetch(`${API_URL}/orders?motoboy=pending`, {
+          headers: motoboyHeaders()
+        });
         const data = await res.json();
+        if (res.status === 401) {
+          localStorage.removeItem('motoboy_token');
+          showMotoboyToast('Chave de acesso inválida.');
+          return;
+        }
         if (data.ok) {
           const openOrders = (data.orders || []).filter(o => o.status !== 'delivered' && o.status !== 'cancelled' && o.status !== 'returned' && o.delivery?.type === 'delivery');
           const box = document.getElementById('open-orders-box');
