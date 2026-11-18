@@ -1785,6 +1785,12 @@ window.confirmPayment = window.simulateBankApproval;
 // ==================== MODAL UNIVERSAL DE CONFIRMAÇÃO ====================
 let CONFIRM_MODAL_CALLBACK = null;
 window.showConfirmModal = function({ icon = '⚠️', title = 'Confirmar Ação', message = '', btnText = 'Confirmar', btnClass = 'btn-next', onConfirm }) {
+  if (window.customConfirm) {
+    window.customConfirm({ icon, title, message, confirmText: btnText, confirmClass: btnClass }).then(ok => {
+      if (ok && typeof onConfirm === 'function') onConfirm();
+    });
+    return;
+  }
   if ($('#confirm-modal-icon')) $('#confirm-modal-icon').textContent = icon;
   if ($('#confirm-modal-title')) $('#confirm-modal-title').textContent = title;
   if ($('#confirm-modal-message')) $('#confirm-modal-message').innerHTML = message;
@@ -1802,6 +1808,7 @@ window.showConfirmModal = function({ icon = '⚠️', title = 'Confirmar Ação'
   const m = $('#confirm-action-modal');
   if (m) m.style.display = 'flex';
 };
+window.openConfirmModal = window.showConfirmModal;
 
 window.closeConfirmModal = function() {
   const m = $('#confirm-action-modal');
@@ -1903,11 +1910,31 @@ window.copyMotoboyLink = function(orderId) {
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(textToCopy).then(() => {
       adminToast(`Link da entrega #${orderNo} (${customerName}) copiado com sucesso!`, 'success');
-    }).catch(() => {
-      prompt(`Link da entrega #${orderNo}:`, textToCopy);
+    }).catch(async () => {
+      if (window.customPrompt) {
+        await window.customPrompt({
+          title: 'Link da Entrega',
+          icon: '🔗',
+          message: `Link da entrega #${orderNo} (${esc(customerName)}):`,
+          defaultValue: textToCopy,
+          confirmText: 'Fechar'
+        });
+      } else {
+        prompt(`Link da entrega #${orderNo}:`, textToCopy);
+      }
     });
   } else {
-    prompt(`Link da entrega #${orderNo}:`, textToCopy);
+    if (window.customPrompt) {
+      window.customPrompt({
+        title: 'Link da Entrega',
+        icon: '🔗',
+        message: `Link da entrega #${orderNo} (${esc(customerName)}):`,
+        defaultValue: textToCopy,
+        confirmText: 'Fechar'
+      });
+    } else {
+      prompt(`Link da entrega #${orderNo}:`, textToCopy);
+    }
   }
 };
 
@@ -4668,7 +4695,15 @@ window.saveFastSenderName = async function() {
 window.editCurrentCustomerName = async function() {
   if (!ACTIVE_CHAT_PHONE) return;
   const currentName = $('#active-chat-name')?.textContent || '';
-  const newName = prompt('Digite o nome correto deste cliente:', currentName);
+  const newName = window.customPrompt ? await window.customPrompt({
+    title: 'Editar Nome do Cliente',
+    icon: '👤',
+    message: 'Digite o nome correto deste cliente para identificação no sistema:',
+    defaultValue: currentName,
+    placeholder: 'Ex: Carlos Silva',
+    confirmText: 'Salvar Nome'
+  }) : prompt('Digite o nome correto deste cliente:', currentName);
+
   if (!newName || !newName.trim() || newName.trim() === currentName) return;
 
   try {
@@ -5300,7 +5335,7 @@ window.generateRouteWhatsAppText = function(selected) {
   return text;
 };
 
-window.openSendRouteToMotoboyModal = function() {
+window.openSendRouteToMotoboyModal = async function() {
   const selected = getSelectedMapOrders();
   if (selected.length === 0) {
     return adminToast('Selecione pelo menos um pedido para a rota.', 'warning');
@@ -5310,7 +5345,23 @@ window.openSendRouteToMotoboyModal = function() {
   const routeText = generateRouteWhatsAppText(selected);
   const routeKey = `last_motoboy_phone_${routeLabel.replace(/\s+/g, '_')}`;
   const rememberedPhone = localStorage.getItem(routeKey) || localStorage.getItem('last_motoboy_phone') || '';
-  const phone = prompt(`Digite o WhatsApp do entregador responsável pela [${routeLabel}] (DDD e número, ou deixe em branco para escolher no WhatsApp):`, rememberedPhone);
+  
+  let phone;
+  if (window.customPrompt) {
+    phone = await window.customPrompt({
+      title: 'Enviar Rota via WhatsApp',
+      icon: '🛵',
+      message: `Digite o WhatsApp do entregador responsável pela <b>[${esc(routeLabel)}]</b> (DDD e número, ou deixe em branco para escolher no WhatsApp):`,
+      defaultValue: rememberedPhone,
+      placeholder: '(16) 99999-9999',
+      confirmText: 'Enviar no WhatsApp',
+      confirmClass: 'btn-whatsapp',
+      maskType: 'phone'
+    });
+  } else {
+    phone = prompt(`Digite o WhatsApp do entregador responsável pela [${routeLabel}] (DDD e número, ou deixe em branco para escolher no WhatsApp):`, rememberedPhone);
+  }
+
   if (phone === null) return;
 
   if (phone.trim()) {
@@ -5334,11 +5385,31 @@ window.copyFullRouteText = function() {
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(routeText).then(() => {
       adminToast(`✓ ${CURRENT_SELECTED_ROUTE_LABEL || 'Rota'} copiada para a área de transferência!`, 'success');
-    }).catch(() => {
-      prompt('Copie o texto da rota abaixo:', routeText);
+    }).catch(async () => {
+      if (window.customPrompt) {
+        await window.customPrompt({
+          title: 'Copiar Texto da Rota',
+          icon: '📋',
+          message: 'Copie o texto da rota abaixo para colar no WhatsApp ou onde desejar:',
+          defaultValue: routeText,
+          confirmText: 'Concluído'
+        });
+      } else {
+        prompt('Copie o texto da rota abaixo:', routeText);
+      }
     });
   } else {
-    prompt('Copie o texto da rota abaixo:', routeText);
+    if (window.customPrompt) {
+      window.customPrompt({
+        title: 'Copiar Texto da Rota',
+        icon: '📋',
+        message: 'Copie o texto da rota abaixo para colar no WhatsApp ou onde desejar:',
+        defaultValue: routeText,
+        confirmText: 'Concluído'
+      });
+    } else {
+      prompt('Copie o texto da rota abaixo:', routeText);
+    }
   }
 };
 
