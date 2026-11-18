@@ -99,7 +99,6 @@
       transition: all 0.2s;
     }
     .btn:active { transform: scale(0.98); }
-    .btn-maps { background: #2563eb; color: #fff; margin-top: 8px; font-weight: 800; font-size: 16px; }
     .btn-waze { background: #059669; color: #fff; margin-top: 8px; font-weight: 800; font-size: 16px; }
     .btn-wpp { background: #22c55e; color: #fff; margin-top: 8px; font-weight: 800; font-size: 15px; }
     .btn-confirm {
@@ -326,9 +325,6 @@
         </div>
 
         <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-          <a id="btn-maps" href="#" target="_blank" class="btn btn-maps" style="flex:1;min-width:130px;margin-top:0">
-            📍 Google Maps
-          </a>
           <a id="btn-waze" href="#" target="_blank" class="btn" style="flex:1;min-width:130px;background:#059669;color:#fff;margin-top:0;display:flex;align-items:center;justify-content:center;gap:6px">
             🚗 Waze
           </a>
@@ -569,9 +565,8 @@
         if (refBox) refBox.style.display = 'none';
       }
 
-      // Google Maps / Waze
+      // Waze
       const mapsQuery = encodeURIComponent(`${fullAddr}, ${del.bairro || ''}, Franca - SP`);
-      document.getElementById('btn-maps').href = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`;
       const btnWaze = document.getElementById('btn-waze');
       if (btnWaze) {
         btnWaze.href = `https://waze.com/ul?q=${mapsQuery}&navigate=yes`;

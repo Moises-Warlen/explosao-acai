@@ -2783,10 +2783,13 @@ window.setProductsPerPage = function(perPage) {
 function renderProductsTable() {
   const tbody = $('#products-table-body');
   const paginationBox = $('#products-pagination');
-  if (!tbody) return;
+  const mobileCardsContainer = $('#products-cards-mobile-view');
+  const mobilePaginationBox = $('#products-pagination-mobile');
+  if (!tbody && !mobileCardsContainer) return;
 
   const total = PRODUCTS.length;
-  const perPage = PRODUCTS_PER_PAGE || 10;
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 860;
+  const perPage = isMobile ? 4 : (PRODUCTS_PER_PAGE || 10);
   const totalPages = Math.max(1, Math.ceil(total / perPage));
   if (PRODUCTS_PAGE > totalPages) PRODUCTS_PAGE = totalPages;
   if (PRODUCTS_PAGE < 1) PRODUCTS_PAGE = 1;
@@ -2794,49 +2797,53 @@ function renderProductsTable() {
   const start = (PRODUCTS_PAGE - 1) * perPage;
   const pageProducts = PRODUCTS.slice(start, start + perPage);
 
-  tbody.innerHTML = pageProducts.map(p => {
-    let flags = [];
-    const isBest = Array.isArray(SETTINGS.bestSellerProductIds) && SETTINGS.bestSellerProductIds.includes(p.id);
-    if (isBest) flags.push('<span class="profit-badge" style="background:#f59e0b;color:#000;font-weight:700">★ Mais Vendido</span>');
-    if (p.isNewLaunch) flags.push('<span class="profit-badge" style="background:var(--y);color:#000">Lançamento</span>');
-    if (p.isPromo) flags.push('<span class="loss-badge" style="background:var(--danger)">Promoção</span>');
-    if (p.hasAnyLoss) flags.push('<span class="loss-badge">Prejuízo</span>');
+  // 1. Tabela Desktop
+  if (tbody) {
+    tbody.innerHTML = pageProducts.map(p => {
+      let flags = [];
+      const isBest = Array.isArray(SETTINGS.bestSellerProductIds) && SETTINGS.bestSellerProductIds.includes(p.id);
+      if (isBest) flags.push('<span class="profit-badge" style="background:#f59e0b;color:#000;font-weight:700">★ Mais Vendido</span>');
+      if (p.isNewLaunch) flags.push('<span class="profit-badge" style="background:var(--y);color:#000">Lançamento</span>');
+      if (p.isPromo) flags.push('<span class="loss-badge" style="background:var(--danger)">Promoção</span>');
+      if (p.hasAnyLoss) flags.push('<span class="loss-badge">Prejuízo</span>');
 
-    return `
-      <tr>
-        <td><img src="${p.image || 'imagens/do seu jeitinho.png'}" style="width:44px;height:44px;border-radius:10px;object-fit:cover"></td>
-        <td>
-          <b>${esc(p.name)}</b>
-          <br><small style="color:var(--mut)">${esc(p.categorySlug || p.category)}</small>
-        </td>
-        <td>
-          ${p.prices.map(pr => `
-            <div style="font-size:12px;margin-bottom:2px">
-              <b>${pr.size}ml:</b> Venda ${R(pr.price)} · Custo ${R(pr.costPrice)} (${pr.maxAccompaniments} acomp.)
-              ${pr.isLoss ? `<span class="loss-badge">-${R(pr.lossAmount)}</span>` : `<span class="profit-badge">+${R(pr.margin)}</span>`}
-            </div>
-          `).join('')}
-        </td>
-        <td>${flags.join(' ') || '<span style="color:var(--mut);font-size:12px">Padrão</span>'}</td>
-        <td>
-          <button class="btn-sm ${p.active ? 'btn-next' : 'btn-secondary'}" onclick="toggleProductPause('${p.id}')">
-            ${p.active ? 'Ativo' : 'Pausado'}
-          </button>
-        </td>
-        <td>
-          <div style="display:flex;gap:6px;flex-wrap:wrap">
-            <button class="btn-sm" style="font-size:11px;padding:3px 7px;background:${isBest ? '#b45309' : 'transparent'};color:${isBest ? '#fff' : 'var(--tx)'};border:1px solid ${isBest ? '#f59e0b' : 'var(--ln)'}" onclick="toggleProductBestSeller('${p.id}')" title="${isBest ? 'Remover dos Mais Vendidos' : 'Destacar na seção Mais Vendidos'}">
-              ${isBest ? '★ No Topo' : '☆ + Mais Vendido'}
+      return `
+        <tr>
+          <td><img src="${p.image || 'imagens/do seu jeitinho.png'}" style="width:44px;height:44px;border-radius:10px;object-fit:cover" onerror="this.src='imagens/do seu jeitinho.png'"></td>
+          <td>
+            <b>${esc(p.name)}</b>
+            <br><small style="color:var(--mut)">${esc(p.categorySlug || p.category)}</small>
+          </td>
+          <td>
+            ${(p.prices || []).map(pr => `
+              <div style="font-size:12px;margin-bottom:2px">
+                <b>${pr.size}ml:</b> Venda ${R(pr.price)} · Custo ${R(pr.costPrice)} (${pr.maxAccompaniments} acomp.)
+                ${pr.isLoss ? `<span class="loss-badge">-${R(pr.lossAmount)}</span>` : `<span class="profit-badge">+${R(pr.margin)}</span>`}
+              </div>
+            `).join('')}
+          </td>
+          <td>${flags.join(' ') || '<span style="color:var(--mut);font-size:12px">Padrão</span>'}</td>
+          <td>
+            <button class="btn-sm ${p.active ? 'btn-next' : 'btn-secondary'}" onclick="toggleProductPause('${p.id}')">
+              ${p.active ? 'Ativo' : 'Pausado'}
             </button>
-            <button class="btn-sm btn-print" onclick="openRecipeModal('${p.id}')" title="Ver ficha técnica com quantidades e exportar PDF">Receita & PDF</button>
-            <button class="btn-sm btn-secondary" onclick="editProductModal('${p.id}')">Editar</button>
-            <button class="btn-sm btn-danger" onclick="deleteProduct('${p.id}')">Excluir</button>
-          </div>
-        </td>
-      </tr>
-    `;
-  }).join('');
+          </td>
+          <td>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button class="btn-sm" style="font-size:11px;padding:3px 7px;background:${isBest ? '#b45309' : 'transparent'};color:${isBest ? '#fff' : 'var(--tx)'};border:1px solid ${isBest ? '#f59e0b' : 'var(--ln)'}" onclick="toggleProductBestSeller('${p.id}')" title="${isBest ? 'Remover dos Mais Vendidos' : 'Destacar na seção Mais Vendidos'}">
+                ${isBest ? '★ No Topo' : '☆ + Mais Vendido'}
+              </button>
+              <button class="btn-sm btn-print" onclick="openRecipeModal('${p.id}')" title="Ver ficha técnica com quantidades e exportar PDF">Receita & PDF</button>
+              <button class="btn-sm btn-secondary" onclick="editProductModal('${p.id}')">Editar</button>
+              <button class="btn-sm btn-danger" onclick="deleteProduct('${p.id}')">Excluir</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
 
+  // 2. Paginação Desktop
   if (paginationBox) {
     paginationBox.innerHTML = `
       <div style="font-size:13px;color:var(--mut)">
@@ -2847,11 +2854,92 @@ function renderProductsTable() {
           <option value="10" ${perPage === 10 ? 'selected' : ''}>10 por página</option>
           <option value="25" ${perPage === 25 ? 'selected' : ''}>25 por página</option>
           <option value="50" ${perPage === 50 ? 'selected' : ''}>50 por página</option>
-          <option value="999" ${perPage >= 999 ? 'selected' : ''}>Mostrar Todos (87+)</option>
+          <option value="999" ${perPage >= 999 ? 'selected' : ''}>Mostrar Todos (${total})</option>
         </select>
         <button class="btn-sm btn-secondary" onclick="setProductsPage(${PRODUCTS_PAGE - 1})" ${PRODUCTS_PAGE <= 1 ? 'disabled' : ''}>◀ Anterior</button>
         <span style="font-size:12px">Pág. <b>${PRODUCTS_PAGE}</b> de <b>${totalPages}</b></span>
         <button class="btn-sm btn-secondary" onclick="setProductsPage(${PRODUCTS_PAGE + 1})" ${PRODUCTS_PAGE >= totalPages ? 'disabled' : ''}>Próximo ▶</button>
+      </div>
+    `;
+  }
+
+  // 3. Cards Mobile Empilhados (Conforme Imagem 3 de Referência)
+  if (mobileCardsContainer) {
+    if (pageProducts.length === 0) {
+      mobileCardsContainer.innerHTML = '<p style="color:var(--mut);font-size:13px;text-align:center;padding:24px">Nenhum produto cadastrado.</p>';
+    } else {
+      mobileCardsContainer.innerHTML = pageProducts.map(p => {
+        const isBest = Array.isArray(SETTINGS.bestSellerProductIds) && SETTINGS.bestSellerProductIds.includes(p.id);
+        const bestIndex = isBest ? SETTINGS.bestSellerProductIds.indexOf(p.id) : -1;
+        const badgeLabel = isBest ? (bestIndex === 3 ? '★ No Topo' : '★ Mais Vendido') : (p.isNewLaunch ? 'Lançamento' : 'Padrão');
+        const badgeClass = isBest ? 'prod-badge-bestseller' : (p.isNewLaunch ? 'prod-badge-bestseller' : 'prod-badge-standard');
+
+        return `
+          <div class="product-stacked-card ${p.active ? '' : 'is-paused'}">
+            <div class="product-stacked-card-main">
+              <img src="${p.image || 'imagens/do seu jeitinho.png'}" class="product-stacked-thumb" alt="${esc(p.name)}" onerror="this.src='imagens/do seu jeitinho.png'" loading="lazy">
+              <div class="product-stacked-info">
+                <div class="product-stacked-title-row">
+                  <h4 class="product-stacked-name" title="${esc(p.name)}">${esc(p.name)}</h4>
+                  <div class="product-stacked-top-badges">
+                    <span class="${badgeClass}">${badgeLabel}</span>
+                    <button type="button" class="prod-badge-status ${p.active ? 'active' : 'paused'}" onclick="toggleProductPause('${p.id}')" title="Pausar ou Ativar produto">
+                      ${p.active ? 'Ativo' : 'Pausado'}
+                    </button>
+                    <span class="product-stacked-chevron">⌵</span>
+                  </div>
+                </div>
+                <div class="product-stacked-cat">${esc(p.categorySlug || p.category || 'clássica')}</div>
+                <div class="product-stacked-sizes">
+                  ${(p.prices || []).map(pr => `
+                    <div class="product-stacked-size-line">
+                      <b>${pr.size}ml:</b> R$ ${pr.price.toFixed(2).replace('.', ',')} - Custo R$ ${(pr.costPrice || 0).toFixed(2).replace('.', ',')} (${pr.maxAccompaniments} acomp.)
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+            <div class="product-stacked-actions">
+              <button type="button" class="btn-card-bestseller" onclick="toggleProductBestSeller('${p.id}')">
+                ★ Mais Vendido
+              </button>
+              <button type="button" class="btn-card-recipe" onclick="openRecipeModal('${p.id}')">
+                📄 Receita & PDF
+              </button>
+              <button type="button" class="btn-card-edit" onclick="editProductModal('${p.id}')">
+                ✏️ Editar
+              </button>
+              <button type="button" class="btn-card-delete" onclick="deleteProduct('${p.id}')">
+                🗑️ Excluir
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  // 4. Paginação Mobile Centrada: « ‹ 1 2 3 › » (Idêntico à Imagem 3)
+  if (mobilePaginationBox) {
+    let startPage = Math.max(1, PRODUCTS_PAGE - 1);
+    let endPage = Math.min(totalPages, PRODUCTS_PAGE + 1);
+    if (PRODUCTS_PAGE === 1) endPage = Math.min(totalPages, 3);
+    if (PRODUCTS_PAGE === totalPages) startPage = Math.max(1, totalPages - 2);
+
+    let pageNumsHtml = '';
+    for (let pg = startPage; pg <= endPage; pg++) {
+      pageNumsHtml += `
+        <button type="button" class="btn-mobile-page-num ${pg === PRODUCTS_PAGE ? 'active' : ''}" onclick="setProductsPage(${pg})">${pg}</button>
+      `;
+    }
+
+    mobilePaginationBox.innerHTML = `
+      <div class="products-pagination-mobile">
+        <button type="button" class="btn-mobile-page-nav" onclick="setProductsPage(1)" ${PRODUCTS_PAGE <= 1 ? 'disabled' : ''} title="Primeira página">«</button>
+        <button type="button" class="btn-mobile-page-nav" onclick="setProductsPage(${PRODUCTS_PAGE - 1})" ${PRODUCTS_PAGE <= 1 ? 'disabled' : ''} title="Página anterior">‹</button>
+        ${pageNumsHtml}
+        <button type="button" class="btn-mobile-page-nav" onclick="setProductsPage(${PRODUCTS_PAGE + 1})" ${PRODUCTS_PAGE >= totalPages ? 'disabled' : ''} title="Próxima página">›</button>
+        <button type="button" class="btn-mobile-page-nav" onclick="setProductsPage(${totalPages})" ${PRODUCTS_PAGE >= totalPages ? 'disabled' : ''} title="Última página">»</button>
       </div>
     `;
   }
@@ -6114,7 +6202,14 @@ window.toggleOperacoesMenu = window.toggleMobileOperacaoModal;
 window.closeOperacoesMenu = window.closeMobileOperacaoModal;
 window.handleOperacoesBackdropClick = window.handleMobileOperacaoBackdropClick;
 
+let lastIsMobileProduct = typeof window !== 'undefined' ? window.innerWidth <= 860 : false;
 window.addEventListener('resize', () => {
+  const nowMobile = window.innerWidth <= 860;
+  if (nowMobile !== lastIsMobileProduct) {
+    lastIsMobileProduct = nowMobile;
+    PRODUCTS_PAGE = 1;
+    renderProductsTable();
+  }
   if (window.innerWidth <= 860) {
     window.applyMobileSingleColumn();
   } else {

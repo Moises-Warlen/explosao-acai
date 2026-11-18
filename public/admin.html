@@ -569,7 +569,7 @@
       </div>
 
       <div class="admin-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+        <div class="prod-header-desktop" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
           <div>
             <h2 style="margin:0">Gestão de Produtos, Ficha Técnica & Alerta de Prejuízo</h2>
             <p style="color:var(--mut);font-size:13px;margin:4px 0 0">
@@ -585,8 +585,21 @@
           </div>
         </div>
 
+        <!-- Cabeçalho Exclusivo Mobile (Conforme Imagem de Referência) -->
+        <div class="prod-header-mobile">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px">
+            <div>
+              <h2 style="margin:0;font-size:1.35rem;font-weight:800;color:#fff;letter-spacing:-0.3px">Cardápio & Estoque</h2>
+              <p style="color:var(--mut);font-size:12px;margin:3px 0 0">
+                Gerencie seu cardápio, preços e estoque
+              </p>
+            </div>
+            <button type="button" class="btn-sm btn-new-prod-mobile" onclick="openNewProductModal()">+ Novo Produto</button>
+          </div>
+        </div>
+
         <!-- Gestão da Seção Mais Vendidos -->
-        <div style="margin-bottom:20px;padding:16px;background:#181028;border:1.5px solid #4b0f6b;border-radius:10px">
+        <div class="prod-bestsellers-box" style="margin-bottom:20px;padding:16px;background:#181028;border:1.5px solid #4b0f6b;border-radius:10px">
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">
             <div>
               <h3 style="margin:0;color:var(--y);font-size:15px">★ Gestão da Seção "Mais Vendidos" no Cardápio</h3>
@@ -594,7 +607,7 @@
                 Selecione quais produtos serão destacados na seção "Mais Vendidos" do cardápio digital do cliente.
               </p>
             </div>
-            <div style="display:flex;gap:8px;align-items:center">
+            <div class="bestsellers-input-row" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
               <select id="sel-add-bestseller" style="font-size:12px;padding:6px 10px;border-radius:6px;background:var(--card);color:#fff;border:1px solid var(--ln);max-width:240px"></select>
               <button class="btn-sm btn-next" onclick="addSelectedToBestSellers()">+ Adicionar</button>
             </div>
@@ -619,7 +632,15 @@
         </div>
         <!-- Modo Vitrine de Cards com Fotos e Margem de Lucro -->
         <div id="products-grid-view" class="products-vitrine-grid" style="display:none"></div>
-        <div id="products-pagination" style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;flex-wrap:wrap;gap:10px"></div>
+
+        <!-- Modo Cards Mobile Empilhados (Exclusivo Mobile) -->
+        <div id="products-cards-mobile-view" class="products-cards-mobile-container"></div>
+
+        <!-- Paginação Desktop -->
+        <div id="products-pagination" class="products-pagination-desktop" style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;flex-wrap:wrap;gap:10px"></div>
+
+        <!-- Paginação Mobile Centrada -->
+        <div id="products-pagination-mobile" class="products-pagination-mobile-wrap"></div>
       </div>
     </div>
 
@@ -1686,6 +1707,6 @@
 
   <!-- Scripts -->
   <script src="js/global-modal.js?v=1.0"></script>
-  <script src="js/admin.js?v=3.7"></script>
+  <script src="js/admin.js?v=3.8"></script>
 </body>
 </html>
