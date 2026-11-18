@@ -483,6 +483,35 @@ class JsonDatabase {
             this.data[k] = v;
           }
         }
+
+        // Base de Conhecimento / Aprendizado da IA (FAQ)
+        if (!Array.isArray(this.data.botKnowledge)) {
+          this.data.botKnowledge = [
+            {
+              id: "know_1",
+              question: "O açaí de vocês tem leite ou lactose?",
+              answer: "O nosso açaí tradicional é 100% puro e não contém lactose nem glúten! Temos opções deliciosas para intolerantes como montagens com frutas frescas, paçoca e granola tradicional sem leite.",
+              keywords: ["leite", "lactose", "intolerante", "vegano", "puro"]
+            },
+            {
+              id: "know_2",
+              question: "Qual o raio máximo de entrega e valor do frete?",
+              answer: "Entregamos em toda Franca - SP em até 25km! O frete possui valor mínimo de R$ 4,50 e você pode simular a taxa exata digitando seu endereço no nosso cardápio digital.",
+              keywords: ["frete", "taxa", "entrega", "km", "distancia", "distância"]
+            },
+            {
+              id: "know_3",
+              question: "Quais são as formas de pagamento aceitas?",
+              answer: "Aceitamos Pix com aprovação imediata no site e no WhatsApp, além de Cartão de Crédito/Débito e Dinheiro com opção de troco direto com o entregador!",
+              keywords: ["pagamento", "pagar", "pix", "cartao", "cartão", "dinheiro", "troco"]
+            }
+          ];
+        }
+
+        // Ouvidoria: Reclamações e Sugestões registradas
+        if (!Array.isArray(this.data.feedbacks)) {
+          this.data.feedbacks = [];
+        }
       } catch (err) {
         console.error("Erro ao ler database.json, restaurando inicial:", err);
         this.data = JSON.parse(JSON.stringify(INITIAL_DATA));

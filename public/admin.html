@@ -1400,6 +1400,73 @@
             </div>
           </div>
         </div>
+
+        <!-- Card 4: Ouvidoria WhatsApp (Sugestões & Reclamações) -->
+        <div style="margin-top:24px;background:var(--card);border:1.5px solid var(--ln);border-radius:16px;padding:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--ln);padding-bottom:14px;margin-bottom:16px">
+            <div>
+              <h3 style="margin:0;font-size:17px;color:#fff;display:flex;align-items:center;gap:10px">
+                <span>📝</span> Ouvidoria WhatsApp: Sugestões & Reclamações
+              </h3>
+              <p style="margin:4px 0 0;font-size:12px;color:var(--mut)">
+                Feedbacks enviados diretamente pelos clientes via WhatsApp (Opção 6 do menu). Dados protegidos pela LGPD.
+              </p>
+            </div>
+            <button type="button" class="btn-sm btn-secondary" onclick="loadBotFeedbacks(true)" style="padding:6px 12px;font-size:12px">
+              🔄 Atualizar Ouvidoria
+            </button>
+          </div>
+
+          <div id="bot-feedbacks-container" style="display:flex;flex-direction:column;gap:10px;max-height:360px;overflow-y:auto;padding-right:4px">
+            <div style="text-align:center;padding:20px;color:var(--mut);font-size:13px">Nenhum feedback registrado no momento.</div>
+          </div>
+        </div>
+
+        <!-- Card 5: Base de Conhecimento & Aprendizado Contínuo da IA -->
+        <div style="margin-top:24px;background:var(--card);border:1.5px solid var(--ln);border-radius:16px;padding:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--ln);padding-bottom:14px;margin-bottom:16px">
+            <div>
+              <h3 style="margin:0;font-size:17px;color:#fff;display:flex;align-items:center;gap:10px">
+                <span>🧠</span> Base de Conhecimento & Aprendizado Contínuo da IA
+              </h3>
+              <p style="margin:4px 0 0;font-size:12px;color:var(--mut)">
+                Ensine novas respostas personalizadas para a IA tirar dúvidas dos clientes instantaneamente. 100% conforme à LGPD (sem dados pessoais).
+              </p>
+            </div>
+            <button type="button" class="btn-sm btn-secondary" onclick="loadBotKnowledge(true)" style="padding:6px 12px;font-size:12px">
+              🔄 Atualizar Conhecimento
+            </button>
+          </div>
+
+          <!-- Formulário para Ensinar à IA -->
+          <div style="background:rgba(0,0,0,0.2);border:1px solid var(--ln);border-radius:12px;padding:16px;margin-bottom:18px">
+            <h4 style="margin:0 0 10px;font-size:13px;color:var(--y)">➕ Ensinar Nova Resposta à IA:</h4>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:12px">
+              <div>
+                <label style="font-size:11px;color:var(--mut);display:block;margin-bottom:4px">Pergunta / Dúvida Comum:</label>
+                <input type="text" id="bot-know-question" placeholder="Ex: O açaí de vocês tem glúten?" style="width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid var(--ln);color:#fff;font-size:12px">
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--mut);display:block;margin-bottom:4px">Palavras-chave (separadas por vírgula):</label>
+                <input type="text" id="bot-know-keywords" placeholder="Ex: glúten, celíaco, farinha" style="width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid var(--ln);color:#fff;font-size:12px">
+              </div>
+            </div>
+            <div style="margin-bottom:12px">
+              <label style="font-size:11px;color:var(--mut);display:block;margin-bottom:4px">Resposta Oficial que a IA deve fornecer:</label>
+              <textarea id="bot-know-answer" rows="2" placeholder="Ex: Nosso açaí é 100% puro e não contém glúten! Temos opções de acompanhamentos seguros para celíacos como frutas e castanhas." style="width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid var(--ln);color:#fff;font-size:12px;line-height:1.4"></textarea>
+            </div>
+            <div style="display:flex;justify-content:flex-end">
+              <button type="button" class="btn-sm btn-next" onclick="addNewKnowledgeToAI()" style="padding:8px 18px;font-size:12px;font-weight:700">
+                ✨ Ensinar à IA
+              </button>
+            </div>
+          </div>
+
+          <!-- Lista de Perguntas e Respostas Aprendidas -->
+          <div id="bot-knowledge-list" style="display:flex;flex-direction:column;gap:10px;max-height:340px;overflow-y:auto;padding-right:4px">
+            <div style="text-align:center;padding:16px;color:var(--mut);font-size:12px">Carregando conhecimento da IA...</div>
+          </div>
+        </div>
       </div>
     </div>
 

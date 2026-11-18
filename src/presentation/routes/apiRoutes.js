@@ -118,6 +118,11 @@ router.get('/bot/campaign/info', adminAuthMiddleware, (req, res) => botControlle
 router.post('/bot/campaign/preview', adminAuthMiddleware, (req, res) => botController.previewCampaign(req, res));
 router.post('/bot/campaign/send', adminAuthMiddleware, (req, res) => botController.sendCampaign(req, res));
 router.put('/bot/campaign/settings', adminAuthMiddleware, (req, res) => botController.saveCampaignSettings(req, res));
+router.get('/bot/feedbacks', adminAuthMiddleware, (req, res) => botController.getFeedbacks(req, res));
+router.put('/bot/feedbacks/:id/resolve', adminAuthMiddleware, (req, res) => botController.resolveFeedback(req, res));
+router.get('/bot/knowledge', adminAuthMiddleware, (req, res) => botController.getKnowledge(req, res));
+router.post('/bot/knowledge', adminAuthMiddleware, (req, res) => botController.addKnowledge(req, res));
+router.delete('/bot/knowledge/:id', adminAuthMiddleware, (req, res) => botController.deleteKnowledge(req, res));
 
 // ================= AUTENTICAÇÃO DO ADMIN =================
 router.post('/admin/auth', (req, res) => {

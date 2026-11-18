@@ -290,7 +290,14 @@ class WhatsAppBotService {
             });
 
             if (aiResponse && aiResponse.reply) {
-              await this.sendTextMessage(remoteJid, aiResponse.reply);
+              if (aiResponse.sendWithLogo) {
+                const logoPng = path.resolve(__dirname, '../../../public/imagens/Logo.png');
+                const logoWebp = path.resolve(__dirname, '../../../public/imagens/Logo.webp');
+                const finalLogoPath = fs.existsSync(logoPng) ? logoPng : logoWebp;
+                await this.sendImageMessage(remoteJid, finalLogoPath, aiResponse.reply);
+              } else {
+                await this.sendTextMessage(remoteJid, aiResponse.reply);
+              }
               this.stats.aiReplies++;
 
               if (aiResponse.needsHumanTakeover) {
@@ -324,6 +331,31 @@ class WhatsAppBotService {
       this.broadcastStatus();
       throw err;
     }
+  }
+
+  /**
+   * Envia uma mensagem com imagem (ex: Logo oficial da loja) e legenda opcional
+   */
+  async sendImageMessage(toJid, imagePath, caption = '') {
+    if (!this.sock || this.status !== 'connected') {
+      return false;
+    }
+    const target = toJid.includes('@') ? toJid : `${toJid.replace(/\D/g, '')}@s.whatsapp.net`;
+    try {
+      if (fs.existsSync(imagePath)) {
+        const imageBuffer = fs.readFileSync(imagePath);
+        await this.sock.sendMessage(target, {
+          image: imageBuffer,
+          caption
+        });
+        this.stats.messagesSent++;
+        return true;
+      }
+    } catch (err) {
+      console.warn(`[WhatsApp Bot] Falha ao enviar imagem para ${target}, tentando como texto puro:`, err.message);
+    }
+    // Fallback gracioso para texto caso ocorra qualquer problema com a imagem
+    return this.sendTextMessage(target, caption);
   }
 
   /**

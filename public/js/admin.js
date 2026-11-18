@@ -6810,6 +6810,8 @@ window.loadWhatsAppBotStatus = async function(isManualRefresh = false) {
     const data = await res.json();
     if (data.ok) {
       updateBotUI(data);
+      loadBotFeedbacks();
+      loadBotKnowledge();
       if (isManualRefresh) {
         adminToast('Status do bot atualizado com sucesso!', 'info');
       }
@@ -7204,6 +7206,171 @@ window.sendTestWeeklyCampaign = async function() {
     }
   } catch (err) {
     adminToast('Erro ao enviar teste da campanha.', 'danger');
+  }
+};
+
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+window.loadBotFeedbacks = async function(isManualToast = false) {
+  const container = $('#bot-feedbacks-container');
+  if (!container) return;
+
+  try {
+    const res = await fetch(`${API_URL}/bot/feedbacks`, { headers: authHeaders() });
+    const data = await res.json();
+    if (data.ok && Array.isArray(data.feedbacks)) {
+      if (data.feedbacks.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--mut);font-size:13px">Nenhum feedback registrado no momento.</div>';
+        return;
+      }
+      container.innerHTML = data.feedbacks.map(f => {
+        const isComplaint = f.type === 'reclamacao';
+        const typeBadge = isComplaint
+          ? '<span style="background:rgba(239,68,68,0.2);color:#ef4444;border:1px solid rgba(239,68,68,0.4);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">🚨 Reclamação</span>'
+          : '<span style="background:rgba(16,185,129,0.2);color:#10b981;border:1px solid rgba(16,185,129,0.4);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700">✨ Sugestão / Elogio</span>';
+        
+        const dateStr = f.createdAt ? new Date(f.createdAt).toLocaleString('pt-BR') : '';
+        const resolvedBadge = f.resolved
+          ? '<span style="color:var(--green);font-size:11px;font-weight:700">✓ Resolvido</span>'
+          : `<button class="btn-sm btn-secondary" style="padding:3px 8px;font-size:11px" onclick="resolveBotFeedback('${f.id}')">Resolver</button>`;
+
+        return `
+          <div style="background:rgba(255,255,255,0.03);border:1px solid ${isComplaint ? 'rgba(239,68,68,0.3)' : 'var(--ln)'};border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+              <div style="display:flex;align-items:center;gap:8px">
+                ${typeBadge}
+                <b style="color:#fff;font-size:13px">${escapeHtml(f.customerName || 'Cliente')}</b>
+                <span style="color:var(--mut);font-size:11px">${escapeHtml(f.phone || '')}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="color:var(--mut);font-size:11px">${dateStr}</span>
+                ${resolvedBadge}
+              </div>
+            </div>
+            <div style="color:#e2e8f0;font-size:12px;background:rgba(0,0,0,0.2);padding:8px;border-radius:6px;line-height:1.4">
+              "${escapeHtml(f.message || '')}"
+            </div>
+          </div>
+        `;
+      }).join('');
+      if (isManualToast) adminToast('Ouvidoria atualizada com sucesso!', 'info');
+    }
+  } catch (err) {
+    console.warn('Erro ao carregar feedbacks:', err);
+  }
+};
+
+window.resolveBotFeedback = async function(id) {
+  try {
+    const res = await fetch(`${API_URL}/bot/feedbacks/${id}/resolve`, {
+      method: 'PUT',
+      headers: authHeaders()
+    });
+    const data = await res.json();
+    if (data.ok) {
+      adminToast('Feedback marcado como resolvido!', 'success');
+      loadBotFeedbacks();
+    }
+  } catch (err) {
+    adminToast('Erro ao resolver feedback.', 'danger');
+  }
+};
+
+window.loadBotKnowledge = async function(isManualToast = false) {
+  const container = $('#bot-knowledge-list');
+  if (!container) return;
+
+  try {
+    const res = await fetch(`${API_URL}/bot/knowledge`, { headers: authHeaders() });
+    const data = await res.json();
+    if (data.ok && Array.isArray(data.knowledge)) {
+      if (data.knowledge.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--mut);font-size:12px">Nenhum item na base de conhecimento. Ensine a IA acima!</div>';
+        return;
+      }
+      container.innerHTML = data.knowledge.map(k => {
+        const keywordsBadge = (k.keywords || []).map(kw => `<span style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:10px;color:var(--mut)">#${escapeHtml(kw)}</span>`).join(' ');
+        return `
+          <div style="background:rgba(255,255,255,0.03);border:1px solid var(--ln);border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+            <div style="flex:1">
+              <div style="color:var(--y);font-weight:700;font-size:13px;margin-bottom:4px">
+                ❓ ${escapeHtml(k.question)}
+              </div>
+              <div style="color:#e2e8f0;font-size:12px;line-height:1.4;margin-bottom:6px">
+                💡 ${escapeHtml(k.answer)}
+              </div>
+              <div>${keywordsBadge}</div>
+            </div>
+            <button class="btn-sm" style="background:rgba(239,68,68,0.2);color:#ef4444;border:none;padding:4px 8px;font-size:11px;border-radius:6px;cursor:pointer" onclick="deleteBotKnowledge('${k.id}')" title="Excluir item">
+              🗑️
+            </button>
+          </div>
+        `;
+      }).join('');
+      if (isManualToast) adminToast('Base de conhecimento atualizada!', 'info');
+    }
+  } catch (err) {
+    console.warn('Erro ao carregar conhecimento:', err);
+  }
+};
+
+window.addNewKnowledgeToAI = async function() {
+  const qInput = $('#bot-know-question');
+  const aInput = $('#bot-know-answer');
+  const kInput = $('#bot-know-keywords');
+
+  const question = qInput ? qInput.value.trim() : '';
+  const answer = aInput ? aInput.value.trim() : '';
+  const keywords = kInput ? kInput.value.trim() : '';
+
+  if (!question || !answer) {
+    return adminToast('Preencha a pergunta e a resposta para ensinar a IA.', 'warning');
+  }
+
+  try {
+    adminToast('Ensinando novo conhecimento à IA...', 'info');
+    const res = await fetch(`${API_URL}/bot/knowledge`, {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, answer, keywords })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      adminToast('✨ A IA aprendeu a nova resposta com sucesso!', 'success');
+      if (qInput) qInput.value = '';
+      if (aInput) aInput.value = '';
+      if (kInput) kInput.value = '';
+      loadBotKnowledge();
+    } else {
+      adminToast(data.error || 'Erro ao ensinar IA.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Erro de comunicação.', 'danger');
+  }
+};
+
+window.deleteBotKnowledge = async function(id) {
+  if (!confirm('Deseja excluir esta resposta da base de conhecimento da IA?')) return;
+  try {
+    const res = await fetch(`${API_URL}/bot/knowledge/${id}`, {
+      method: 'DELETE',
+      headers: authHeaders()
+    });
+    const data = await res.json();
+    if (data.ok) {
+      adminToast('Item removido da base de conhecimento!', 'info');
+      loadBotKnowledge();
+    }
+  } catch (err) {
+    adminToast('Erro ao remover conhecimento.', 'danger');
   }
 };
 

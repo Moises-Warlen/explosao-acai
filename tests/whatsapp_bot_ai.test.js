@@ -270,4 +270,114 @@ describe('Explosão Açaí — Testes do Bot WhatsApp & Inteligência Artificial
     assert.strictEqual(setData.settings.scheduledHour, 18);
   });
 
+  test('14. Loja Fechada: Envia mensagem calorosa e acolhedora e tira dúvidas normalmente', async () => {
+    // 1. Renderização do Menu com loja fechada
+    const ctxFechado = {
+      isOpen: false,
+      openingHours: '13h às 23h',
+      publicUrl: 'http://localhost:3000'
+    };
+    const menuFechado = geminiAssistantService.renderMainMenu(ctxFechado, 'Mariana');
+    assert.ok(menuFechado.includes('descansando'), 'Deve avisar com carinho que a cozinha está descansando');
+    assert.ok(menuFechado.includes('13h às 23h'), 'Deve informar horário');
+    assert.ok(menuFechado.includes('fique super à vontade'), 'Deve convidar a tirar dúvidas');
+
+    // 2. Tira dúvidas mesmo com a loja fechada
+    const res = await geminiAssistantService.processMessage({
+      phone: '16999990008',
+      customerName: 'Mariana',
+      text: 'O açaí de vocês tem leite ou lactose?'
+    });
+
+    assert.ok(res.reply);
+    assert.ok(res.reply.includes('100% Puro') || res.reply.includes('lactose'), 'Deve responder sobre lactose');
+    assert.strictEqual(res.needsHumanTakeover, false);
+  });
+
+  test('15. Ouvidoria: Registra sugestão e reclamação com anonimização LGPD', async () => {
+    // 1. Envio de Sugestão
+    const resSugestao = await geminiAssistantService.processMessage({
+      phone: '16999990009',
+      customerName: 'Gustavo',
+      text: 'Minha sugestão é que vocês coloquem calda de maracujá no cardápio, parabéns pelo açaí!'
+    });
+
+    assert.ok(resSugestao.reply.includes('sugestão') || resSugestao.reply.includes('carinho'));
+    assert.strictEqual(resSugestao.needsHumanTakeover, false);
+
+    // 2. Consulta API de Ouvidoria
+    const feedRes = await fetch(`${baseUrl}/api/bot/feedbacks`, {
+      headers: { 'x-admin-token': TEST_ADMIN_PASSWORD }
+    });
+    assert.strictEqual(feedRes.status, 200);
+    const feedData = await feedRes.json();
+    assert.strictEqual(feedData.ok, true);
+    assert.ok(Array.isArray(feedData.feedbacks));
+    const saved = feedData.feedbacks.find(f => f.customerName === 'Gustavo');
+    assert.ok(saved);
+    assert.strictEqual(saved.type, 'sugestao');
+    assert.ok(saved.phone.includes('****'), 'Telefone do cliente deve ser anonimizado na ouvidoria conforme LGPD');
+  });
+
+  test('16. Transbordo Seguro: Quando não souber responder, transfere para atendente humano', async () => {
+    const res = await geminiAssistantService.processMessage({
+      phone: '16999990010',
+      customerName: 'Renato',
+      text: 'Vocês fazem parceria para fornecer açaí para um congresso de 500 pessoas no sábado?'
+    });
+
+    assert.ok(res.reply);
+    assert.ok(res.reply.includes('específica') || res.reply.includes('atendente'), 'Deve avisar que é específica e transferir');
+    assert.strictEqual(res.needsHumanTakeover, true, 'Deve acionar atendente humano');
+  });
+
+  test('17. Base de Conhecimento Dinâmica: Aprende novas perguntas e respostas', async () => {
+    // 1. Cadastra novo conhecimento via API
+    const addRes = await fetch(`${baseUrl}/api/bot/knowledge`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-token': TEST_ADMIN_PASSWORD
+      },
+      body: JSON.stringify({
+        question: 'Vocês têm copo de 1 Litro?',
+        answer: 'Sim! Temos a marmita térmica e o copo de 1 Litro para a família toda com até 6 acompanhamentos!',
+        keywords: ['1 litro', '1l', 'litro', 'família']
+      })
+    });
+    assert.strictEqual(addRes.status, 200);
+    const addData = await addRes.json();
+    assert.strictEqual(addData.ok, true);
+
+    // 2. O bot responde usando a resposta aprendida!
+    const res = await geminiAssistantService.processMessage({
+      phone: '16999990011',
+      customerName: 'Lucas',
+      text: 'Vocês têm copo de 1 litro?'
+    });
+
+    assert.ok(res.reply);
+    assert.ok(res.reply.includes('1 Litro') || res.reply.includes('marmita'));
+    assert.strictEqual(res.needsHumanTakeover, false);
+  });
+
+  test('18. Direito ao Esquecimento (Art. 18 LGPD) e Flag da Logo Oficial', async () => {
+    // 1. Direito ao esquecimento apaga dados de conversa
+    const resForget = await geminiAssistantService.processMessage({
+      phone: '16999990012',
+      customerName: 'Bruna',
+      text: 'quero apagar meus dados esquecer'
+    });
+    assert.ok(resForget.reply.includes('Privacidade & LGPD'));
+    assert.strictEqual(resForget.isForget, true);
+
+    // 2. Comando Menu sinaliza envio da Logo
+    const resMenu = await geminiAssistantService.processMessage({
+      phone: '16999990013',
+      customerName: 'Bruno',
+      text: 'menu'
+    });
+    assert.strictEqual(resMenu.sendWithLogo, true, 'Menu deve enviar a logo da loja');
+  });
+
 });
