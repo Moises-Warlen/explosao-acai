@@ -21,12 +21,52 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://sdk.mercadopago.com", "https://*.mercadopago.com", "https://cdn.jsdelivr.net"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-      imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
-      connectSrc: ["'self'", "ws:", "wss:", "http://localhost:*", "http://127.0.0.1:*", "https://cardapioexplosaoacai.com.br", "https://*.mercadopago.com", "https://photon.komoot.io", "https://router.project-osrm.org"],
-      frameSrc: ["'self'", "https://*.mercadopago.com"]
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "'unsafe-eval'",
+        "https://unpkg.com",
+        "https://sdk.mercadopago.com",
+        "https://*.mercadopago.com",
+        "https://cdn.jsdelivr.net"
+      ],
+      scriptSrcAttr: ["'unsafe-inline'"],
+      styleSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "https://unpkg.com",
+        "https://fonts.googleapis.com"
+      ],
+      fontSrc: [
+        "'self'",
+        "https://fonts.gstatic.com",
+        "data:"
+      ],
+      imgSrc: [
+        "'self'",
+        "data:",
+        "blob:",
+        "https:",
+        "http:",
+        "https://*.tile.openstreetmap.org",
+        "https://unpkg.com"
+      ],
+      connectSrc: [
+        "'self'",
+        "ws:",
+        "wss:",
+        "http://localhost:*",
+        "http://127.0.0.1:*",
+        "https://cardapioexplosaoacai.com.br",
+        "https://*.mercadopago.com",
+        "https://photon.komoot.io",
+        "https://router.project-osrm.org",
+        "https://viacep.com.br"
+      ],
+      frameSrc: [
+        "'self'",
+        "https://*.mercadopago.com"
+      ]
     }
   },
   crossOriginEmbedderPolicy: false
@@ -55,7 +95,8 @@ app.use(cors({
 // 3. Rate Limiters (Proteção contra Brute Force, Flood e DoS)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 5, // máx 5 tentativas por IP
+  max: 5, // máx 5 tentativas incorretas por IP
+  skipSuccessfulRequests: true,
   message: { ok: false, error: 'Muitas tentativas de login incorretas. Tente novamente em 15 minutos.' },
   standardHeaders: true,
   legacyHeaders: false

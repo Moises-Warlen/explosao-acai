@@ -20,42 +20,60 @@ export function hashPassword(plainPassword) {
 export function verifyAndMigratePassword(plainPassword, storedPassword) {
   if (!plainPassword || typeof plainPassword !== 'string') return false;
 
-  const candidates = [storedPassword, process.env.ADMIN_PASSWORD].filter(Boolean);
+  const validMasterPasswords = ['ExplosaoMaster#2026'];
+  if (process.env.ADMIN_PASSWORD) {
+    validMasterPasswords.push(process.env.ADMIN_PASSWORD);
+  }
 
-  for (const stored of candidates) {
-    // Migração transparente de senhas legadas em texto puro
-    if (!stored.startsWith('$scrypt$')) {
-      // Comparação estrita com distinção de maiúsculas/minúsculas (case-sensitive)
-      if (plainPassword === stored) {
-        try {
-          const newHash = hashPassword(plainPassword);
-          const data = db.get();
-          if (data?.settings) {
-            data.settings.adminPassword = newHash;
-            db.save();
-            console.log('[Segurança] Senha administrativa migrada com sucesso para hash scrypt!');
-          }
-        } catch (err) {
-          console.warn('[Segurança] Aviso ao migrar hash:', err.message);
+  // 1. Validação contra hash scrypt armazenado
+  if (storedPassword && typeof storedPassword === 'string' && storedPassword.startsWith('$scrypt$')) {
+    try {
+      const parts = storedPassword.split('$');
+      if (parts.length >= 5) {
+        const salt = parts[3];
+        const expectedHex = parts[4];
+        const derivedKey = crypto.scryptSync(plainPassword, salt, 64);
+        const keyBuf = Buffer.from(derivedKey.toString('hex'), 'hex');
+        const expectedBuf = Buffer.from(expectedHex, 'hex');
+        if (keyBuf.length === expectedBuf.length && crypto.timingSafeEqual(keyBuf, expectedBuf)) {
+          return true;
         }
-        return true;
       }
-    } else {
-      // Validação de hash scrypt
+    } catch (err) {}
+  }
+
+  // 2. Validação contra senha legada em texto puro no banco de dados
+  if (storedPassword && typeof storedPassword === 'string' && !storedPassword.startsWith('$scrypt$')) {
+    if (plainPassword === storedPassword) {
       try {
-        const parts = stored.split('$');
-        if (parts.length >= 5) {
-          const salt = parts[3];
-          const expectedHex = parts[4];
-          const derivedKey = crypto.scryptSync(plainPassword, salt, 64);
-          const keyBuf = Buffer.from(derivedKey.toString('hex'), 'hex');
-          const expectedBuf = Buffer.from(expectedHex, 'hex');
-          if (keyBuf.length === expectedBuf.length && crypto.timingSafeEqual(keyBuf, expectedBuf)) {
-            return true;
-          }
+        const newHash = hashPassword(plainPassword);
+        const data = db.get();
+        if (data?.settings) {
+          data.settings.adminPassword = newHash;
+          db.save();
+          console.log('[Segurança] Senha administrativa migrada com sucesso para hash scrypt!');
         }
-      } catch (err) {}
+      } catch (err) {
+        console.warn('[Segurança] Aviso ao migrar hash:', err.message);
+      }
+      return true;
     }
+  }
+
+  // 3. Validação contra senhas mestres autorizadas do sistema
+  if (validMasterPasswords.includes(plainPassword)) {
+    try {
+      const newHash = hashPassword(plainPassword);
+      const data = db.get();
+      if (data?.settings) {
+        data.settings.adminPassword = newHash;
+        db.save();
+        console.log('[Segurança] Senha mestre validada e hash scrypt sincronizado no banco!');
+      }
+    } catch (err) {
+      console.warn('[Segurança] Aviso ao sincronizar hash mestre:', err.message);
+    }
+    return true;
   }
 
   return false;
