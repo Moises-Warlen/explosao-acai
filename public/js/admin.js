@@ -4923,6 +4923,7 @@ window.openDeliveryMapModal = function() {
   setTimeout(() => {
     initLeafletDeliveryMap();
     renderDeliveryMapMarkers();
+    if (DELIVERY_MAP) DELIVERY_MAP.invalidateSize();
   }, 100);
 };
 
