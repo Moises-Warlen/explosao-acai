@@ -151,8 +151,8 @@ describe('Explosão Açaí — Testes das 4 Correções Finais', () => {
 
   after(() => {
     const data = db.get();
-    data.orders = [];
-    data.chats = [];
+    data.orders = (data.orders || []).filter(o => o.customer?.phone !== '16998877665');
+    data.chats = (data.chats || []).filter(c => c.customerPhone !== '16998877665');
     db.save();
   });
 

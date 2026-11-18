@@ -384,6 +384,12 @@ function initWebSocket() {
           adminToast(`🚨 Cliente ${data.payload.customerName || data.payload.phone} solicitou atendente humano no WhatsApp!`, 'warning');
           loadChatConversations();
         }
+        if (data.type === 'NEW_FEEDBACK' || data.event === 'NEW_FEEDBACK') {
+          playNotificationChime();
+          const isReclamacao = data.payload?.type === 'reclamacao';
+          adminToast(`${isReclamacao ? '🚨 Nova reclamação' : '✨ Nova sugestão'} registrada na Ouvidoria!`, isReclamacao ? 'danger' : 'info');
+          if (typeof loadBotFeedbacks === 'function') loadBotFeedbacks();
+        }
       } catch (e) {}
     };
     WS.onclose = () => setTimeout(initWebSocket, 4000);

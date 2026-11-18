@@ -289,7 +289,7 @@ class WhatsAppBotService {
           if (isOptOut) {
             this.optOutPhones.add(cleanPhone);
             this.saveBotSettings();
-            const reply = "Tudo bem! Você foi removido da lista de novidades e promoções da *Explosão Açaí*. 🍇\n\nCaso queira fazer um pedido ou ver o cardápio no futuro, basta digitar *menu* a qualquer momento!";
+            const reply = "Tudo bem! Você foi removido da lista de novidades e promoções da *Explosão Açaí*.\n\nCaso queira fazer um pedido ou ver o cardápio no futuro, basta digitar *menu* a qualquer momento!";
             await this.sendTextMessage(remoteJid, reply);
             continue;
           }

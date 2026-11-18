@@ -411,4 +411,128 @@ describe('Explosão Açaí — Testes do Bot WhatsApp & Inteligência Artificial
     assert.ok(resPalavrao.reply.includes('respeitoso') || resPalavrao.reply.includes('ofensivos'));
   });
 
+  test('20. Bot Clean: Mensagens e Menus sem poluição de emotions (livre de 🍇, 💳, 📲)', async () => {
+    // 1. Menu Principal
+    const ctx = geminiAssistantService.buildLiveContext('16999990020');
+    const menuOpen = geminiAssistantService.renderMainMenu(ctx, 'Carlos');
+    assert.strictEqual(menuOpen.includes('🍇'), false, 'Não deve conter emoji 🍇 no menu aberto');
+    assert.strictEqual(menuOpen.includes('💳'), false, 'Não deve conter emoji 💳 no menu aberto');
+    assert.strictEqual(menuOpen.includes('📲'), false, 'Não deve conter emoji 📲 no menu aberto');
+    assert.ok(menuOpen.includes('Cardápio Digital Completo'));
+
+    // 2. Menu com loja fechada
+    const ctxClosed = { ...ctx, isOpen: false, openingHours: '13h às 23h' };
+    const menuClosed = geminiAssistantService.renderMainMenu(ctxClosed, 'Carlos');
+    assert.strictEqual(menuClosed.includes('🍇'), false, 'Não deve conter emoji 🍇 no menu fechado');
+    assert.strictEqual(menuClosed.includes('💳'), false, 'Não deve conter emoji 💳 no menu fechado');
+    assert.strictEqual(menuClosed.includes('📲'), false, 'Não deve conter emoji 📲 no menu fechado');
+
+    // 3. Respostas automáticas do motor
+    const res1 = await geminiAssistantService.processMessage({ phone: '16999990021', text: '1' });
+    assert.strictEqual(res1.reply.includes('🍇'), false);
+    assert.strictEqual(res1.reply.includes('💳'), false);
+    assert.strictEqual(res1.reply.includes('📲'), false);
+
+    const res2 = await geminiAssistantService.processMessage({ phone: '16999990022', text: '2' });
+    assert.strictEqual(res2.reply.includes('🍇'), false);
+    assert.strictEqual(res2.reply.includes('💳'), false);
+    assert.strictEqual(res2.reply.includes('📲'), false);
+
+    const res4 = await geminiAssistantService.processMessage({ phone: '16999990023', text: '4' });
+    assert.strictEqual(res4.reply.includes('🍇'), false);
+    assert.strictEqual(res4.reply.includes('💳'), false);
+    assert.strictEqual(res4.reply.includes('📲'), false);
+  });
+
+  test('21. Ouvidoria & Feedback: Grava perfeitamente texto, áudio e reclamações espontâneas em db.feedbacks', async () => {
+    // 1. Cliente envia '6' para abrir ouvidoria
+    const step1 = await geminiAssistantService.processMessage({
+      phone: '16999990030',
+      customerName: 'Luciana',
+      text: '6'
+    });
+    assert.ok(step1.isFeedbackPrompt, 'Deve retornar prompt de ouvidoria');
+    assert.ok(step1.reply.includes('Ouvidoria & Feedback'));
+    assert.strictEqual(geminiAssistantService.pendingFeedbackSessions.has('16999990030'), true, 'Deve ativar sessão de Ouvidoria');
+
+    // 2. Cliente responde com sua reclamação (ex: atraso na entrega)
+    const step2 = await geminiAssistantService.processMessage({
+      phone: '16999990030',
+      customerName: 'Luciana',
+      text: 'O motoboy demorou mais de uma hora e o açaí chegou quente e derretido!'
+    });
+    assert.strictEqual(step2.needsHumanTakeover, true, 'Reclamação na ouvidoria deve solicitar atendente humano');
+    assert.ok(step2.feedbackId, 'Deve gerar ID de feedback gravado');
+    assert.ok(step2.reply.includes('Protocolo') || step2.reply.includes('Registrei'), 'Deve confirmar protocolo para a cliente');
+    assert.strictEqual(geminiAssistantService.pendingFeedbackSessions.has('16999990030'), false, 'Sessão pendente deve ser encerrada após gravação');
+
+    // 3. Cliente envia '6' e em seguida envia ÁUDIO ("eu falei e nao gravou")
+    await geminiAssistantService.processMessage({
+      phone: '16999990031',
+      customerName: 'Marcos Voz',
+      text: '6'
+    });
+    assert.strictEqual(geminiAssistantService.pendingFeedbackSessions.has('16999990031'), true);
+
+    const stepAudio = await geminiAssistantService.processMessage({
+      phone: '16999990031',
+      customerName: 'Marcos Voz',
+      text: '[MENSAGEM_DE_AUDIO]'
+    });
+    assert.strictEqual(stepAudio.isAudio, true);
+    assert.strictEqual(stepAudio.needsHumanTakeover, true, 'Áudio na ouvidoria deve solicitar atendente humano');
+    assert.ok(stepAudio.feedbackId, 'Deve gerar protocolo de feedback para o áudio');
+    assert.ok(stepAudio.reply.includes('áudio') || stepAudio.reply.includes('gravada'));
+
+    // 4. Cliente envia '6' e em seguida envia uma Sugestão
+    await geminiAssistantService.processMessage({
+      phone: '16999990032',
+      customerName: 'Ana Clara',
+      text: '6'
+    });
+    const stepSugestao = await geminiAssistantService.processMessage({
+      phone: '16999990032',
+      customerName: 'Ana Clara',
+      text: 'Seria maravilhoso se vocês colocassem calda de pistache e morango picado!'
+    });
+    assert.strictEqual(stepSugestao.needsHumanTakeover, false);
+    assert.ok(stepSugestao.feedbackId);
+
+    // 5. Cliente envia reclamação espontânea sem digitar 6 previamente
+    const stepEspontaneo = await geminiAssistantService.processMessage({
+      phone: '16999990033',
+      customerName: 'Rodrigo',
+      text: 'Meu pedido veio todo errado e faltando a granola que paguei!'
+    });
+    assert.strictEqual(stepEspontaneo.needsHumanTakeover, true);
+    assert.ok(stepEspontaneo.feedbackId);
+
+    // 6. Validação na API /api/bot/feedbacks
+    const feedRes = await fetch(`${baseUrl}/api/bot/feedbacks`, {
+      headers: { 'x-admin-token': TEST_ADMIN_PASSWORD }
+    });
+    assert.strictEqual(feedRes.status, 200);
+    const feedData = await feedRes.json();
+    assert.strictEqual(feedData.ok, true);
+
+    const allFeedbacks = feedData.feedbacks;
+    const lucianaFb = allFeedbacks.find(f => f.customerName === 'Luciana');
+    assert.ok(lucianaFb, 'Feedback da Luciana deve estar gravado no banco');
+    assert.strictEqual(lucianaFb.type, 'reclamacao');
+    assert.ok(lucianaFb.message.includes('demorou'));
+
+    const marcosFb = allFeedbacks.find(f => f.customerName === 'Marcos Voz');
+    assert.ok(marcosFb, 'Feedback por áudio do Marcos deve estar gravado no banco');
+    assert.strictEqual(marcosFb.type, 'reclamacao');
+    assert.ok(marcosFb.message.includes('Áudio'));
+
+    const anaFb = allFeedbacks.find(f => f.customerName === 'Ana Clara');
+    assert.ok(anaFb, 'Sugestão da Ana Clara deve estar gravada no banco');
+    assert.strictEqual(anaFb.type, 'sugestao');
+
+    const rodrigoFb = allFeedbacks.find(f => f.customerName === 'Rodrigo');
+    assert.ok(rodrigoFb, 'Reclamação espontânea do Rodrigo deve estar gravada no banco');
+    assert.strictEqual(rodrigoFb.type, 'reclamacao');
+  });
+
 });
