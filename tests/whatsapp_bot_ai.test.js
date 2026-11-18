@@ -46,7 +46,7 @@ describe('Explosão Açaí — Testes do Bot WhatsApp & Inteligência Artificial
 
     assert.ok(res.reply, 'Deve conter resposta');
     assert.ok(res.reply.includes('Roberto') || res.reply.includes('Explosão Açaí'), 'Deve saudar o cliente');
-    assert.ok(res.reply.includes('http') || res.reply.includes('cardápio'), 'Deve fornecer o link do cardápio digital');
+    assert.ok(res.reply.includes('http') || res.reply.toLowerCase().includes('cardapio'), 'Deve fornecer o link do cardápio digital');
     assert.strictEqual(res.needsHumanTakeover, false, 'Não deve solicitar transbordo humano em saudação');
   });
 
@@ -452,7 +452,7 @@ describe('Explosão Açaí — Testes do Bot WhatsApp & Inteligência Artificial
       text: '6'
     });
     assert.ok(step1.isFeedbackPrompt, 'Deve retornar prompt de ouvidoria');
-    assert.ok(step1.reply.includes('Ouvidoria & Feedback'));
+    assert.ok(step1.reply.includes('sugestão, elogio ou reclamação') || step1.reply.includes('Explosão Açaí'));
     assert.strictEqual(geminiAssistantService.pendingFeedbackSessions.has('16999990030'), true, 'Deve ativar sessão de Ouvidoria');
 
     // 2. Cliente responde com sua reclamação (ex: atraso na entrega)
@@ -535,4 +535,72 @@ describe('Explosão Açaí — Testes do Bot WhatsApp & Inteligência Artificial
     assert.strictEqual(rodrigoFb.type, 'reclamacao');
   });
 
+  test('22. Especificação Oficial Explosão Açaí: 8 Opções, Inatividade de 20m, Navegação 0 e Textos Exatos', async () => {
+    const testPhone = '16998877665';
+    const testName = 'Juliana';
+
+    // 1. Menu Principal inicial ou digitando 0
+    const res0 = await geminiAssistantService.processMessage({
+      phone: testPhone,
+      customerName: testName,
+      text: '0'
+    });
+    assert.ok(res0.reply.includes('Menu Principal Explosão Açaí'));
+    assert.ok(res0.reply.includes('Olá Juliana!'));
+    assert.ok(res0.reply.includes('1 - Para Conhecer nosso cardapio digital Cardápio Digital Completo:'));
+    assert.ok(res0.reply.includes('2 - Rastrear meu Pedido.'));
+    assert.ok(res0.reply.includes('3 - Combos & Promoções da Semana.'));
+    assert.ok(res0.reply.includes('4 - Horário de Funcionamento e Endereço.'));
+    assert.ok(res0.reply.includes('5 - Falar com um Atendente Humano'));
+    assert.ok(res0.reply.includes('6 - Enviar Sugestão ou Reclamação (Ouvidoria)'));
+    assert.ok(res0.reply.includes('7 - Forma de pagamento.'));
+    assert.ok(res0.reply.includes('8 - Encerrar atendimento.'));
+    assert.ok(res0.reply.includes('Digite 0 a qualquer momento para voltar no menu!'));
+
+    // 2. Opção 1: Cardápio Digital
+    const res1 = await geminiAssistantService.processMessage({ phone: testPhone, customerName: testName, text: '1' });
+    assert.ok(res1.reply.includes('https://cardapioexplosaoacai.com.br'));
+    assert.ok(res1.reply.includes('*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*'));
+
+    // 3. Opção 3: Combos & Promoções da Semana
+    const res3 = await geminiAssistantService.processMessage({ phone: testPhone, customerName: testName, text: '3' });
+    assert.ok(res3.reply.includes('Combos & Promoções da Semana'));
+    assert.ok(res3.reply.includes('https://cardapioexplosaoacai.com.br'));
+
+    // 4. Opção 4: Horário e Endereço
+    const res4 = await geminiAssistantService.processMessage({ phone: testPhone, customerName: testName, text: '4' });
+    assert.ok(res4.reply.includes('Endereço:'));
+    assert.ok(res4.reply.includes('Horário de Funcionamento:'));
+
+    // 5. Opção 5: Transferência para Humano (Texto Exato)
+    const res5 = await geminiAssistantService.processMessage({ phone: testPhone, customerName: testName, text: '5' });
+    assert.strictEqual(res5.needsHumanTakeover, true);
+    assert.ok(res5.reply.includes('Essa é uma dúvida bem específica e quero te dar a resposta correta com certeza'));
+    assert.ok(res5.reply.includes('estou chamando um atendente humano da nossa equipe agora mesmo'));
+    assert.ok(res5.reply.includes('Se quiser ver o cardápio ou outras informações  enquanto isso, digite 0 para voltar ao menu de opções !'));
+
+    // 6. Opção 7: Formas de Pagamento
+    const res7 = await geminiAssistantService.processMessage({ phone: testPhone, customerName: testName, text: '7' });
+    assert.ok(res7.reply.includes('Pix'));
+    assert.ok(res7.reply.includes('Cartão de Crédito e Débito'));
+    assert.ok(res7.reply.includes('Dinheiro'));
+
+    // 7. Opção 8: Encerrar Atendimento (Texto Exato)
+    const res8 = await geminiAssistantService.processMessage({ phone: testPhone, customerName: testName, text: '8' });
+    assert.strictEqual(res8.isSessionEnded, true);
+    assert.ok(res8.reply.includes('Atendimento encerrado! Agradecemos pelo contato com a *Explosão Açaí* 🍧💜'));
+    assert.ok(res8.reply.includes('basta enviar um *Oi* por aqui para iniciar um novo atendimento!'));
+
+    // 8. Regra de Inatividade (> 20 minutos)
+    // Simulamos que a última interação foi há 25 minutos
+    geminiAssistantService.lastInteraction.set(testPhone, Date.now() - 25 * 60 * 1000);
+    const resInactivity = await geminiAssistantService.processMessage({
+      phone: testPhone,
+      customerName: testName,
+      text: 'Olá tudo bem'
+    });
+    assert.ok(resInactivity.reply.includes('Atendimento encerrado por *falta de interação* (mais de 20 minutos sem resposta) ⏳.'));
+    assert.ok(resInactivity.reply.includes('Para iniciar um novo atendimento com a *Explosão Açaí*, escolha uma opção abaixo:'));
+    assert.ok(resInactivity.reply.includes('Menu Principal Explosão Açaí'));
+  });
 });

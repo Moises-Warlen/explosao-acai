@@ -14,6 +14,7 @@ class GeminiAssistantService {
     this.client = null;
     this.history = new Map(); // Memória de curto prazo por telefone: Map<phone, Array<{role, text}>>
     this.pendingFeedbackSessions = new Map(); // Sessão ativa de Ouvidoria: Map<cleanPhone, {timestamp, customerName}>
+    this.lastInteraction = new Map(); // Timestamp da última interação: Map<cleanPhone, number>
     this.stats = {
       profanityBlocked: 0,
       menuRequests: 0,
@@ -65,6 +66,63 @@ class GeminiAssistantService {
     if (!phone) return;
     const clean = phone.replace(/\D/g, '');
     this.history.delete(clean);
+  }
+
+  /**
+   * Memória das últimas conversas e histórico relevante do cliente (Contexto Inteligente)
+   */
+  getClientMemory(phone) {
+    if (!phone) return null;
+    const cleanPhone = String(phone).replace(/\D/g, '');
+    try {
+      const allOrders = orderService.getOrders() || [];
+      const customerOrders = allOrders.filter(o => {
+        const p = o.customer?.phone ? String(o.customer.phone).replace(/\D/g, '') : '';
+        return p && p.endsWith(cleanPhone.slice(-8));
+      });
+
+      const latestOrder = customerOrders.length > 0 ? customerOrders[customerOrders.length - 1] : null;
+
+      // Preferência de pagamento
+      let paymentPref = null;
+      if (latestOrder?.payment?.method) {
+        paymentPref = latestOrder.payment.method;
+        if (latestOrder.payment.changeFor) {
+          paymentPref += ` (troco para R$ ${latestOrder.payment.changeFor})`;
+        }
+      }
+
+      // Itens favoritos
+      const itemCounts = {};
+      for (const ord of customerOrders) {
+        for (const it of (ord.items || [])) {
+          if (it.name) itemCounts[it.name] = (itemCounts[it.name] || 0) + (it.quantity || 1);
+        }
+      }
+      const favoriteItems = Object.entries(itemCounts).sort((a,b) => b[1] - a[1]).slice(0, 3).map(e => e[0]);
+
+      // Endereço de entrega
+      let deliveryAddress = null;
+      if (latestOrder?.delivery && latestOrder.delivery.type === 'delivery') {
+        const d = latestOrder.delivery;
+        deliveryAddress = [d.street, d.number, d.bairro, d.city].filter(Boolean).join(', ');
+      }
+
+      // Último feedback ou pendência na Ouvidoria
+      const feedbacks = db.get()?.feedbacks || [];
+      const lastFeedback = feedbacks.find(f => f.rawPhone === cleanPhone || (f.phone && f.phone.endsWith(cleanPhone.slice(-4))));
+
+      return {
+        customerName: latestOrder?.customer?.name || null,
+        latestOrder,
+        favoriteItems,
+        paymentPref,
+        deliveryAddress,
+        lastFeedback: lastFeedback ? { id: lastFeedback.id, type: lastFeedback.type, resolved: lastFeedback.resolved, message: lastFeedback.message } : null
+      };
+    } catch (e) {
+      return null;
+    }
   }
 
   /**
@@ -193,52 +251,48 @@ class GeminiAssistantService {
   }
 
   /**
-   * Renderiza a resposta formatada do Menu Principal (estilo limpo, elegante e sem excesso de emojis)
+   * Renderiza a resposta formatada do Menu Principal (Texto Exato e 8 Opções)
    */
   renderMainMenu(ctx, customerName, isReactivated = false) {
     this.stats.menuRequests++;
-    const nameStr = customerName ? ` ${customerName}` : '';
-    const reactivationNotice = isReactivated ? '*Atendimento automático do bot reativado!*\n\n' : '';
+    const nameStr = customerName ? customerName : (ctx?.clientMemory?.customerName || 'Cliente');
+    const reactivationNotice = isReactivated ? 'Atendimento automático do bot reativado!\n\n' : '';
 
-    // Mensagem cordial quando a loja estiver fechada
     if (!ctx.isOpen) {
-      return `${reactivationNotice}*Olá${nameStr}! No momento nossa cozinha está descansando.*
-Nosso horário de funcionamento é: *${ctx.openingHours}*.
+      return `${reactivationNotice}Atendimento automático Explosão Açaí!
 
-fique super à vontade! Continuo online por aqui para:
-• Tirar qualquer dúvida sobre sabores, adicionais, frutas e tamanhos de copos!
-• Te informar sobre valores de frete, lactose, veganos e entrega
-• Registrar sua sugestão ou reclamação para a gerência
+Menu Principal Explosão Açaí
+Status: No momento nossa cozinha está descansando (Horário: ${ctx.openingHours})
 
-*Você já pode ir montando seu açaí no cardápio digital:*
-${ctx.publicUrl}
+Olá ${nameStr}! fique super à vontade! Como posso te ajudar hoje? escolha uma opção.
 
-1. Cardápio Digital Completo
-2. Rastrear meu Pedido
-3. Combos & Promoções da Semana
-4. Horário de Funcionamento & Endereço
-5. Falar com um Atendente Humano
-6. Enviar Sugestão ou Reclamação (Ouvidoria)
-
-_Dica: Digite *menu* ou *0* a qualquer momento para voltar aqui!_`;
+1 - Para Conhecer nosso cardapio digital Cardápio Digital Completo:
+2 - Rastrear meu Pedido.
+3 - Combos & Promoções da Semana.
+4 - Horário de Funcionamento e Endereço.
+5 - Falar com um Atendente Humano
+6 - Enviar Sugestão ou Reclamação (Ouvidoria)
+7 - Forma de pagamento.
+8 - Encerrar atendimento.
+Digite 0 a qualquer momento para voltar no menu!`;
     }
 
-    return `${reactivationNotice}*Menu Principal — Explosão Açaí*
-*Status:* Loja Aberta e Entregando
+    return `${reactivationNotice}Atendimento automático Explosão Açaí!
 
-Olá${nameStr}! Como posso te ajudar hoje?${ctx.customerPrefGreeting ? '\n' + ctx.customerPrefGreeting : ''}
+Menu Principal Explosão Açaí
+Status: Loja Aberta e Entregando
 
-1. *Cardápio Digital Completo:*
-${ctx.publicUrl}
-_(Monte seu açaí, escolha acompanhamentos e pague no Pix ou Cartão)_
+Olá ${nameStr}! Como posso te ajudar hoje? escolha uma opção.
 
-2. Rastrear meu Pedido
-3. Combos & Promoções da Semana
-4. Horário de Funcionamento & Endereço
-5. Falar com um Atendente Humano
-6. Enviar Sugestão ou Reclamação (Ouvidoria)
-
-_Dica: Digite *menu* ou *0* a qualquer momento para voltar aqui!_`;
+1 - Para Conhecer nosso cardapio digital Cardápio Digital Completo:
+2 - Rastrear meu Pedido.
+3 - Combos & Promoções da Semana.
+4 - Horário de Funcionamento e Endereço.
+5 - Falar com um Atendente Humano
+6 - Enviar Sugestão ou Reclamação (Ouvidoria)
+7 - Forma de pagamento.
+8 - Encerrar atendimento.
+Digite 0 a qualquer momento para voltar no menu!`;
   }
 
   /**
@@ -249,7 +303,8 @@ _Dica: Digite *menu* ou *0* a qualquer momento para voltar aqui!_`;
     const storeOpenInfo = typeof storeService.isStoreOpen === 'function' ? storeService.isStoreOpen() : { isOpen: true };
     const storeSettings = typeof storeService.getSettings === 'function' ? storeService.getSettings() : {};
     const coupons = (typeof couponService.getCoupons === 'function' ? couponService.getCoupons() : (couponService.getAll ? couponService.getAll() : [])).filter(c => c.active);
-    
+    const clientMemory = this.getClientMemory(customerPhone);
+
     // Busca pedidos recentes do cliente pelo telefone para rastreamento instantâneo
     let recentOrders = [];
     let customerPrefGreeting = '';
@@ -299,7 +354,7 @@ _Dica: Digite *menu* ou *0* a qualquer momento para voltar aqui!_`;
       orderStatusText = `Último Pedido #${latest.orderNo} (${latest.createdAt}): Status atual é "${latest.status}"${motoboyInfo}. Total: R$ ${Number(latest.total || 0).toFixed(2)}.`;
     }
 
-    const publicUrl = process.env.BASE_URL || 'http://localhost:3000';
+    const publicUrl = process.env.BASE_URL || 'https://cardapioexplosaoacai.com.br';
 
     // Resumo de perguntas frequentes aprendidas pela IA
     const knowledgeList = db.get()?.botKnowledge || [];
@@ -319,7 +374,8 @@ _Dica: Digite *menu* ou *0* a qualquer momento para voltar aqui!_`;
       couponList: couponList || 'Nenhum cupom ativo no momento',
       orderStatusText,
       knowledgeSummary,
-      customerPrefGreeting
+      customerPrefGreeting,
+      clientMemory
     };
   }
 
@@ -331,13 +387,36 @@ _Dica: Digite *menu* ou *0* a qualquer momento para voltar aqui!_`;
     const t = cleanText.toLowerCase();
     const cleanPhone = (phone || '').replace(/\D/g, '');
     const ctx = this.buildLiveContext(phone);
+    const clientMemory = ctx.clientMemory || this.getClientMemory(cleanPhone);
+    const effectiveName = customerName || clientMemory?.customerName || 'Cliente';
 
-    // 0. DIREITO AO ESQUECIMENTO (LGPD - ART. 18)
+    // 0. REGRA DE INATIVIDADE (APÓS 20 MINUTOS)
+    const lastTime = this.lastInteraction.get(cleanPhone);
+    const now = Date.now();
+    const isInactiveTimeout = Boolean(lastTime && (now - lastTime > 20 * 60 * 1000));
+    this.lastInteraction.set(cleanPhone, now);
+
+    if (isInactiveTimeout) {
+      this.pendingFeedbackSessions.delete(cleanPhone);
+      this.clearHistory(cleanPhone);
+      const timeoutNotice = `Atendimento encerrado por *falta de interação* (mais de 20 minutos sem resposta) ⏳.\nPara iniciar um novo atendimento com a *Explosão Açaí*, escolha uma opção abaixo:\n\n`;
+      const reply = timeoutNotice + this.renderMainMenu(ctx, effectiveName, wasInHumanTakeover);
+      this.saveHistory(phone, 'user', cleanText);
+      this.saveHistory(phone, 'assistant', reply);
+      return {
+        reply,
+        needsHumanTakeover: false,
+        resetHumanTakeover: wasInHumanTakeover,
+        isTimeoutNotice: true
+      };
+    }
+
+    // 0.1 DIREITO AO ESQUECIMENTO (LGPD - ART. 18)
     const forgetKeywords = ['esquecer', 'apagar dados', 'limpar dados', 'limpar historico', 'limpar histórico', 'esquecer meus dados', 'privacidade lgpd'];
     if (forgetKeywords.some(k => t === k || t.includes(k))) {
       this.clearHistory(phone);
       this.pendingFeedbackSessions.delete(cleanPhone);
-      const reply = `*Privacidade & LGPD — Explosão Açaí*\n\nSeus dados de histórico e preferências temporárias de atendimento foram totalmente apagados da nossa memória em estrita conformidade com a LGPD!\n\nSeus direitos de privacidade são respeitados com total rigor. Quando quiser nos chamar novamente, estaremos à disposição.\n\n_Digite *menu* para ver opções._`;
+      const reply = `*Privacidade & LGPD — Explosão Açaí*\n\nSeus dados de histórico e preferências temporárias de atendimento foram totalmente apagados da nossa memória em estrita conformidade com a LGPD!\n\nSeus direitos de privacidade são respeitados com total rigor. Quando quiser nos chamar novamente, estaremos à disposição.\n\n_Digite *0* para ver opções._`;
       return {
         reply,
         needsHumanTakeover: false,
@@ -345,10 +424,10 @@ _Dica: Digite *menu* ou *0* a qualquer momento para voltar aqui!_`;
       };
     }
 
-    // Retorno ao Menu Principal (cancela sessão pendente de ouvidoria se houver e reativa bot se estava em transbordo)
+    // 1. REGRA DE NAVEGAÇÃO: VOLTAR AO MENU (DIGITE 0 OU MENU)
     if (this.isMenuCommand(cleanText)) {
       this.pendingFeedbackSessions.delete(cleanPhone);
-      const reply = this.renderMainMenu(ctx, customerName, wasInHumanTakeover);
+      const reply = this.renderMainMenu(ctx, effectiveName, wasInHumanTakeover);
       this.saveHistory(phone, 'user', cleanText);
       this.saveHistory(phone, 'assistant', reply);
       return {
@@ -359,7 +438,21 @@ _Dica: Digite *menu* ou *0* a qualquer momento para voltar aqui!_`;
       };
     }
 
-    // 0.1 TRATAMENTO DE SESSÃO ATIVA DE OUVIDORIA (Cliente escolheu opção 6 anteriormente e agora enviou texto ou áudio)
+    // 1.1 OPÇÃO 8: ENCERRAR ATENDIMENTO
+    if (t === '8' || t === 'encerrar' || t === 'encerrar atendimento' || t === 'fim') {
+      this.pendingFeedbackSessions.delete(cleanPhone);
+      this.clearHistory(cleanPhone);
+      const reply = `Atendimento encerrado! Agradecemos pelo contato com a *Explosão Açaí* 🍧💜.\nSempre que precisar, basta enviar um *Oi* por aqui para iniciar um novo atendimento!`;
+      this.saveHistory(phone, 'user', cleanText);
+      this.saveHistory(phone, 'assistant', reply);
+      return {
+        reply,
+        needsHumanTakeover: false,
+        isSessionEnded: true
+      };
+    }
+
+    // 1.2 TRATAMENTO DE SESSÃO ATIVA DE OUVIDORIA (O cliente digitou 6 anteriormente)
     if (this.pendingFeedbackSessions.has(cleanPhone)) {
       const session = this.pendingFeedbackSessions.get(cleanPhone);
       const isExpired = session && session.timestamp && (Date.now() - session.timestamp > 15 * 60 * 1000);
@@ -371,11 +464,11 @@ _Dica: Digite *menu* ou *0* a qualquer momento para voltar aqui!_`;
         if (cleanText === '[MENSAGEM_DE_AUDIO]') {
           const entry = this.saveFeedback({
             phone: cleanPhone,
-            customerName,
+            customerName: effectiveName,
             type: 'reclamacao',
             message: '[Áudio gravado pelo cliente no WhatsApp - Ouvidoria]'
           });
-          const reply = `Recebi seu áudio na Ouvidoria${customerName ? ` ${customerName}` : ''}. Sua mensagem foi gravada com sucesso no sistema (Protocolo #${entry?.id || 'OK'}).\n\nEstou transferindo para nossa equipe humana ouvir sua gravação e te dar o retorno imediato. Por favor, aguarde só um momento.`;
+          const reply = `Recebi seu áudio na Ouvidoria${effectiveName ? ` ${effectiveName}` : ''}. Sua mensagem foi gravada com sucesso no sistema (Protocolo #${entry?.id || 'OK'}).\n\nEstou transferindo para nossa equipe humana ouvir sua gravação e te dar o retorno imediato. Por favor, aguarde só um momento.`;
           this.saveHistory(phone, 'user', cleanText);
           this.saveHistory(phone, 'assistant', reply);
           return {
@@ -391,13 +484,13 @@ _Dica: Digite *menu* ou *0* a qualquer momento para voltar aqui!_`;
         const type = isComp ? 'reclamacao' : 'sugestao';
         const entry = this.saveFeedback({
           phone: cleanPhone,
-          customerName,
+          customerName: effectiveName,
           type,
           message: cleanText
         });
 
         if (type === 'reclamacao') {
-          const reply = `Sinto muito pelo ocorrido${customerName ? ` ${customerName}` : ''}. Registrei sua reclamação no sistema (Protocolo #${entry?.id || 'OK'}). A gerência foi notificada e nossa equipe humana vai assumir este atendimento agora mesmo para te ajudar.`;
+          const reply = `Sinto muito pelo ocorrido${effectiveName ? ` ${effectiveName}` : ''}. Registrei sua reclamação no sistema (Protocolo #${entry?.id || 'OK'}). A gerência foi notificada e nossa equipe humana vai assumir este atendimento agora mesmo para te ajudar.`;
           this.saveHistory(phone, 'user', cleanText);
           this.saveHistory(phone, 'assistant', reply);
           return {
@@ -406,7 +499,7 @@ _Dica: Digite *menu* ou *0* a qualquer momento para voltar aqui!_`;
             feedbackId: entry?.id
           };
         } else {
-          const reply = `Muito obrigado pelo seu carinho e pela sua sugestão${customerName ? ` ${customerName}` : ''}! Registrei sua mensagem no sistema com sucesso (Protocolo #${entry?.id || 'OK'}) e já encaminhei para a gerência.\n\n_Digite *menu* para ver opções._`;
+          const reply = `Muito obrigado pelo seu carinho e pela sua sugestão${effectiveName ? ` ${effectiveName}` : ''}! Registrei sua mensagem no sistema com sucesso (Protocolo #${entry?.id || 'OK'}) e já encaminhei para a gerência.\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`;
           this.saveHistory(phone, 'user', cleanText);
           this.saveHistory(phone, 'assistant', reply);
           return {
@@ -420,27 +513,27 @@ _Dica: Digite *menu* ou *0* a qualquer momento para voltar aqui!_`;
       }
     }
 
-    // 0.2 TRATAMENTO DE ÁUDIO ENVIADO PELO CLIENTE FORA DA OUVIDORIA
+    // 1.3 TRATAMENTO DE ÁUDIO FORA DA OUVIDORIA
     if (cleanText === '[MENSAGEM_DE_AUDIO]') {
-      const reply = `Olá${customerName ? ` ${customerName}` : ''}! Recebi seu áudio. No momento nosso assistente virtual do delivery lê mensagens em texto. Se puder digitar sua dúvida ou pedido, te respondo prontamente!\n\n*Cardápio Digital:* ${ctx.publicUrl}\n\n_Para falar com atendente humano, digite *5* ou *humano*._`;
+      const reply = `Olá${effectiveName ? ` ${effectiveName}` : ''}! Recebi seu áudio. No momento nosso assistente virtual do delivery lê mensagens em texto. Se puder digitar sua dúvida ou pedido, te respondo prontamente!\n\n*Cardápio Digital:* https://cardapioexplosaoacai.com.br\n\n_Para falar com atendente humano, digite *5*._\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`;
       this.saveHistory(phone, 'assistant', reply);
       return { reply, needsHumanTakeover: false, isAudio: true };
     }
 
-    // 0.3 TRATAMENTO DE FOTO / COMPROVANTE PIX / DOCUMENTO
+    // 1.4 TRATAMENTO DE FOTO / COMPROVANTE PIX / DOCUMENTO
     if (cleanText === '[MENSAGEM_DE_FOTO]' || cleanText === '[MENSAGEM_DE_DOCUMENTO]') {
-      const reply = `Recebi seu arquivo/foto. Se for um comprovante de pagamento Pix, nosso time do caixa já está conferindo no sistema para liberar seu pedido!\n\nSe for uma dúvida, você pode digitar aqui em texto que te ajudo na hora!\n\n*Cardápio Digital:* ${ctx.publicUrl}\n\n_Digite *menu* para ver opções ou *5* para falar com um atendente humano._`;
+      const reply = `Recebi seu arquivo/foto. Se for um comprovante de pagamento Pix, nosso time do caixa já está conferindo no sistema para liberar seu pedido!\n\nSe for uma dúvida, você pode digitar aqui em texto que te ajudo na hora!\n\n*Cardápio Digital:* https://cardapioexplosaoacai.com.br\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`;
       this.saveHistory(phone, 'assistant', reply);
       return { reply, needsHumanTakeover: false, isMedia: true };
     }
 
-    // 0.4 TRATAMENTO DE FIGURINHA
+    // 1.5 TRATAMENTO DE FIGURINHA
     if (cleanText === '[MENSAGEM_DE_FIGURINHA]') {
-      const reply = `Recebi sua mensagem! Como posso te ajudar hoje? Digite *menu* para ver nosso cardápio e opções!`;
+      const reply = `Recebi sua mensagem! Como posso te ajudar hoje? Digite *0* para ver nosso cardápio e opções!`;
       return { reply, needsHumanTakeover: false };
     }
 
-    // 1. FILTRO DE PALAVRÕES, OFENSAS E CONTEÚDO IMPRÓPRIO
+    // 2. FILTRO DE PALAVRÕES, OFENSAS E CONTEÚDO IMPRÓPRIO
     if (this.checkProfanityAndExplicit(cleanText)) {
       this.stats.profanityBlocked++;
       try {
@@ -456,7 +549,7 @@ _Dica: Digite *menu* ou *0* a qualquer momento para voltar aqui!_`;
         });
       } catch (e) {}
 
-      const reply = `Olá${customerName ? ` ${customerName}` : ''}! Prezamos por um atendimento respeitoso e harmonioso para todos os nossos clientes e atendentes.\n\nPedimos gentilmente que evite o uso de termos ofensivos. Como posso te ajudar com o cardápio ou seu pedido hoje?\n\n_Dica: Digite *menu* para ver as opções._`;
+      const reply = `Olá${effectiveName ? ` ${effectiveName}` : ''}! Prezamos por um atendimento respeitoso e harmonioso para todos os nossos clientes e atendentes.\n\nPedimos gentilmente que evite o uso de termos ofensivos. Como posso te ajudar com o cardápio ou seu pedido hoje?\n\n_Dica: Digite *0* para ver as opções._`;
       this.saveHistory(phone, 'user', cleanText);
       this.saveHistory(phone, 'assistant', reply);
       return {
@@ -466,20 +559,75 @@ _Dica: Digite *menu* ou *0* a qualquer momento para voltar aqui!_`;
       };
     }
 
-    // 2. OPÇÃO 6 OU FEEDBACK / SUGESTÃO / RECLAMAÇÃO (OUVIDORIA)
-    const isOuvidoriaCommand = t === '6' || t === 'ouvidoria' || t === 'feedback' || t === 'reclamacao' || t === 'reclamação' || t === 'sugestao' || t === 'sugestão' || t === 'ouvidoria e feedback';
-    if (isOuvidoriaCommand) {
-      this.pendingFeedbackSessions.set(cleanPhone, { timestamp: Date.now(), customerName });
-      const reply = `*Ouvidoria & Feedback — Explosão Açaí*\n\nA sua opinião é fundamental para nós! Pode digitar ou enviar áudio com sua *sugestão*, *elogio* ou *reclamação*, que nosso sistema registra diretamente para a gerência.\n\nSe for um problema com seu pedido, nossa equipe humana já assume para te ajudar! Como podemos te ouvir hoje?\n\n_Digite *menu* para voltar._`;
+    // 3. MAPEAMENTO DIRETO DAS 8 OPÇÕES DO MENU
+
+    // Opção 1: Cardápio Digital Completo
+    if (t === '1') {
+      const reply = `Acesse nosso *Cardápio Digital Completo* pelo link abaixo para montar seu açaí do seu jeito e escolher seus acompanhamentos favoritos:\n👉 *https://cardapioexplosaoacai.com.br*\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`;
+      this.saveHistory(phone, 'user', cleanText);
+      this.saveHistory(phone, 'assistant', reply);
+      return { reply, needsHumanTakeover: false };
+    }
+
+    // Opção 2: Rastrear meu Pedido
+    if (t === '2') {
+      let memoryNote = '';
+      if (clientMemory?.latestOrder) {
+        memoryNote = `Identifiquei seu último pedido realizado (#${clientMemory.latestOrder.orderNo} - Status atual: "${clientMemory.latestOrder.status}"). Deseja consultar o andamento deste pedido ou rastrear um novo?\n\n`;
+      }
+      const reply = `${memoryNote}Para consultar o *status do seu pedido*, por favor, me informe o *número do pedido* ou o *nome completo / telefone* cadastrado na compra.\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`;
+      this.saveHistory(phone, 'user', cleanText);
+      this.saveHistory(phone, 'assistant', reply);
+      return { reply, needsHumanTakeover: false };
+    }
+
+    // Opção 3: Combos & Promoções da Semana
+    if (t === '3') {
+      const reply = `Confira nossos *Combos & Promoções da Semana* com descontos especiais direto na aba de promoções do nosso cardápio digital:\n👉 *https://cardapioexplosaoacai.com.br*\nAproveite antes que acabe!\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`;
+      this.saveHistory(phone, 'user', cleanText);
+      this.saveHistory(phone, 'assistant', reply);
+      return { reply, needsHumanTakeover: false };
+    }
+
+    // Opção 4: Horário de Funcionamento e Endereço
+    if (t === '4') {
+      const address = ctx.address || 'Rua Renato Lourenço Fernandes Rosa, 1721 - Franca, SP';
+      const hours = ctx.openingHours || 'Terça a Domingo das 13h às 23h';
+      const reply = `Confira nossas informações de funcionamento e retirada na loja:\n- *Endereço:* ${address}\n- *Horário de Funcionamento:* ${hours}\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`;
+      this.saveHistory(phone, 'user', cleanText);
+      this.saveHistory(phone, 'assistant', reply);
+      return { reply, needsHumanTakeover: false };
+    }
+
+    // Opção 5: Falar com um Atendente Humano
+    if (t === '5') {
+      const reply = `Essa é uma dúvida bem específica e quero te dar a resposta correta com certeza. Por isso, estou chamando um atendente humano da nossa equipe agora mesmo para te responder por aqui. Aguarde só um instante!\n\nSe quiser ver o cardápio ou outras informações  enquanto isso, digite 0 para voltar ao menu de opções !`;
+      this.saveHistory(phone, 'user', cleanText);
+      this.saveHistory(phone, 'assistant', reply);
+      return { reply, needsHumanTakeover: true };
+    }
+
+    // Opção 6: Enviar Sugestão ou Reclamação (Ouvidoria)
+    if (t === '6' || t === 'ouvidoria' || t === 'feedback') {
+      this.pendingFeedbackSessions.set(cleanPhone, { timestamp: Date.now(), customerName: effectiveName });
+      const reply = `Sua opinião é muito importante para a *Explosão Açaí*! Digite abaixo sua *sugestão, elogio ou reclamação* que nossa gerência vai analisar com carinho.\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`;
       this.saveHistory(phone, 'user', cleanText);
       this.saveHistory(phone, 'assistant', reply);
       return { reply, needsHumanTakeover: false, isFeedbackPrompt: true };
     }
 
+    // Opção 7: Forma de pagamento
+    if (t === '7') {
+      const reply = `Aceitamos as seguintes *formas de pagamento*:\n- *Pix* (pagamento rápido online ou na entrega)\n- *Cartão de Crédito e Débito* (online ou na maquininha na entrega)\n- *Dinheiro* (informe se precisar de *troco*)\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`;
+      this.saveHistory(phone, 'user', cleanText);
+      this.saveHistory(phone, 'assistant', reply);
+      return { reply, needsHumanTakeover: false };
+    }
+
     // Detecção espontânea de sugestão ou elogio do cliente
     if (this.isSuggestionText(cleanText)) {
-      const entry = this.saveFeedback({ phone: cleanPhone, customerName, type: 'sugestao', message: cleanText });
-      const reply = `Muito obrigado pelo seu carinho e pela sua sugestão${customerName ? ` ${customerName}` : ''}! A sua opinião é muito valiosa para continuarmos melhorando a cada dia. Já registrei sua mensagem para a nossa gerência e equipe!\n\n_Digite *menu* para ver outras opções._`;
+      const entry = this.saveFeedback({ phone: cleanPhone, customerName: effectiveName, type: 'sugestao', message: cleanText });
+      const reply = `Muito obrigado pelo seu carinho e pela sua sugestão${effectiveName ? ` ${effectiveName}` : ''}! A sua opinião é muito valiosa para continuarmos melhorando a cada dia. Já registrei sua mensagem para a nossa gerência e equipe!\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`;
       this.saveHistory(phone, 'user', cleanText);
       this.saveHistory(phone, 'assistant', reply);
       return { reply, needsHumanTakeover: false, feedbackId: entry?.id };
@@ -487,37 +635,25 @@ _Dica: Digite *menu* ou *0* a qualquer momento para voltar aqui!_`;
 
     // Detecção espontânea de reclamação explícita do cliente
     if (this.isComplaintText(cleanText)) {
-      const entry = this.saveFeedback({ phone: cleanPhone, customerName, type: 'reclamacao', message: cleanText });
-      const reply = `Sinto muito pelo ocorrido${customerName ? ` ${customerName}` : ''}! Peço sinceras desculpas pelo transtorno. Nós levamos a qualidade do seu atendimento muito a sério. Notifiquei a gerência e o responsável da loja no painel e alguém da nossa equipe vai assumir este chat agora mesmo para te ajudar!`;
+      const entry = this.saveFeedback({ phone: cleanPhone, customerName: effectiveName, type: 'reclamacao', message: cleanText });
+      const reply = `Sinto muito pelo ocorrido${effectiveName ? ` ${effectiveName}` : ''}! Peço sinceras desculpas pelo transtorno. Nós levamos a qualidade do seu atendimento muito a sério. Notifiquei a gerência e o responsável da loja no painel e alguém da nossa equipe vai assumir este chat agora mesmo para te ajudar!`;
       this.saveHistory(phone, 'user', cleanText);
       this.saveHistory(phone, 'assistant', reply);
       return { reply, needsHumanTakeover: true, feedbackId: entry?.id };
     }
 
-    // 3. CONSULTA À BASE DE APRENDIZADO DA IA (FAQ APRENDIDA)
+    // 4. CONSULTA À BASE DE APRENDIZADO DA IA (FAQ APRENDIDA)
     const learned = this.findLearnedKnowledge(cleanText);
     if (learned) {
       let reply = `*Explosão Açaí Informa:*\n\n${learned.answer}`;
       if (!ctx.isOpen) {
         reply += `\n\n*(Lembrando que nossa cozinha está fechada no momento e abre às ${ctx.openingHours}, mas você já pode ir escolhendo o seu favorito!)*`;
       } else {
-        reply += `\n\n*Monte seu açaí no cardápio digital:* ${ctx.publicUrl}\n\n_Digite *menu* para mais opções._`;
+        reply += `\n\n*Monte seu açaí no cardápio digital:* https://cardapioexplosaoacai.com.br\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`;
       }
       this.saveHistory(phone, 'user', cleanText);
       this.saveHistory(phone, 'assistant', reply);
       return { reply, needsHumanTakeover: false };
-    }
-
-    // 4. DETECÇÃO DE PEDIDO EXPLÍCITO DE ATENDENTE HUMANO
-    const humanKeywords = ['atendente', 'humano', 'falar com pessoa', 'gerente', 'falar com alguem', 'pessoa real', '5'];
-    if (humanKeywords.some(k => t === k || t.includes(k))) {
-      const reply = `Entendido${customerName ? `, ${customerName}` : ''}! Estou transferindo você para um de nossos atendentes humanos agora mesmo. Por favor, aguarde só um momento que já vamos te responder por aqui!\n\n_Se quiser voltar ao atendimento automático, basta digitar *menu*._`;
-      this.saveHistory(phone, 'user', cleanText);
-      this.saveHistory(phone, 'assistant', reply);
-      return {
-        reply,
-        needsHumanTakeover: true
-      };
     }
 
     // 5. ATENDIMENTO AVANÇADO COM GOOGLE GEMINI 2.0 FLASH (COM MEMÓRIA CONVERSACIONAL)
@@ -525,46 +661,43 @@ _Dica: Digite *menu* ou *0* a qualquer momento para voltar aqui!_`;
       try {
         const systemInstruction = `
 Você é a atendente virtual oficial e consultora da "Explosão Açaí", delivery em Franca - SP.
-Seu objetivo é encantar o cliente, tirar dúvidas com simpatia, sugerir produtos e orientar no pedido.
+Siga rigorosamente as 8 opções do Menu Principal, os textos exatos e a regra de transferência.
+
+MENU PRINCIPAL:
+1 - Para Conhecer nosso cardapio digital Cardápio Digital Completo:
+2 - Rastrear meu Pedido.
+3 - Combos & Promoções da Semana.
+4 - Horário de Funcionamento e Endereço.
+5 - Falar com um Atendente Humano
+6 - Enviar Sugestão ou Reclamação (Ouvidoria)
+7 - Forma de pagamento.
+8 - Encerrar atendimento.
+Digite 0 a qualquer momento para voltar no menu!
 
 INFORMAÇÕES REAIS DO ESTABELECIMENTO EM TEMPO REAL:
 - Loja: ${ctx.storeName}
-- Status: ${ctx.isOpen ? 'ABERTA AGORA! Recebendo pedidos normalmente.' : 'FECHADA NO MOMENTO (Atenção: responda todas as dúvidas do cliente com gentileza, explicando que a cozinha está descansando e abre às ' + ctx.openingHours + ')'}
+- Status: ${ctx.isOpen ? 'Loja Aberta e Entregando' : 'No momento nossa cozinha está descansando (Horário: ' + ctx.openingHours + ')'}
 - Horário de Funcionamento: ${ctx.openingHours}
 - Endereço: ${ctx.address}
-- Link do Cardápio Digital Oficial: ${ctx.publicUrl}
+- Link do Cardápio Digital Oficial: https://cardapioexplosaoacai.com.br
 - Cupons Ativos: ${ctx.couponList}
 
-BASE DE CONHECIMENTO & APRENDIZADO DA IA:
-${ctx.knowledgeSummary}
+MEMÓRIA DO CLIENTE:
+- Nome: ${effectiveName}
+- Último pedido: ${clientMemory?.latestOrder ? '#' + clientMemory.latestOrder.orderNo + ' (' + clientMemory.latestOrder.status + ')' : 'Nenhum'}
+- Preferência de pagamento: ${clientMemory?.paymentPref || 'Nenhuma'}
+- Endereço de entrega: ${clientMemory?.deliveryAddress || 'Nenhum'}
 
-PREFERÊNCIAS DE CONSUMO DO CLIENTE (MEMÓRIA LGPD):
-${ctx.customerPrefGreeting || 'Nenhum pedido anterior registrado.'}
+REGRAS RÍGIDAS DE ATENDIMENTO:
+1. Sempre que o cliente escolher a Opção 5 ou fizer uma pergunta muito específica que você não saiba responder com absoluta certeza, NUNCA invente: transfira imediatamente para um atendente humano com a mensagem exata:
+"Essa é uma dúvida bem específica e quero te dar a resposta correta com certeza. Por isso, estou chamando um atendente humano da nossa equipe agora mesmo para te responder por aqui. Aguarde só um instante!
 
-CARDÁPIO E PREÇOS REAIS:
-${ctx.productsSummary}
+Se quiser ver o cardápio ou outras informações  enquanto isso, digite 0 para voltar ao menu de opções !"
+e conclua internamente com: [ACTION:CALL_HUMAN].
 
-ACOMPANHAMENTOS (já inclusos):
-${ctx.acompList}
-
-EXTRAS / COBERTURAS ESPECIAIS:
-${ctx.extrasList}
-
-FRUTAS FRESCAS:
-${ctx.fruitsList}
-
-STATUS DE PEDIDO DO CLIENTE ATUAL (${phone}):
-${ctx.orderStatusText}
-
-REGRAS DE CONDUTA E ESTILO:
-1. Mantenha um tom limpo, profissional, prestativo e direto ao ponto. NUNCA use emojis em excesso ou repetidos (NUNCA envie 🍇, 💳, 📲, ✨). Use no máximo 0 a 1 emoji simples e discreto por mensagem apenas se absolutamente necessário.
-2. Se a loja estiver FECHADA: acolha o cliente com simpatia, responda todas as perguntas sobre o cardápio e avise que quando a loja abrir às ${ctx.openingHours} ele já pode enviar o pedido pelo link.
-3. Se perguntarem sobre lactose/vegano: o açaí puro não contém lactose nem glúten. Sugira montar com frutas, paçoca e granola tradicional sem leite.
-4. Se perguntarem sobre status de entrega: informe o status exato e o entregador com base no STATUS DE PEDIDO acima.
-5. Sempre que fizer sentido, envie o link do Cardápio Digital (${ctx.publicUrl}) para o cliente finalizar.
-6. Sempre inclua ao final de forma sutil: "_Digite *menu* para ver as opções._"
-7. Se o cliente fizer uma pergunta muito específica, técnica ou que você NÃO saiba responder com absoluta certeza, NUNCA invente dados: peça desculpas com simpatia, diga que está chamando a equipe e conclua com o código: [ACTION:CALL_HUMAN].
-8. Se o cliente demonstrar insatisfação grave (pedido errado, derretido, atraso excessivo), peça desculpas sinceras, diga que acionou o gerente e finalize com o código: [ACTION:CALL_HUMAN].
+2. Se o cliente digitar 0 ou pedir menu, envie o Menu Principal.
+3. Se o cliente digitar 8, encerre com a mensagem de encerramento.
+4. Mantenha tom cordial, elegante e sem excesso de emojis.
         `.trim();
 
         const historyList = this.getHistory(phone);
@@ -575,7 +708,7 @@ REGRAS DE CONDUTA E ESTILO:
           })),
           {
             role: 'user',
-            parts: [{ text: `Cliente (${customerName || 'Cliente'}, Tel: ${phone}): ${cleanText}` }]
+            parts: [{ text: `Cliente (${effectiveName}, Tel: ${phone}): ${cleanText}` }]
           }
         ];
 
@@ -596,7 +729,7 @@ REGRAS DE CONDUTA E ESTILO:
 
         // Se a IA detectou que precisa chamar humano por reclamação, garante gravação no banco
         if (needsHuman && this.isComplaintText(cleanText)) {
-          this.saveFeedback({ phone: cleanPhone, customerName, type: 'reclamacao', message: cleanText });
+          this.saveFeedback({ phone: cleanPhone, customerName: effectiveName, type: 'reclamacao', message: cleanText });
         }
 
         this.saveHistory(phone, 'user', cleanText);
@@ -612,109 +745,143 @@ REGRAS DE CONDUTA E ESTILO:
     }
 
     // 6. MOTOR INTELIGENTE LOCAL (CONTINGÊNCIA SEM CUSTO DE API)
-    const result = this.fallbackSmartRuleEngine(cleanText, ctx, customerName, cleanPhone);
+    const result = this.fallbackSmartRuleEngine(cleanText, ctx, effectiveName, cleanPhone);
     this.saveHistory(phone, 'user', cleanText);
     this.saveHistory(phone, 'assistant', result.reply);
     return result;
   }
 
   /**
-   * Motor inteligente local de contingência (com tom limpo, profissional e sem poluição de emojis)
+   * Motor inteligente local de contingência (com tom limpo, profissional e mapeamento das 8 opções)
    */
   fallbackSmartRuleEngine(text, ctx, customerName, cleanPhone = '') {
-    const t = text.toLowerCase();
-    const nameStr = customerName ? ` ${customerName}` : '';
+    const t = text.toLowerCase().trim();
     const phoneToSave = cleanPhone || (ctx.phone || '').replace(/\D/g, '');
-    const closedReminder = !ctx.isOpen ? `\n\n*(Lembrando que nossa cozinha está fechada no momento e abre às ${ctx.openingHours}, mas você já pode ir escolhendo o seu favorito!)*` : '';
+    const memory = ctx.clientMemory || this.getClientMemory(phoneToSave);
+    const effectiveName = customerName || memory?.customerName || 'Cliente';
 
-    // Opção 1 ou Rastreio de Pedido
-    if (t === '1' || t.includes('pedido') || t.includes('rastrear') || t.includes('onde ta') || t.includes('cade') || t.includes('cadê') || t.includes('demorando')) {
+    // Opção 1 ou Cardápio
+    if (t === '1' || t.includes('cardapio') || t.includes('cardápio') || t.includes('conhecer nosso cardapio')) {
       return {
-        reply: `*Status do seu Pedido:*\n\n${ctx.orderStatusText}\n\nAcompanhe o pedido ou monte um novo copo:\n${ctx.publicUrl}\n\n_Digite *menu* para voltar._`,
+        reply: `Acesse nosso *Cardápio Digital Completo* pelo link abaixo para montar seu açaí do seu jeito e escolher seus acompanhamentos favoritos:\n👉 *https://cardapioexplosaoacai.com.br*\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`,
         needsHumanTakeover: false
       };
     }
 
-    // Opção 2 ou Produtos / Preços / Sabores
-    if (t === '2' || t.includes('preco') || t.includes('preço') || t.includes('quanto custa') || t.includes('sabores') || t.includes('cardapio') || t.includes('cardápio') || t.includes('tamanhos') || t.includes('copos')) {
+    // Opção 2 ou Rastreamento de Pedido
+    if (t === '2' || t.includes('rastrear') || t.includes('rastreio') || t.includes('onde ta') || t.includes('cade meu pedido') || t.includes('cadê meu pedido')) {
+      let memoryNote = '';
+      if (memory?.latestOrder) {
+        memoryNote = `Identifiquei seu último pedido realizado (#${memory.latestOrder.orderNo} - Status atual: "${memory.latestOrder.status}"). Deseja consultar o andamento deste pedido ou rastrear um novo?\n\n`;
+      }
       return {
-        reply: `*Destaques do nosso Cardápio:*\n\n${ctx.productsSummary.split('\n').slice(0, 4).join('\n')}\n\n*Confira todos os tamanhos, adicionais e combos no cardápio digital:*\n${ctx.publicUrl}${closedReminder}\n\n_Digite *menu* para voltar._`,
+        reply: `${memoryNote}Para consultar o *status do seu pedido*, por favor, me informe o *número do pedido* ou o *nome completo / telefone* cadastrado na compra.\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`,
         needsHumanTakeover: false
       };
     }
 
-    // Opção 3 ou Promoções / Cupons
-    if (t === '3' || t.includes('promo') || t.includes('combo') || t.includes('desconto') || t.includes('cupom')) {
+    // Consulta direta por número de pedido (ex: 6 dígitos ou #123456)
+    const orderNoMatch = t.match(/\b\d{6}\b/);
+    if (orderNoMatch) {
+      const orderNo = orderNoMatch[0];
+      const allOrders = orderService.getOrders() || [];
+      const found = allOrders.find(o => o.orderNo === orderNo);
+      if (found) {
+        const motoboy = found.delivery?.motoboyName ? ` com o motoboy ${found.delivery.motoboyName}` : '';
+        return {
+          reply: `*Status do Pedido #${found.orderNo}:*\n- *Situação:* ${found.status}${motoboy}\n- *Total:* R$ ${Number(found.total || 0).toFixed(2)}\n- *Entrega:* ${found.delivery?.street ? `${found.delivery.street}, ${found.delivery.number || ''}` : 'Retirada'}\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`,
+          needsHumanTakeover: false
+        };
+      }
+    }
+
+    // Opção 3 ou Promoções / Combos
+    if (t === '3' || t.includes('combo') || t.includes('promo') || t.includes('promocoes') || t.includes('promoções') || t.includes('desconto')) {
       return {
-        reply: `*Promoções & Cupons Ativos:*\n\n*Cupons Disponíveis:* ${ctx.couponList}\n\nTemos combos especiais com preços promocionais no cardápio!\nAcesse: ${ctx.publicUrl}${closedReminder}\n\n_Digite *menu* para voltar._`,
+        reply: `Confira nossos *Combos & Promoções da Semana* com descontos especiais direto na aba de promoções do nosso cardápio digital:\n👉 *https://cardapioexplosaoacai.com.br*\nAproveite antes que acabe!\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`,
         needsHumanTakeover: false
       };
     }
 
-    // Opção 4 ou Horários / Endereço / Onde fica
-    if (t === '4' || t.includes('horario') || t.includes('horário') || t.includes('onde fica') || t.includes('endereco') || t.includes('endereço') || t.includes('localizacao') || t.includes('localização')) {
+    // Opção 4 ou Horários e Endereço
+    if (t === '4' || t.includes('horario') || t.includes('horário') || t.includes('endereco') || t.includes('endereço') || t.includes('onde fica') || t.includes('localizacao')) {
+      const address = ctx.address || 'Rua Renato Lourenço Fernandes Rosa, 1721 - Franca, SP';
+      const hours = ctx.openingHours || 'Terça a Domingo das 13h às 23h';
       return {
-        reply: `*Nossa Localização & Horários:*\n\n*Endereço:* ${ctx.address}\n*Horário:* ${ctx.openingHours}\n\nPeça online pelo delivery: ${ctx.publicUrl}${closedReminder}\n\n_Digite *menu* para voltar._`,
+        reply: `Confira nossas informações de funcionamento e retirada na loja:\n- *Endereço:* ${address}\n- *Horário de Funcionamento:* ${hours}\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`,
         needsHumanTakeover: false
       };
     }
 
-    // Dúvidas de Ingredientes / Lactose / Vegano
-    if (t.includes('leite') || t.includes('lactose') || t.includes('vegano') || t.includes('intolerante') || t.includes('puro') || t.includes('ingredientes')) {
+    // Opção 5 ou Atendente Humano
+    if (t === '5' || t.includes('atendente') || t.includes('humano') || t.includes('falar com pessoa') || t.includes('pessoa real')) {
       return {
-        reply: `*Nosso Açaí é 100% Puro & Natural!*\n\nNão contém leite, lactose nem glúten em sua base tradicional. Se você tiver intolerância, recomendamos pedir com frutas frescas, paçoca e granola tradicional sem leite!${closedReminder}\n\nMonte do seu jeito: ${ctx.publicUrl}\n\n_Digite *menu* para voltar._`,
+        reply: `Essa é uma dúvida bem específica e quero te dar a resposta correta com certeza. Por isso, estou chamando um atendente humano da nossa equipe agora mesmo para te responder por aqui. Aguarde só um instante!\n\nSe quiser ver o cardápio ou outras informações  enquanto isso, digite 0 para voltar ao menu de opções !`,
+        needsHumanTakeover: true
+      };
+    }
+
+    // Opção 6 ou Ouvidoria
+    if (t === '6' || t.includes('ouvidoria') || t.includes('sugestao') || t.includes('sugestão') || t.includes('reclamacao') || t.includes('reclamação')) {
+      this.pendingFeedbackSessions.set(phoneToSave, { timestamp: Date.now(), customerName: effectiveName });
+      return {
+        reply: `Sua opinião é muito importante para a *Explosão Açaí*! Digite abaixo sua *sugestão, elogio ou reclamação* que nossa gerência vai analisar com carinho.\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`,
+        needsHumanTakeover: false,
+        isFeedbackPrompt: true
+      };
+    }
+
+    // Opção 7 ou Forma de pagamento
+    if (t === '7' || t.includes('pagamento') || t.includes('pagar') || t.includes('cartao') || t.includes('cartão') || t.includes('pix') || t.includes('dinheiro') || t.includes('troco')) {
+      return {
+        reply: `Aceitamos as seguintes *formas de pagamento*:\n- *Pix* (pagamento rápido online ou na entrega)\n- *Cartão de Crédito e Débito* (online ou na maquininha na entrega)\n- *Dinheiro* (informe se precisar de *troco*)\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`,
         needsHumanTakeover: false
       };
     }
 
-    // Dúvidas de Entrega / Bairros / Frete
-    if (t.includes('entrega') || t.includes('frete') || t.includes('taxa') || t.includes('distancia') || t.includes('distância')) {
+    // Opção 8 ou Encerrar atendimento
+    if (t === '8' || t.includes('encerrar') || t.includes('finalizar atendimento') || t.includes('tchau') || t.includes('obrigado') || t.includes('valeu')) {
+      this.pendingFeedbackSessions.delete(phoneToSave);
+      this.clearHistory(phoneToSave);
       return {
-        reply: `*Entregas em toda Franca - SP!*\n\nCobrimos até 25km de distância da loja com frete a partir de R$ 4,50. Você pode colocar seu endereço direto no cardápio digital para calcular o frete exato:\n${ctx.publicUrl}${closedReminder}\n\n_Digite *menu* para voltar._`,
-        needsHumanTakeover: false
+        reply: `Atendimento encerrado! Agradecemos pelo contato com a *Explosão Açaí* 🍧💜.\nSempre que precisar, basta enviar um *Oi* por aqui para iniciar um novo atendimento!`,
+        needsHumanTakeover: false,
+        isSessionEnded: true
       };
     }
 
     // Reclamação ou problema com gravação garantida em db.feedbacks
     if (this.isComplaintText(t) || t.includes('errado') || t.includes('derretido') || t.includes('faltou') || t.includes('reclamar') || t.includes('ruim') || t.includes('cancelar')) {
-      this.saveFeedback({ phone: phoneToSave, customerName, type: 'reclamacao', message: text });
+      this.saveFeedback({ phone: phoneToSave, customerName: effectiveName, type: 'reclamacao', message: text });
       return {
-        reply: `Sinto muito pelo ocorrido${nameStr}! Peço sinceras desculpas pelo transtorno. Nós levamos a qualidade do seu atendimento muito a sério. Notifiquei a gerência no painel e alguém da nossa equipe vai assumir este chat agora mesmo para te ajudar!`,
+        reply: `Sinto muito pelo ocorrido${effectiveName ? ` ${effectiveName}` : ''}! Peço sinceras desculpas pelo transtorno. Nós levamos a qualidade do seu atendimento muito a sério. Notifiquei a gerência no painel e alguém da nossa equipe vai assumir este chat agora mesmo para te ajudar!`,
         needsHumanTakeover: true
       };
     }
 
-    // Saudações comuns ou intenção inicial de pedir
+    // Saudações comuns ou intenção inicial de pedir -> Menu Principal
     const isGreetingOrOrderIntent = /^(oi|ola|olá|bom dia|boa tarde|boa noite|quero pedir|quero açaí|quero acai)\b/i.test(t) ||
       t.includes('boa noite') || t.includes('bom dia') || t.includes('boa tarde') || t.includes('quero pedir') || t.includes('fazer pedido') || t === 'oi' || t === 'ola' || t === 'olá';
 
     if (isGreetingOrOrderIntent && !t.includes('?')) {
-      const greeting = !ctx.isOpen
-        ? `Olá${nameStr}! No momento nossa cozinha está descansando (abrimos às *${ctx.openingHours}*), mas continuo por aqui para tirar qualquer dúvida sobre o cardápio ou te ajudar a escolher o açaí ideal da *Explosão Açaí*!\n\n*Acesse nosso cardápio digital:* \n${ctx.publicUrl}\n\n_Digite *menu* para ver todas as opções!_`
-        : `Oi${nameStr}! Bem-vindo à *Explosão Açaí*! Como posso te ajudar hoje?\n\n*Para ver o cardápio e fazer seu pedido, acesse:* \n${ctx.publicUrl}\n\n_Digite *menu* para ver todas as opções disponíveis!_`;
-
       return {
-        reply: greeting,
+        reply: this.renderMainMenu(ctx, effectiveName),
         needsHumanTakeover: false
       };
     }
 
-    // DÚVIDA NÃO RECONHECIDA OU ESPECÍFICA: TRANSFERE PARA ATENDENTE HUMANO
+    // DÚVIDA NÃO RECONHECIDA OU ESPECÍFICA: TRANSFERE PARA ATENDENTE HUMANO (SEÇÃO 6)
     const isQuestionOrComplex = t.includes('?') || t.includes('como') || t.includes('qual') || t.includes('onde') || t.includes('quando') || t.includes('aceita') || t.includes('parceria') || t.includes('trabalhar') || t.includes('vaga') || t.length > 20;
     if (isQuestionOrComplex) {
       return {
-        reply: `Essa é uma dúvida bem específica e quero te dar a resposta correta com certeza. Por isso, estou chamando um atendente humano da nossa equipe agora mesmo para te responder por aqui. Aguarde só um instante!\n\n_Se quiser ver o cardápio enquanto isso, digite *menu*._`,
+        reply: `Essa é uma dúvida bem específica e quero te dar a resposta correta com certeza. Por isso, estou chamando um atendente humano da nossa equipe agora mesmo para te responder por aqui. Aguarde só um instante!\n\nSe quiser ver o cardápio ou outras informações  enquanto isso, digite 0 para voltar ao menu de opções !`,
         needsHumanTakeover: true
       };
     }
 
-    // Saudação padrão sóbria
-    const closedGreeting = !ctx.isOpen
-      ? `Olá${nameStr}! No momento nossa cozinha está descansando (abrimos às *${ctx.openingHours}*), mas continuo por aqui para tirar qualquer dúvida sobre o cardápio ou te ajudar a escolher o seu pedido!\n\n*Acesse nosso cardápio digital:* \n${ctx.publicUrl}\n\n_Digite *menu* para ver todas as opções!_`
-      : `Oi${nameStr}! Como posso te ajudar hoje?\n\n*Para ver o cardápio e fazer seu pedido, acesse:* \n${ctx.publicUrl}\n\n_Digite *menu* para ver todas as opções disponíveis!_`;
-
+    // Resposta padrão
     return {
-      reply: closedGreeting,
+      reply: this.renderMainMenu(ctx, effectiveName),
       needsHumanTakeover: false
     };
   }
