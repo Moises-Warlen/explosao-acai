@@ -380,4 +380,35 @@ describe('Explosão Açaí — Testes do Bot WhatsApp & Inteligência Artificial
     assert.strictEqual(resMenu.sendWithLogo, true, 'Menu deve enviar a logo da loja');
   });
 
+  test('19. Mensagens Multimídia: Responde com gentileza a áudio, foto de comprovante Pix e filtra palavrões', async () => {
+    // 1. Mensagem de áudio
+    const resAudio = await geminiAssistantService.processMessage({
+      phone: '16999990014',
+      customerName: 'Tiago',
+      text: '[MENSAGEM_DE_AUDIO]'
+    });
+    assert.ok(resAudio.reply.includes('áudio') || resAudio.reply.includes('audio'));
+    assert.strictEqual(resAudio.isAudio, true);
+    assert.strictEqual(resAudio.needsHumanTakeover, false);
+
+    // 2. Foto sem legenda (ex: comprovante de pagamento Pix)
+    const resFoto = await geminiAssistantService.processMessage({
+      phone: '16999990015',
+      customerName: 'Patrícia',
+      text: '[MENSAGEM_DE_FOTO]'
+    });
+    assert.ok(resFoto.reply.includes('foto') || resFoto.reply.includes('comprovante'));
+    assert.strictEqual(resFoto.isMedia, true);
+    assert.strictEqual(resFoto.needsHumanTakeover, false);
+
+    // 3. Palavrão em legenda de foto ou texto
+    const resPalavrao = await geminiAssistantService.processMessage({
+      phone: '16999990016',
+      customerName: 'Cliente Estressado',
+      text: 'olha a merda dessa foto caralho'
+    });
+    assert.strictEqual(resPalavrao.isProfanity, true);
+    assert.ok(resPalavrao.reply.includes('respeitoso') || resPalavrao.reply.includes('ofensivos'));
+  });
+
 });

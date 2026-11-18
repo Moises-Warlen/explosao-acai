@@ -244,10 +244,26 @@ class WhatsAppBotService {
           const cleanPhone = senderPhone.replace(/\D/g, '');
           const pushName = msg.pushName || 'Cliente';
 
-          const textMessage = msg.message.conversation ||
+          const isAudio = Boolean(msg.message.audioMessage);
+          const isImageNoCaption = Boolean(msg.message.imageMessage && !msg.message.imageMessage.caption);
+          const isSticker = Boolean(msg.message.stickerMessage);
+          const isDocument = Boolean(msg.message.documentMessage);
+
+          let textMessage = msg.message.conversation ||
             msg.message.extendedTextMessage?.text ||
             msg.message.imageMessage?.caption ||
             '';
+
+          // Se for áudio, foto sem legenda, figurinha ou documento, mapeia marcador para atendimento inteligente
+          if (isAudio) {
+            textMessage = '[MENSAGEM_DE_AUDIO]';
+          } else if (isImageNoCaption) {
+            textMessage = '[MENSAGEM_DE_FOTO]';
+          } else if (isSticker) {
+            textMessage = '[MENSAGEM_DE_FIGURINHA]';
+          } else if (isDocument) {
+            textMessage = '[MENSAGEM_DE_DOCUMENTO]';
+          }
 
           if (!textMessage.trim()) continue;
 

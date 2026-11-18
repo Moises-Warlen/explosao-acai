@@ -297,6 +297,26 @@ _(Monte seu açaí, escolha acompanhamentos e pague no Pix ou Cartão)_
       };
     }
 
+    // 0.1 TRATAMENTO DE ÁUDIO ENVIADO PELO CLIENTE
+    if (cleanText === '[MENSAGEM_DE_AUDIO]') {
+      const reply = `Olá${customerName ? ` ${customerName}` : ''}! 🎧 Recebi seu áudio! No momento nosso assistente virtual do delivery lê mensagens em texto. Se puder digitar sua dúvida ou pedido, te respondo instantaneamente! 🍇\n\n📱 *Ou monte seu açaí direto no cardápio:* \n👉 ${ctx.publicUrl}\n\n💡 _Se preferir que um atendente humano ouça seu áudio, digite *5* ou *humano*!_`;
+      this.saveHistory(phone, 'assistant', reply);
+      return { reply, needsHumanTakeover: false, isAudio: true };
+    }
+
+    // 0.2 TRATAMENTO DE FOTO / COMPROVANTE PIX / DOCUMENTO
+    if (cleanText === '[MENSAGEM_DE_FOTO]' || cleanText === '[MENSAGEM_DE_DOCUMENTO]') {
+      const reply = `Recebi seu arquivo/foto! 📸 Se for um comprovante de pagamento Pix, nosso time do caixa já está conferindo no sistema para liberar seu pedido! 🥣✨\n\nSe for uma dúvida, você pode digitar aqui em texto que te ajudo na hora!\n\n📱 *Cardápio Digital:* ${ctx.publicUrl}\n\n💡 _Digite *menu* para ver opções ou *5* para falar com um atendente humano._`;
+      this.saveHistory(phone, 'assistant', reply);
+      return { reply, needsHumanTakeover: false, isMedia: true };
+    }
+
+    // 0.3 TRATAMENTO DE FIGURINHA
+    if (cleanText === '[MENSAGEM_DE_FIGURINHA]') {
+      const reply = `Adorei a figurinha! 🍧🍇 Como posso te ajudar hoje? Digite *menu* para ver nosso cardápio e promoções!`;
+      return { reply, needsHumanTakeover: false };
+    }
+
     // 1. FILTRO DE PALAVRÕES, OFENSAS E CONTEÚDO IMPRÓPRIO
     if (this.checkProfanityAndExplicit(cleanText)) {
       this.stats.profanityBlocked++;
