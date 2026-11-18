@@ -633,32 +633,36 @@
         <button type="button" class="subnav-pill" onclick="openFruitsAdminTab(event)">🍓 Frutas Adicionais</button>
       </div>
 
-      <div class="admin-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
-          <div>
-            <h2 style="margin:0">Gestão de Acompanhamentos / Complementos</h2>
-            <p style="color:var(--mut);font-size:13px;margin:4px 0 0">
-              Crie quantos acompanhamentos quiser (os 15 originais e novos), defina o custo de insumo e vincule a produtos específicos.
-            </p>
+      <div class="admin-card acomp-admin-card">
+        <!-- Top bar: Título à esquerda, Botão à direita, e descrição logo abaixo (Padrão Imagem 2) -->
+        <div class="acomp-header-block">
+          <div class="acomp-header-top-row">
+            <div class="acomp-title-col">
+              <span class="acomp-title-p1">Gestão de Acompanhamentos /</span>
+              <div class="acomp-title-p2-row">
+                <h2 class="acomp-main-title">Complementos</h2>
+                <button type="button" class="acomp-btn-new acomp-btn-new-mobile" onclick="openNewAccompanimentModal()">
+                  <span>+</span> Novo Acompanhamento
+                </button>
+              </div>
+            </div>
+            <button type="button" class="acomp-btn-new acomp-btn-new-desktop" onclick="openNewAccompanimentModal()">
+              <span>+</span> Novo Acompanhamento
+            </button>
           </div>
-          <button class="btn-sm btn-next" onclick="openNewAccompanimentModal()">+ Novo Acompanhamento</button>
+          <p class="acomp-main-subtitle">
+            Crie quantos acompanhamentos quiser (os 15 originais e novos), defina o custo de insumo e vincule a produtos específicos.
+          </p>
         </div>
 
-        <div class="table-responsive">
-          <table>
-            <thead>
-              <tr>
-                <th>Nome do Acompanhamento</th>
-                <th>Custo Unitário (Insumo)</th>
-                <th>Vínculo a Produtos</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="accompaniments-table-body"></tbody>
-          </table>
-        </div>
-        <div id="accompaniments-pagination" style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;flex-wrap:wrap;gap:10px"></div>
+        <!-- Lista de Cards Individuais de Acompanhamentos (Substitui a tabela conforme Imagem 2) -->
+        <div id="accompaniments-cards-container" class="acomp-cards-container"></div>
+
+        <!-- Fallback tbody caso necessário para compatibilidade -->
+        <div style="display:none"><tbody id="accompaniments-table-body"></tbody></div>
+
+        <!-- Paginação -->
+        <div id="accompaniments-pagination" class="acomp-pagination-box"></div>
       </div>
     </div>
 

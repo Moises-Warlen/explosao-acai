@@ -3588,7 +3588,7 @@ async function loadAccompaniments() {
 }
 
 let ACCOMPANIMENTS_PAGE = 1;
-let ACCOMPANIMENTS_PER_PAGE = 10;
+let ACCOMPANIMENTS_PER_PAGE = 4; // Padrão de 4 por página conforme Imagem 2 de Referência
 
 window.setAccompanimentsPage = function(page) {
   ACCOMPANIMENTS_PAGE = page;
@@ -3601,13 +3601,25 @@ window.setAccompanimentsPerPage = function(perPage) {
   renderAccompanimentsTable();
 };
 
+window.toggleAccompanimentCardExpand = function(id) {
+  const details = $(`#acomp-details-${id}`);
+  const chevron = $(`#acomp-chevron-${id}`);
+  if (!details) return;
+  const isHidden = details.style.display === 'none' || !details.style.display;
+  details.style.display = isHidden ? 'block' : 'none';
+  if (chevron) {
+    chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+  }
+};
+
 function renderAccompanimentsTable() {
   const tbody = $('#accompaniments-table-body');
+  const cardsContainer = $('#accompaniments-cards-container');
   const paginationBox = $('#accompaniments-pagination');
-  if (!tbody) return;
+  if (!tbody && !cardsContainer) return;
 
   const total = ACCOMPANIMENTS.length;
-  const perPage = ACCOMPANIMENTS_PER_PAGE || 10;
+  const perPage = ACCOMPANIMENTS_PER_PAGE || 4;
   const totalPages = Math.max(1, Math.ceil(total / perPage));
   if (ACCOMPANIMENTS_PAGE > totalPages) ACCOMPANIMENTS_PAGE = totalPages;
   if (ACCOMPANIMENTS_PAGE < 1) ACCOMPANIMENTS_PAGE = 1;
@@ -3615,38 +3627,119 @@ function renderAccompanimentsTable() {
   const start = (ACCOMPANIMENTS_PAGE - 1) * perPage;
   const pageItems = ACCOMPANIMENTS.slice(start, start + perPage);
 
-  tbody.innerHTML = pageItems.map(ac => `
-    <tr>
-      <td><b>${esc(ac.name)}</b></td>
-      <td>${R(ac.costPrice || 0.50)}</td>
-      <td><span style="color:var(--mut);font-size:12px">Liberado para todos os açaís</span></td>
-      <td>
-        <button class="btn-sm ${ac.active ? 'btn-next' : 'btn-secondary'}" onclick="toggleAccompanimentActive('${ac.id}')">
-          ${ac.active ? 'Ativo' : 'Inativo'}
-        </button>
-      </td>
-      <td>
-        <button class="btn-sm btn-print" onclick="openEditAccompanimentModal('${ac.id}')">Editar</button>
-        <button class="btn-sm btn-danger" onclick="deleteAccompaniment('${ac.id}')">Excluir</button>
-      </td>
-    </tr>
-  `).join('');
+  // 1. Tabela (Fallback oculto para compatibilidade)
+  if (tbody) {
+    tbody.innerHTML = pageItems.map(ac => `
+      <tr>
+        <td><b>${esc(ac.name)}</b></td>
+        <td>${R(ac.costPrice || 0.50)}</td>
+        <td><span style="color:var(--mut);font-size:12px">Liberado para todos os açaís</span></td>
+        <td>
+          <button class="btn-sm ${ac.active !== false ? 'btn-next' : 'btn-secondary'}" onclick="toggleAccompanimentActive('${ac.id}')">
+            ${ac.active !== false ? 'Ativo' : 'Inativo'}
+          </button>
+        </td>
+        <td>
+          <button class="btn-sm btn-print" onclick="openEditAccompanimentModal('${ac.id}')">Editar</button>
+          <button class="btn-sm btn-danger" onclick="deleteAccompaniment('${ac.id}')">Excluir</button>
+        </td>
+      </tr>
+    `).join('');
+  }
 
+  // 2. Cards Individuais (Idêntico à Imagem 2 de Referência)
+  if (cardsContainer) {
+    if (total === 0) {
+      cardsContainer.innerHTML = `<div style="text-align:center;padding:28px;color:var(--mut);font-size:13px">Nenhum acompanhamento cadastrado.</div>`;
+    } else {
+      cardsContainer.innerHTML = pageItems.map(ac => {
+        let vinculoTexto = 'Liberado para todos os açaís';
+        if (Array.isArray(ac.allowedProductIds) && ac.allowedProductIds.length > 0) {
+          const names = ac.allowedProductIds.map(pid => {
+            const prod = (PRODUCTS || []).find(p => p.id === pid);
+            return prod ? prod.name : pid;
+          });
+          vinculoTexto = `Vinculado a ${names.length} produto(s): ${names.join(', ')}`;
+        }
+
+        const isActive = ac.active !== false;
+
+        return `
+          <div class="acomp-card" id="acomp-card-${ac.id}">
+            <div class="acomp-card-header">
+              <div class="acomp-card-name">${esc(ac.name)}</div>
+              <div class="acomp-card-header-actions">
+                <button type="button" class="acomp-status-badge ${isActive ? 'active' : 'inactive'}" 
+                        onclick="toggleAccompanimentActive('${ac.id}')" 
+                        title="Clique para alternar status (Ativo/Inativo)">
+                  ${isActive ? 'Ativo' : 'Inativo'}
+                </button>
+                <button type="button" class="acomp-chevron-btn" onclick="toggleAccompanimentCardExpand('${ac.id}')" title="Expandir/Recolher detalhes">
+                  <span class="acomp-chevron-icon" id="acomp-chevron-${ac.id}">⌄</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="acomp-card-body">
+              <div class="acomp-meta-row">
+                <span class="acomp-meta-label">Custo Unitário:</span>
+                <span class="acomp-meta-val">${R(ac.costPrice || 0.50)}</span>
+              </div>
+              <div class="acomp-meta-row">
+                <span class="acomp-meta-label">Vínculo:</span>
+                <span class="acomp-meta-link">${esc(vinculoTexto)}</span>
+              </div>
+              
+              <!-- Detalhes Expansíveis via Botão Chevron -->
+              <div class="acomp-card-details" id="acomp-details-${ac.id}" style="display:none">
+                <div class="acomp-detail-item">
+                  <span class="acomp-detail-k">Código Insumo:</span>
+                  <span class="acomp-detail-v">#${esc(ac.id)}</span>
+                </div>
+                <div class="acomp-detail-item">
+                  <span class="acomp-detail-k">Disponibilidade:</span>
+                  <span class="acomp-detail-v" style="color:${isActive ? '#34d399' : '#f87171'}">${isActive ? '✓ Disponível para clientes no cardápio' : '✕ Desativado no cardápio'}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="acomp-card-footer">
+              <button type="button" class="acomp-action-btn btn-acomp-edit" onclick="openEditAccompanimentModal('${ac.id}')">
+                <span class="acomp-action-icon">✏️</span> Editar
+              </button>
+              <button type="button" class="acomp-action-btn btn-acomp-delete" onclick="deleteAccompaniment('${ac.id}')">
+                <span class="acomp-action-icon">🗑️</span> Excluir
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  // 3. Paginação Centralizada [ ≪ ] [ ‹ ] [ 1 ] [ 2 ] [ 3 ] [ › ] [ ≫ ] (Idêntica à Imagem 2)
   if (paginationBox) {
+    let startPage = Math.max(1, ACCOMPANIMENTS_PAGE - 1);
+    let endPage = Math.min(totalPages, ACCOMPANIMENTS_PAGE + 1);
+    if (ACCOMPANIMENTS_PAGE === 1) endPage = Math.min(totalPages, 3);
+    if (ACCOMPANIMENTS_PAGE === totalPages) startPage = Math.max(1, totalPages - 2);
+
+    let pageNumbersHtml = '';
+    for (let p = startPage; p <= endPage; p++) {
+      pageNumbersHtml += `
+        <button class="btn-sm ${p === ACCOMPANIMENTS_PAGE ? 'btn-next' : 'btn-secondary'}" 
+                style="padding:5px 12px;min-width:32px;font-size:12px;font-weight:${p === ACCOMPANIMENTS_PAGE ? 'bold' : 'normal'}" 
+                onclick="setAccompanimentsPage(${p})">${p}</button>
+      `;
+    }
+
     paginationBox.innerHTML = `
-      <div style="font-size:13px;color:var(--mut)">
-        Mostrando <b>${total === 0 ? 0 : start + 1} - ${Math.min(start + perPage, total)}</b> de <b>${total}</b> acompanhamentos
-      </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <select onchange="setAccompanimentsPerPage(this.value)" style="padding:4px 8px;font-size:12px;border-radius:8px">
-          <option value="10" ${perPage === 10 ? 'selected' : ''}>10 por página</option>
-          <option value="25" ${perPage === 25 ? 'selected' : ''}>25 por página</option>
-          <option value="50" ${perPage === 50 ? 'selected' : ''}>50 por página</option>
-          <option value="999" ${perPage >= 999 ? 'selected' : ''}>Mostrar Todos</option>
-        </select>
-        <button class="btn-sm btn-secondary" onclick="setAccompanimentsPage(${ACCOMPANIMENTS_PAGE - 1})" ${ACCOMPANIMENTS_PAGE <= 1 ? 'disabled' : ''}>◀ Anterior</button>
-        <span style="font-size:12px">Pág. <b>${ACCOMPANIMENTS_PAGE}</b> de <b>${totalPages}</b></span>
-        <button class="btn-sm btn-secondary" onclick="setAccompanimentsPage(${ACCOMPANIMENTS_PAGE + 1})" ${ACCOMPANIMENTS_PAGE >= totalPages ? 'disabled' : ''}>Próximo ▶</button>
+      <div class="acomp-pagination-controls" style="display:flex;align-items:center;gap:6px;justify-content:center;width:100%">
+        <button class="btn-sm btn-secondary" style="padding:5px 10px;font-size:11px" onclick="setAccompanimentsPage(1)" ${ACCOMPANIMENTS_PAGE <= 1 ? 'disabled' : ''} title="Primeira página">≪</button>
+        <button class="btn-sm btn-secondary" style="padding:5px 10px;font-size:11px" onclick="setAccompanimentsPage(${ACCOMPANIMENTS_PAGE - 1})" ${ACCOMPANIMENTS_PAGE <= 1 ? 'disabled' : ''} title="Página anterior">‹</button>
+        <div style="display:flex;gap:5px">${pageNumbersHtml}</div>
+        <button class="btn-sm btn-secondary" style="padding:5px 10px;font-size:11px" onclick="setAccompanimentsPage(${ACCOMPANIMENTS_PAGE + 1})" ${ACCOMPANIMENTS_PAGE >= totalPages ? 'disabled' : ''} title="Próxima página">›</button>
+        <button class="btn-sm btn-secondary" style="padding:5px 10px;font-size:11px" onclick="setAccompanimentsPage(${totalPages})" ${ACCOMPANIMENTS_PAGE >= totalPages ? 'disabled' : ''} title="Última página">≫</button>
       </div>
     `;
   }

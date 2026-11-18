@@ -4046,6 +4046,414 @@ input:focus, select:focus, textarea:focus {
   }
 }
 
+/* ==========================================================================
+   GESTÃO DE ACOMPANHAMENTOS / COMPLEMENTOS - CARDS INDIVIDUAIS (REESTRUTURAÇÃO)
+   Fiel à Referência Visual (Imagem 2)
+   ========================================================================== */
+
+.acomp-admin-card {
+  background: #140827;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+.acomp-header-block {
+  margin-bottom: 14px;
+}
+
+.acomp-header-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.acomp-title-col {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.acomp-title-p1 {
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.acomp-title-p2-row {
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.acomp-main-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.acomp-btn-new-mobile {
+  display: none !important;
+}
+
+.acomp-btn-new-desktop {
+  display: inline-flex !important;
+}
+
+.acomp-btn-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 3px 12px rgba(168, 85, 247, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  flex-shrink: 0;
+}
+
+.acomp-btn-new:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(168, 85, 247, 0.45);
+}
+
+.acomp-btn-new span {
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.acomp-main-subtitle {
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* Cards Container & Individual Cards */
+.acomp-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.acomp-card {
+  background: #17092c;
+  border: 1px solid rgba(147, 51, 234, 0.22);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
+  transition: border-color 0.2s ease, background 0.2s ease;
+  position: relative;
+}
+
+.acomp-card:hover {
+  border-color: rgba(168, 85, 247, 0.4);
+}
+
+.acomp-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.acomp-card-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.acomp-card-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.acomp-status-badge {
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  transition: all 0.15s ease;
+  line-height: 1.2;
+}
+
+.acomp-status-badge.active {
+  background: #10b981;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+}
+
+.acomp-status-badge.inactive {
+  background: #475569;
+  color: #cbd5e1;
+}
+
+.acomp-chevron-btn {
+  background: transparent;
+  border: none;
+  color: #e2e8f0;
+  cursor: pointer;
+  padding: 2px 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.15s ease;
+}
+
+.acomp-chevron-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.acomp-chevron-icon {
+  display: inline-block;
+  font-size: 16px;
+  font-weight: 800;
+  transition: transform 0.2s ease;
+  line-height: 1;
+}
+
+/* Card Body */
+.acomp-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.acomp-meta-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.acomp-meta-label {
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.acomp-meta-val {
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.acomp-meta-link {
+  color: #a78bfa;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Detalhes Expansíveis */
+.acomp-card-details {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(168, 85, 247, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.acomp-detail-item {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.acomp-detail-k {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.acomp-detail-v {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Card Footer / Ações */
+.acomp-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.acomp-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: #ffffff;
+}
+
+.acomp-action-btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn-acomp-edit {
+  background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%);
+  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.35);
+}
+
+.btn-acomp-edit:hover {
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.5);
+}
+
+.btn-acomp-delete {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
+}
+
+.btn-acomp-delete:hover {
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);
+}
+
+.acomp-action-icon {
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* Paginação Centralizada */
+.acomp-pagination-box {
+  margin-top: 16px;
+  padding: 10px 0 4px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.acomp-pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.acomp-pagination-controls button {
+  background: #1c0e35 !important;
+  border: 1px solid rgba(168, 85, 247, 0.3) !important;
+  color: #e2e8f0 !important;
+  border-radius: 8px !important;
+  min-width: 32px !important;
+  height: 32px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  padding: 0 10px !important;
+  transition: all 0.15s ease !important;
+}
+
+.acomp-pagination-controls button:hover:not(:disabled) {
+  background: rgba(168, 85, 247, 0.25) !important;
+  border-color: #a855f7 !important;
+}
+
+.acomp-pagination-controls button.btn-next {
+  background: #9333ea !important;
+  border-color: #a855f7 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.4) !important;
+}
+
+.acomp-pagination-controls button:disabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+}
+
+@media (max-width: 600px) {
+  .acomp-admin-card {
+    padding: 12px 10px;
+  }
+  .acomp-header-top-row {
+    display: block;
+    margin-bottom: 6px;
+  }
+  .acomp-title-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+  }
+  .acomp-title-p1 {
+    font-size: 16px;
+    width: 100%;
+    white-space: normal;
+  }
+  .acomp-title-p2-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    gap: 8px;
+  }
+  .acomp-main-title {
+    font-size: 16px;
+    white-space: nowrap;
+  }
+  .acomp-btn-new-desktop {
+    display: none !important;
+  }
+  .acomp-btn-new-mobile {
+    display: inline-flex !important;
+    padding: 5px 12px;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .acomp-card {
+    padding: 12px 12px;
+  }
+  .acomp-card-name {
+    font-size: 15px;
+  }
+  .acomp-meta-row {
+    font-size: 12px;
+  }
+  .acomp-action-btn {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+}
+
+
 @media print {
   @page {
     margin: 0 !important;
