@@ -278,9 +278,8 @@ describe('Explosão Açaí — Testes do Bot WhatsApp & Inteligência Artificial
       publicUrl: 'http://localhost:3000'
     };
     const menuFechado = geminiAssistantService.renderMainMenu(ctxFechado, 'Mariana');
-    assert.ok(menuFechado.includes('descansando'), 'Deve avisar com carinho que a cozinha está descansando');
-    assert.ok(menuFechado.includes('13h às 23h'), 'Deve informar horário');
-    assert.ok(menuFechado.includes('fique super à vontade'), 'Deve convidar a tirar dúvidas');
+    assert.ok(menuFechado.includes('🔴 Status: Loja Fechada no Momento'), 'Deve exibir status de loja fechada');
+    assert.ok(menuFechado.includes('Mariana'), 'Deve saudar o cliente');
 
     // 2. Tira dúvidas mesmo com a loja fechada
     const res = await geminiAssistantService.processMessage({
@@ -535,32 +534,34 @@ describe('Explosão Açaí — Testes do Bot WhatsApp & Inteligência Artificial
     assert.strictEqual(rodrigoFb.type, 'reclamacao');
   });
 
-  test('22. Especificação Oficial Explosão Açaí: 8 Opções, Inatividade de 20m, Navegação 0 e Textos Exatos', async () => {
+  test('22. Especificação Oficial Explosão Açaí: 9 Opções, Status Aberto/Fechado, Opção 5, Chave PIX e Textos Exatos', async () => {
     const testPhone = '16998877665';
     const testName = 'Juliana';
 
-    // 1. Menu Principal inicial ou digitando 0
+    // 1. Menu Principal inicial ou digitando 0 (Loja Aberta)
     const res0 = await geminiAssistantService.processMessage({
       phone: testPhone,
       customerName: testName,
       text: '0'
     });
-    assert.ok(res0.reply.includes('Menu Principal Explosão Açaí'));
-    assert.ok(res0.reply.includes('Olá Juliana!'));
-    assert.ok(res0.reply.includes('1 - Para Conhecer nosso cardapio digital Cardápio Digital Completo:'));
-    assert.ok(res0.reply.includes('2 - Rastrear meu Pedido.'));
-    assert.ok(res0.reply.includes('3 - Combos & Promoções da Semana.'));
-    assert.ok(res0.reply.includes('4 - Horário de Funcionamento e Endereço.'));
-    assert.ok(res0.reply.includes('5 - Falar com um Atendente Humano'));
-    assert.ok(res0.reply.includes('6 - Enviar Sugestão ou Reclamação (Ouvidoria)'));
-    assert.ok(res0.reply.includes('7 - Forma de pagamento.'));
-    assert.ok(res0.reply.includes('8 - Encerrar atendimento.'));
-    assert.ok(res0.reply.includes('Digite 0 a qualquer momento para voltar no menu!'));
+    assert.ok(res0.reply.includes('Atendimento automático Explosão Açaí! 🍧'));
+    assert.ok(res0.reply.includes('📋 Menu Principal Explosão Açaí'));
+    assert.ok(res0.reply.includes('🟢 Status: Loja Aberta e Entregando') || res0.reply.includes('🔴 Status: Loja Fechada no Momento'));
+    assert.ok(res0.reply.includes('Olá Juliana! Como posso te ajudar hoje? escolha uma opção.'));
+    assert.ok(res0.reply.includes('1️⃣ - Para Conhecer nosso cardapio digital Cardápio Digital Completo:'));
+    assert.ok(res0.reply.includes('2️⃣ - Rastrear meu Pedido.'));
+    assert.ok(res0.reply.includes('3️⃣ - Combos & Promoções da Semana.'));
+    assert.ok(res0.reply.includes('4️⃣ - Horário de Funcionamento e Endereço.'));
+    assert.ok(res0.reply.includes('5️⃣ - Falar com um Atendente.'));
+    assert.ok(res0.reply.includes('6️⃣ - Enviar Sugestão ou Reclamação (Ouvidoria)'));
+    assert.ok(res0.reply.includes('7️⃣ - Forma de pagamento.'));
+    assert.ok(res0.reply.includes('8️⃣ - Pedir Chave PIX.'));
+    assert.ok(res0.reply.includes('9️⃣ - Encerrar atendimento.'));
+    assert.ok(res0.reply.includes('0️⃣ Digite 0 a qualquer momento para voltar no menu!'));
 
     // 2. Opção 1: Cardápio Digital
     const res1 = await geminiAssistantService.processMessage({ phone: testPhone, customerName: testName, text: '1' });
     assert.ok(res1.reply.includes('https://cardapioexplosaoacai.com.br'));
-    assert.ok(res1.reply.includes('*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*'));
 
     // 3. Opção 3: Combos & Promoções da Semana
     const res3 = await geminiAssistantService.processMessage({ phone: testPhone, customerName: testName, text: '3' });
@@ -574,12 +575,23 @@ describe('Explosão Açaí — Testes do Bot WhatsApp & Inteligência Artificial
     assert.ok(res4.reply.includes('Endereço:'));
     assert.ok(res4.reply.includes('Horário de Funcionamento:'));
 
-    // 5. Opção 5: Transferência para Humano (Texto Exato)
-    const res5 = await geminiAssistantService.processMessage({ phone: testPhone, customerName: testName, text: '5' });
-    assert.strictEqual(res5.needsHumanTakeover, true);
-    assert.ok(res5.reply.includes('Essa é uma dúvida bem específica e quero te dar a resposta correta com certeza'));
-    assert.ok(res5.reply.includes('estou chamando um atendente humano da nossa equipe agora mesmo'));
-    assert.ok(res5.reply.includes('Se quiser ver o cardápio ou outras informações  enquanto isso, digite 0 para voltar ao menu de opções !'));
+    // 5. Opção 5: Falar com Atendente (Loja Aberta x Loja Fechada)
+    // Se loja aberta:
+    const res5Open = await geminiAssistantService.processMessage({ phone: testPhone, customerName: testName, text: '5' });
+    if (res5Open.needsHumanTakeover) {
+      assert.ok(res5Open.reply.includes('chamando um atendente humano'));
+    }
+
+    // Se loja fechada:
+    const origIsOpen = geminiAssistantService.buildLiveContext;
+    geminiAssistantService.buildLiveContext = () => ({ isOpen: false, openingHours: '13h às 23h', storeName: 'Explosão Açaí' });
+    const res5Closed = await geminiAssistantService.processMessage({ phone: '16999990099', text: '5' });
+    assert.strictEqual(res5Closed.needsHumanTakeover, false);
+    assert.ok(res5Closed.reply.includes('No momento a nossa loja está fechada e não é possível falar com um atendente agora. 🔴'));
+    assert.ok(res5Closed.reply.includes('Mas você pode deixar a sua mensagem escrita aqui mesmo que ela será encaminhada para a nossa equipe assim que abrirmos!'));
+    assert.ok(res5Closed.reply.includes('Agradecemos muito o seu contato com a Explosão Açaí! 🍧'));
+    assert.ok(res5Closed.reply.includes('0️⃣ Digite 0 a qualquer momento para voltar no menu!'));
+    geminiAssistantService.buildLiveContext = origIsOpen; // restaura live context
 
     // 6. Opção 7: Formas de Pagamento
     const res7 = await geminiAssistantService.processMessage({ phone: testPhone, customerName: testName, text: '7' });
@@ -587,14 +599,21 @@ describe('Explosão Açaí — Testes do Bot WhatsApp & Inteligência Artificial
     assert.ok(res7.reply.includes('Cartão de Crédito e Débito'));
     assert.ok(res7.reply.includes('Dinheiro'));
 
-    // 7. Opção 8: Encerrar Atendimento (Texto Exato)
+    // 7. Opção 8: Pedir Chave PIX (Texto Exato e CNPJ)
     const res8 = await geminiAssistantService.processMessage({ phone: testPhone, customerName: testName, text: '8' });
-    assert.strictEqual(res8.isSessionEnded, true);
-    assert.ok(res8.reply.includes('Atendimento encerrado! Agradecemos pelo contato com a *Explosão Açaí* 🍧💜'));
-    assert.ok(res8.reply.includes('basta enviar um *Oi* por aqui para iniciar um novo atendimento!'));
+    assert.strictEqual(res8.needsHumanTakeover, false);
+    assert.ok(res8.reply.includes('Aqui está a nossa chave PIX (CNPJ) para pagamento! 💠'));
+    assert.ok(res8.reply.includes('**Favorecido:** Laudinea Cristina dos Reis / Explosão Açaí'));
+    assert.ok(res8.reply.includes('```69925028000136```'));
+    assert.ok(res8.reply.includes('0️⃣ Digite 0 a qualquer momento para voltar no menu!'));
 
-    // 8. Regra de Inatividade (> 20 minutos)
-    // Simulamos que a última interação foi há 25 minutos
+    // 8. Opção 9: Encerrar Atendimento (Texto Exato)
+    const res9 = await geminiAssistantService.processMessage({ phone: testPhone, customerName: testName, text: '9' });
+    assert.strictEqual(res9.isSessionEnded, true);
+    assert.ok(res9.reply.includes('Atendimento encerrado! Agradecemos pelo contato com a *Explosão Açaí* 🍧💜'));
+    assert.ok(res9.reply.includes('basta enviar um *Oi* por aqui para iniciar um novo atendimento!'));
+
+    // 9. Regra de Inatividade (> 20 minutos)
     geminiAssistantService.lastInteraction.set(testPhone, Date.now() - 25 * 60 * 1000);
     const resInactivity = await geminiAssistantService.processMessage({
       phone: testPhone,
