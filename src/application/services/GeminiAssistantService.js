@@ -15,6 +15,7 @@ class GeminiAssistantService {
     this.history = new Map(); // Memória de curto prazo por telefone: Map<phone, Array<{role, text}>>
     this.pendingFeedbackSessions = new Map(); // Sessão ativa de Ouvidoria: Map<cleanPhone, {timestamp, customerName}>
     this.lastInteraction = new Map(); // Timestamp da última interação: Map<cleanPhone, number>
+    this.profanityCount = new Map(); // Contagem de ofensas consecutivas: Map<cleanPhone, number>
     this.stats = {
       profanityBlocked: 0,
       menuRequests: 0,
@@ -66,6 +67,7 @@ class GeminiAssistantService {
     if (!phone) return;
     const clean = phone.replace(/\D/g, '');
     this.history.delete(clean);
+    this.profanityCount.delete(clean);
   }
 
   /**
@@ -257,7 +259,7 @@ class GeminiAssistantService {
     this.stats.menuRequests++;
     const nameStr = customerName ? customerName : (ctx?.clientMemory?.customerName || 'Cliente');
     const reactivationNotice = isReactivated ? 'Atendimento automático do bot reativado!\n\n' : '';
-    const statusLine = ctx.isOpen ? '🟢 Status: Loja Aberta e Entregando' : '🔴 Status: Loja Fechada no Momento';
+    const statusLine = ctx.isOpen ? '😊 Status: Loja Aberta e Entregando' : '😴 Status: Loja Fechada no momento';
 
     return `${reactivationNotice}Atendimento automático Explosão Açaí! 🍧
 
@@ -557,14 +559,14 @@ Olá ${nameStr}! Como posso te ajudar hoje? escolha uma opção.
 
     // 1.3 TRATAMENTO DE ÁUDIO FORA DA OUVIDORIA
     if (cleanText === '[MENSAGEM_DE_AUDIO]') {
-      const reply = `Olá${effectiveName ? ` ${effectiveName}` : ''}! Recebi seu áudio. No momento nosso assistente virtual do delivery lê mensagens em texto. Se puder digitar sua dúvida ou pedido, te respondo prontamente!\n\n*Cardápio Digital:* https://cardapioexplosaoacai.com.br\n\n_Para falar com atendente humano, digite *5*._\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`;
+      const reply = `Oi! Como sou o assistente virtual da *Explosão Açaí*, ainda não consigo ouvir áudios por aqui. 🎧\n\nSe puder digitar o que precisa, eu já te ajudo agora mesmo! Mas se preferir falar com alguém da nossa equipe para ouvir seu áudio, digite *0* e escolha a opção de atendente no menu. 😊`;
       this.saveHistory(phone, 'assistant', reply);
       return { reply, needsHumanTakeover: false, isAudio: true };
     }
 
-    // 1.4 TRATAMENTO DE FOTO / COMPROVANTE PIX / DOCUMENTO
-    if (cleanText === '[MENSAGEM_DE_FOTO]' || cleanText === '[MENSAGEM_DE_DOCUMENTO]') {
-      const reply = `Recebi seu arquivo/foto. Se for um comprovante de pagamento Pix, nosso time do caixa já está conferindo no sistema para liberar seu pedido!\n\nSe for uma dúvida, você pode digitar aqui em texto que te ajudo na hora!\n\n*Cardápio Digital:* https://cardapioexplosaoacai.com.br\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`;
+    // 1.4 TRATAMENTO DE FOTO OU IMAGEM
+    if (cleanText === '[MENSAGEM_DE_FOTO]' || cleanText === '[MENSAGEM_DE_IMAGEM]' || cleanText === '[MENSAGEM_DE_DOCUMENTO]') {
+      const reply = `Recebi sua imagem! 📸 Como sou um assistente virtual, não consigo visualizar fotos por aqui.\n\nSe for o *comprovante do seu PIX* ou algo sobre um pedido, pode aguardar um pouquinho que nossa equipe já vai conferir! Se precisar de outra coisa, é só escrever por aqui ou digitar *0* para voltar ao menu. `;
       this.saveHistory(phone, 'assistant', reply);
       return { reply, needsHumanTakeover: false, isMedia: true };
     }
@@ -575,7 +577,7 @@ Olá ${nameStr}! Como posso te ajudar hoje? escolha uma opção.
       return { reply, needsHumanTakeover: false };
     }
 
-    // 2. FILTRO DE PALAVRÕES, OFENSAS E CONTEÚDO IMPRÓPRIO
+    // 2. FILTRO DE PALAVRÕES, OFENSAS E CONTEÚDO IMPRÓPRIO (ESCALADA DE ATÉ 3 AVISOS CONSECUTIVOS)
     if (this.checkProfanityAndExplicit(cleanText)) {
       this.stats.profanityBlocked++;
       try {
@@ -591,15 +593,33 @@ Olá ${nameStr}! Como posso te ajudar hoje? escolha uma opção.
         });
       } catch (e) {}
 
-      const reply = `Olá${effectiveName ? ` ${effectiveName}` : ''}! Prezamos por um atendimento respeitoso e harmonioso para todos os nossos clientes e atendentes.\n\nPedimos gentilmente que evite o uso de termos ofensivos. Como posso te ajudar com o cardápio ou seu pedido hoje?\n\n_Dica: Digite *0* para ver as opções._`;
+      const currentCount = (this.profanityCount.get(cleanPhone) || 0) + 1;
+      this.profanityCount.set(cleanPhone, currentCount);
+
+      let reply = '';
+      let needsTakeover = false;
+
+      if (currentCount === 1) {
+        reply = `Poxa, quero muito te ajudar da melhor forma possível, mas preciso que a gente mantenha o respeito por aqui, combinado? 🤝\n\nSe houve algum problema com seu pedido ou se precisa resolver algo urgente, digite *0* para acessar o menu e depois a opção *6* para falar com a nossa equipe sobre sua sugestão ou reclamação.`;
+      } else if (currentCount === 2) {
+        reply = `Entendo que você possa estar chateado, mas não consigo continuar o atendimento com esse tipo de linguagem. Por favor, mantenha o respeito para que possamos resolver tudo da melhor forma. 🙏\n\nSe precisar registrar uma reclamação ou falar com um responsável, digite *0* e escolha a opção *6* no menu.`;
+      } else {
+        reply = `Como as ofensas continuaram, estou encerrando o atendimento automático por aqui. Nossa equipe foi notificada e analisará a conversa assim que possível.`;
+        needsTakeover = true;
+      }
+
       this.saveHistory(phone, 'user', cleanText);
       this.saveHistory(phone, 'assistant', reply);
       return {
         reply,
-        needsHumanTakeover: false,
-        isProfanity: true
+        needsHumanTakeover: needsTakeover,
+        isProfanity: true,
+        profanityCount: currentCount
       };
     }
+
+    // Se o cliente enviou mensagem normal respeitosa, reseta o contador consecutivo de ofensas
+    this.profanityCount.delete(cleanPhone);
 
     // 3. MAPEAMENTO DIRETO DAS 8 OPÇÕES DO MENU
 
@@ -732,7 +752,7 @@ MENU PRINCIPAL:
 Atendimento automático Explosão Açaí! 🍧
 
 📋 Menu Principal Explosão Açaí
-${ctx.isOpen ? '🟢 Status: Loja Aberta e Entregando' : '🔴 Status: Loja Fechada no Momento'}
+${ctx.isOpen ? '😊 Status: Loja Aberta e Entregando' : '😴 Status: Loja Fechada no momento'}
 
 Olá {Nome_Cliente}! Como posso te ajudar hoje? escolha uma opção.
 
@@ -750,7 +770,7 @@ Olá {Nome_Cliente}! Como posso te ajudar hoje? escolha uma opção.
 
 INFORMAÇÕES REAIS DO ESTABELECIMENTO EM TEMPO REAL:
 - Loja: ${ctx.storeName}
-- Status: ${ctx.isOpen ? '🟢 Status: Loja Aberta e Entregando' : '🔴 Status: Loja Fechada no Momento'}
+- Status: ${ctx.isOpen ? '😊 Status: Loja Aberta e Entregando' : '😴 Status: Loja Fechada no momento'}
 - Horário de Funcionamento: ${ctx.openingHours}
 - Endereço: ${ctx.address}
 - Link do Cardápio Digital Oficial: https://cardapioexplosaoacai.com.br
@@ -793,6 +813,11 @@ Responda exatamente com:
 3. Opção 9: Encerre o atendimento com a mensagem de encerramento.
 4. Se o cliente digitar 0 ou pedir menu, envie o Menu Principal exato.
 5. Quando o cliente escolher a Opção 3 ou perguntar sobre combos e promoções, informe os combos e promoções da semana com preços e composições, os cupons ativos e o link https://cardapioexplosaoacai.com.br.
+6. Mensagens Não Compreendidas ou Fora de Contexto (Fallback):
+Se a mensagem do cliente for aleatória, incompreensível ou fora de contexto, responda exatamente:
+"Ops! Acho que não consegui entender essa mensagem por aqui. 😅
+
+Como sou um assistente virtual, às vezes preciso de uma ajudinha. Tente escrever com outras palavras o que você precisa ou digite *0* para voltar ao menu principal da *Explosão Açaí*! 🍧"
         `.trim();
 
         const historyList = this.getHistory(phone);
@@ -979,8 +1004,8 @@ Responda exatamente com:
       };
     }
 
-    // DÚVIDA NÃO RECONHECIDA OU ESPECÍFICA: TRANSFERE PARA ATENDENTE HUMANO (SEÇÃO 6)
-    const isQuestionOrComplex = t.includes('?') || t.includes('como') || t.includes('qual') || t.includes('onde') || t.includes('quando') || t.includes('aceita') || t.includes('parceria') || t.includes('trabalhar') || t.includes('vaga') || t.length > 20;
+    // Dúvida específica ou solicitação complexa (Parceria, Vagas, Dúvidas): transfere para atendente humano
+    const isQuestionOrComplex = t.includes('?') || t.includes('parceria') || t.includes('trabalhar') || t.includes('vaga');
     if (isQuestionOrComplex) {
       return {
         reply: `Essa é uma dúvida bem específica e quero te dar a resposta correta com certeza. Por isso, estou chamando um atendente humano da nossa equipe agora mesmo para te responder por aqui. Aguarde só um instante!\n\nSe quiser ver o cardápio ou outras informações  enquanto isso, digite 0 para voltar ao menu de opções !`,
@@ -988,10 +1013,11 @@ Responda exatamente com:
       };
     }
 
-    // Resposta padrão
+    // Resposta padrão (Fallback para mensagem aleatória ou não compreendida)
     return {
-      reply: this.renderMainMenu(ctx, effectiveName),
-      needsHumanTakeover: false
+      reply: `Ops! Acho que não consegui entender essa mensagem por aqui. 😅\n\nComo sou um assistente virtual, às vezes preciso de uma ajudinha. Tente escrever com outras palavras o que você precisa ou digite *0* para voltar ao menu principal da *Explosão Açaí*! 🍧`,
+      needsHumanTakeover: false,
+      isFallback: true
     };
   }
 

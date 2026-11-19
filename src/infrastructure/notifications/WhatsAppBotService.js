@@ -260,7 +260,7 @@ class WhatsAppBotService {
           const pushName = msg.pushName || 'Cliente';
 
           const isAudio = Boolean(msg.message.audioMessage);
-          const isImageNoCaption = Boolean(msg.message.imageMessage && !msg.message.imageMessage.caption);
+          const isImage = Boolean(msg.message.imageMessage);
           const isSticker = Boolean(msg.message.stickerMessage);
           const isDocument = Boolean(msg.message.documentMessage);
 
@@ -269,11 +269,16 @@ class WhatsAppBotService {
             msg.message.imageMessage?.caption ||
             '';
 
-          // Se for áudio, foto sem legenda, figurinha ou documento, mapeia marcador para atendimento inteligente
+          // Se for áudio, foto/imagem, figurinha ou documento, mapeia marcador para atendimento inteligente
           if (isAudio) {
             textMessage = '[MENSAGEM_DE_AUDIO]';
-          } else if (isImageNoCaption) {
-            textMessage = '[MENSAGEM_DE_FOTO]';
+          } else if (isImage) {
+            const cap = (msg.message.imageMessage?.caption || '').trim();
+            if (cap && /^[0-9]$/.test(cap)) {
+              textMessage = cap;
+            } else {
+              textMessage = '[MENSAGEM_DE_FOTO]';
+            }
           } else if (isSticker) {
             textMessage = '[MENSAGEM_DE_FIGURINHA]';
           } else if (isDocument) {

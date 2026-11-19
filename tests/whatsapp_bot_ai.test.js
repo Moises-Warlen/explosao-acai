@@ -181,7 +181,7 @@ describe('Explosão Açaí — Testes do Bot WhatsApp & Inteligência Artificial
     assert.ok(res.reply);
     assert.strictEqual(res.isProfanity, true);
     assert.strictEqual(res.needsHumanTakeover, false);
-    assert.ok(res.reply.includes('respeitoso') || res.reply.includes('ofensivos'), 'Deve pedir respeito de forma cortês');
+    assert.ok(res.reply.includes('respeito') || res.reply.includes('respeitoso') || res.reply.includes('ofensivos'), 'Deve pedir respeito de forma cortês');
     assert.ok(!res.reply.toLowerCase().includes('merda') && !res.reply.toLowerCase().includes('caralho'), 'Nunca deve repetir ofensas');
   });
 
@@ -278,7 +278,7 @@ describe('Explosão Açaí — Testes do Bot WhatsApp & Inteligência Artificial
       publicUrl: 'http://localhost:3000'
     };
     const menuFechado = geminiAssistantService.renderMainMenu(ctxFechado, 'Mariana');
-    assert.ok(menuFechado.includes('🔴 Status: Loja Fechada no Momento'), 'Deve exibir status de loja fechada');
+    assert.ok(menuFechado.includes('😴 Status: Loja Fechada no momento') || menuFechado.includes('Loja Fechada'), 'Deve exibir status de loja fechada');
     assert.ok(menuFechado.includes('Mariana'), 'Deve saudar o cliente');
 
     // 2. Tira dúvidas mesmo com a loja fechada
@@ -407,7 +407,7 @@ describe('Explosão Açaí — Testes do Bot WhatsApp & Inteligência Artificial
       text: 'olha a merda dessa foto caralho'
     });
     assert.strictEqual(resPalavrao.isProfanity, true);
-    assert.ok(resPalavrao.reply.includes('respeitoso') || resPalavrao.reply.includes('ofensivos'));
+    assert.ok(resPalavrao.reply.includes('respeito') || resPalavrao.reply.includes('respeitoso') || resPalavrao.reply.includes('ofensivos'));
   });
 
   test('20. Bot Clean: Mensagens e Menus sem poluição de emotions (livre de 🍇, 💳, 📲)', async () => {
@@ -546,7 +546,7 @@ describe('Explosão Açaí — Testes do Bot WhatsApp & Inteligência Artificial
     });
     assert.ok(res0.reply.includes('Atendimento automático Explosão Açaí! 🍧'));
     assert.ok(res0.reply.includes('📋 Menu Principal Explosão Açaí'));
-    assert.ok(res0.reply.includes('🟢 Status: Loja Aberta e Entregando') || res0.reply.includes('🔴 Status: Loja Fechada no Momento'));
+    assert.ok(res0.reply.includes('😊 Status: Loja Aberta e Entregando') || res0.reply.includes('😴 Status: Loja Fechada no momento'));
     assert.ok(res0.reply.includes('Olá Juliana! Como posso te ajudar hoje? escolha uma opção.'));
     assert.ok(res0.reply.includes('1️⃣ - Para Conhecer nosso cardapio digital Cardápio Digital Completo:'));
     assert.ok(res0.reply.includes('2️⃣ - Rastrear meu Pedido.'));
@@ -623,5 +623,77 @@ describe('Explosão Açaí — Testes do Bot WhatsApp & Inteligência Artificial
     assert.ok(resInactivity.reply.includes('Atendimento encerrado por *falta de interação* (mais de 20 minutos sem resposta) ⏳.'));
     assert.ok(resInactivity.reply.includes('Para iniciar um novo atendimento com a *Explosão Açaí*, escolha uma opção abaixo:'));
     assert.ok(resInactivity.reply.includes('Menu Principal Explosão Açaí'));
+  });
+
+  test('23. Validação das 5 Novas Regras: Status com Emojis 😊/😴, Respostas Exatas de Áudio, Foto, Escalada de 3 Ofensas e Fallback', async () => {
+    const phone = '16999990050';
+
+    // 1. Emoji no Status do Menu: Loja Aberta (😊) e Loja Fechada (😴)
+    const ctxOpen = { isOpen: true, openingHours: '13h às 23h', storeName: 'Explosão Açaí' };
+    const menuOpen = geminiAssistantService.renderMainMenu(ctxOpen, 'Moises');
+    assert.ok(menuOpen.includes('😊 Status: Loja Aberta e Entregando'));
+
+    const ctxClosed = { isOpen: false, openingHours: '13h às 23h', storeName: 'Explosão Açaí' };
+    const menuClosed = geminiAssistantService.renderMainMenu(ctxClosed, 'Moises');
+    assert.ok(menuClosed.includes('😴 Status: Loja Fechada no momento'));
+
+    // 2. Quando o cliente enviar um ÁUDIO (Texto Exato)
+    const resAudio = await geminiAssistantService.processMessage({
+      phone,
+      text: '[MENSAGEM_DE_AUDIO]'
+    });
+    assert.strictEqual(resAudio.isAudio, true);
+    assert.strictEqual(resAudio.needsHumanTakeover, false);
+    assert.ok(resAudio.reply.includes('Oi! Como sou o assistente virtual da *Explosão Açaí*, ainda não consigo ouvir áudios por aqui. 🎧'));
+    assert.ok(resAudio.reply.includes('Se puder digitar o que precisa, eu já te ajudo agora mesmo! Mas se preferir falar com alguém da nossa equipe para ouvir seu áudio, digite *0* e escolha a opção de atendente no menu. 😊'));
+
+    // 3. Quando o cliente enviar FOTO ou IMAGEM (Texto Exato)
+    const resFoto = await geminiAssistantService.processMessage({
+      phone,
+      text: '[MENSAGEM_DE_FOTO]'
+    });
+    assert.strictEqual(resFoto.isMedia, true);
+    assert.strictEqual(resFoto.needsHumanTakeover, false);
+    assert.ok(resFoto.reply.includes('Recebi sua imagem! 📸 Como sou um assistente virtual, não consigo visualizar fotos por aqui.'));
+    assert.ok(resFoto.reply.includes('Se for o *comprovante do seu PIX* ou algo sobre um pedido, pode aguardar um pouquinho que nossa equipe já vai conferir!'));
+
+    // 4. Escalada de Ofensas: 1º aviso, 2º aviso e 3º aviso (com encerramento e pausa)
+    geminiAssistantService.clearHistory(phone);
+
+    // 1ª ocorrência:
+    const ofensa1 = await geminiAssistantService.processMessage({
+      phone,
+      text: 'vai se foder seu lixo'
+    });
+    assert.strictEqual(ofensa1.isProfanity, true);
+    assert.strictEqual(ofensa1.needsHumanTakeover, false);
+    assert.ok(ofensa1.reply.includes('Poxa, quero muito te ajudar da melhor forma possível, mas preciso que a gente mantenha o respeito por aqui, combinado? 🤝'));
+
+    // 2ª ocorrência:
+    const ofensa2 = await geminiAssistantService.processMessage({
+      phone,
+      text: 'cala a boca seu merda'
+    });
+    assert.strictEqual(ofensa2.isProfanity, true);
+    assert.strictEqual(ofensa2.needsHumanTakeover, false);
+    assert.ok(ofensa2.reply.includes('Entendo que você possa estar chateado, mas não consigo continuar o atendimento com esse tipo de linguagem.'));
+
+    // 3ª ocorrência: encerra e solicita intervenção humana
+    const ofensa3 = await geminiAssistantService.processMessage({
+      phone,
+      text: 'voce e um filho da puta'
+    });
+    assert.strictEqual(ofensa3.isProfanity, true);
+    assert.strictEqual(ofensa3.needsHumanTakeover, true);
+    assert.ok(ofensa3.reply.includes('Como as ofensas continuaram, estou encerrando o atendimento automático por aqui. Nossa equipe foi notificada e analisará a conversa assim que possível.'));
+
+    // 5. Fallback para mensagem aleatória ou não compreendida (Texto Exato)
+    const resFallback = await geminiAssistantService.processMessage({
+      phone: '16999990051',
+      text: 'blablabla xpto nonsense 1234'
+    });
+    assert.strictEqual(resFallback.needsHumanTakeover, false);
+    assert.ok(resFallback.reply.includes('Ops! Acho que não consegui entender essa mensagem por aqui. 😅'));
+    assert.ok(resFallback.reply.includes('Como sou um assistente virtual, às vezes preciso de uma ajudinha. Tente escrever com outras palavras o que você precisa ou digite *0* para voltar ao menu principal da *Explosão Açaí*! 🍧'));
   });
 });
