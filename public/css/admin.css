@@ -779,7 +779,8 @@ input:checked + .slider:before {
 
   .header-kpis-capsule .kpi-eye-icon {
     font-size: 14px !important;
-    margin-right: 3px !important;
+    margin-left: 4px !important;
+    margin-right: 0 !important;
     cursor: pointer !important;
     display: inline-block !important;
     opacity: 1 !important;
