@@ -71,7 +71,7 @@ describe('Explosão Açaí — Testes do Bot WhatsApp & Inteligência Artificial
 
     assert.ok(res.reply, 'Deve conter resposta');
     assert.strictEqual(res.needsHumanTakeover, true, 'Deve marcar para transbordo humano');
-    assert.ok(res.reply.includes('atendente') || res.reply.includes('aguarde'), 'Deve confirmar que transferiu para humano');
+    assert.ok(res.reply.includes('atender') || res.reply.includes('atendente') || res.reply.includes('aguardar') || res.reply.includes('aguarde'), 'Deve confirmar que transferiu para humano');
   });
 
   test('5. GeminiAssistantService: Detecta reclamação grave e aciona o suporte', async () => {
@@ -579,7 +579,8 @@ describe('Explosão Açaí — Testes do Bot WhatsApp & Inteligência Artificial
     // Se loja aberta:
     const res5Open = await geminiAssistantService.processMessage({ phone: testPhone, customerName: testName, text: '5' });
     if (res5Open.needsHumanTakeover) {
-      assert.ok(res5Open.reply.includes('chamando um atendente humano'));
+      assert.ok(res5Open.reply.includes('Com certeza! Já estou chamando alguém da nossa equipe para te atender por aqui.'));
+      assert.ok(res5Open.reply.includes('(Se precisar voltar para o menu anterior enquanto aguarda, é só digitar *0*).'));
     }
 
     // Se loja fechada:
@@ -587,10 +588,9 @@ describe('Explosão Açaí — Testes do Bot WhatsApp & Inteligência Artificial
     geminiAssistantService.buildLiveContext = () => ({ isOpen: false, openingHours: '13h às 23h', storeName: 'Explosão Açaí' });
     const res5Closed = await geminiAssistantService.processMessage({ phone: '16999990099', text: '5' });
     assert.strictEqual(res5Closed.needsHumanTakeover, false);
-    assert.ok(res5Closed.reply.includes('No momento a nossa loja está fechada e não é possível falar com um atendente agora. 🔴'));
-    assert.ok(res5Closed.reply.includes('Mas você pode deixar a sua mensagem escrita aqui mesmo que ela será encaminhada para a nossa equipe assim que abrirmos!'));
-    assert.ok(res5Closed.reply.includes('Agradecemos muito o seu contato com a Explosão Açaí! 🍧'));
-    assert.ok(res5Closed.reply.includes('0️⃣ Digite 0 a qualquer momento para voltar no menu!'));
+    assert.ok(res5Closed.reply.includes('Poxa, no momento a *Explosão Açaí* está fechada e nossa equipe já encerrou o expediente por hoje! 🌙'));
+    assert.ok(res5Closed.reply.includes('Mas pode ficar à vontade para deixar sua mensagem escrita aqui mesmo. Assim que abrirmos, alguém da equipe já pega o seu recado para te responder!'));
+    assert.ok(res5Closed.reply.includes('(Se quiser ver nosso cardápio ou horários, é só digitar *0* para voltar ao menu).'));
     geminiAssistantService.buildLiveContext = origIsOpen; // restaura live context
 
     // 6. Opção 7: Formas de Pagamento

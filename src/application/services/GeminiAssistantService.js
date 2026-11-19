@@ -644,12 +644,12 @@ Olá ${nameStr}! Como posso te ajudar hoje? escolha uma opção.
     // Opção 5: Falar com um Atendente
     if (t === '5' || t === '5️⃣') {
       if (!ctx.isOpen) {
-        const reply = `No momento a nossa loja está fechada e não é possível falar com um atendente agora. 🔴\n\nMas você pode deixar a sua mensagem escrita aqui mesmo que ela será encaminhada para a nossa equipe assim que abrirmos!\n\nAgradecemos muito o seu contato com a Explosão Açaí! 🍧\n\n0️⃣ Digite 0 a qualquer momento para voltar no menu!`;
+        const reply = `Poxa, no momento a *Explosão Açaí* está fechada e nossa equipe já encerrou o expediente por hoje! 🌙\n\nMas pode ficar à vontade para deixar sua mensagem escrita aqui mesmo. Assim que abrirmos, alguém da equipe já pega o seu recado para te responder! \n\n(Se quiser ver nosso cardápio ou horários, é só digitar *0* para voltar ao menu).`;
         this.saveHistory(phone, 'user', cleanText);
         this.saveHistory(phone, 'assistant', reply);
         return { reply, needsHumanTakeover: false };
       }
-      const reply = `Essa é uma dúvida bem específica e quero te dar a resposta correta com certeza. Por isso, estou chamando um atendente humano da nossa equipe agora mesmo para te responder por aqui. Aguarde só um instante!\n\nSe quiser ver o cardápio ou outras informações  enquanto isso, digite 0 para voltar ao menu de opções !`;
+      const reply = `Com certeza! Já estou chamando alguém da nossa equipe para te atender por aqui. É só aguardar um minutinho que já vamos te responder! 😊\n\n(Se precisar voltar para o menu anterior enquanto aguarda, é só digitar *0*).`;
       this.saveHistory(phone, 'user', cleanText);
       this.saveHistory(phone, 'assistant', reply);
       return { reply, needsHumanTakeover: true };
@@ -765,18 +765,16 @@ MEMÓRIA DO CLIENTE:
 REGRAS RÍGIDAS DE ATENDIMENTO:
 1. Status da Loja & Opção 5:
    - Se a loja estiver ABERTA: transfira para atendente humano com a mensagem exata:
-"Essa é uma dúvida bem específica e quero te dar a resposta correta com certeza. Por isso, estou chamando um atendente humano da nossa equipe agora mesmo para te responder por aqui. Aguarde só um instante!
+"Com certeza! Já estou chamando alguém da nossa equipe para te atender por aqui. É só aguardar um minutinho que já vamos te responder! 😊
 
-Se quiser ver o cardápio ou outras informações  enquanto isso, digite 0 para voltar ao menu de opções !"
+(Se precisar voltar para o menu anterior enquanto aguarda, é só digitar *0*)."
 e conclua internamente com: [ACTION:CALL_HUMAN].
    - Se a loja estiver FECHADA: NÃO transfira para o atendente, responda exatamente:
-"No momento a nossa loja está fechada e não é possível falar com um atendente agora. 🔴
+"Poxa, no momento a *Explosão Açaí* está fechada e nossa equipe já encerrou o expediente por hoje! 🌙
 
-Mas você pode deixar a sua mensagem escrita aqui mesmo que ela será encaminhada para a nossa equipe assim que abrirmos!
+Mas pode ficar à vontade para deixar sua mensagem escrita aqui mesmo. Assim que abrirmos, alguém da equipe já pega o seu recado para te responder! 
 
-Agradecemos muito o seu contato com a Explosão Açaí! 🍧
-
-0️⃣ Digite 0 a qualquer momento para voltar no menu!"
+(Se quiser ver nosso cardápio ou horários, é só digitar *0* para voltar ao menu)."
 
 2. Opção 8 (Pedir Chave PIX):
 Responda exatamente com:
@@ -914,12 +912,12 @@ Responda exatamente com:
     if (t === '5' || t === '5️⃣' || t.includes('atendente') || t.includes('humano') || t.includes('falar com pessoa') || t.includes('pessoa real')) {
       if (!ctx.isOpen) {
         return {
-          reply: `No momento a nossa loja está fechada e não é possível falar com um atendente agora. 🔴\n\nMas você pode deixar a sua mensagem escrita aqui mesmo que ela será encaminhada para a nossa equipe assim que abrirmos!\n\nAgradecemos muito o seu contato com a Explosão Açaí! 🍧\n\n0️⃣ Digite 0 a qualquer momento para voltar no menu!`,
+          reply: `Poxa, no momento a *Explosão Açaí* está fechada e nossa equipe já encerrou o expediente por hoje! 🌙\n\nMas pode ficar à vontade para deixar sua mensagem escrita aqui mesmo. Assim que abrirmos, alguém da equipe já pega o seu recado para te responder! \n\n(Se quiser ver nosso cardápio ou horários, é só digitar *0* para voltar ao menu).`,
           needsHumanTakeover: false
         };
       }
       return {
-        reply: `Essa é uma dúvida bem específica e quero te dar a resposta correta com certeza. Por isso, estou chamando um atendente humano da nossa equipe agora mesmo para te responder por aqui. Aguarde só um instante!\n\nSe quiser ver o cardápio ou outras informações  enquanto isso, digite 0 para voltar ao menu de opções !`,
+        reply: `Com certeza! Já estou chamando alguém da nossa equipe para te atender por aqui. É só aguardar um minutinho que já vamos te responder! 😊\n\n(Se precisar voltar para o menu anterior enquanto aguarda, é só digitar *0*).`,
         needsHumanTakeover: true
       };
     }
