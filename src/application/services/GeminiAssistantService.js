@@ -128,10 +128,85 @@ class GeminiAssistantService {
   }
 
   /**
-   * Filtro de Palavrões, Ofensas e Conteúdo Explícito
+   * Normalização fonética e leetspeak para detecção de linguagem disfarçada
+   */
+  normalizeForModeration(text) {
+    if (!text || typeof text !== 'string') return { norm: '', leet: '', collapsed: '' };
+    const norm = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const leetMap = {
+      '@': 'a', '4': 'a',
+      '3': 'e',
+      '1': 'i', '!': 'i', '|': 'i',
+      '0': 'o',
+      '5': 's', '$': 's',
+      '7': 't'
+    };
+    const leet = norm.replace(/[@431!|05$7]/g, m => leetMap[m] || m);
+    // Remove pontuações e espaços repetidos entre letras, ex: p.u.t.a -> puta, m-e-r-d-a -> merda
+    const collapsed = leet.replace(/([a-z])[\s._\-*]+(?=[a-z])/g, '$1');
+    return { norm, leet, collapsed };
+  }
+
+  /**
+   * Proteção contra falsos positivos: identifica relatos legítimos de discriminação ou dúvidas
+   */
+  isPrejudiceDiscussionOrReport(text) {
+    if (!text || typeof text !== 'string') return false;
+    const lower = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const safePhrases = [
+      'sofri preconceito', 'sofri racismo', 'sofri discriminacao', 'fui vitima',
+      'relatar preconceito', 'denunciar preconceito', 'denunciar racismo',
+      'intolerancia a lactose', 'intolerante a lactose',
+      'publico lgbt', 'publico lgbtq', 'atendem lgbt', 'opcao vegana'
+    ];
+    return safePhrases.some(phrase => lower.includes(phrase));
+  }
+
+  /**
+   * Detecção de Ameaças Graves ou Discriminação Explícita (Prioridade Máxima - Ação Imediata)
+   */
+  checkSevereThreatOrDiscrimination(text) {
+    if (!text || typeof text !== 'string') return false;
+    if (this.isPrejudiceDiscussionOrReport(text)) return false;
+
+    const { norm, leet, collapsed } = this.normalizeForModeration(text);
+    const targets = [norm, leet, collapsed];
+
+    // Ameaças de morte, violência física, armas, agressão
+    const severeThreatPatterns = [
+      /\b(vou|vai|vcs vao|voces vao)\s*(te|lhe|nos)?\s*(matar|arrebentar|espancar|degolar|linchar)\b/i,
+      /\b(dar\s*um\s*tiro|meter\s*bala|tiro\s*na\s*cara|bala\s*na\s*cara|vou\s*te\s*dar\s*um\s*tiro)\b/i,
+      /\b(botar\s*fogo\s*na\s*loja|quebrar\s*a\s*loja|quebrar\s*a\s*sua\s*cara|vou\s*quebrar\s*tudo)\b/i,
+      /\b(te\s*pego\s*na\s*saida|voce\s*vai\s*morrer|vou\s*te\s*achar)\b/i
+    ];
+
+    // Discriminação e preconceito explícito (racismo, injúria racial, homofobia/transfobia)
+    const severeDiscriminationPatterns = [
+      /\b(seu\s*macaco|seus\s*macacos|macaco\s*safado|macaca\s*safada)\b/i,
+      /\b(preto\s*imundo|negro\s*imundo|preto\s*fedido|crioulo\s*safado|preto\s*de\s*merda)\b/i,
+      /\b(traveco|traveco\s*imundo|bicha\s*imunda|viadinho\s*de\s*merda|sapatao\s*de\s*merda)\b/i,
+      /\b(aberracao\s*lgbt|malditos\s*lgbt)\b/i,
+      /\b(retardado\s*mental|mongoloid[es]|aleijado\s*de\s*merda)\b/i
+    ];
+
+    const hasThreat = severeThreatPatterns.some(p => targets.some(t => p.test(t)));
+    if (hasThreat) return { isSevere: true, reason: 'ameaca' };
+
+    const hasDiscrimination = severeDiscriminationPatterns.some(p => targets.some(t => p.test(t)));
+    if (hasDiscrimination) return { isSevere: true, reason: 'discriminacao' };
+
+    return false;
+  }
+
+  /**
+   * Filtro de Palavrões, Ofensas e Conteúdo Explícito (com suporte a leetspeak e variações disfarçadas)
    */
   checkProfanityAndExplicit(text) {
     if (!text || typeof text !== 'string') return false;
+    if (this.isPrejudiceDiscussionOrReport(text)) return false;
+
+    const { norm, leet, collapsed } = this.normalizeForModeration(text);
+    const targets = [norm, leet, collapsed];
     
     // Expressões regulares com variações fonéticas e abreviações comuns
     const profanityPatterns = [
@@ -144,7 +219,7 @@ class GeminiAssistantService {
       /\b(n+u+d+e+s?|s+e+x+o+\s*a+g+o+r+a+|p+i+r+o+c+a+|p+a+u+\s*z+[aã]o)\b/i
     ];
 
-    return profanityPatterns.some(pattern => pattern.test(text));
+    return profanityPatterns.some(pattern => targets.some(t => pattern.test(t)));
   }
 
   /**
@@ -577,23 +652,34 @@ Olá ${nameStr}! Como posso te ajudar hoje? escolha uma opção.
       return { reply, needsHumanTakeover: false };
     }
 
-    // 2. FILTRO DE PALAVRÕES, OFENSAS E CONTEÚDO IMPRÓPRIO (ESCALADA DE ATÉ 3 AVISOS CONSECUTIVOS)
-    if (this.checkProfanityAndExplicit(cleanText)) {
+    // 2. CAMADA 1: SISTEMA DE PROTEÇÃO CONTRA OFENSAS E DISCRIMINAÇÃO (PRIORIDADE MÁXIMA)
+    const severeCheck = this.checkSevereThreatOrDiscrimination(cleanText);
+    const isProfane = this.checkProfanityAndExplicit(cleanText);
+
+    if (severeCheck || isProfane) {
       this.stats.profanityBlocked++;
+      const isSevere = Boolean(severeCheck);
+      const maskedPhone = phone ? String(phone).replace(/(\d{4})\d+(\d{4})/, '$1****$2') : 'Desconhecido';
+
       try {
-        const maskedPhone = phone ? String(phone).replace(/(\d{4})\d+(\d{4})/, '$1****$2') : 'Desconhecido';
         securityAuditService.recordEvent({
           type: SecurityEventType.PROFANITY_OFFENSE,
-          severity: SecuritySeverity.MEDIUM,
+          severity: isSevere ? SecuritySeverity.HIGH : SecuritySeverity.MEDIUM,
           ip: 'WhatsApp-Client',
           endpoint: '/bot/webhook',
           method: 'MESSAGE',
-          details: `Linguagem inapropriada bloqueada do remetente ${maskedPhone}.`,
+          details: isSevere
+            ? `Conduta intolerável detectada (${severeCheck.reason}) do remetente ${maskedPhone}. Encerramento imediato do bot.`
+            : `Linguagem inapropriada bloqueada do remetente ${maskedPhone}.`,
           userAgent: 'WhatsApp-Baileys'
         });
       } catch (e) {}
 
-      const currentCount = (this.profanityCount.get(cleanPhone) || 0) + 1;
+      let currentCount = (this.profanityCount.get(cleanPhone) || 0) + 1;
+      // Reincidência (3º aviso) OU caso de discriminação explícita ou ameaça grave (imediato, sem aviso prévio)
+      if (isSevere) {
+        currentCount = 3;
+      }
       this.profanityCount.set(cleanPhone, currentCount);
 
       let reply = '';
@@ -604,7 +690,7 @@ Olá ${nameStr}! Como posso te ajudar hoje? escolha uma opção.
       } else if (currentCount === 2) {
         reply = `Entendo que você possa estar chateado, mas não consigo continuar o atendimento com esse tipo de linguagem. Por favor, mantenha o respeito para que possamos resolver tudo da melhor forma. 🙏\n\nSe precisar registrar uma reclamação ou falar com um responsável, digite *0* e escolha a opção *6* no menu.`;
       } else {
-        reply = `Como as ofensas continuaram, estou encerrando o atendimento automático por aqui. Nossa equipe foi notificada e analisará a conversa assim que possível.`;
+        reply = `Como as ofensas continuaram (ou por envolver conduta que não toleramos na Explosão Açaí), estou encerrando o atendimento automático por aqui. Nossa equipe foi notificada e analisará a conversa assim que possível.`;
         needsTakeover = true;
       }
 
@@ -614,6 +700,7 @@ Olá ${nameStr}! Como posso te ajudar hoje? escolha uma opção.
         reply,
         needsHumanTakeover: needsTakeover,
         isProfanity: true,
+        isSevere,
         profanityCount: currentCount
       };
     }
@@ -746,34 +833,50 @@ Olá ${nameStr}! Como posso te ajudar hoje? escolha uma opção.
     if (this.client && this.apiKey) {
       try {
         const systemInstruction = `
-Você é o assistente virtual oficial de atendimento da "Explosão Açaí".
+Você é o Atendente Virtual Inteligente da Explosão Açaí (Franca - SP).
+Seu tom de voz é caloroso, acolhedor, profissional, direto e sem poluição visual de emojis desnecessários.
 
-MENU PRINCIPAL:
-Atendimento automático Explosão Açaí! 🍧
+====================================================================
+🛡️ CAMADA 1: SISTEMA DE PROTEÇÃO CONTRA OFENSAS E DISCRIMINAÇÃO (PRIORIDADE MÁXIMA)
+Antes de responder qualquer dúvida sobre pedidos ou cardápio, avalie o contexto completo da mensagem do cliente (incluindo palavras disfarçadas com números, símbolos, pontos, espaços entre letras, erros de português, letras repetidas, abreviações, gírias, ironias humilhantes e emojis ofensivos).
 
-📋 Menu Principal Explosão Açaí
-${ctx.isOpen ? '😊 Status: Loja Aberta e Entregando' : '😴 Status: Loja Fechada no momento'}
+1. O QUE DETECTAR:
+- LINGUAGEM OFENSIVA: Palavrões, xingamentos, insultos, palavras obscenas, provocações e humilhações contra a loja, atendentes, entregadores ou clientes.
+- DISCRIMINAÇÃO E PRECONCEITO: Racismo, injúria racial, xenofobia, homofobia, lesbofobia, bifobia, transfobia, ataques LGBTQIA+, machismo, misoginia, sexismo, gordofobia, capacitismo, intolerância religiosa ou qualquer tentativa de inferiorizar/desumanizar alguém (mesmo sem palavrões explícitos).
+- AMEAÇAS E AGRESSÕES: Ameaças de morte ou violência física, intimidação, chantagem, perseguição, assédio ou incentivo à agressão contra funcionários, atendentes, entregadores, proprietários ou clientes.
 
-Olá {Nome_Cliente}! Como posso te ajudar hoje? escolha uma opção.
+2. PROTEÇÃO CONTRA FALSOS POSITIVOS:
+- NÃO trate como ofensa reclamações legítimas de clientes irritados sobre atrasos, pedido errado ou qualidade do produto (ex: "meu açaí chegou derretido", "que demora absurda"), desde que não haja xingamentos pessoais, discriminação ou ameaças. Nesses casos, acolha a reclamação com educação e oriente digitar *0* e escolher a opção *6* (Ouvidoria).
+- NÃO penalize clientes que estejam apenas perguntando sobre assuntos relacionados a preconceito, relatando ter sofrido discriminação ou usando palavras normais do atendimento.
 
-1️⃣ - Para Conhecer nosso cardapio digital Cardápio Digital Completo:
-2️⃣ - Rastrear meu Pedido.
-3️⃣ - Combos & Promoções da Semana.
-4️⃣ - Horário de Funcionamento e Endereço.
-5️⃣ - Falar com um Atendente.
-6️⃣ - Enviar Sugestão ou Reclamação (Ouvidoria)
-7️⃣ - Forma de pagamento.
-8️⃣ - Pedir Chave PIX.
-9️⃣ - Encerrar atendimento.
+3. REGRAS DE CONDUTA E RESPOSTA EXATA EM CASO DE INFRAÇÃO:
+- Nunca responda com palavrões, agressividade, ironia, deboche ou sarcasmo. Nunca invente punições ou bloqueios.
+- Se detectar LINGUAGEM OFENSIVA (1º aviso na conversa): Interrompa o fluxo de vendas e responda EXATAMENTE:
+"Poxa, quero muito te ajudar da melhor forma possível, mas preciso que a gente mantenha o respeito por aqui, combinado? 🤝
 
-0️⃣ Digite 0 a qualquer momento para voltar no menu!
+Se houve algum problema com seu pedido ou se precisa resolver algo urgente, digite *0* para acessar o menu e depois a opção *6* para falar com a nossa equipe sobre sua sugestão ou reclamação."
 
-INFORMAÇÕES REAIS DO ESTABELECIMENTO EM TEMPO REAL:
+- Se detectar LINGUAGEM OFENSIVA (2º aviso consecutivo no histórico): Responda EXATAMENTE:
+"Entendo que você possa estar chateado, mas não consigo continuar o atendimento com esse tipo de linguagem. Por favor, mantenha o respeito para que possamos resolver tudo da melhor forma. 🙏
+
+Se precisar registrar uma reclamação ou falar com um responsável, digite *0* e escolha a opção *6* no menu."
+
+- Se detectar REINCIDÊNCIA (3º aviso seguido) OU qualquer caso de DISCRIMINAÇÃO EXPLÍCITA ou AMEAÇA GRAVE (imediato, sem aviso prévio): Responda EXATAMENTE:
+"Como as ofensas continuaram (ou por envolver conduta que não toleramos na Explosão Açaí), estou encerrando o atendimento automático por aqui. Nossa equipe foi notificada e analisará a conversa assim que possível."
+
+💜 EXPLOSÃO AÇAÍ — RESPEITO EM PRIMEIRO LUGAR!
+
+====================================================================
+🍧 CAMADA 2: ATENDIMENTO E VENDAS EXPLOSÃO AÇAÍ (SEGUIR SE NÃO HOUVER INFRAÇÃO ACIMA)
+
+1. INFORMAÇÕES OFICIAIS DA LOJA:
 - Loja: ${ctx.storeName}
 - Status: ${ctx.isOpen ? '😊 Status: Loja Aberta e Entregando' : '😴 Status: Loja Fechada no momento'}
 - Horário de Funcionamento: ${ctx.openingHours}
-- Endereço: ${ctx.address}
-- Link do Cardápio Digital Oficial: https://cardapioexplosaoacai.com.br
+- Endereço: Rua Renato Lourenço Fernandes Rosa, 1721 - Franca, SP.
+- Cardápio Digital Completo (onde o cliente monta o açaí, escolhe frutas e adicionais): https://cardapioexplosaoacai.com.br
+- Formas de Pagamento: Pix (online ou na entrega), Cartão de Crédito e Débito (online ou na maquininha com o entregador) e Dinheiro (com opção de troco no pedido).
+- Chave PIX (CNPJ): 69925028000136 (Favorecido: Laudinea Cristina dos Reis / Explosão Açaí). Sempre oriente enviar o comprovante após pagar.
 - Cupons Ativos: ${ctx.couponList}
 
 MEMÓRIA DO CLIENTE:
@@ -782,39 +885,24 @@ MEMÓRIA DO CLIENTE:
 - Preferência de pagamento: ${clientMemory?.paymentPref || 'Nenhuma'}
 - Endereço de entrega: ${clientMemory?.deliveryAddress || 'Nenhum'}
 
-REGRAS RÍGIDAS DE ATENDIMENTO:
-1. Status da Loja & Opção 5:
-   - Se a loja estiver ABERTA: transfira para atendente humano com a mensagem exata:
-"Com certeza! Já estou chamando alguém da nossa equipe para te atender por aqui. É só aguardar um minutinho que já vamos te responder! 😊
+2. ATALHOS DO MENU PRINCIPAL (ORIENTE O CLIENTE QUANDO NECESSÁRIO):
+Sempre lembre que o cliente pode digitar *0* a qualquer momento para voltar ao menu principal:
+- Opção 1: Cardápio Digital Completo
+- Opção 2: Rastrear Pedido (ou informar o código de 6 dígitos)
+- Opção 3: Combos & Promoções da Semana
+- Opção 4: Horário de Funcionamento e Endereço
+- Opção 5: Falar com um Atendente:
+  * Se a loja estiver ABERTA: responda com a mensagem de transferência e inclua [ACTION:CALL_HUMAN].
+  * Se a loja estiver FECHADA: responda: "Poxa, no momento a *Explosão Açaí* está fechada e nossa equipe já encerrou o expediente por hoje! 🌙\n\nMas pode ficar à vontade para deixar sua mensagem escrita aqui mesmo. Assim que abrirmos, alguém da equipe já pega o seu recado para te responder!\n\n(Se quiser ver nosso cardápio ou horários, é só digitar *0* para voltar ao menu)."
+- Opção 6: Enviar Sugestão ou Reclamação (Ouvidoria)
+- Opção 7: Formas de Pagamento
+- Opção 8: Pedir Chave PIX
+- Opção 9: Encerrar Atendimento
 
-(Se precisar voltar para o menu anterior enquanto aguarda, é só digitar *0*)."
-e conclua internamente com: [ACTION:CALL_HUMAN].
-   - Se a loja estiver FECHADA: NÃO transfira para o atendente, responda exatamente:
-"Poxa, no momento a *Explosão Açaí* está fechada e nossa equipe já encerrou o expediente por hoje! 🌙
-
-Mas pode ficar à vontade para deixar sua mensagem escrita aqui mesmo. Assim que abrirmos, alguém da equipe já pega o seu recado para te responder! 
-
-(Se quiser ver nosso cardápio ou horários, é só digitar *0* para voltar ao menu)."
-
-2. Opção 8 (Pedir Chave PIX):
-Responda exatamente com:
-"Aqui está a nossa chave PIX (CNPJ) para pagamento! 💠
-
-**Favorecido:** Laudinea Cristina dos Reis / Explosão Açaí
-
-👇 Selecione e copie a chave abaixo:
-
-\`\`\`69925028000136\`\`\`
-
-*(Após o pagamento, lembre-se de nos enviar o comprovante por aqui!)*
-
-0️⃣ Digite 0 a qualquer momento para voltar no menu!"
-
-3. Opção 9: Encerre o atendimento com a mensagem de encerramento.
-4. Se o cliente digitar 0 ou pedir menu, envie o Menu Principal exato.
-5. Quando o cliente escolher a Opção 3 ou perguntar sobre combos e promoções, informe os combos e promoções da semana com preços e composições, os cupons ativos e o link https://cardapioexplosaoacai.com.br.
-6. Mensagens Não Compreendidas ou Fora de Contexto (Fallback):
-Se a mensagem do cliente for aleatória, incompreensível ou fora de contexto, responda exatamente:
+3. DIRETRIZES DE ATENDIMENTO NATURAL (IA):
+- Responda dúvidas dos clientes com base nas informações acima e nos dados dinâmicos da loja fornecidos no contexto.
+- Quando o cliente perguntar sobre sabores ou quiser fazer um pedido, seja simpático, faça sugestões leves de adicionais (upsell consultivo, sem insistência) e envie o link do cardápio digital (https://cardapioexplosaoacai.com.br).
+- Se o cliente enviar uma mensagem confusa que você não consiga interpretar com segurança, responda:
 "Ops! Acho que não consegui entender essa mensagem por aqui. 😅
 
 Como sou um assistente virtual, às vezes preciso de uma ajudinha. Tente escrever com outras palavras o que você precisa ou digite *0* para voltar ao menu principal da *Explosão Açaí*! 🍧"

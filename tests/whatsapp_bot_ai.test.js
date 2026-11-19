@@ -685,7 +685,7 @@ describe('Explosão Açaí — Testes do Bot WhatsApp & Inteligência Artificial
     });
     assert.strictEqual(ofensa3.isProfanity, true);
     assert.strictEqual(ofensa3.needsHumanTakeover, true);
-    assert.ok(ofensa3.reply.includes('Como as ofensas continuaram, estou encerrando o atendimento automático por aqui. Nossa equipe foi notificada e analisará a conversa assim que possível.'));
+    assert.ok(ofensa3.reply.includes('Como as ofensas continuaram (ou por envolver conduta que não toleramos na Explosão Açaí), estou encerrando o atendimento automático por aqui.'));
 
     // 5. Fallback para mensagem aleatória ou não compreendida (Texto Exato)
     const resFallback = await geminiAssistantService.processMessage({
@@ -695,5 +695,51 @@ describe('Explosão Açaí — Testes do Bot WhatsApp & Inteligência Artificial
     assert.strictEqual(resFallback.needsHumanTakeover, false);
     assert.ok(resFallback.reply.includes('Ops! Acho que não consegui entender essa mensagem por aqui. 😅'));
     assert.ok(resFallback.reply.includes('Como sou um assistente virtual, às vezes preciso de uma ajudinha. Tente escrever com outras palavras o que você precisa ou digite *0* para voltar ao menu principal da *Explosão Açaí*! 🍧'));
+  });
+
+  test('24. Validação Camada 1: Ameaça Grave / Discriminação com Encerramento Imediato e Proteção contra Falsos Positivos', async () => {
+    // 1. Ameaça grave fecha na 1ª mensagem sem aviso prévio
+    const phoneAmeaca = '16999990077';
+    geminiAssistantService.clearHistory(phoneAmeaca);
+    const resAmeaca = await geminiAssistantService.processMessage({
+      phone: phoneAmeaca,
+      text: 'vou te matar seu merda vou dar um tiro na cara'
+    });
+    assert.strictEqual(resAmeaca.isProfanity, true);
+    assert.strictEqual(resAmeaca.isSevere, true);
+    assert.strictEqual(resAmeaca.needsHumanTakeover, true);
+    assert.ok(resAmeaca.reply.includes('Como as ofensas continuaram (ou por envolver conduta que não toleramos na Explosão Açaí), estou encerrando o atendimento automático por aqui.'));
+
+    // 2. Discriminação explícita fecha na 1ª mensagem sem aviso prévio
+    const phonePreconceito = '16999990078';
+    geminiAssistantService.clearHistory(phonePreconceito);
+    const resPreconceito = await geminiAssistantService.processMessage({
+      phone: phonePreconceito,
+      text: 'cala a boca seu macaco safado'
+    });
+    assert.strictEqual(resPreconceito.isProfanity, true);
+    assert.strictEqual(resPreconceito.isSevere, true);
+    assert.strictEqual(resPreconceito.needsHumanTakeover, true);
+    assert.ok(resPreconceito.reply.includes('Como as ofensas continuaram (ou por envolver conduta que não toleramos na Explosão Açaí), estou encerrando o atendimento automático por aqui.'));
+
+    // 3. Proteção contra falso positivo: Reclamação irritada legítima de atraso e produto derretido NÃO é ofensa
+    const phoneReclamacao = '16999990079';
+    geminiAssistantService.clearHistory(phoneReclamacao);
+    const resReclamacao = await geminiAssistantService.processMessage({
+      phone: phoneReclamacao,
+      text: 'meu açaí chegou derretido e que demora absurda'
+    });
+    assert.strictEqual(resReclamacao.isProfanity, undefined, 'Reclamação de atraso/derretido não deve ser tratada como ofensa');
+    assert.strictEqual(resReclamacao.needsHumanTakeover, true, 'Reclamação deve ser encaminhada para atendimento humano');
+    assert.ok(resReclamacao.reply.includes('Sinto muito pelo ocorrido') || resReclamacao.reply.includes('desculpas'), 'Deve acolher com educação');
+
+    // 4. Proteção contra falso positivo: Relato de discriminação sofrida NÃO é ofensa
+    const phoneRelato = '16999990080';
+    geminiAssistantService.clearHistory(phoneRelato);
+    const resRelato = await geminiAssistantService.processMessage({
+      phone: phoneRelato,
+      text: 'quero relatar que sofri preconceito do motoboy'
+    });
+    assert.strictEqual(resRelato.isProfanity, undefined, 'Relato de preconceito não deve ser bloqueado pelo filtro');
   });
 });

@@ -221,23 +221,37 @@ O bot responde amigavelmente e sugere digitar `0` para conhecer o cardápio.
 
 ---
 
-## 6. Filtro de Moderação e Escalada de Ofensas (3 Avisos)
+## 6. Camada 1: Sistema de Proteção Contra Ofensas, Ameaças e Discriminação (Prioridade Máxima)
 
-Para garantir um ambiente de respeito e proteger os operadores, o chatbot possui um sistema de detecção de ofensas e palavrões com **escalada de 3 avisos consecutivos (Regra 4)**:
+Para garantir um ambiente de respeito absoluto e proteger os funcionários, entregadores e clientes da loja, o chatbot possui um sistema de detecção em tempo real de ofensas, ameaças e preconceitos:
 
+### 1. O que é detectado (incluindo variações disfarçadas em leetspeak, pontos e símbolos):
+* **Linguagem Ofensiva:** Palavrões, xingamentos, insultos, palavras obscenas, provocações e humilhações contra a loja, atendentes, entregadores ou clientes.
+* **Discriminação e Preconceito:** Racismo, injúria racial, xenofobia, homofobia, lesbofobia, bifobia, transfobia, ataques LGBTQIA+, machismo, misoginia, sexismo, gordofobia, capacitismo, intolerância religiosa ou qualquer tentativa de desumanizar alguém.
+* **Ameaças e Agressões:** Ameaças de morte ou violência física, intimidação, chantagem, perseguição, assédio ou incentivo à agressão.
+
+### 2. Proteção contra Falsos Positivos:
+* **Reclamações legítimas de clientes:** Clientes irritados com atrasos, produto derretido ou pedido errado (ex: *"meu açaí chegou derretido"*, *"que demora absurda"*) **NÃO são tratados como ofensa**, desde que não haja xingamentos pessoais. Nesses casos, o bot acolhe com educação e direciona para Ouvidoria / atendimento humano.
+* **Relatos ou dúvidas sobre discriminação:** Clientes que perguntam sobre inclusão (ex: público LGBTQIA+) ou relatam ter sofrido preconceito não são penalizados.
+
+### 3. Matriz de Resposta e Escalada:
 | Ocorrência | Mensagem Enviada pelo Bot | Ação do Sistema |
 | :--- | :--- | :--- |
 | **1ª Ocorrência** (Primeiro Aviso) | *Poxa, quero muito te ajudar da melhor forma possível, mas preciso que a gente mantenha o respeito por aqui, combinado? 🤝<br><br>Se houve algum problema com seu pedido ou se precisa resolver algo urgente, digite \*0\* para acessar o menu e depois a opção \*6\* para falar com a nossa equipe sobre sua sugestão ou reclamação.* | Registra log de auditoria no sistema. Bot continua ativo. |
 | **2ª Ocorrência** (Segundo Aviso) | *Entendo que você possa estar chateado, mas não consigo continuar o atendimento com esse tipo de linguagem. Por favor, mantenha o respeito para que possamos resolver tudo da melhor forma. 🙏<br><br>Se precisar registrar uma reclamação ou falar com um responsável, digite \*0\* e escolha a opção \*6\* no menu.* | Emite alerta de média severidade no painel. Bot continua ativo. |
-| **3ª Ocorrência** (Terceiro Aviso) | *Como as ofensas continuaram, estou encerrando o atendimento automático por aqui. Nossa equipe foi notificada e analisará a conversa assim que possível.* | **Pausa imediata** de respostas automáticas para este contato. Transfere para transbordo humano obrigatório. |
+| **3ª Ocorrência OU Discriminação Explícita / Ameaça Grave (Imediato)** | *Como as ofensas continuaram (ou por envolver conduta que não toleramos na Explosão Açaí), estou encerrando o atendimento automático por aqui. Nossa equipe foi notificada e analisará a conversa assim que possível.* | **Pausa imediata** de respostas automáticas para este contato. Transfere para transbordo humano obrigatório com severidade alta. |
 
-Se o cliente enviar uma mensagem respeitosa normal (por exemplo, digitar `0`, `1` ou pedir desculpas) antes do 3º aviso, o contador de ofensas consecutivas é zerado automaticamente.
+> [!NOTE]
+> Se o cliente enviar uma mensagem respeitosa normal (por exemplo, digitar `0`, `1` ou pedir desculpas) antes do 3º aviso, o contador de ofensas consecutivas é zerado automaticamente.
 
 ---
 
-## 7. Mensagens Não Compreendidas (Fallback Inteligente)
+## 7. Camada 2: Atendimento e Vendas Naturais (IA Consultiva & Upsell)
 
-Quando o cliente digita textos desconexos, gírias não mapeadas, caracteres aleatórios ou mensagens que a inteligência não consegue interpretar com segurança **(Regra 5)**, o bot responde com o fallback oficial:
+Quando a mensagem não contém nenhuma infração da Camada 1, o bot atua no fluxo de vendas e atendimento com:
+1. **Informações Oficiais:** Cardápio Digital (`https://cardapioexplosaoacai.com.br`), Endereço (`Rua Renato Lourenço Fernandes Rosa, 1721 - Franca, SP`), Chave Pix CNPJ (`69925028000136` - Laudinea Cristina dos Reis / Explosão Açaí) e Formas de Pagamento (Pix, Cartão e Dinheiro com troco).
+2. **Atendimento Consultivo:** Sugestões leves de adicionais (*upsell* natural, sem insistência) e envio do link do cardápio digital quando o cliente quer pedir.
+3. **Fallback Inteligente para Mensagens Confusas:** Quando o cliente digita textos desconexos, gírias não mapeadas, caracteres aleatórios ou mensagens que a inteligência não consegue interpretar com segurança, o bot responde com o fallback oficial:
 
 ```text
 Ops! Acho que não consegui entender essa mensagem por aqui. 😅
