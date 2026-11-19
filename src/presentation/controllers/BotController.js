@@ -18,8 +18,9 @@ class BotController {
 
   async connect(req, res) {
     try {
+      const forceNew = req.body?.forceNew === true;
       // Inicia a conexão em segundo plano para não travar a requisição HTTP
-      whatsAppBotService.startConnection().catch(err => {
+      whatsAppBotService.startConnection(forceNew).catch(err => {
         console.error('[BotController] Erro na inicialização do WhatsApp:', err.message);
       });
       return res.json({

@@ -1,7 +1,8 @@
 import makeWASocket, {
   useMultiFileAuthState,
   DisconnectReason,
-  fetchLatestBaileysVersion
+  fetchLatestBaileysVersion,
+  Browsers
 } from '@whiskeysockets/baileys';
 import pino from 'pino';
 import QRCode from 'qrcode';
@@ -170,9 +171,22 @@ class WhatsAppBotService {
   /**
    * Inicializa a conexão com o WhatsApp
    */
-  async startConnection() {
-    if (this.sock && this.status === 'connected') {
+  async startConnection(forceNew = false) {
+    if (this.sock && this.status === 'connected' && !forceNew) {
       return this.getStatus();
+    }
+
+    // Limpa socket e ouvintes anteriores para evitar conflito de instâncias paralelas
+    if (this.sock) {
+      try {
+        this.sock.ev.removeAllListeners();
+        this.sock.end(undefined);
+      } catch (e) {}
+      this.sock = null;
+    }
+
+    if (forceNew) {
+      this.clearAuthFiles();
     }
 
     this.status = 'connecting';
@@ -180,14 +194,30 @@ class WhatsAppBotService {
 
     try {
       const { state, saveCreds } = await useMultiFileAuthState(this.authDir);
-      const { version } = await fetchLatestBaileysVersion();
+      
+      // Fallback seguro de versão para evitar falhas de rede ao buscar a versão oficial
+      let version = [2, 3000, 1043857760];
+      try {
+        const vInfo = await fetchLatestBaileysVersion();
+        if (vInfo && Array.isArray(vInfo.version)) {
+          version = vInfo.version;
+        }
+      } catch (vErr) {
+        console.warn('[WhatsApp Bot] Aviso: Usando versão de contingência do Baileys:', vErr.message);
+      }
 
       this.sock = makeWASocket({
         version,
         logger: pino({ level: 'silent' }),
         auth: state,
         printQRInTerminal: false,
-        browser: ['Explosão Açaí Gestor', 'Chrome', '120.0.0']
+        browser: Browsers.ubuntu('Chrome'),
+        syncFullHistory: false,
+        connectTimeoutMs: 60000,
+        defaultQueryTimeoutMs: 60000,
+        keepAliveIntervalMs: 25000,
+        markOnlineOnConnect: true,
+        generateHighQualityLinkPreview: false
       });
 
       this.sock.ev.on('creds.update', saveCreds);
@@ -207,7 +237,22 @@ class WhatsAppBotService {
 
         if (connection === 'close') {
           const statusCode = (lastDisconnect?.error)?.output?.statusCode;
-          const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+          const isRestartRequired = statusCode === DisconnectReason.restartRequired || statusCode === 515;
+          const isLoggedOut = statusCode === DisconnectReason.loggedOut || statusCode === 401;
+          const shouldReconnect = !isLoggedOut;
+
+          console.log(`[WhatsApp Bot] Conexão fechada. Código: ${statusCode} (restartRequired: ${isRestartRequired}, loggedOut: ${isLoggedOut})`);
+
+          // Tratamento crucial do código 515 (restartRequired):
+          // Ocorre normalmente durante o handshake de leitura do QR Code para troca de chaves.
+          // Não deve mudar o status para 'disconnected' nem apagar o estado na interface!
+          if (isRestartRequired) {
+            this.status = 'connecting';
+            this.broadcastStatus();
+            setTimeout(() => this.startConnection(false), 500);
+            return;
+          }
+
           this.status = 'disconnected';
           this.connectedPhone = null;
           this.qrCodeDataUrl = null;
@@ -229,9 +274,9 @@ class WhatsAppBotService {
 
           if (shouldReconnect) {
             console.log('[WhatsApp Bot] Conexão encerrada temporariamente. Reconectando em 5 segundos...');
-            setTimeout(() => this.startConnection(), 5000);
+            setTimeout(() => this.startConnection(false), 5000);
           } else {
-            console.log('[WhatsApp Bot] Sessão desconectada pelo usuário.');
+            console.log('[WhatsApp Bot] Sessão desconectada pelo usuário ou deslogada.');
             this.clearAuthFiles();
           }
         } else if (connection === 'open') {

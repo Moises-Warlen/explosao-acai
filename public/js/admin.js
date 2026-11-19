@@ -7113,15 +7113,19 @@ function updateBotUI(data) {
   }
 }
 
-window.connectWhatsAppBot = async function() {
+window.connectWhatsAppBot = async function(forceNew = false) {
   const btn = $('#btn-bot-connect');
   if (btn) btn.disabled = true;
-  adminToast('Iniciando WhatsApp... O QR Code aparecerá na tela em instantes.', 'info');
+  adminToast(forceNew ? 'Gerando novo QR Code limpo...' : 'Iniciando WhatsApp... O QR Code aparecerá na tela em instantes.', 'info');
 
   try {
     const res = await fetch(`${API_URL}/bot/connect`, {
       method: 'POST',
-      headers: authHeaders()
+      headers: {
+        ...authHeaders(),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ forceNew })
     });
     const data = await res.json();
     if (data.ok) {
