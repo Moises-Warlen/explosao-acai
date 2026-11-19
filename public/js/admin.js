@@ -160,6 +160,36 @@ window.handleUnauthorized = function() {
   adminToast('Sua sessão expirou ou o acesso foi alterado. Por favor, faça login com suas credenciais.', 'danger');
 };
 
+/**
+ * Validador de permissões do usuário logado (suporte a wildcard, hierarquia e legados)
+ */
+window.hasUserPermission = function(requiredKeyOrKeys) {
+  // Em ambiente de teste de UI ou antes da autenticação, o painel opera em modo permissivo padrão (admin)
+  if (!CURRENT_USER) return true;
+  if (CURRENT_USER.role === 'admin') return true;
+  const userPerms = Array.isArray(CURRENT_USER.permissions) ? CURRENT_USER.permissions : [];
+  if (userPerms.includes('*')) return true;
+
+  const required = Array.isArray(requiredKeyOrKeys) ? requiredKeyOrKeys : [requiredKeyOrKeys];
+  return required.some(reqKey => {
+    if (!reqKey) return false;
+    if (userPerms.includes(reqKey)) return true;
+    const parts = String(reqKey).split('.');
+    if (parts.length > 1) {
+      const rootModule = parts[0];
+      if (userPerms.includes(rootModule) || userPerms.includes(`${rootModule}.*`)) return true;
+      if (parts.length > 2) {
+        const subModule = `${parts[0]}.${parts[1]}`;
+        if (userPerms.includes(subModule) || userPerms.includes(`${subModule}.*`)) return true;
+      }
+    }
+    if (!reqKey.includes('.') && userPerms.some(p => p.startsWith(`${reqKey}.`))) {
+      return true;
+    }
+    return false;
+  });
+};
+
 window.doLogin = async function() {
   const loginInput = $('#admin-login-input');
   const login = loginInput ? loginInput.value.trim() : '';
@@ -186,8 +216,9 @@ window.doLogin = async function() {
       if (dash) dash.style.display = 'block';
       window.syncTopbarHeight();
       adminToast('Painel autenticado com sucesso!', 'success');
+      bindNavigation();
       applyUserPermissionsUI(CURRENT_USER);
-      initDashboard();
+      await initDashboard();
     } else {
       adminToast(data.error || 'Senha ou login incorreto.', 'danger');
     }
@@ -223,33 +254,57 @@ function authHeaders() {
 
 // Inicialização Geral do Painel
 async function initDashboard() {
+  bindNavigation();
   initWebSocket();
   startRealtimeClock();
-  setKanbanViewMode('live');
   await loadCurrentUser();
+  applyUserPermissionsUI(CURRENT_USER);
   await loadStoreStatus();
-  await loadOrders();
-  await loadCategories();
-  await loadProducts();
-  await loadAccompaniments();
-  await loadExtras();
-  await loadFruits();
-  await loadCoupons();
-  await loadPrinters();
-  await loadSalesReport({ period: 'today' });
-  await loadChatConversations();
-  if (CURRENT_USER?.role === 'admin') {
+
+  // Carregamento condicional e seguro conforme as permissões do usuário logado
+  if (hasUserPermission(['orders.view', 'orders'])) {
+    setKanbanViewMode('live');
+    await loadOrders();
+  }
+  if (hasUserPermission(['catalog.products.view', 'catalog'])) {
+    await loadCategories();
+    await loadProducts();
+  }
+  if (hasUserPermission(['catalog.accompaniments.view', 'catalog.extras.view', 'catalog.fruits.view', 'accompaniments', 'catalog'])) {
+    await loadAccompaniments();
+    await loadExtras();
+    await loadFruits();
+  }
+  if (hasUserPermission(['coupons.view', 'coupons'])) {
+    await loadCoupons();
+  }
+  if (hasUserPermission(['printers.view', 'printers'])) {
+    await loadPrinters();
+  }
+  if (hasUserPermission(['reports.view', 'reports'])) {
+    await loadSalesReport({ period: 'today' });
+  }
+  if (hasUserPermission(['chat.view', 'chat'])) {
+    await loadChatConversations();
+  }
+  if (hasUserPermission(['users.view', 'users'])) {
     loadUsersList();
   }
-  bindNavigation();
+  if (hasUserPermission(['security.view', 'security'])) {
+    loadSecurityLogs();
+  }
+  if (hasUserPermission(['bot.view', 'bot'])) {
+    loadWhatsAppBotStatus();
+  }
+
   updateHeaderKPIs();
   window.syncTopbarHeight();
   initAdminNotifications();
 
-  // Fallback de sincronização periódica (garante novos pedidos e status em tempo real mesmo em suspensão mobile ou oscilação de rede)
+  // Fallback de sincronização periódica apenas se o usuário tiver permissão de pedidos
   if (!window._adminOrdersPollInterval) {
     window._adminOrdersPollInterval = setInterval(async () => {
-      if (!ADMIN_TOKEN) return;
+      if (!ADMIN_TOKEN || !hasUserPermission(['orders.view', 'orders'])) return;
       try {
         const res = await fetch(`${API_URL}/orders`, { headers: authHeaders() });
         if (res.ok) {
@@ -263,12 +318,12 @@ async function initDashboard() {
             });
             if (hasDiff) {
               ORDERS = data.orders;
-              renderKanban();
-              updateOrdersBadge();
+              renderOrders();
+              updateHeaderKPIs();
             }
           }
         }
-      } catch (e) {}
+      } catch (err) {}
     }, 4000);
   }
 }
@@ -417,60 +472,77 @@ function initWebSocket() {
   }
 }
 
-// Navegação entre Abas
+// Navegação centralizada entre Abas com controle granular e lazy loading
+window.navigateToTab = function(tabTarget) {
+  if (!tabTarget) return;
+  const tabs = $$('.nav-tab');
+  const targetTab = Array.from(tabs).find(t => t.dataset.tab === tabTarget || t.id === tabTarget);
+  if (targetTab && targetTab.style.display === 'none') {
+    return; // Aba não permitida para o perfil do operador
+  }
+
+  tabs.forEach(t => t.classList.remove('active'));
+  $$('.tab-pane').forEach(p => p.classList.remove('active'));
+
+  if (targetTab) targetTab.classList.add('active');
+
+  const paneId = (tabTarget === 'nav-tab-fruits') ? 'tab-extras' : tabTarget;
+  const targetPane = $(`#${paneId}`);
+  if (targetPane) targetPane.classList.add('active');
+
+  // Sincroniza active state no dock lateral esquerdo
+  $$('.dock-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-tab-target') === paneId);
+  });
+
+  if (paneId === 'tab-kanban' && hasUserPermission(['orders.view', 'orders'])) {
+    loadOrders();
+  }
+
+  if (paneId === 'tab-extras' && typeof window.setExtrasSubView === 'function') {
+    window.setExtrasSubView(tabTarget === 'nav-tab-fruits' ? 'fruits' : 'extras');
+  }
+
+  if (paneId === 'tab-reports' && hasUserPermission(['reports.view', 'reports'])) {
+    if (CURRENT_REPORT_SECTION === 'deliveries') {
+      loadDeliveryReport();
+    } else {
+      const period = $('#report-period-select')?.value || 'today';
+      loadSalesReport({ period });
+    }
+  }
+
+  if (paneId === 'tab-chat' && hasUserPermission(['chat.view', 'chat'])) {
+    loadChatConversations().then(() => {
+      if (!ACTIVE_CHAT_PHONE && CHAT_CONVERSATIONS.length > 0) {
+        selectChat(CHAT_CONVERSATIONS[0].customerPhone, CHAT_CONVERSATIONS[0].customerName);
+      }
+      const inp = $('#admin-chat-input');
+      if (inp) inp.focus();
+    });
+  }
+
+  if (paneId === 'tab-store') {
+    if (hasUserPermission(['users.view', 'users'])) {
+      loadUsersList();
+    }
+  }
+  if (paneId === 'tab-bot' && hasUserPermission(['bot.view', 'bot'])) {
+    loadWhatsAppBotStatus();
+  }
+  if (paneId === 'tab-security' && hasUserPermission(['security.view', 'security'])) {
+    loadSecurityLogs();
+  }
+};
+
 function bindNavigation() {
   const tabs = $$('.nav-tab');
   tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
+    tab.onclick = () => {
       if (tab.id === 'nav-tab-fruits') return;
       if (typeof window.closeAdminMobileNav === 'function') window.closeAdminMobileNav();
-      tabs.forEach(t => t.classList.remove('active'));
-      $$('.tab-pane').forEach(p => p.classList.remove('active'));
-
-      tab.classList.add('active');
-      const targetPane = $(`#${tab.dataset.tab}`);
-      if (targetPane) targetPane.classList.add('active');
-
-      // Sincroniza active state no dock lateral esquerdo
-      $$('.dock-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.getAttribute('data-tab-target') === tab.dataset.tab);
-      });
-
-      if (tab.dataset.tab === 'tab-extras' && typeof window.setExtrasSubView === 'function') {
-        window.setExtrasSubView('extras');
-      }
-
-      if (tab.dataset.tab === 'tab-reports') {
-        if (CURRENT_REPORT_SECTION === 'deliveries') {
-          loadDeliveryReport();
-        } else {
-          const period = $('#report-period-select')?.value || 'today';
-          loadSalesReport({ period });
-        }
-      }
-
-      if (tab.dataset.tab === 'tab-chat') {
-        loadChatConversations().then(() => {
-          if (!ACTIVE_CHAT_PHONE && CHAT_CONVERSATIONS.length > 0) {
-            selectChat(CHAT_CONVERSATIONS[0].customerPhone, CHAT_CONVERSATIONS[0].customerName);
-          }
-          const inp = $('#admin-chat-input');
-          if (inp) inp.focus();
-        });
-      }
-
-      if (tab.dataset.tab === 'tab-store') {
-        if (CURRENT_USER?.role === 'admin') {
-          loadUsersList();
-        }
-      }
-      if (tab.dataset.tab === 'tab-bot') {
-        loadWhatsAppBotStatus();
-      }
-      if (tab.dataset.tab === 'tab-security') {
-        loadSecurityLogs();
-      }
-    });
+      window.navigateToTab(tab.dataset.tab);
+    };
   });
 }
 
@@ -1006,10 +1078,20 @@ window.closeAdminMobileNav = function() {
 };
 
 function updateHeaderKPIs() {
+  const kpiCapsule = $('#header-kpis');
+  // Cápsula de Métricas e Faturamento Hoje: visível EXCLUSIVAMENTE para Admin
+  if (CURRENT_USER && CURRENT_USER.role !== 'admin') {
+    if (kpiCapsule) kpiCapsule.style.display = 'none';
+    return;
+  }
+
   const kpiFaturamento = $('#kpi-faturamento');
   const kpiPedidos = $('#kpi-pedidos');
   const kpiTempo = $('#kpi-tempo');
   if (!kpiFaturamento && !kpiPedidos && !kpiTempo) return;
+  if (kpiCapsule && (!CURRENT_USER || CURRENT_USER.role === 'admin')) {
+    kpiCapsule.style.display = '';
+  }
 
   const todayBrasilia = getBrasiliaDateString(new Date());
   const todayOrders = (ORDERS || []).filter(o => {
@@ -1282,8 +1364,8 @@ function createOrderCardHtml(order, isHistory = false) {
   const isMoney = order.payment?.method === 'Dinheiro';
   const isDeliveryPayment = order.payment?.timing === 'delivery' || isMoney;
   const isApproved = order.payment?.status === 'approved';
-  // Regra de impressão: dinheiro ou cartão na entrega imprime na hora; online só após aprovado pelo banco
-  const canPrint = isDeliveryPayment || isApproved;
+  // Regra de impressão: dinheiro ou cartão na entrega imprime na hora; online só após aprovado pelo banco + permissão de impressão
+  const canPrint = (isDeliveryPayment || isApproved) && hasUserPermission(['orders.print', 'orders']);
   const hasTroco = isMoney && order.payment?.trocoValue > 0;
   const isDelivery = order.delivery?.type === 'delivery';
 
@@ -1295,47 +1377,61 @@ function createOrderCardHtml(order, isHistory = false) {
     if (order.status === 'received') {
       const isOnlinePending = !isDeliveryPayment && !isApproved;
       if (isOnlinePending) {
-        nextAction = `
-          <button class="btn-sm btn-print" style="background:#059669;color:#fff;font-weight:700;font-size:11px;padding:4px 8px" onclick="simulateBankApproval('${order.id}')" title="Confirmar pagamento Pix">
-            ✓ Confirmar Pix
-          </button>
-        `;
+        if (hasUserPermission(['orders.accept', 'orders'])) {
+          nextAction = `
+            <button class="btn-sm btn-print" style="background:#059669;color:#fff;font-weight:700;font-size:11px;padding:4px 8px" onclick="simulateBankApproval('${order.id}')" title="Confirmar pagamento Pix">
+              ✓ Confirmar Pix
+            </button>
+          `;
+        }
       } else {
         // 1. Novos Pedidos: apenas envia para a cozinha
-        nextAction = `<button class="btn-sm btn-next btn-next-received" onclick="advanceOrderStatus('${order.id}', 'preparing')">Aceitar / Mandar p/ Cozinha</button>`;
+        if (hasUserPermission(['orders.accept', 'orders'])) {
+          nextAction = `<button class="btn-sm btn-next btn-next-received" onclick="advanceOrderStatus('${order.id}', 'preparing')">Aceitar / Mandar p/ Cozinha</button>`;
+        }
       }
     } else if (order.status === 'preparing') {
       // 2. Em Preparo: move para a coluna de Pronto / Saiu para Entrega
-      nextAction = isDelivery 
-        ? `<button class="btn-sm btn-next btn-next-preparing" onclick="openMotoboySelectorModal('${order.id}', 'out_for_delivery')">Pronto p/ Entrega</button>`
-        : `<button class="btn-sm btn-next btn-next-preparing" onclick="advanceOrderStatus('${order.id}', 'ready')">Pronto no Balcão</button>`;
+      if (hasUserPermission(['orders.dispatch', 'orders'])) {
+        nextAction = isDelivery 
+          ? `<button class="btn-sm btn-next btn-next-preparing" onclick="openMotoboySelectorModal('${order.id}', 'out_for_delivery')">Pronto p/ Entrega</button>`
+          : `<button class="btn-sm btn-next btn-next-preparing" onclick="advanceOrderStatus('${order.id}', 'ready')">Pronto no Balcão</button>`;
+      }
     } else if (order.status === 'out_for_delivery' || order.status === 'ready') {
       // 3. Pronto / Saiu para Entrega: confirma entrega/retirada e move para Concluídos
+      const canComplete = hasUserPermission(['orders.complete', 'orders']);
+      const canCancelPerm = hasUserPermission(['orders.cancel', 'orders']);
       if (isDelivery) {
         nextAction = `
+          ${canComplete ? `
           <button class="btn-sm btn-next btn-next-ready" onclick="confirmOrderDeliveryAndPayment('${order.id}')" title="Confirmar que o cliente recebeu e o pagamento foi concluído">
             ✓ Entregue & Recebido
-          </button>
+          </button>` : ''}
           <button class="btn-sm btn-secondary" style="font-size:10px;padding:4px 6px" onclick="copyMotoboyLink('${order.id}')" title="Copiar link para o celular do entregador">
             📱 Link Motoboy
           </button>
+          ${canCancelPerm ? `
           <button class="btn-sm" style="background:#b45309;color:#fff;font-size:10px;padding:4px 6px" onclick="openReturnOrderModal('${order.id}', '${order.orderNo}')" title="Marcar como devolvido à loja se o cliente não atendeu">
             ↩ Devolver
-          </button>
+          </button>` : ''}
         `;
       } else {
+        if (canComplete) {
+          nextAction = `
+            <button class="btn-sm btn-next btn-next-ready" onclick="confirmPickupOrder('${order.id}')" title="Marcar como Pago e Retirado pelo Cliente no Balcão">
+              ✓ Concluir Retirada (Pago)
+            </button>
+          `;
+        }
+      }
+    } else if (order.status === 'returned') {
+      if (hasUserPermission(['orders.accept', 'orders'])) {
         nextAction = `
-          <button class="btn-sm btn-next btn-next-ready" onclick="confirmPickupOrder('${order.id}')" title="Marcar como Pago e Retirado pelo Cliente no Balcão">
-            ✓ Concluir Retirada (Pago)
+          <button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'preparing')" title="Reenviar este pedido para a cozinha preparar novamente">
+            Reenviar p/ Cozinha
           </button>
         `;
       }
-    } else if (order.status === 'returned') {
-      nextAction = `
-        <button class="btn-sm btn-next" onclick="advanceOrderStatus('${order.id}', 'preparing')" title="Reenviar este pedido para a cozinha preparar novamente">
-          Reenviar p/ Cozinha
-        </button>
-      `;
     }
   }
 
@@ -1345,7 +1441,7 @@ function createOrderCardHtml(order, isHistory = false) {
   // - Novos Pedidos, Em Preparo e Devolvidos: cancelamento permitido
   // - Entregues Hoje, Pedidos Concluídos e Cancelados: sem botão de cancelamento
   let canCancel = false;
-  if (!isHistory) {
+  if (!isHistory && hasUserPermission(['orders.cancel', 'orders'])) {
     if (order.status === 'received' || order.status === 'preparing' || order.status === 'returned') {
       canCancel = true;
     } else if (order.status === 'ready' || order.status === 'out_for_delivery') {
@@ -7793,58 +7889,53 @@ function applyUserPermissionsUI(user) {
     userBtn.title = `Perfil: ${user.role === 'admin' ? 'Administrador (Acesso Total)' : 'Operador'} (${user.email || ''})`;
   }
 
-  // Administrador possui acesso irrestrito a todas as abas e botões
+  // Administrador possui acesso irrestrito a todas as abas, botões e métricas
+  const kpis = $('#header-kpis');
   if (!user || user.role === 'admin') {
+    if (kpis) kpis.style.display = '';
     $$('.nav-tab').forEach(t => t.style.display = '');
     $$('.dock-btn').forEach(b => b.style.display = '');
+    $$('.view-switch-btn').forEach(b => b.style.display = '');
+    $$('.btn-routes-gps, .btn-routes-mobile').forEach(b => b.style.display = '');
     const userCard = $('#card-users-management');
     if (userCard) userCard.style.display = '';
+    const storeStatusBtn = $('#store-status-glow-btn');
+    if (storeStatusBtn) {
+      storeStatusBtn.style.opacity = '1';
+      storeStatusBtn.style.cursor = 'pointer';
+    }
     return;
   }
 
-  // Perfil Operador: oculta gerenciamento de usuários
-  const userCard = $('#card-users-management');
-  if (userCard) userCard.style.display = 'none';
-
-  const userPerms = Array.isArray(user.permissions) ? user.permissions : [];
+  // Cápsula Central de Métricas e Faturamento Hoje: visível EXCLUSIVAMENTE para Admin
+  if (kpis) kpis.style.display = 'none';
 
   // Mapeamento de abas para permissões necessárias
   const tabPermMap = {
-    'tab-kanban': 'orders',
-    'tab-chat': 'chat',
-    'tab-products': 'catalog',
-    'tab-accompaniments': ['accompaniments', 'catalog'],
-    'tab-extras': ['accompaniments', 'catalog'],
-    'nav-tab-fruits': ['accompaniments', 'catalog'],
-    'tab-categories': 'catalog',
-    'tab-reports': 'reports',
-    'tab-coupons': 'coupons',
-    'tab-printers': 'printers',
-    'tab-store': 'store',
-    'tab-bot': 'bot',
-    'tab-security': 'security'
+    'tab-kanban': ['orders.view', 'orders'],
+    'tab-chat': ['chat.view', 'chat'],
+    'tab-products': ['catalog.products.view', 'catalog'],
+    'tab-accompaniments': ['catalog.accompaniments.view', 'accompaniments', 'catalog'],
+    'tab-extras': ['catalog.extras.view', 'accompaniments', 'catalog'],
+    'nav-tab-fruits': ['catalog.fruits.view', 'accompaniments', 'catalog'],
+    'tab-categories': ['catalog.categories.view', 'catalog'],
+    'tab-reports': ['reports.view', 'reports'],
+    'tab-coupons': ['coupons.view', 'coupons'],
+    'tab-printers': ['printers.view', 'printers'],
+    'tab-store': ['store.view', 'store'],
+    'tab-bot': ['bot.view', 'bot'],
+    'tab-security': ['security.view', 'security']
   };
 
-  // Aplica nas abas do menu de navegação
+  // 1. Aplica visibilidade nas 13 abas do menu de navegação
   $$('.nav-tab').forEach(tab => {
     const tabKey = tab.id === 'nav-tab-fruits' ? 'nav-tab-fruits' : tab.dataset.tab;
     const required = tabPermMap[tabKey];
-
-    if (!required) return;
-
-    let hasPerm = false;
-    if (userPerms.includes('*')) {
-      hasPerm = true;
-    } else if (Array.isArray(required)) {
-      hasPerm = required.some(r => userPerms.includes(r));
-    } else {
-      hasPerm = userPerms.includes(required);
-    }
-
-    tab.style.display = hasPerm ? '' : 'none';
+    const allowed = required ? hasUserPermission(required) : true;
+    tab.style.display = allowed ? '' : 'none';
   });
 
-  // Sincroniza visibilidade no dock lateral esquerdo (mobile/desktop)
+  // 2. Sincroniza visibilidade no dock lateral esquerdo (mobile/desktop)
   $$('.dock-btn').forEach(dockBtn => {
     const target = dockBtn.getAttribute('data-tab-target');
     const matchingTab = $(`.nav-tab[data-tab="${target}"]`);
@@ -7855,12 +7946,39 @@ function applyUserPermissionsUI(user) {
     }
   });
 
-  // Se a aba atualmente ativa foi ocultada, redireciona para a primeira aba permitida
+  // 3. Sub-abas do Kanban (Pedidos)
+  const btnLive = $('#btn-view-live');
+  if (btnLive) btnLive.style.display = hasUserPermission(['orders.live', 'orders']) ? '' : 'none';
+  const btnAll = $('#btn-view-all');
+  if (btnAll) btnAll.style.display = hasUserPermission(['orders.all_columns', 'orders']) ? '' : 'none';
+  const btnArchive = $('#btn-view-archive');
+  if (btnArchive) btnArchive.style.display = hasUserPermission(['orders.history', 'orders']) ? '' : 'none';
+
+  // 4. Botões de Rotas & GPS
+  $$('.btn-routes-gps, .btn-routes-mobile').forEach(btn => {
+    btn.style.display = hasUserPermission(['routes.view', 'routes', 'orders']) ? '' : 'none';
+  });
+
+  // 5. Switch de abrir/fechar loja
+  const storeStatusBtn = $('#store-status-glow-btn');
+  if (storeStatusBtn) {
+    const canToggleStore = hasUserPermission(['orders.store_toggle', 'store.manage', 'orders', 'store']);
+    storeStatusBtn.style.opacity = canToggleStore ? '1' : '0.6';
+    storeStatusBtn.style.cursor = canToggleStore ? 'pointer' : 'not-allowed';
+  }
+
+  // 6. Card de Gerenciamento de Usuários na aba Configurações
+  const userCard = $('#card-users-management');
+  if (userCard) {
+    userCard.style.display = hasUserPermission(['users.view', 'users']) ? '' : 'none';
+  }
+
+  // 7. Se a aba atualmente ativa foi ocultada, redireciona para a primeira aba permitida
   const activeTab = $('.nav-tab.active');
-  if (activeTab && activeTab.style.display === 'none') {
+  if (!activeTab || activeTab.style.display === 'none') {
     const firstAllowed = Array.from($$('.nav-tab')).find(t => t.style.display !== 'none');
     if (firstAllowed) {
-      firstAllowed.click();
+      window.navigateToTab(firstAllowed.id === 'nav-tab-fruits' ? 'nav-tab-fruits' : firstAllowed.dataset.tab);
     }
   }
 }
@@ -8059,7 +8177,9 @@ window.openUserModal = function(userId) {
     // Checkboxes de permissões
     const uPerms = Array.isArray(user.permissions) ? user.permissions : [];
     $$('input[name="user-perm"]').forEach(cb => {
-      cb.checked = uPerms.includes('*') || uPerms.includes(cb.value);
+      const val = cb.value;
+      const rootModule = val.split('.')[0];
+      cb.checked = uPerms.includes('*') || uPerms.includes(val) || uPerms.includes(rootModule);
     });
   } else {
     modalTitle.innerHTML = '<span>👤</span> Novo Usuário';
@@ -8069,7 +8189,7 @@ window.openUserModal = function(userId) {
 
     // Padrão para novo operador: marca pedidos e chat
     $$('input[name="user-perm"]').forEach(cb => {
-      cb.checked = (cb.value === 'orders' || cb.value === 'chat');
+      cb.checked = (cb.dataset.group === 'orders' || cb.dataset.group === 'chat');
     });
   }
 
@@ -8100,6 +8220,16 @@ window.handleUserRoleChange = function() {
     if (permSec) permSec.style.display = 'block';
     if (adminBadge) adminBadge.style.display = 'none';
   }
+};
+
+/**
+ * Alterna rapidamente a seleção de todos os checkboxes de um grupo específico
+ */
+window.togglePermissionGroup = function(groupName) {
+  const cbs = Array.from($$(`input[name="user-perm"][data-group="${groupName}"]`));
+  if (cbs.length === 0) return;
+  const allChecked = cbs.every(cb => cb.checked);
+  cbs.forEach(cb => cb.checked = !allChecked);
 };
 
 /**

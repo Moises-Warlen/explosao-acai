@@ -617,7 +617,7 @@ Olá ${nameStr}! Como posso te ajudar hoje? escolha uma opção.
       if (clientMemory?.latestOrder) {
         memoryNote = `Identifiquei seu último pedido realizado (#${clientMemory.latestOrder.orderNo} - Status atual: "${clientMemory.latestOrder.status}"). Deseja consultar o andamento deste pedido ou rastrear um novo?\n\n`;
       }
-      const reply = `${memoryNote}Para consultar o *status do seu pedido*, por favor, me informe o *número do pedido* ou o *nome completo / telefone* cadastrado na compra.\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`;
+      const reply = `${memoryNote}Para consultar o *Status do seu Pedido*, por favor, me informe o *número do pedido* ou o *nome completo / telefone* cadastrado na compra.\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`;
       this.saveHistory(phone, 'user', cleanText);
       this.saveHistory(phone, 'assistant', reply);
       return { reply, needsHumanTakeover: false };
@@ -872,7 +872,7 @@ Responda exatamente com:
         memoryNote = `Identifiquei seu último pedido realizado (#${memory.latestOrder.orderNo} - Status atual: "${memory.latestOrder.status}"). Deseja consultar o andamento deste pedido ou rastrear um novo?\n\n`;
       }
       return {
-        reply: `${memoryNote}Para consultar o *status do seu pedido*, por favor, me informe o *número do pedido* ou o *nome completo / telefone* cadastrado na compra.\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`,
+        reply: `${memoryNote}Para consultar o *Status do seu Pedido*, por favor, me informe o *número do pedido* ou o *nome completo / telefone* cadastrado na compra.\n\n*(Digite *0* para voltar ao menu ou *8* para encerrar o atendimento).*`,
         needsHumanTakeover: false
       };
     }

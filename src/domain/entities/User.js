@@ -5,6 +5,8 @@
 
 export const SystemModules = {
   ORDERS: 'orders',                 // Pedidos & Cozinha (Kanban / PDV)
+  ROUTES: 'routes',                 // Rotas & GPS
+  MOTOBOYS: 'motoboys',             // Gestão de Entregadores
   CHAT: 'chat',                     // Chat com Clientes
   CATALOG: 'catalog',               // Cardápio, Produtos & Estoque
   ACCOMPANIMENTS: 'accompaniments', // Acompanhamentos, Frutas & Adicionais
@@ -12,6 +14,7 @@ export const SystemModules = {
   COUPONS: 'coupons',               // Cupons de Desconto
   PRINTERS: 'printers',             // Impressoras Térmicas
   STORE: 'store',                   // Configurações da Loja & Frete
+  USERS: 'users',                   // Gerenciamento de Usuários RBAC
   BOT: 'bot',                       // Bot WhatsApp & IA
   SECURITY: 'security'              // Logs de Segurança & Firewall
 };
@@ -53,7 +56,31 @@ export class User {
   hasPermission(moduleKey) {
     if (this.isAdmin()) return true;
     if (this.permissions.includes('*')) return true;
-    return this.permissions.includes(moduleKey);
+    if (!moduleKey) return false;
+
+    const requiredKeys = Array.isArray(moduleKey) ? moduleKey : [moduleKey];
+
+    return requiredKeys.some(key => {
+      if (this.permissions.includes(key)) return true;
+
+      // Suporte a hierarquia: se tem 'orders', tem acesso a qualquer 'orders.*'
+      const parts = String(key).split('.');
+      if (parts.length > 1) {
+        const rootModule = parts[0];
+        if (this.permissions.includes(rootModule) || this.permissions.includes(`${rootModule}.*`)) return true;
+        if (parts.length > 2) {
+          const subModule = `${parts[0]}.${parts[1]}`;
+          if (this.permissions.includes(subModule) || this.permissions.includes(`${subModule}.*`)) return true;
+        }
+      }
+
+      // Se a verificação é de módulo macro (ex: 'orders') e o usuário possui ao menos uma sub-permissão desse módulo
+      if (!key.includes('.') && this.permissions.some(p => p.startsWith(`${key}.`))) {
+        return true;
+      }
+
+      return false;
+    });
   }
 
   /**

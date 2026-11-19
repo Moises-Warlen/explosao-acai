@@ -101,9 +101,9 @@ app.use(cors({
 // 3. Rate Limiters (Proteção contra Brute Force, Flood e DoS)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 5, // máx 5 tentativas incorretas por IP
+  max: 25, // máx 25 tentativas incorretas por IP com liberação imediata ao acertar
   skipSuccessfulRequests: true,
-  message: { ok: false, error: 'Muitas tentativas de login incorretas. Tente novamente em 15 minutos.' },
+  message: { ok: false, error: 'Muitas tentativas de login incorretas. Tente novamente em alguns minutos.' },
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res, next, options) => {
@@ -124,7 +124,7 @@ const authLimiter = rateLimit({
 
 const ordersLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minuto
-  max: 10, // máx 10 pedidos por minuto por IP
+  max: process.env.NODE_ENV === 'test' ? 1000 : 30, // flexibilidade para ambiente de testes automatizados
   message: { ok: false, error: 'Limite de pedidos por minuto atingido. Aguarde um instante.' },
   standardHeaders: true,
   legacyHeaders: false,

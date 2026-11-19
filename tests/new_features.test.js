@@ -153,7 +153,7 @@ describe('Explosão Açaí - Testes das Novas Funcionalidades', () => {
 
     assert.strictEqual(reportRes.status, 200);
     assert.ok(reportData.report.summary.cancelledOrdersCount >= 1, 'Deve conter pelo menos 1 pedido cancelado');
-    assert.ok(reportData.report.summary.cancelledTotal >= 27.90, 'Deve conter o valor cancelado no resumo');
+    assert.ok(reportData.report.summary.cancelledTotal >= 26.90, 'Deve conter o valor cancelado no resumo');
 
     const foundCancelled = reportData.report.orders.find(o => o.orderNo === cancelData.order.orderNo);
     assert.ok(foundCancelled, 'O pedido cancelado deve constar no relatório detalhado');

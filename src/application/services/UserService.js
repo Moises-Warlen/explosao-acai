@@ -303,7 +303,7 @@ export class UserService {
   }
 
   /**
-   * Autentica usuário por login/e-mail e senha
+   * Autentica usuário por login/e-mail/nome e senha com suporte a operadores e admin padrão
    */
   authenticate(loginOrEmail, password) {
     if (!password) return null;
@@ -312,21 +312,28 @@ export class UserService {
     const cleanLogin = String(loginOrEmail || '').trim().toLowerCase();
     const rawPass = String(password).trim();
 
-    // 1. Busca por login/e-mail específico se informado
+    // 1. Busca por login, e-mail ou nome específico se informado
     if (cleanLogin) {
       const user = (data.users || []).find(u =>
         !u.isDeleted &&
-        (u.email.toLowerCase() === cleanLogin || u.id.toLowerCase() === cleanLogin || (cleanLogin === 'admin' && u.role === UserRole.ADMIN))
+        (
+          u.email.toLowerCase() === cleanLogin ||
+          u.id.toLowerCase() === cleanLogin ||
+          (u.name && u.name.toLowerCase() === cleanLogin) ||
+          (cleanLogin === 'admin' && u.role === UserRole.ADMIN)
+        )
       );
 
       if (user) {
         if (verifyPasswordHash(rawPass, user.passwordHash) || verifyAndMigratePassword(rawPass, user.passwordHash)) {
           return new User(user);
         }
+        // Credencial inválida para o usuário localizado
+        return null;
       }
     }
 
-    // 2. Se apenas senha foi informada (ou falhou busca por login), tenta validar contra senha mestre do admin
+    // 2. Se apenas senha foi informada (ou "admin"), tenta validar contra senha mestre do admin
     const storedAdminPass = data.settings?.adminPassword || process.env.ADMIN_PASSWORD;
     if (verifyAndMigratePassword(rawPass, storedAdminPass)) {
       return this.getDefaultAdmin();
@@ -337,6 +344,16 @@ export class UserService {
     if (defaultAdmin && defaultAdmin.passwordHash) {
       if (verifyPasswordHash(rawPass, defaultAdmin.passwordHash)) {
         return new User(defaultAdmin);
+      }
+    }
+
+    // 4. Se o login foi omitido mas a senha pertence a um operador ativo cadastrado:
+    if (!cleanLogin) {
+      const matchingUser = (data.users || []).find(u =>
+        !u.isDeleted && u.active && u.passwordHash && verifyPasswordHash(rawPass, u.passwordHash)
+      );
+      if (matchingUser) {
+        return new User(matchingUser);
       }
     }
 

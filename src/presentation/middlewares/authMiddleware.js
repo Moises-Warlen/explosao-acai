@@ -211,6 +211,41 @@ export function adminAuthMiddleware(req, res, next) {
 }
 
 /**
+ * Verifica se um usuário possui a permissão requerida com suporte hierárquico e wildcard
+ */
+export function hasUserPermission(user, permissionKeyOrKeys) {
+  if (!user) return false;
+  if (user.role === 'admin') return true;
+  const userPerms = Array.isArray(user.permissions) ? user.permissions : [];
+  if (userPerms.includes('*')) return true;
+
+  const required = Array.isArray(permissionKeyOrKeys) ? permissionKeyOrKeys : [permissionKeyOrKeys];
+
+  return required.some(reqKey => {
+    if (!reqKey) return false;
+    if (userPerms.includes(reqKey)) return true;
+
+    // Suporte a hierarquia: se tem 'orders', tem acesso a qualquer 'orders.*'
+    const parts = String(reqKey).split('.');
+    if (parts.length > 1) {
+      const rootModule = parts[0];
+      if (userPerms.includes(rootModule) || userPerms.includes(`${rootModule}.*`)) return true;
+      if (parts.length > 2) {
+        const subModule = `${parts[0]}.${parts[1]}`;
+        if (userPerms.includes(subModule) || userPerms.includes(`${subModule}.*`)) return true;
+      }
+    }
+
+    // Se a permissão requerida é de módulo macro (ex: 'orders') e o usuário possui uma sub-permissão desse módulo
+    if (!reqKey.includes('.') && userPerms.some(p => p.startsWith(`${reqKey}.`))) {
+      return true;
+    }
+
+    return false;
+  });
+}
+
+/**
  * Middleware restrito EXCLUSIVAMENTE a Administradores (ex: Gerenciamento de Usuários)
  */
 export function requireAdminOnlyMiddleware(req, res, next) {
@@ -235,16 +270,25 @@ export function requirePermission(permissionKeyOrKeys) {
       if (!req.user) {
         return res.status(401).json({ ok: false, error: 'Acesso não autenticado.' });
       }
-      if (req.user.role === 'admin') {
+      if (hasUserPermission(req.user, required)) {
         return next();
       }
-      const userPerms = Array.isArray(req.user.permissions) ? req.user.permissions : [];
-      if (userPerms.includes('*') || required.some(k => userPerms.includes(k))) {
-        return next();
-      }
+
+      try {
+        securityAuditService.recordEvent({
+          type: SecurityEventType.UNAUTHORIZED_401,
+          severity: SecuritySeverity.MEDIUM,
+          ip: securityAuditService.extractClientIp(req),
+          endpoint: req.originalUrl || req.url,
+          method: req.method,
+          details: `Tentativa de acesso negada (403): Usuário "${req.user.name || req.user.email}" não possui permissão para [${required.join(', ')}].`,
+          userAgent: req.headers['user-agent']
+        });
+      } catch (e) {}
+
       return res.status(403).json({
         ok: false,
-        error: `Acesso negado: seu usuário não possui permissão para acessar o módulo (${required.join(', ')}).`
+        error: `Acesso negado: apenas Administradores ou usuários com permissão específica (${required.join(', ')}) possuem autorização.`
       });
     });
   };

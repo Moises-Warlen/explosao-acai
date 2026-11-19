@@ -3,6 +3,7 @@ import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert';
 import { server } from '../src/server.js';
 import { userService } from '../src/application/services/UserService.js';
+import { orderService } from '../src/application/services/OrderService.js';
 import { hashPassword, verifyPasswordHash } from '../src/presentation/middlewares/authMiddleware.js';
 import { db } from '../src/infrastructure/database/JsonDatabase.js';
 
@@ -15,7 +16,7 @@ describe('Explosão Açaí — Gestão de Usuários, RBAC & Segurança LGPD', ()
 
   before(async () => {
     if (db && db.data && Array.isArray(db.data.users)) {
-      db.data.users = db.data.users.filter(u => u.email !== 'carlos.operador@explosao.com' && u.email !== 'temp.operador@explosao.com');
+      db.data.users = db.data.users.filter(u => u.id === 'usr_admin_default');
       db.save();
     }
     return new Promise((resolve) => {
@@ -36,7 +37,7 @@ describe('Explosão Açaí — Gestão de Usuários, RBAC & Segurança LGPD', ()
 
   after(async () => {
     if (db && db.data && Array.isArray(db.data.users)) {
-      db.data.users = db.data.users.filter(u => u.email !== 'carlos.operador@explosao.com' && u.email !== 'temp.operador@explosao.com');
+      db.data.users = db.data.users.filter(u => u.id === 'usr_admin_default');
       db.save();
     }
     return new Promise((resolve) => {
@@ -310,5 +311,190 @@ describe('Explosão Açaí — Gestão de Usuários, RBAC & Segurança LGPD', ()
     assert.ok(rawUser);
     assert.strictEqual(rawUser.isDeleted, true);
     assert.strictEqual(rawUser.active, false);
+  });
+
+  test('10. Login de Novo Usuário: Autentica com sucesso por Nome, Login/E-mail ou Senha única', async () => {
+    // 1. Criar novo atendente com nome e login específicos
+    const createRes = await fetch(`${baseUrl}/api/users`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-token': adminToken
+      },
+      body: JSON.stringify({
+        name: 'Mariana Atendente',
+        email: 'mariana.atendimento@explosao.com',
+        password: 'MarianaSuperSenha#2026',
+        role: 'operator',
+        permissions: ['chat.view', 'chat.reply', 'chat.edit_customer'],
+        active: true
+      })
+    });
+    const { user: mariana } = await createRes.json();
+    assert.ok(mariana.id);
+
+    // 2. Login pelo e-mail
+    const loginEmailRes = await fetch(`${baseUrl}/api/admin/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        login: 'mariana.atendimento@explosao.com',
+        password: 'MarianaSuperSenha#2026'
+      })
+    });
+    const emailData = await loginEmailRes.json();
+    assert.strictEqual(loginEmailRes.status, 200);
+    assert.strictEqual(emailData.ok, true);
+    assert.strictEqual(emailData.user.name, 'Mariana Atendente');
+
+    // 3. Login pelo Nome (case-insensitive)
+    const loginNameRes = await fetch(`${baseUrl}/api/admin/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        login: 'mariana atendente',
+        password: 'MarianaSuperSenha#2026'
+      })
+    });
+    const nameData = await loginNameRes.json();
+    assert.strictEqual(loginNameRes.status, 200);
+    assert.strictEqual(nameData.ok, true);
+    assert.ok(nameData.token);
+
+    // 4. Limpeza
+    await fetch(`${baseUrl}/api/users/${mariana.id}`, {
+      method: 'DELETE',
+      headers: { 'x-admin-token': adminToken }
+    });
+  });
+
+  test('11. RBAC Granular: Operador restrito a Chat é bloqueado em Rotas Operacionais não autorizadas (403)', async () => {
+    // 1. Criar operador exclusivo de chat
+    const createRes = await fetch(`${baseUrl}/api/users`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-token': adminToken
+      },
+      body: JSON.stringify({
+        name: 'Lucas Chat Only',
+        email: 'lucas.chat@explosao.com',
+        password: 'senhaChatLucas#2026',
+        role: 'operator',
+        permissions: ['chat.view', 'chat.reply'],
+        active: true
+      })
+    });
+    const { user: lucas } = await createRes.json();
+
+    // 2. Obter token do Lucas
+    const authRes = await fetch(`${baseUrl}/api/admin/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        login: 'lucas.chat@explosao.com',
+        password: 'senhaChatLucas#2026'
+      })
+    });
+    const { token: lucasToken } = await authRes.json();
+
+    // 3. Lucas tenta consultar relatórios financeiros -> deve receber 403 Forbidden
+    const reportRes = await fetch(`${baseUrl}/api/reports/sales?period=today`, {
+      headers: { 'x-admin-token': lucasToken }
+    });
+    assert.strictEqual(reportRes.status, 403);
+    const reportErr = await reportRes.json();
+    assert.strictEqual(reportErr.ok, false);
+    assert.ok(reportErr.error.includes('Acesso negado'));
+
+    // 4. Lucas tenta alterar status da loja (Abrir/Fechar) -> deve receber 403 Forbidden
+    const toggleRes = await fetch(`${baseUrl}/api/store/toggle-status`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-token': lucasToken
+      },
+      body: JSON.stringify({ isOpen: false })
+    });
+    assert.strictEqual(toggleRes.status, 403);
+
+    // 5. Lucas acessa lista de conversas de chat -> autorizado (200 OK)
+    const chatRes = await fetch(`${baseUrl}/api/chat/conversations`, {
+      headers: { 'x-admin-token': lucasToken }
+    });
+    assert.strictEqual(chatRes.status, 200);
+
+    // 6. Limpeza
+    await fetch(`${baseUrl}/api/users/${lucas.id}`, {
+      method: 'DELETE',
+      headers: { 'x-admin-token': adminToken }
+    });
+  });
+
+  test('12. Hierarquia e Wildcard: Operador com "orders" acessa ações granulares de pedidos', async () => {
+    // 1. Criar operador com permissão macro "orders"
+    const createRes = await fetch(`${baseUrl}/api/users`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-token': adminToken
+      },
+      body: JSON.stringify({
+        name: 'Roberto Cozinha',
+        email: 'roberto.cozinha@explosao.com',
+        password: 'senhaRoberto#2026',
+        role: 'operator',
+        permissions: ['orders'],
+        active: true
+      })
+    });
+    const { user: roberto } = await createRes.json();
+
+    // 2. Autentica Roberto
+    const authRes = await fetch(`${baseUrl}/api/admin/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        login: 'roberto.cozinha@explosao.com',
+        password: 'senhaRoberto#2026'
+      })
+    });
+    const { token: robertoToken } = await authRes.json();
+
+    // 3. Cria um pedido para teste de alteração de status (Pagamento na entrega)
+    const order = await orderService.createOrder({
+      customer: { name: 'Cliente Teste Roberto', phone: '16999991111' },
+      delivery: { type: 'pickup' },
+      payment: { method: 'Dinheiro', timing: 'delivery' },
+      bypassStoreClosed: true,
+      items: [
+        { productId: 'prod_classico', name: 'Clássico 500 ml', size: 500, quantity: 1, unitPrice: 26.90, accompaniments: ['Banana'], extras: [] }
+      ]
+    });
+
+    // 4. Roberto altera status do pedido para "preparing" -> autorizado (herança hierárquica)
+    const statusRes = await fetch(`${baseUrl}/api/orders/${order.id}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-token': robertoToken
+      },
+      body: JSON.stringify({ status: 'preparing' })
+    });
+    assert.strictEqual(statusRes.status, 200);
+    const statusData = await statusRes.json();
+    assert.strictEqual(statusData.order.status, 'preparing');
+
+    // 5. Roberto tenta acessar cupons -> bloqueado (403 Forbidden)
+    const couponRes = await fetch(`${baseUrl}/api/coupons`, {
+      headers: { 'x-admin-token': robertoToken }
+    });
+    assert.strictEqual(couponRes.status, 403);
+
+    // 6. Limpeza
+    await fetch(`${baseUrl}/api/users/${roberto.id}`, {
+      method: 'DELETE',
+      headers: { 'x-admin-token': adminToken }
+    });
   });
 });
