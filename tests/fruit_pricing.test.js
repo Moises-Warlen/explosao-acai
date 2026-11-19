@@ -97,4 +97,19 @@ describe('Controle de Preço Individual de Frutas Adicionais', () => {
     catalogService.updateFruit(morango.id, { price: 3.90 });
   });
 
+  test('4. Navegação do Menu: Aba Frutas (#nav-tab-fruits) deve abrir a subvisão de Frutas sem bloqueio', async () => {
+    const fs = await import('node:fs');
+    const adminHtml = fs.readFileSync('public/admin.html', 'utf-8');
+    const adminJs = fs.readFileSync('public/js/admin.js', 'utf-8');
+
+    // Garante que o botão Frutas existe no menu superior com id e data-tab
+    assert.ok(adminHtml.includes('id="nav-tab-fruits"'), 'Deve existir o botão #nav-tab-fruits');
+    assert.ok(adminHtml.includes('openFruitsAdminTab(event)'), 'Deve conter chamada openFruitsAdminTab no botão Frutas');
+
+    // Garante que bindNavigation() não bloqueia Frutas com return vazio
+    assert.ok(!adminJs.includes("if (tab.id === 'nav-tab-fruits') return;"), 'bindNavigation não pode ter return vazio para nav-tab-fruits');
+    assert.ok(adminJs.includes("window.openFruitsAdminTab(e)"), 'bindNavigation deve delegar para openFruitsAdminTab');
+    assert.ok(adminJs.includes("tabId === 'tab-fruits' || tabId === 'nav-tab-fruits'"), 'switchAdminTab deve suportar frutas');
+  });
+
 });

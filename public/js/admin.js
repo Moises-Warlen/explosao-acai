@@ -501,6 +501,9 @@ window.navigateToTab = function(tabTarget) {
 
   if (paneId === 'tab-extras' && typeof window.setExtrasSubView === 'function') {
     window.setExtrasSubView(tabTarget === 'nav-tab-fruits' ? 'fruits' : 'extras');
+    if (tabTarget === 'nav-tab-fruits' && typeof loadFruits === 'function') {
+      loadFruits();
+    }
   }
 
   if (paneId === 'tab-reports' && hasUserPermission(['reports.view', 'reports'])) {
@@ -538,9 +541,12 @@ window.navigateToTab = function(tabTarget) {
 function bindNavigation() {
   const tabs = $$('.nav-tab');
   tabs.forEach(tab => {
-    tab.onclick = () => {
-      if (tab.id === 'nav-tab-fruits') return;
+    tab.onclick = (e) => {
       if (typeof window.closeAdminMobileNav === 'function') window.closeAdminMobileNav();
+      if (tab.id === 'nav-tab-fruits') {
+        window.openFruitsAdminTab(e);
+        return;
+      }
       window.navigateToTab(tab.dataset.tab);
     };
   });
@@ -1032,7 +1038,11 @@ window.setKanbanViewMode = function(mode = 'live') {
 };
 
 window.switchAdminTab = function(tabId) {
-  const tabBtn = $(`.nav-tab[data-tab="${tabId}"]`);
+  if (tabId === 'tab-fruits' || tabId === 'nav-tab-fruits') {
+    window.openFruitsAdminTab();
+    return;
+  }
+  const tabBtn = $(`#${tabId}`) || $(`.nav-tab[data-tab="${tabId}"]`);
   if (tabBtn) {
     tabBtn.click();
   }
@@ -4737,6 +4747,9 @@ window.openFruitsAdminTab = function(e) {
   }
   if (typeof window.closeAdminMobileNav === 'function') {
     window.closeAdminMobileNav();
+  }
+  if (typeof loadFruits === 'function') {
+    loadFruits();
   }
 };
 
