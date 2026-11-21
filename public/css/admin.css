@@ -2828,7 +2828,7 @@ input:checked + .slider:before {
   color: var(--y);
 }
 
-/* Multi-select de Combos */
+/* Multi-select de Combos & Compositor Inteligente */
 .combo-items-selector {
   background: var(--card);
   border: 1px solid var(--ln);
@@ -2853,6 +2853,91 @@ input:checked + .slider:before {
 .combo-check-item input {
   width: auto;
   margin: 0;
+}
+
+.combo-composer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.combo-prod-card {
+  background: var(--panel);
+  border: 1px solid var(--ln);
+  border-radius: 8px;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.combo-prod-card.has-qty {
+  border-color: var(--y);
+  background: rgba(255, 215, 0, 0.08);
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.15);
+}
+
+.combo-prod-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.combo-prod-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tx);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.combo-prod-meta {
+  font-size: 10.5px;
+  color: var(--mut);
+}
+
+.combo-qty-control {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.combo-qty-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid var(--ln);
+  background: var(--card);
+  color: var(--tx);
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.combo-qty-btn:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.combo-qty-val {
+  min-width: 20px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--y);
 }
 
 /* Modals & Forms */

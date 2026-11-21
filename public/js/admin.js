@@ -3861,7 +3861,9 @@ window.openNewProductModal = function() {
   ]);
 
   $('#loss-alert-box').style.display = 'none';
-  handleCategoryChange($('#p-category')?.value);
+  COMBO_COMPOSITION = {};
+  if ($('#p-combo-customizable')) $('#p-combo-customizable').checked = true;
+  handleCategoryChange($('#p-category')?.value, []);
   renderProductAccompanimentsCheckboxes(null);
   renderProductExtrasCheckboxes(null, true);
   $('#product-edit-modal').style.display = 'flex';
@@ -3883,6 +3885,10 @@ window.editProductModal = function(id) {
 
   renderProductSizeRows(prod.prices || []);
 
+  if ($('#p-combo-customizable')) {
+    $('#p-combo-customizable').checked = prod.isCustomizableCombo !== false;
+  }
+
   handleCategoryChange(prod.categoryId, prod.comboProductIds || []);
   // Produto que nunca teve lista salva só oferece acompanhamentos ao cliente se for o "Monte seu açaí";
   // por isso a tela mostra desmarcado (reflete exatamente o que o cliente vê) até você marcar e salvar.
@@ -3903,44 +3909,201 @@ window.closeProductModal = function() {
   $('#product-edit-modal').style.display = 'none';
 };
 
+// ==================== COMPOSITOR INTELIGENTE DE COMBOS ====================
+let COMBO_COMPOSITION = {}; // { [productId]: quantity }
+
 window.handleCategoryChange = function(catId, selectedComboIds = []) {
   const cat = CATEGORIES.find(c => c.id === catId || c.slug === catId);
   const isCombo = cat && (cat.slug === 'combos' || cat.name.toLowerCase().includes('combo'));
   const comboSection = $('#combo-selection-section');
-  const comboCheckboxes = $('#combo-products-checkboxes');
 
-  if (isCombo && comboSection && comboCheckboxes) {
+  if (isCombo && comboSection) {
     comboSection.style.display = 'block';
-    // Lista os copos de açaí individuais cadastrados para somar o custo no combo
-    const individualProducts = PRODUCTS.filter(p => p.categorySlug !== 'combos');
-    comboCheckboxes.innerHTML = individualProducts.map(p => {
-      const isChecked = selectedComboIds.includes(p.id);
-      const cost = p.prices && p.prices[0] ? p.prices[0].costPrice : 0;
-      return `
-        <label class="combo-check-item">
-          <input type="checkbox" value="${p.id}" data-cost="${cost}" ${isChecked ? 'checked' : ''} onchange="recalculateComboCostFromCheckboxes()">
-          <span>${esc(p.name)} (${R(cost)})</span>
-        </label>
-      `;
-    }).join('');
+
+    // Se passou uma lista de IDs selecionados (ex: ao editar combo), preenche o mapa de composição
+    COMBO_COMPOSITION = {};
+    if (Array.isArray(selectedComboIds) && selectedComboIds.length > 0) {
+      selectedComboIds.forEach(id => {
+        if (id) COMBO_COMPOSITION[id] = (COMBO_COMPOSITION[id] || 0) + 1;
+      });
+    }
+
+    renderComboProductsList();
+    recalculateComboPricing();
   } else if (comboSection) {
     comboSection.style.display = 'none';
   }
 };
 
-window.recalculateComboCostFromCheckboxes = function() {
-  const checkboxes = $$('#combo-products-checkboxes input[type="checkbox"]:checked');
-  let totalComboCost = 0;
-  checkboxes.forEach(cb => {
-    totalComboCost += parseFloat(cb.dataset.cost || 0);
+window.renderComboProductsList = function() {
+  const container = $('#combo-products-list');
+  if (!container) return;
+
+  const individualProducts = PRODUCTS.filter(p => p.categorySlug !== 'combos');
+  container.innerHTML = individualProducts.map(p => {
+    const qty = COMBO_COMPOSITION[p.id] || 0;
+    const p500 = (p.prices || []).find(x => x.size === 500) || (p.prices || [])[0] || {};
+    const price = Number(p500.promoPrice != null ? p500.promoPrice : (p500.price || 0));
+    const cost = Number(p500.costPrice || 0);
+
+    return `
+      <div class="combo-prod-card ${qty > 0 ? 'has-qty' : ''}" id="combo-card-${p.id}">
+        <div class="combo-prod-info" title="${esc(p.name)}">
+          <div class="combo-prod-name">${esc(p.name)}</div>
+          <div class="combo-prod-meta">Venda: ${R(price)} · Custo: ${R(cost)}</div>
+        </div>
+        <div class="combo-qty-control">
+          <button type="button" class="combo-qty-btn" onclick="updateComboItemQty('${p.id}', -1)" title="Diminuir">−</button>
+          <span class="combo-qty-val" id="combo-qty-${p.id}">${qty}</span>
+          <button type="button" class="combo-qty-btn" onclick="updateComboItemQty('${p.id}', 1)" title="Aumentar">+</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  updateComboSummaryBadge();
+};
+
+window.updateComboItemQty = function(prodId, delta) {
+  const current = COMBO_COMPOSITION[prodId] || 0;
+  const next = Math.max(0, current + delta);
+  if (next > 0) {
+    COMBO_COMPOSITION[prodId] = next;
+  } else {
+    delete COMBO_COMPOSITION[prodId];
+  }
+
+  const qtyEl = $(`#combo-qty-${prodId}`);
+  if (qtyEl) qtyEl.textContent = next;
+
+  const card = $(`#combo-card-${prodId}`);
+  if (card) {
+    if (next > 0) card.classList.add('has-qty');
+    else card.classList.remove('has-qty');
+  }
+
+  updateComboSummaryBadge();
+  recalculateComboPricing();
+};
+
+window.updateComboSummaryBadge = function() {
+  const badge = $('#combo-total-items-badge');
+  if (!badge) return;
+  const total = Object.values(COMBO_COMPOSITION).reduce((sum, q) => sum + q, 0);
+  badge.textContent = `${total} copo${total === 1 ? '' : 's'} no combo`;
+};
+
+window.recalculateComboPricing = function() {
+  const pricingCard = $('#combo-pricing-card');
+  const metricsBox = $('#combo-pricing-metrics');
+  if (!pricingCard || !metricsBox) return;
+
+  const selectedEntries = Object.entries(COMBO_COMPOSITION).filter(([_, qty]) => qty > 0);
+  const totalItems = selectedEntries.reduce((sum, [_, q]) => sum + q, 0);
+
+  if (totalItems === 0) {
+    pricingCard.style.display = 'none';
+    return;
+  }
+
+  let totalRetail = 0;
+  let totalCost = 0;
+
+  selectedEntries.forEach(([pId, qty]) => {
+    const prod = PRODUCTS.find(p => p.id === pId);
+    if (!prod) return;
+    const pSize = (prod.prices || []).find(x => x.size === 500) || (prod.prices || [])[0] || {};
+    const effectivePrice = Number(pSize.promoPrice != null ? pSize.promoPrice : (pSize.price || 0));
+    const effectiveCost = Number(pSize.costPrice || 0);
+
+    totalRetail += effectivePrice * qty;
+    totalCost += effectiveCost * qty;
   });
 
-  if (totalComboCost > 0) {
-    const rows = Array.from($$('#p-sizes-list .p-size-row'));
-    const row500 = rows.find(r => parseInt(r.querySelector('.p-size-ml').value, 10) === 500) || rows[0];
-    if (row500) row500.querySelector('.p-size-cost').value = totalComboCost.toFixed(2);
-    checkFormPrejuizo();
+  // Preço promocional sugerido:
+  // 1. Atrativo pro cliente: Desconto médio de 14% sobre a soma avulsa
+  // 2. Proteção contra prejuízo: Preço deve ser no mínimo custo + 45% de margem
+  const targetRetailPromo = totalRetail * 0.86;
+  const minimumSafePrice = totalCost * 1.45;
+  let suggested = Math.max(minimumSafePrice, targetRetailPromo);
+
+  // Arredonda para final .90 atraente
+  suggested = Math.floor(suggested) + 0.90;
+  if (suggested < minimumSafePrice) {
+    suggested = Math.ceil(minimumSafePrice) + 0.90;
   }
+
+  const clientSavings = Math.max(0, totalRetail - suggested);
+  const storeProfit = Math.max(0, suggested - totalCost);
+  const profitMarginPercent = suggested > 0 ? Math.round((storeProfit / suggested) * 100) : 0;
+
+  metricsBox.innerHTML = `
+    <div style="background:var(--card);border:1px solid var(--ln);border-radius:8px;padding:8px">
+      <div style="color:var(--mut);font-size:11px">Soma dos Itens Avulsos:</div>
+      <b style="font-size:13.5px;color:var(--tx)">${R(totalRetail)}</b>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--ln);border-radius:8px;padding:8px">
+      <div style="color:var(--mut);font-size:11px">Custo Total dos Insumos:</div>
+      <b style="font-size:13.5px;color:#ef4444">${R(totalCost)}</b>
+    </div>
+    <div style="background:var(--card);border:1.5px solid var(--y);border-radius:8px;padding:8px">
+      <div style="color:var(--y);font-weight:700;font-size:11px">Preço Sugerido (Promoção):</div>
+      <b style="font-size:15px;color:var(--y)">${R(suggested)}</b>
+      <div style="font-size:10.5px;color:#10b981">Economia de ${R(clientSavings)}</div>
+    </div>
+    <div style="background:var(--card);border:1px solid #10b981;border-radius:8px;padding:8px">
+      <div style="color:#10b981;font-weight:700;font-size:11px">Lucro Seguro da Loja:</div>
+      <b style="font-size:13.5px;color:#10b981">${R(storeProfit)}</b>
+      <div style="font-size:10.5px;color:#10b981">+${profitMarginPercent}% de margem</div>
+    </div>
+  `;
+
+  pricingCard.style.display = 'block';
+};
+
+window.aplicarPrecoSugeridoCombo = function() {
+  const selectedEntries = Object.entries(COMBO_COMPOSITION).filter(([_, qty]) => qty > 0);
+  if (selectedEntries.length === 0) {
+    return adminToast('Selecione pelo menos um produto para compor o combo antes de aplicar o preço sugerido.', 'danger');
+  }
+
+  const rows = Array.from($$('#p-sizes-list .p-size-row'));
+  if (rows.length === 0) {
+    return adminToast('Nenhum tamanho configurado no produto.', 'danger');
+  }
+
+  rows.forEach(row => {
+    const sizeMl = parseInt(row.querySelector('.p-size-ml')?.value, 10) || 500;
+    let rowCost = 0;
+    let rowRetail = 0;
+
+    selectedEntries.forEach(([pId, qty]) => {
+      const prod = PRODUCTS.find(p => p.id === pId);
+      if (!prod) return;
+      const pSize = (prod.prices || []).find(x => x.size === sizeMl) || (prod.prices || [])[0] || {};
+      const pPrice = Number(pSize.promoPrice != null ? pSize.promoPrice : (pSize.price || 0));
+      const pCost = Number(pSize.costPrice || 0);
+
+      rowRetail += pPrice * qty;
+      rowCost += pCost * qty;
+    });
+
+    const targetPromo = rowRetail * 0.86;
+    const minSafe = rowCost * 1.45;
+    let rowSuggested = Math.max(minSafe, targetPromo);
+    rowSuggested = Math.floor(rowSuggested) + 0.90;
+    if (rowSuggested < minSafe) {
+      rowSuggested = Math.ceil(minSafe) + 0.90;
+    }
+
+    const priceInput = row.querySelector('.p-size-price');
+    const costInput = row.querySelector('.p-size-cost');
+    if (priceInput) priceInput.value = rowSuggested.toFixed(2);
+    if (costInput) costInput.value = rowCost.toFixed(2);
+  });
+
+  checkFormPrejuizo();
+  adminToast('Preço promocional sugerido e custos aplicados com sucesso! Você pode editar o preço quando desejar.', 'success');
 };
 
 // ==================== TAMANHOS DO PRODUTO (LISTA DINÂMICA) ====================
@@ -4185,9 +4348,18 @@ window.saveProductForm = async function(e) {
 
   if (!name) return adminToast('Informe o nome do produto.', 'danger');
 
-  // Combo sub-products
-  const comboCheckboxes = $$('#combo-products-checkboxes input[type="checkbox"]:checked');
-  const comboProductIds = Array.from(comboCheckboxes).map(cb => cb.value);
+  // Combo sub-products & customização
+  const cat = CATEGORIES.find(c => c.id === categoryId || c.slug === categoryId);
+  const isCombo = cat && (cat.slug === 'combos' || cat.name.toLowerCase().includes('combo'));
+  const comboProductIds = [];
+  if (isCombo) {
+    Object.entries(COMBO_COMPOSITION).forEach(([pId, qty]) => {
+      for (let i = 0; i < qty; i++) {
+        comboProductIds.push(pId);
+      }
+    });
+  }
+  const isCustomizableCombo = $('#p-combo-customizable') ? $('#p-combo-customizable').checked : true;
 
   // Tamanhos do copo (lista dinâmica: adicionar / editar / remover)
   const sizeRows = getProductSizeRows();
@@ -4228,6 +4400,7 @@ window.saveProductForm = async function(e) {
     isNewLaunch,
     isPromo,
     comboProductIds,
+    isCustomizableCombo,
     allowedAccompanimentIds,
     allowExtras,
     allowedExtraIds,

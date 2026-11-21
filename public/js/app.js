@@ -672,9 +672,36 @@ window.openItemModal = function(productId) {
   const prod = (CATALOG.products || []).find(p => p.id === productId);
   if (!prod) return;
 
+  const isCombo = prod.categorySlug === 'combos' || prod.category === 'combos' || (Array.isArray(prod.comboProductIds) && prod.comboProductIds.length > 0);
+  let comboCups = [];
+  if (isCombo) {
+    if (Array.isArray(prod.comboProductIds) && prod.comboProductIds.length > 0) {
+      comboCups = prod.comboProductIds.map((pId, idx) => {
+        const found = (CATALOG.products || []).find(p => p.id === pId);
+        return {
+          flavor: found ? found.name : 'Açaí Tradicional',
+          fruit: '',
+          acomp: ''
+        };
+      });
+    } else {
+      let count = 2;
+      const match = (prod.name + ' ' + (prod.description || '')).match(/(\d+)\s*copos/i);
+      if (match) count = parseInt(match[1], 10);
+      const defaultFlavor = ((CATALOG.products || []).find(p => p.active && p.categorySlug !== 'combos')?.name) || 'Açaí Tradicional';
+      comboCups = Array.from({ length: count }, () => ({
+        flavor: defaultFlavor,
+        fruit: '',
+        acomp: ''
+      }));
+    }
+  }
+
   // REGRA 1: Sempre inicia com estado 100% limpo a cada abertura
   CURRENT_ITEM_STATE = {
     product: prod,
+    isCombo,
+    comboCups,
     selectedSizeIdx: 0,        // Tamanho padrão (primeiro da lista)
     accompaniments: [],        // Nenhum acompanhamento selecionado
     extras: [],                // Nenhum adicional extra marcado
@@ -792,7 +819,7 @@ function renderItemModal() {
 
   let h = `
     <button class="x" onclick="closeSheet()">×</button>
-    <button class="btn o" onclick="closeSheet()" style="position:absolute;top:14px;left:14px;padding:5px 12px;font-size:12px;font-weight:700;display:flex;align-items:center;cursor:pointer;z-index:10;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.25);color:#fff;border-radius:20px">
+    <button class="btn o" onclick="closeSheet()" style="position:absolute;top:14px;left:14px;width:auto !important;max-width:calc(100% - 70px) !important;padding:5px 12px;font-size:12px;font-weight:700;display:flex;align-items:center;cursor:pointer;z-index:10;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.25);color:#fff;border-radius:20px">
       Voltar para o cardápio
     </button>
     <div class="sheet-photo-wrap">
@@ -814,8 +841,67 @@ function renderItemModal() {
     </div>
   `;
 
-  // Acompanhamentos inclusos (se customizável ou monte seu açaí)
-  if (prod.isCustomizable || isMonteSeuAcai || hasPanelAccompaniments) {
+  // SE FOR COMBO: Seletores em Dropdown para personalizar cada copo (Sabores, Mousses, Frutas e Acompanhamentos)
+  if (st.isCombo && Array.isArray(st.comboCups) && st.comboCups.length > 0) {
+    const availableFlavors = (CATALOG.products || []).filter(p => p.active && p.categorySlug !== 'combos' && p.category !== 'combos');
+    const availableFruits = (CATALOG.fruits || []).filter(f => typeof f === 'string' || f.active !== false);
+    const availableAcomps = (CATALOG.accompaniments || []).filter(a => typeof a === 'string' || a.active !== false);
+
+    h += `
+      <div class="combo-cups-builder">
+        <div class="combo-cups-header">
+          <div class="combo-badge-pill">🔥 Combo Personalizado</div>
+          <h4 style="margin:8px 0 2px">Monte os ${st.comboCups.length} Copos do seu Combo</h4>
+          <p class="mut" style="font-size:12px;margin:0 0 10px 0">Escolha o sabor/mousse, fruta e acompanhamento para cada copo:</p>
+        </div>
+
+        ${st.comboCups.map((cup, cupIdx) => `
+          <div class="combo-cup-card" data-cup-index="${cupIdx}">
+            <div class="combo-cup-card-title">
+              <span class="cup-num-pill">${cupIdx + 1}º Copo</span>
+              <b class="combo-cup-title-text">${esc(cup.flavor || 'Copo ' + (cupIdx + 1))}</b>
+            </div>
+
+            <div class="combo-cup-field">
+              <label class="combo-field-label">🍧 Sabor / Mousse do Copo:</label>
+              <select class="combo-dropdown" onchange="updateComboCupSelection(${cupIdx}, 'flavor', this.value)">
+                ${availableFlavors.map(fl => `
+                  <option value="${esc(fl.name)}" ${fl.name === cup.flavor ? 'selected' : ''}>
+                    ${esc(fl.name)}
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+
+            <div class="combo-cup-field">
+              <label class="combo-field-label">🍓 Fruta do Copo:</label>
+              <select class="combo-dropdown" onchange="updateComboCupSelection(${cupIdx}, 'fruit', this.value)">
+                <option value="" ${!cup.fruit ? 'selected' : ''}>Nenhuma fruta neste copo</option>
+                ${availableFruits.map(fr => {
+                  const frName = typeof fr === 'string' ? fr : fr.name;
+                  return `<option value="${esc(frName)}" ${cup.fruit === frName ? 'selected' : ''}>${esc(frName)}</option>`;
+                }).join('')}
+              </select>
+            </div>
+
+            <div class="combo-cup-field">
+              <label class="combo-field-label">🥜 Acompanhamento do Copo:</label>
+              <select class="combo-dropdown" onchange="updateComboCupSelection(${cupIdx}, 'acomp', this.value)">
+                <option value="" ${!cup.acomp ? 'selected' : ''}>Nenhum acompanhamento neste copo</option>
+                ${availableAcomps.map(ac => {
+                  const acName = typeof ac === 'string' ? ac : ac.name;
+                  return `<option value="${esc(acName)}" ${cup.acomp === acName ? 'selected' : ''}>${esc(acName)}</option>`;
+                }).join('')}
+              </select>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  // Acompanhamentos inclusos normais (apenas para produtos que não são combos)
+  if (!st.isCombo && (prod.isCustomizable || isMonteSeuAcai || hasPanelAccompaniments)) {
     const acompPct = Math.min(100, Math.round((st.accompaniments.length / (maxAcomp || 1)) * 100));
     const isComplete = st.accompaniments.length >= maxAcomp;
     h += `
@@ -911,6 +997,18 @@ function renderItemModal() {
 
   sheet.innerHTML = h;
 }
+
+window.updateComboCupSelection = function(cupIdx, field, value) {
+  if (!CURRENT_ITEM_STATE || !Array.isArray(CURRENT_ITEM_STATE.comboCups)) return;
+  if (!CURRENT_ITEM_STATE.comboCups[cupIdx]) return;
+  CURRENT_ITEM_STATE.comboCups[cupIdx][field] = value;
+
+  // Atualiza título do copo se mudou de sabor
+  if (field === 'flavor') {
+    const titleEl = document.querySelector(`.combo-cup-card[data-cup-index="${cupIdx}"] .combo-cup-title-text`);
+    if (titleEl) titleEl.textContent = value || `Copo ${cupIdx + 1}`;
+  }
+};
 
 window.selectSize = function(idx) {
   if (!CURRENT_ITEM_STATE) return;
@@ -1094,6 +1192,20 @@ window.addItemToCart = function() {
     ? prod.name
     : `${prod.name} ${sizeLabel}`;
 
+  // Formatação dos acompanhamentos (se for Combo, gera a lista detalhada de cada copo montado)
+  let finalAccompaniments = [...st.accompaniments];
+  if (st.isCombo && Array.isArray(st.comboCups) && st.comboCups.length > 0) {
+    finalAccompaniments = st.comboCups.map((cup, i) => {
+      const details = [];
+      if (cup.fruit) details.push(`Fruta: ${cup.fruit}`);
+      if (cup.acomp) details.push(`Acomp: ${cup.acomp}`);
+      if (details.length > 0) {
+        return `${i + 1}º Copo: ${cup.flavor || 'Açaí'} (${details.join(', ')})`;
+      }
+      return `${i + 1}º Copo: ${cup.flavor || 'Açaí'}`;
+    });
+  }
+
   // REGRA 2: Cria um novo item no carrinho com ID ÚNICO e combinação exata escolhida
   const cartItemId = 'copo_' + Date.now() + '_' + Math.random().toString(36).substr(2, 7);
 
@@ -1107,7 +1219,9 @@ window.addItemToCart = function() {
     unitPrice: unitPrice,
     basePrice: basePrice,
     extrasTotal: extrasTotal,
-    accompaniments: [...st.accompaniments],
+    isCombo: !!st.isCombo,
+    comboSelections: st.comboCups ? [...st.comboCups] : [],
+    accompaniments: finalAccompaniments,
     extras: [...extrasNames],
     fruits: [...st.fruits],
     note: finalNote,
@@ -1198,7 +1312,7 @@ function renderCartModal() {
 
   let h = `
     <button class="x" onclick="closeSheet()">×</button>
-    <button class="btn o" onclick="closeSheet()" style="position:absolute;top:14px;left:14px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">
+    <button class="btn o" onclick="closeSheet()" style="position:absolute;top:14px;left:14px;width:auto !important;max-width:calc(100% - 70px) !important;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">
       Voltar para o cardápio
     </button>
     <div style="display:flex;justify-content:space-between;align-items:center;padding-right:32px;margin-bottom:12px;margin-top:28px">
@@ -1245,8 +1359,14 @@ function renderCartModal() {
 
         ${acompText ? `
           <div class="cart-item-detail">
-            <span class="detail-badge acomp">Acompanhamentos</span>
-            <span class="detail-content">${esc(acompText)}</span>
+            <span class="detail-badge acomp">${(it.isCombo || it.accompaniments.some(a => String(a).includes('Copo:'))) ? 'Copos do Combo' : 'Acompanhamentos'}</span>
+            ${(it.isCombo || it.accompaniments.some(a => String(a).includes('Copo:'))) ? `
+              <div class="combo-cups-list">
+                ${it.accompaniments.map(acc => `<div class="combo-cup-item-row">• ${esc(acc)}</div>`).join('')}
+              </div>
+            ` : `
+              <span class="detail-content">${esc(acompText)}</span>
+            `}
           </div>
         ` : ''}
 
@@ -1388,7 +1508,7 @@ function renderCheckoutModal() {
 
   let h = `
     <button class="x" onclick="closeSheet()">×</button>
-    <button class="btn o" onclick="closeSheet()" style="position:absolute;top:14px;left:14px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">
+    <button class="btn o" onclick="closeSheet()" style="position:absolute;top:14px;left:14px;width:auto !important;max-width:calc(100% - 70px) !important;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">
       Voltar para o cardápio
     </button>
     <h3 style="margin-top:28px">Finalizar Pedido</h3>
@@ -1850,7 +1970,14 @@ function renderOrderSuccess(order) {
 
   const itemsSummary = (order.items || []).map(it => {
     let line = `*${it.quantity}x* ${it.name}`;
-    if (it.accompaniments?.length) line += `\n   - Acomp: ${it.accompaniments.join(', ')}`;
+    if (it.accompaniments?.length) {
+      const isComboAcc = it.accompaniments.some(a => String(a).includes('Copo:'));
+      if (isComboAcc) {
+        line += `\n   ${it.accompaniments.map(a => `• ${a}`).join('\n   ')}`;
+      } else {
+        line += `\n   - Acomp: ${it.accompaniments.join(', ')}`;
+      }
+    }
     if (it.extras?.length) line += `\n   - Extras: ${it.extras.join(', ')}`;
     if (it.fruits?.length) line += `\n   - Frutas: ${it.fruits.join(', ')}`;
     if (it.note) line += `\n   - Obs: ${it.note}`;
@@ -1889,7 +2016,7 @@ ${orderTrackingUrl}
 
   let h = `
     <button class="x" onclick="closeSheet()">×</button>
-    <button class="btn o" onclick="closeSheet()" style="position:absolute;top:14px;left:14px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">
+    <button class="btn o" onclick="closeSheet()" style="position:absolute;top:14px;left:14px;width:auto !important;max-width:calc(100% - 70px) !important;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">
       Voltar para o cardápio
     </button>
     <div style="text-align:center;padding:10px 0;margin-top:20px">

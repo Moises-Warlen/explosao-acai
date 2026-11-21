@@ -202,7 +202,18 @@ export class CatalogService {
       const recipe = (product.recipes || []).find(r => r.size === pr.size);
       let calculatedCost = pr.costPrice || 0;
 
-      if (comboCalculatedCost > 0) {
+      if (isCombo && Array.isArray(product.comboProductIds) && product.comboProductIds.length > 0) {
+        let sizeCost = 0;
+        product.comboProductIds.forEach(pId => {
+          const subProd = allProducts.find(x => x.id === pId);
+          if (subProd && subProd.prices && subProd.prices.length > 0) {
+            const pSize = subProd.prices.find(s => s.size === pr.size) || subProd.prices[0];
+            sizeCost += (Number(pSize.costPrice) || 0);
+          }
+        });
+        if (sizeCost > 0) calculatedCost = sizeCost;
+        else if (comboCalculatedCost > 0) calculatedCost = comboCalculatedCost;
+      } else if (comboCalculatedCost > 0) {
         calculatedCost = comboCalculatedCost;
       } else if (recipe && Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0) {
         calculatedCost = recipe.ingredients.reduce((acc, ing) => acc + (Number(ing.totalCost) || (ing.quantity * ing.unitCost)), 0);
@@ -332,6 +343,7 @@ export class CatalogService {
       isNewLaunch: !!productData.isNewLaunch,
       isPromo: !!productData.isPromo,
       comboProductIds: Array.isArray(productData.comboProductIds) ? productData.comboProductIds : [],
+      isCustomizableCombo: productData.isCustomizableCombo !== undefined ? !!productData.isCustomizableCombo : true,
       allowedAccompanimentIds: Array.isArray(productData.allowedAccompanimentIds) ? productData.allowedAccompanimentIds : undefined,
       allowExtras: productData.allowExtras !== undefined ? !!productData.allowExtras : true,
       allowedExtraIds: Array.isArray(productData.allowedExtraIds) ? productData.allowedExtraIds : undefined,

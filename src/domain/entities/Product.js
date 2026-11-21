@@ -19,6 +19,7 @@ export class Product {
     isNewLaunch = false,
     isPromo = false,
     comboProductIds = [],
+    isCustomizableCombo = true,
     allowedAccompanimentIds,
     allowExtras = true,
     allowedExtraIds,
@@ -38,6 +39,7 @@ export class Product {
     this.isNewLaunch = isNewLaunch;
     this.isPromo = isPromo;
     this.comboProductIds = comboProductIds;
+    this.isCustomizableCombo = isCustomizableCombo !== false;
     this.allowedAccompanimentIds = allowedAccompanimentIds;
     this.allowExtras = allowExtras !== false;
     this.allowedExtraIds = allowedExtraIds;

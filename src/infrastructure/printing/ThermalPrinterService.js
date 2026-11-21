@@ -97,7 +97,12 @@ export class ThermalPrinterService {
 
       // Detalhes / Acompanhamentos
       if (item.accompaniments && item.accompaniments.length > 0) {
-        lines.push(`  * Acomp: ${item.accompaniments.join(', ')}`);
+        const isComboAcc = item.accompaniments.some(a => String(a).includes('Copo:'));
+        if (isComboAcc) {
+          item.accompaniments.forEach(c => lines.push(`  * ${c}`));
+        } else {
+          lines.push(`  * Acomp: ${item.accompaniments.join(', ')}`);
+        }
       }
 
       // Extras e Adicionais
