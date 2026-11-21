@@ -182,10 +182,31 @@ app.use('/api', generalApiLimiter);
 
 // Arquivos estáticos (Frontend Cardápio + Painel Admin + Portal do Entregador)
 const publicDir = path.resolve(__dirname, '../public');
-app.use(express.static(publicDir, { extensions: ['html'] }));
+// Cache-Control: o painel precisa sempre receber a versão mais recente dos arquivos (evita JS antigo preso no navegador/CDN)
+app.use(express.static(publicDir, {
+  extensions: ['html'],
+  etag: true,
+  setHeaders: (res, filePath) => {
+    if (/\.(html|js|css)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+    }
+  }
+}));
+
+// Respostas da API nunca devem ser armazenadas em cache (pedidos em tempo real)
+app.use('/api', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store');
+  next();
+});
 
 // Rotas da API
 app.use('/api', apiRoutes);
+
+// Páginas servidas por rota direta também sem cache
+app.use(['/admin', '/motoboy', '/m'], (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+  next();
+});
 
 // Rotas diretas e amigáveis para SPA e entregador
 app.get('/admin', (req, res) => {

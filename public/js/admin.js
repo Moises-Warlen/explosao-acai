@@ -306,24 +306,30 @@ async function initDashboard() {
     window._adminOrdersPollInterval = setInterval(async () => {
       if (!ADMIN_TOKEN || !hasUserPermission(['orders.view', 'orders'])) return;
       try {
-        const res = await fetch(`${API_URL}/orders`, { headers: authHeaders() });
+        const res = await fetch(`${API_URL}/orders`, { headers: authHeaders(), cache: 'no-store' });
+        if (res.status === 401) {
+          handleUnauthorized();
+          return;
+        }
         if (res.ok) {
           const data = await res.json();
           if (data.ok && Array.isArray(data.orders)) {
-            const oldLen = ORDERS.length;
-            const newLen = data.orders.length;
-            const hasDiff = oldLen !== newLen || data.orders.some((no, i) => {
-              const oo = ORDERS[i];
-              return !oo || oo.id !== no.id || oo.status !== no.status || oo.payment?.status !== no.payment?.status;
+            const oldById = new Map(ORDERS.map(o => [o.id, o]));
+            const hasDiff = oldById.size !== data.orders.length || data.orders.some(no => {
+              const oo = oldById.get(no.id);
+              return !oo || oo.status !== no.status || oo.payment?.status !== no.payment?.status ||
+                     oo.archivedToHistory !== no.archivedToHistory || oo.motoboyName !== no.motoboyName;
             });
             if (hasDiff) {
               ORDERS = data.orders;
-              renderOrders();
-              updateHeaderKPIs();
+              renderKanban();
+              updateOrdersBadge();
             }
           }
         }
-      } catch (err) {}
+      } catch (err) {
+        console.error('Falha na sincronização periódica de pedidos:', err);
+      }
     }, 4000);
   }
 }
@@ -464,7 +470,9 @@ function initWebSocket() {
           adminToast(`${isReclamacao ? '🚨 Nova reclamação' : '✨ Nova sugestão'} registrada na Ouvidoria!`, isReclamacao ? 'danger' : 'info');
           if (typeof loadBotFeedbacks === 'function') loadBotFeedbacks();
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error('Erro ao processar evento do WebSocket:', e);
+      }
     };
     WS.onclose = () => setTimeout(initWebSocket, 4000);
   } catch (err) {
@@ -770,7 +778,7 @@ window.saveNewAdminPassword = async function(e) {
 // ==================== PEDIDOS & KANBAN (PRODUÇÃO & LOGÍSTICA) ====================
 async function loadOrders() {
   try {
-    const res = await fetch(`${API_URL}/orders`, { headers: authHeaders() });
+    const res = await fetch(`${API_URL}/orders`, { headers: authHeaders(), cache: 'no-store' });
     if (res.status === 401) {
       handleUnauthorized();
       return;
@@ -781,7 +789,9 @@ async function loadOrders() {
       renderKanban();
       updateOrdersBadge();
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error('Erro ao carregar pedidos:', e);
+  }
 }
 
 function updateOrdersBadge() {
