@@ -437,6 +437,16 @@ function renderNavigation() {
         pill.classList.add('active');
       });
     });
+
+    if (!nav._wheelBound) {
+      nav._wheelBound = true;
+      nav.addEventListener('wheel', (e) => {
+        if (e.deltaY !== 0 && nav.scrollWidth > nav.clientWidth) {
+          e.preventDefault();
+          nav.scrollLeft += e.deltaY;
+        }
+      }, { passive: false });
+    }
   }
 
   if (drawerList) {
