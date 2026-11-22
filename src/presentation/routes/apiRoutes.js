@@ -78,8 +78,8 @@ router.delete('/catalog/fruits/:id', requirePermission(['catalog.fruits.manage',
 router.post('/upload', requirePermission(['catalog.products.manage', 'catalog']), upload.single('image'), (req, res) => catalogController.uploadPhoto(req, res));
 
 // ================= RELATÓRIOS GERENCIAIS =================
-router.get('/reports/sales', requirePermission(['reports.view', 'reports']), (req, res) => reportController.getSalesReport(req, res));
-router.get('/reports/deliveries', requirePermission(['motoboys.reports', 'reports.view', 'reports']), (req, res) => reportController.getDeliveryReport(req, res));
+router.get('/reports/sales', requirePermission(['reports.view']), (req, res) => reportController.getSalesReport(req, res));
+router.get('/reports/deliveries', requirePermission(['reports.deliveries', 'motoboys.reports']), (req, res) => reportController.getDeliveryReport(req, res));
 
 // ================= CUPONS DE DESCONTO =================
 router.post('/coupons/validate', (req, res) => couponController.validate(req, res));
@@ -125,6 +125,7 @@ router.post('/bot/campaign/send', requirePermission(['bot.campaigns', 'bot']), (
 router.put('/bot/campaign/settings', requirePermission(['bot.campaigns', 'bot']), (req, res) => botController.saveCampaignSettings(req, res));
 router.get('/bot/feedbacks', requirePermission(['bot.feedbacks', 'bot']), (req, res) => botController.getFeedbacks(req, res));
 router.put('/bot/feedbacks/:id/resolve', requirePermission(['bot.feedbacks', 'bot']), (req, res) => botController.resolveFeedback(req, res));
+router.post('/bot/feedbacks/delete-resolved', requirePermission(['bot.feedbacks', 'bot']), (req, res) => botController.deleteResolvedFeedbacks(req, res));
 router.get('/bot/knowledge', requirePermission(['bot.knowledge', 'bot']), (req, res) => botController.getKnowledge(req, res));
 router.post('/bot/knowledge', requirePermission(['bot.knowledge', 'bot']), (req, res) => botController.addKnowledge(req, res));
 router.delete('/bot/knowledge/:id', requirePermission(['bot.knowledge', 'bot']), (req, res) => botController.deleteKnowledge(req, res));

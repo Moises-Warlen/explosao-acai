@@ -1429,7 +1429,8 @@
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
                 <div>
                   <label style="font-size:11px;color:var(--mut);display:block;margin-bottom:4px">Produto em Destaque:</label>
-                  <input type="text" id="bot-campaign-product" placeholder="Ex: Copo Especial 500ml" style="width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid var(--ln);color:#fff;font-size:12px">
+                  <input type="text" id="bot-campaign-product" list="bot-campaign-products-datalist" placeholder="Ex: Copo Especial 500ml ou escolha um combo..." style="width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid var(--ln);color:#fff;font-size:12px" autocomplete="off">
+                  <datalist id="bot-campaign-products-datalist"></datalist>
                 </div>
                 <div>
                   <label style="font-size:11px;color:var(--mut);display:block;margin-bottom:4px">Cupom / Desconto:</label>
@@ -1474,9 +1475,17 @@
                 Feedbacks enviados diretamente pelos clientes via WhatsApp (Opção 6 do menu). Dados protegidos pela LGPD.
               </p>
             </div>
-            <button type="button" class="btn-sm btn-secondary" onclick="loadBotFeedbacks(true)" style="padding:6px 12px;font-size:12px">
-              🔄 Atualizar Ouvidoria
-            </button>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <button type="button" id="btn-toggle-select-resolved" class="btn-sm btn-secondary" style="display:none;padding:6px 12px;font-size:12px" onclick="toggleSelectAllResolvedFeedbacks()">
+                ☑️ Selecionar Todos Resolvidos
+              </button>
+              <button type="button" id="btn-clean-resolved-feedbacks" class="btn-sm" style="display:none;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);color:#ef4444;font-weight:700;padding:6px 12px;font-size:12px;border-radius:8px;cursor:pointer" onclick="deleteSelectedResolvedFeedbacks()">
+                🗑️ Limpar Resolvidos (<span id="feedbacks-selected-count">0</span>)
+              </button>
+              <button type="button" class="btn-sm btn-secondary" onclick="loadBotFeedbacks(true)" style="padding:6px 12px;font-size:12px">
+                🔄 Atualizar Ouvidoria
+              </button>
+            </div>
           </div>
 
           <div id="bot-feedbacks-container" style="display:flex;flex-direction:column;gap:10px;max-height:360px;overflow-y:auto;padding-right:4px">
@@ -2344,6 +2353,7 @@
               </div>
               <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:6px">
                 <label style="display:flex;align-items:flex-start;gap:7px;font-size:11.5px;cursor:pointer;color:#e2e8f0"><input type="checkbox" name="user-perm" data-group="reports" value="reports.view" style="margin-top:2px;width:auto"> <span>Visualizar Relatórios & Vendas</span></label>
+                <label style="display:flex;align-items:flex-start;gap:7px;font-size:11.5px;cursor:pointer;color:#e2e8f0"><input type="checkbox" name="user-perm" data-group="reports" value="reports.deliveries" style="margin-top:2px;width:auto"> <span>Relatório de Entregas & Motoboys</span></label>
                 <label style="display:flex;align-items:flex-start;gap:7px;font-size:11.5px;cursor:pointer;color:#e2e8f0"><input type="checkbox" name="user-perm" data-group="reports" value="reports.costs" style="margin-top:2px;width:auto"> <span>Ver/editar Ficha Técnica de custos</span></label>
                 <label style="display:flex;align-items:flex-start;gap:7px;font-size:11.5px;cursor:pointer;color:#e2e8f0"><input type="checkbox" name="user-perm" data-group="reports" value="reports.export_pdf" style="margin-top:2px;width:auto"> <span>Exportar relatórios em PDF</span></label>
               </div>

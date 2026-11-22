@@ -1111,26 +1111,45 @@ Como sou um assistente virtual, às vezes preciso de uma ajudinha. Tente escreve
 
   /**
    * Gera texto promocional semanal persuasivo com IA para disparo aos clientes (sem excesso de emojis)
+   * Suporta tanto produtos tradicionais quanto combos completos (com composição real, descrição e preço)
    */
-  async generateWeeklyPromotionText({ productName = '', discount = '', couponCode = '' } = {}) {
+  async generateWeeklyPromotionText({ productName = '', discount = '', couponCode = '', productDetails = null } = {}) {
     const ctx = this.buildLiveContext();
     const publicUrl = ctx.publicUrl;
 
+    const isCombo = Boolean(productDetails?.isCombo);
+    const displayName = productDetails?.name || productName;
+    const composition = productDetails?.composition || '';
+    const description = productDetails?.description || '';
+    const priceStr = productDetails?.priceStr || '';
+
     if (this.client && this.apiKey) {
       try {
+        let offerDetails = `- ${isCombo ? 'Combo em Destaque' : 'Produto em Destaque'}: ${displayName || 'Nossos Combos e Copos Especiais'}`;
+        if (isCombo && composition) {
+          offerDetails += `\n- Composição real do Combo: ${composition}`;
+        }
+        if (description) {
+          offerDetails += `\n- Detalhes/Descrição: ${description}`;
+        }
+        if (priceStr) {
+          offerDetails += `\n- Preço: ${priceStr}`;
+        }
+        offerDetails += `\n- Cupom / Desconto: ${couponCode ? `Cupom ${couponCode}` : (discount || 'Desconto exclusivo')}`;
+        offerDetails += `\n- Link da loja: ${publicUrl}`;
+
         const prompt = `
 Crie uma mensagem promocional curta, direta e atraente para envio no WhatsApp da "Explosão Açaí".
 Detalhes da oferta:
-- Produto em Destaque: ${productName || 'Nossos Combos e Copos Especiais'}
-- Cupom / Desconto: ${couponCode ? `Cupom ${couponCode}` : (discount || 'Desconto exclusivo')}
-- Link da loja: ${publicUrl}
+${offerDetails}
 
 Regras:
 1. Comece com uma saudação educada e simpática.
-2. Seja elegante e direto. Não use excesso de emojis (no máximo 1 ou nenhum).
-3. Mantenha no máximo 4 a 5 linhas.
-4. Inclua chamada para ação com o link.
-5. Termine com nota legal: "(Caso não queira mais receber nossas ofertas, digite 'sair')".
+2. ${isCombo ? 'Destaque que é um Combo especial exclusivo da casa, mencionando a sua composição deliciosa.' : 'Destaque o produto de forma apetitosa.'}
+3. Seja elegante e direto. Não use excesso de emojis (no máximo 1 ou nenhum).
+4. Mantenha no máximo 4 a 5 linhas.
+5. Inclua chamada para ação com o link da loja.
+6. Termine com nota legal: "(Caso não queira mais receber nossas ofertas, digite 'sair')".
         `.trim();
 
         const response = await this.client.models.generateContent({
@@ -1143,8 +1162,10 @@ Regras:
       } catch (e) {}
     }
 
-    // Fallback padrão se Gemini não estiver configurado
-    const itemStr = productName ? `o delicioso *${productName}*` : 'nossos melhores copos e combos';
+    // Fallback padrão se Gemini não estiver configurado ou offline
+    const itemStr = displayName
+      ? (isCombo ? `o combo *${displayName}*${composition ? ` (${composition})` : ''}` : `o delicioso *${displayName}*`)
+      : 'nossos melhores copos e combos';
     const couponStr = couponCode ? `Use o cupom *${couponCode}* e aproveite!` : 'Aproveite nossa promoção especial!';
 
     return `Olá! Passando para compartilhar uma oferta especial da *Explosão Açaí*!\n\nQue tal pedir hoje ${itemStr}? ${couponStr}\n\nPeça agora com entrega rápida:\n${publicUrl}\n\n_(Caso não queira mais receber novidades da loja, basta responder 'sair')_`;

@@ -1,6 +1,7 @@
 import { whatsAppBotService } from '../../infrastructure/notifications/WhatsAppBotService.js';
 import { geminiAssistantService } from '../../application/services/GeminiAssistantService.js';
 import { db } from '../../infrastructure/database/JsonDatabase.js';
+import { securityAuditService, SecurityEventType, SecuritySeverity } from '../../infrastructure/security/SecurityAuditService.js';
 
 class BotController {
   getStatus(req, res) {
@@ -123,11 +124,12 @@ class BotController {
 
   async previewCampaign(req, res) {
     try {
-      const { productName, discount, couponCode } = req.body || {};
+      const { productName, discount, couponCode, productDetails } = req.body || {};
       const message = await geminiAssistantService.generateWeeklyPromotionText({
         productName,
         discount,
-        couponCode
+        couponCode,
+        productDetails
       });
       return res.json({ ok: true, message });
     } catch (err) {
@@ -181,10 +183,60 @@ class BotController {
       if (item) {
         item.resolved = true;
         item.resolvedAt = new Date().toISOString();
-        db.saveLocal();
+        db.save();
         return res.json({ ok: true, message: 'Ocorrência marcada como resolvida!' });
       }
       return res.status(404).json({ ok: false, error: 'Ocorrência não encontrada.' });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  }
+
+  deleteResolvedFeedbacks(req, res) {
+    try {
+      const { ids } = req.body || {};
+      const data = db.get();
+      if (!Array.isArray(data.feedbacks)) data.feedbacks = [];
+
+      const targetIds = Array.isArray(ids) && ids.length > 0 ? ids.map(String) : null;
+      let removedCount = 0;
+
+      data.feedbacks = data.feedbacks.filter(f => {
+        // REGRA OBRIGATÓRIA: Registros pendentes (não resolvidos) NUNCA podem ser excluídos!
+        if (!f.resolved) return true;
+
+        // Se uma lista de IDs foi enviada, exclui apenas os marcados
+        if (targetIds) {
+          if (targetIds.includes(String(f.id))) {
+            removedCount++;
+            return false; // remove
+          }
+          return true; // preserva os demais
+        }
+
+        // Se nenhum ID específico foi enviado, exclui todos os resolvidos
+        removedCount++;
+        return false;
+      });
+
+      db.save();
+
+      try {
+        securityAuditService.logEvent({
+          type: SecurityEventType.CONFIG_CHANGE,
+          severity: SecuritySeverity.LOW,
+          userId: req.user?.userId || req.user?.id || 'admin',
+          ip: req.ip,
+          details: `Ouvidoria: ${removedCount} registros resolvidos foram excluídos com sucesso.`
+        });
+      } catch (e) {}
+
+      return res.json({
+        ok: true,
+        message: `${removedCount} registro(s) resolvido(s) excluído(s) com sucesso!`,
+        removedCount,
+        remainingCount: data.feedbacks.length
+      });
     } catch (err) {
       return res.status(500).json({ ok: false, error: err.message });
     }

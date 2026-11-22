@@ -2811,6 +2811,18 @@ window.exportReportToPdf = function() {
 
 // ==================== SUB-ABA: RELATÓRIO DE ENTREGAS & MOTOBOYS ====================
 window.switchReportSection = function(section) {
+  const canViewDeliveries = typeof hasUserPermission === 'function' ? hasUserPermission(['reports.deliveries', 'motoboys.reports']) : true;
+  const canViewSales = typeof hasUserPermission === 'function' ? hasUserPermission(['reports.view']) : true;
+
+  if (section === 'deliveries' && !canViewDeliveries) {
+    adminToast('Acesso negado: você não possui permissão para acessar o Relatório de Entregas & Motoboys.', 'warning');
+    return;
+  }
+  if (section === 'sales' && !canViewSales) {
+    adminToast('Acesso negado: você não possui permissão para acessar o Relatório de Vendas.', 'warning');
+    return;
+  }
+
   CURRENT_REPORT_SECTION = section;
   const btnSales = $('#btn-rep-type-sales');
   const btnDel = $('#btn-rep-type-deliveries');
@@ -3238,6 +3250,7 @@ async function loadProducts() {
       PRODUCTS = data.products;
       renderProductsTable();
       renderBestSellersManager();
+      if (typeof updateCampaignProductsDatalist === 'function') updateCampaignProductsDatalist();
     }
   } catch (e) {}
 }
@@ -7204,6 +7217,7 @@ window.loadWhatsAppBotStatus = async function(isManualRefresh = false) {
       updateBotUI(data);
       loadBotFeedbacks();
       loadBotKnowledge();
+      if (typeof updateCampaignProductsDatalist === 'function') updateCampaignProductsDatalist();
       if (isManualRefresh) {
         adminToast('Status do bot atualizado com sucesso!', 'info');
       }
@@ -7485,6 +7499,43 @@ window.sendTestWhatsAppMessage = async function() {
   }
 };
 
+window.updateCampaignProductsDatalist = function() {
+  const datalist = $('#bot-campaign-products-datalist');
+  if (!datalist) return;
+
+  const prods = Array.isArray(PRODUCTS) ? PRODUCTS : [];
+  if (prods.length === 0) {
+    datalist.innerHTML = '';
+    return;
+  }
+
+  // Identifica combos (por categorySlug === 'combos', categoryId === 'cat_combos' ou comboProductIds)
+  const combos = prods.filter(p => p.active !== false && (p.categorySlug === 'combos' || p.categoryId === 'cat_combos' || (Array.isArray(p.comboProductIds) && p.comboProductIds.length > 0)));
+  const regular = prods.filter(p => p.active !== false && !combos.some(c => c.id === p.id));
+
+  let html = '';
+  // Combos em destaque no início
+  if (combos.length > 0) {
+    combos.forEach(c => {
+      const p500 = (c.prices || []).find(pr => pr.size === 500) || (c.prices || [])[0];
+      const pVal = p500 ? (p500.promoPrice != null ? p500.promoPrice : p500.price) : null;
+      const priceText = pVal != null ? ` · R$ ${Number(pVal).toFixed(2).replace('.', ',')}` : '';
+      html += `<option value="${escapeHtml(c.name)}">🎁 Combo: ${escapeHtml(c.name)}${priceText}</option>`;
+    });
+  }
+  // Produtos individuais do cardápio
+  if (regular.length > 0) {
+    regular.forEach(p => {
+      const p500 = (p.prices || []).find(pr => pr.size === 500) || (p.prices || [])[0];
+      const pVal = p500 ? (p500.promoPrice != null ? p500.promoPrice : p500.price) : null;
+      const priceText = pVal != null ? ` · R$ ${Number(pVal).toFixed(2).replace('.', ',')}` : '';
+      html += `<option value="${escapeHtml(p.name)}">🍧 Copo/Produto: ${escapeHtml(p.name)}${priceText}</option>`;
+    });
+  }
+
+  datalist.innerHTML = html;
+};
+
 window.generateAICampaignText = async function() {
   const prodInput = $('#bot-campaign-product');
   const couponInput = $('#bot-campaign-coupon');
@@ -7493,12 +7544,59 @@ window.generateAICampaignText = async function() {
   const productName = prodInput ? prodInput.value.trim() : '';
   const couponCode = couponInput ? couponInput.value.trim() : '';
 
+  // Localiza o produto ou combo real no cadastro para fornecer informações reais à IA
+  let productDetails = null;
+  if (productName && Array.isArray(PRODUCTS) && PRODUCTS.length > 0) {
+    const cleanSearch = productName.toLowerCase();
+    const found = PRODUCTS.find(p =>
+      p.name.toLowerCase() === cleanSearch ||
+      p.id.toLowerCase() === cleanSearch ||
+      cleanSearch.includes(p.name.toLowerCase()) ||
+      p.name.toLowerCase().includes(cleanSearch)
+    );
+
+    if (found) {
+      const isCombo = found.categorySlug === 'combos' || found.categoryId === 'cat_combos' || (Array.isArray(found.comboProductIds) && found.comboProductIds.length > 0);
+      
+      let composition = '';
+      if (isCombo && Array.isArray(found.comboProductIds) && found.comboProductIds.length > 0) {
+        const itemNames = found.comboProductIds.map(subId => {
+          const sub = PRODUCTS.find(p => p.id === subId);
+          return sub ? sub.name : null;
+        }).filter(Boolean);
+        if (itemNames.length > 0) {
+          composition = itemNames.join(' + ');
+        }
+      }
+      if (!composition && found.description) {
+        composition = found.description;
+      }
+
+      let priceStr = '';
+      if (Array.isArray(found.prices) && found.prices.length > 0) {
+        priceStr = found.prices.map(pr => {
+          const val = pr.promoPrice != null ? pr.promoPrice : pr.price;
+          return `${pr.size ? pr.size + 'ml: ' : ''}R$ ${Number(val).toFixed(2).replace('.', ',')}`;
+        }).join(' | ');
+      }
+
+      productDetails = {
+        isCombo,
+        name: found.name,
+        description: found.description || '',
+        details: found.details || '',
+        composition,
+        priceStr
+      };
+    }
+  }
+
   try {
     adminToast('Gerando texto promocional com Inteligência Artificial...', 'info');
     const res = await fetch(`${API_URL}/bot/campaign/preview`, {
       method: 'POST',
       headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ productName, couponCode })
+      body: JSON.stringify({ productName, couponCode, productDetails })
     });
     const data = await res.json();
     if (data.ok && data.message) {
@@ -7628,6 +7726,7 @@ window.loadBotFeedbacks = async function(isManualToast = false) {
     if (data.ok && Array.isArray(data.feedbacks)) {
       if (data.feedbacks.length === 0) {
         container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--mut);font-size:13px">Nenhum feedback registrado no momento.</div>';
+        if (typeof updateResolvedFeedbacksSelectionUI === 'function') updateResolvedFeedbacksSelectionUI();
         return;
       }
       container.innerHTML = data.feedbacks.map(f => {
@@ -7641,10 +7740,16 @@ window.loadBotFeedbacks = async function(isManualToast = false) {
           ? '<span style="color:var(--green);font-size:11px;font-weight:700">✓ Resolvido</span>'
           : `<button class="btn-sm btn-secondary" style="padding:3px 8px;font-size:11px" onclick="resolveBotFeedback('${f.id}')">Resolver</button>`;
 
+        // Apenas registros com status RESOLVIDO possuem caixa de seleção para exclusão (pendentes nunca podem ser excluídos)
+        const selectCheckbox = f.resolved
+          ? `<input type="checkbox" class="feedback-resolved-cb" value="${escapeHtml(f.id)}" onchange="updateResolvedFeedbacksSelectionUI()" style="cursor:pointer;accent-color:#ef4444;width:15px;height:15px;margin-right:2px" title="Selecionar este registro resolvido para exclusão">`
+          : '';
+
         return `
           <div style="background:rgba(255,255,255,0.03);border:1px solid ${isComplaint ? 'rgba(239,68,68,0.3)' : 'var(--ln)'};border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
               <div style="display:flex;align-items:center;gap:8px">
+                ${selectCheckbox}
                 ${typeBadge}
                 <b style="color:#fff;font-size:13px">${escapeHtml(f.customerName || 'Cliente')}</b>
                 <span style="color:var(--mut);font-size:11px">${escapeHtml(f.phone || '')}</span>
@@ -7660,10 +7765,85 @@ window.loadBotFeedbacks = async function(isManualToast = false) {
           </div>
         `;
       }).join('');
+
+      if (typeof updateResolvedFeedbacksSelectionUI === 'function') updateResolvedFeedbacksSelectionUI();
       if (isManualToast) adminToast('Ouvidoria atualizada com sucesso!', 'info');
     }
   } catch (err) {
     console.warn('Erro ao carregar feedbacks:', err);
+  }
+};
+
+window.updateResolvedFeedbacksSelectionUI = function() {
+  const allResolvedCbs = Array.from($$('.feedback-resolved-cb'));
+  const selectedCbs = allResolvedCbs.filter(cb => cb.checked);
+  const btnClean = $('#btn-clean-resolved-feedbacks');
+  const btnToggle = $('#btn-toggle-select-resolved');
+  const countBadge = $('#feedbacks-selected-count');
+
+  if (allResolvedCbs.length === 0) {
+    if (btnClean) btnClean.style.display = 'none';
+    if (btnToggle) btnToggle.style.display = 'none';
+    return;
+  }
+
+  if (btnClean) btnClean.style.display = 'inline-flex';
+  if (btnToggle) btnToggle.style.display = 'inline-flex';
+
+  const count = selectedCbs.length > 0 ? selectedCbs.length : allResolvedCbs.length;
+  if (countBadge) countBadge.textContent = count;
+
+  if (btnClean) {
+    btnClean.title = selectedCbs.length > 0
+      ? `Excluir os ${selectedCbs.length} registros resolvidos selecionados`
+      : `Excluir todos os ${allResolvedCbs.length} registros resolvidos`;
+  }
+  if (btnToggle) {
+    const allChecked = selectedCbs.length === allResolvedCbs.length && allResolvedCbs.length > 0;
+    btnToggle.textContent = allChecked ? '⏹️ Desmarcar Todos' : '☑️ Selecionar Todos Resolvidos';
+  }
+};
+
+window.toggleSelectAllResolvedFeedbacks = function() {
+  const allResolvedCbs = Array.from($$('.feedback-resolved-cb'));
+  if (allResolvedCbs.length === 0) return;
+  const anyUnchecked = allResolvedCbs.some(cb => !cb.checked);
+  allResolvedCbs.forEach(cb => cb.checked = anyUnchecked);
+  updateResolvedFeedbacksSelectionUI();
+};
+
+window.deleteSelectedResolvedFeedbacks = async function() {
+  const allResolvedCbs = Array.from($$('.feedback-resolved-cb'));
+  if (allResolvedCbs.length === 0) {
+    return adminToast('Não há registros resolvidos para limpar.', 'info');
+  }
+
+  const selectedCbs = allResolvedCbs.filter(cb => cb.checked);
+  const isTargeted = selectedCbs.length > 0;
+  const countToDelete = isTargeted ? selectedCbs.length : allResolvedCbs.length;
+  const targetIds = isTargeted ? selectedCbs.map(cb => cb.value) : allResolvedCbs.map(cb => cb.value);
+
+  const confirmMsg = isTargeted
+    ? `Deseja excluir definitivamente os ${countToDelete} registro(s) resolvido(s) selecionado(s) da Ouvidoria?\n\nEsta ação não afeta registros pendentes e é irreversível.`
+    : `Deseja excluir definitivamente TODOS os ${countToDelete} registros resolvidos da Ouvidoria?\n\nEsta ação não afeta registros pendentes e é irreversível.`;
+
+  if (!confirm(confirmMsg)) return;
+
+  try {
+    const res = await fetch(`${API_URL}/bot/feedbacks/delete-resolved`, {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: targetIds })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      adminToast(data.message || `${countToDelete} registro(s) resolvido(s) excluído(s) com sucesso!`, 'success');
+      loadBotFeedbacks();
+    } else {
+      adminToast(data.error || 'Falha ao excluir registros resolvidos.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Erro ao comunicar com o servidor para limpar ouvidoria.', 'danger');
   }
 };
 
@@ -8151,6 +8331,10 @@ function applyUserPermissionsUI(user) {
       storeStatusBtn.style.opacity = '1';
       storeStatusBtn.style.cursor = 'pointer';
     }
+    const btnRepDeliv = $('#btn-rep-type-deliveries');
+    if (btnRepDeliv) btnRepDeliv.style.display = '';
+    const btnRepSales = $('#btn-rep-type-sales');
+    if (btnRepSales) btnRepSales.style.display = '';
     return;
   }
 
@@ -8166,7 +8350,7 @@ function applyUserPermissionsUI(user) {
     'tab-extras': ['catalog.extras.view', 'accompaniments', 'catalog'],
     'nav-tab-fruits': ['catalog.fruits.view', 'accompaniments', 'catalog'],
     'tab-categories': ['catalog.categories.view', 'catalog'],
-    'tab-reports': ['reports.view', 'reports'],
+    'tab-reports': ['reports.view', 'reports.deliveries', 'motoboys.reports', 'reports'],
     'tab-coupons': ['coupons.view', 'coupons'],
     'tab-printers': ['printers.view', 'printers'],
     'tab-store': ['store.view', 'store'],
@@ -8220,7 +8404,25 @@ function applyUserPermissionsUI(user) {
     userCard.style.display = hasUserPermission(['users.view', 'users']) ? '' : 'none';
   }
 
-  // 7. Se a aba atualmente ativa foi ocultada, redireciona para a primeira aba permitida
+  // 7. Sub-abas de Relatórios (Faturamento & Vendas vs Relatório de Entregas & Motoboys)
+  const canViewDeliveries = hasUserPermission(['reports.deliveries', 'motoboys.reports']);
+  const canViewSales = hasUserPermission(['reports.view']);
+  const btnRepDeliveries = $('#btn-rep-type-deliveries');
+  const btnRepSales = $('#btn-rep-type-sales');
+
+  if (btnRepDeliveries) {
+    btnRepDeliveries.style.display = canViewDeliveries ? '' : 'none';
+  }
+  if (btnRepSales) {
+    btnRepSales.style.display = canViewSales ? '' : 'none';
+  }
+
+  // Se o operador tem acesso apenas a entregas e não a vendas, chaveia automaticamente a exibição
+  if (!canViewSales && canViewDeliveries && CURRENT_REPORT_SECTION !== 'deliveries') {
+    switchReportSection('deliveries');
+  }
+
+  // 8. Se a aba atualmente ativa foi ocultada, redireciona para a primeira aba permitida
   const activeTab = $('.nav-tab.active');
   if (!activeTab || activeTab.style.display === 'none') {
     const firstAllowed = Array.from($$('.nav-tab')).find(t => t.style.display !== 'none');
