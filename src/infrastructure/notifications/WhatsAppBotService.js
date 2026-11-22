@@ -42,6 +42,7 @@ class WhatsAppBotService {
 
     this.loadBotSettings();
     this.startScheduleChecker();
+    this.startInactivityChecker();
   }
 
   loadBotSettings() {
@@ -154,7 +155,35 @@ class WhatsAppBotService {
   releaseHumanTakeover(phone) {
     const clean = (phone || '').replace(/\D/g, '');
     this.humanTakeoverPhones.delete(clean);
+    try {
+      geminiAssistantService.releaseHumanSession(clean);
+    } catch (e) {}
     this.broadcastStatus();
+  }
+
+  startInactivityChecker() {
+    if (this._inactivityInterval) return;
+    this._inactivityInterval = setInterval(async () => {
+      try {
+        if (!this.sock || this.status !== 'connected' || !this.aiEnabled) return;
+        const dueMessages = geminiAssistantService.checkInactivityTimers();
+        for (const item of dueMessages) {
+          if (!item.remoteJid || !item.message) continue;
+          try {
+            await this.sendTextMessage(item.remoteJid, item.message);
+            this.stats.messagesSent++;
+          } catch (err) {
+            console.warn(`[WhatsApp Bot] Erro ao enviar lembrete (${item.type}) para ${item.remoteJid}:`, err.message);
+          }
+        }
+      } catch (e) {
+        console.warn('[WhatsApp Bot] Erro no verificador de inatividade:', e.message);
+      }
+    }, 30000);
+
+    if (this._inactivityInterval && typeof this._inactivityInterval.unref === 'function') {
+      this._inactivityInterval.unref();
+    }
   }
 
   broadcastStatus() {
@@ -362,13 +391,19 @@ class WhatsAppBotService {
           }
 
           try {
-            // Processa com a IA do Gemini ou motor de contingência
+            // Processa com o fluxo unificado inteligente
             const aiResponse = await geminiAssistantService.processMessage({
               phone: cleanPhone,
               customerName: pushName,
               text: textMessage,
+              remoteJid,
               wasInHumanTakeover: wasInHuman
             });
+
+            if (aiResponse && aiResponse.resetHumanTakeover) {
+              this.humanTakeoverPhones.delete(cleanPhone);
+              this.broadcastStatus();
+            }
 
             if (aiResponse && aiResponse.reply) {
               if (aiResponse.sendWithLogo) {
