@@ -1941,7 +1941,7 @@
 
   <!-- Modal de Ficha Técnica / Receita do Produto com Quantidades por Copo -->
   <div id="recipe-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;z-index:120;backdrop-filter:blur(5px)">
-    <div style="background:var(--panel);border:1.5px solid var(--ln);border-radius:20px;padding:24px;width:min(720px,95vw);max-height:90vh;overflow-y:auto">
+    <div style="background:var(--panel);border:1.5px solid var(--ln);border-radius:20px;padding:24px;width:min(860px,96vw);max-height:90vh;overflow-y:auto">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
         <div style="display:flex;gap:14px;align-items:center">
           <img id="recipe-prod-photo" src="imagens/do seu jeitinho.webp" style="width:65px;height:65px;border-radius:12px;object-fit:cover;border:1.5px solid var(--y)">
@@ -1953,16 +1953,27 @@
         <button class="btn-sm btn-secondary" onclick="closeRecipeModal()">×</button>
       </div>
 
-      <p id="recipe-prod-desc" style="font-size:13px;color:var(--mut);margin-bottom:16px;line-height:1.4"></p>
+      <p id="recipe-prod-desc" style="font-size:13px;color:var(--mut);margin-bottom:10px;line-height:1.4"></p>
+
+      <div style="font-size:12px;color:var(--mut);margin-bottom:16px;background:rgba(255,255,255,0.03);padding:10px 14px;border-radius:10px;border:1px solid var(--ln);display:flex;align-items:center;gap:10px">
+        <span style="font-size:18px">💡</span>
+        <span><b>Edição Livre de Insumos:</b> Você pode alterar quantidades, valores unitários, excluir insumos que não usa, adicionar novos ou puxar acompanhamentos/frutas já cadastrados. O custo e a margem de lucro recalculam na hora!</span>
+      </div>
+
+      <!-- Datalist com insumos cadastrados para autocomplete rápido -->
+      <datalist id="registered-insumos-datalist"></datalist>
 
       <!-- Receitas por Tamanho -->
       <div id="recipe-tables-container"></div>
 
-      <div style="display:flex;gap:10px;margin-top:20px">
-        <button class="btn-sm btn-print" style="flex:1;padding:12px;font-size:14px" onclick="exportRecipeToPdf()">
-          Exportar Ficha Técnica em PDF
+      <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap">
+        <button type="button" id="btn-save-recipe" class="btn-sm btn-next" style="flex:1.5;min-width:180px;padding:12px;font-size:14px;background:#10b981;border:none;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px" onclick="saveRecipeChanges()">
+          <span>💾</span> Salvar Ficha Técnica
         </button>
-        <button class="btn-sm btn-secondary" style="padding:12px" onclick="closeRecipeModal()">
+        <button type="button" class="btn-sm btn-print" style="flex:1;min-width:140px;padding:12px;font-size:14px" onclick="exportRecipeToPdf()">
+          🖨️ Exportar PDF
+        </button>
+        <button type="button" class="btn-sm btn-secondary" style="padding:12px 18px" onclick="closeRecipeModal()">
           Fechar
         </button>
       </div>

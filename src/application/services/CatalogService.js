@@ -251,7 +251,7 @@ export class CatalogService {
     // Garante que todo produto possua a ficha técnica / receita estruturada por tamanho
     const recipes = (product.prices || []).map(pr => {
       const existing = (product.recipes || []).find(r => r.size === pr.size);
-      if (existing && Array.isArray(existing.ingredients) && existing.ingredients.length > 0) {
+      if (existing && Array.isArray(existing.ingredients)) {
         return existing;
       }
       return {
@@ -361,6 +361,22 @@ export class CatalogService {
     const data = this.db.get();
     const idx = data.products.findIndex(p => p.id === id);
     if (idx === -1) throw new Error('Produto não encontrado.');
+
+    // Se foram passadas receitas personalizadas, sincroniza o costPrice de cada tamanho
+    if (Array.isArray(updates.recipes) && Array.isArray(data.products[idx].prices)) {
+      data.products[idx].prices = data.products[idx].prices.map(pr => {
+        const rc = updates.recipes.find(r => r.size === pr.size);
+        if (rc && Array.isArray(rc.ingredients)) {
+          const totalCost = rc.ingredients.reduce((sum, ig) => {
+            const q = Number(ig.quantity) || 0;
+            const u = Number(ig.unitCost) || 0;
+            return sum + (Number(ig.totalCost) || (q * u) || 0);
+          }, 0);
+          return { ...pr, costPrice: Number(totalCost.toFixed(2)) };
+        }
+        return pr;
+      });
+    }
 
     data.products[idx] = {
       ...data.products[idx],

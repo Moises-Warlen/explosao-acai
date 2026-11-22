@@ -3607,71 +3607,374 @@ function renderProductsTable() {
 }
 
 // Modal de Ficha Técnica / Receita com Quantidades por Copo
+// ==================== FICHA TÉCNICA / RECEITAS DE INSUMOS ====================
 window.openRecipeModal = function(productId) {
   const prod = PRODUCTS.find(p => p.id === productId);
   if (!prod) return;
-  CURRENT_RECIPE_PRODUCT = prod;
+  // Clone profundo para que o usuário possa editar livremente e só persistir ao salvar
+  CURRENT_RECIPE_PRODUCT = JSON.parse(JSON.stringify(prod));
 
   $('#recipe-prod-photo').src = prod.image || 'imagens/do seu jeitinho.webp';
   $('#recipe-prod-name').textContent = prod.name;
   $('#recipe-prod-category').textContent = (prod.categorySlug || prod.category || 'Açaí').toUpperCase();
   $('#recipe-prod-desc').textContent = prod.description || 'Receita padronizada com pesagem e insumos para delivery.';
 
-  const container = $('#recipe-tables-container');
-  if (!container) return;
+  // Assegura que haja uma receita para cada tamanho cadastrado no produto
+  if (!Array.isArray(CURRENT_RECIPE_PRODUCT.recipes)) CURRENT_RECIPE_PRODUCT.recipes = [];
+  (CURRENT_RECIPE_PRODUCT.prices || []).forEach(pr => {
+    let rc = CURRENT_RECIPE_PRODUCT.recipes.find(r => r.size === pr.size);
+    if (!rc) {
+      const grams = pr.size === 300 ? 200 : (pr.size === 500 ? 340 : 480);
+      const cupCost = pr.size === 300 ? 0.80 : (pr.size === 500 ? 0.90 : 1.10);
+      const polpaCost = Number((grams * 0.02).toFixed(2));
+      const toppings = pr.maxAccompaniments || 4;
+      const restCost = Math.max(0.50, (pr.costPrice || 8.0) - polpaCost - cupCost - 0.20);
+      rc = {
+        size: pr.size,
+        ingredients: [
+          { name: "Polpa de açaí especial batida", quantity: grams, unit: "g", unitCost: 0.02, totalCost: polpaCost },
+          { name: `Copo térmico ${pr.size}ml descartável com tampa bolha`, quantity: 1, unit: "un", unitCost: cupCost, totalCost: cupCost },
+          { name: `Ingredientes e acompanhamentos da receita (${toppings} itens)`, quantity: toppings, unit: "porções", unitCost: Number((restCost / toppings).toFixed(2)), totalCost: Number(restCost.toFixed(2)) },
+          { name: "Colher reforçada e guardanapo", quantity: 1, unit: "kit", unitCost: 0.20, totalCost: 0.20 }
+        ]
+      };
+      CURRENT_RECIPE_PRODUCT.recipes.push(rc);
+    }
+  });
 
-  const recipes = prod.recipes || [];
-  if (recipes.length === 0) {
-    container.innerHTML = `<p style="color:var(--mut);padding:14px">Nenhuma receita detalhada vinculada.</p>`;
-  } else {
-    container.innerHTML = recipes.map(rc => {
-      const priceObj = (prod.prices || []).find(x => x.size === rc.size) || {};
-      const venda = priceObj.price || 0;
-      const custo = priceObj.costPrice || (rc.ingredients || []).reduce((acc, ig) => acc + (ig.totalCost || 0), 0);
-      const lucro = venda - custo;
-      const margem = venda > 0 ? Math.round((lucro / venda) * 100) : 0;
+  // Atualiza a lista de autocomplete para o datalist de insumos
+  populateRegisteredInsumosDatalist();
 
-      return `
-        <div style="background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:16px;margin-bottom:14px">
-          <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--ln);padding-bottom:10px;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-            <div>
-              <b style="font-size:16px;color:var(--y)">Copo ${rc.size} ml</b>
-              <span style="font-size:12px;color:var(--mut);margin-left:8px">(${priceObj.maxAccompaniments || 3} acomp. inclusos)</span>
-            </div>
-            <div style="font-size:13px;text-align:right">
-              Venda: <b style="color:#fff">${R(venda)}</b> · Custo: <b style="color:var(--danger)">${R(custo)}</b> · 
-              Lucro: <b style="color:var(--green)">${R(lucro)} (${margem}%)</b>
-            </div>
-          </div>
-
-          <div class="table-responsive" style="width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;box-sizing:border-box">
-            <table class="recipe-table" style="font-size:11.5px;width:100%;min-width:0;box-sizing:border-box">
-              <thead>
-                <tr style="color:var(--mut);border-bottom:1px solid rgba(255,255,255,0.08)">
-                  <th style="padding:4px 4px;text-align:left">Insumo</th>
-                  <th style="padding:4px 4px;text-align:center">Qtd</th>
-                  <th style="padding:4px 4px;text-align:right">Unitário</th>
-                  <th style="padding:4px 4px;text-align:right">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${(rc.ingredients || []).map(ig => `
-                  <tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
-                    <td style="padding:5px 4px;word-break:break-word">${esc(ig.name)}</td>
-                    <td style="padding:5px 4px;text-align:center"><b>${ig.quantity} ${ig.unit}</b></td>
-                    <td style="padding:5px 4px;text-align:right">${R(ig.unitCost)}</td>
-                    <td style="padding:5px 4px;text-align:right;color:var(--y)">${R(ig.totalCost)}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
+  // Renderiza as tabelas de insumos por tamanho
+  renderRecipeTables();
 
   $('#recipe-modal').style.display = 'flex';
+};
+
+window.populateRegisteredInsumosDatalist = function() {
+  const datalist = $('#registered-insumos-datalist');
+  if (!datalist) return;
+
+  const names = new Set();
+  (ACCOMPANIMENTS || []).forEach(a => { if (a && a.name) names.add(a.name); });
+  (FRUITS || []).forEach(f => {
+    const fn = typeof f === 'string' ? f : f?.name;
+    if (fn) names.add(fn);
+  });
+  (EXTRAS || []).forEach(e => { if (e && e.name) names.add(e.name); });
+
+  // Insumos básicos comuns
+  names.add("Polpa de açaí especial batida");
+  names.add("Copo térmico 250ml descartável com tampa bolha");
+  names.add("Copo térmico 300ml descartável com tampa bolha");
+  names.add("Copo térmico 500ml descartável com tampa bolha");
+  names.add("Copo térmico 700ml descartável com tampa bolha");
+  names.add("Colher reforçada e guardanapo");
+  names.add("Sacola para entrega com alça");
+  names.add("Lacre de segurança inviolável");
+  names.add("Leite Condensado");
+  names.add("Creme de Ninho");
+  names.add("Nutella Pura");
+  names.add("Confetes coloridos");
+
+  datalist.innerHTML = Array.from(names).sort().map(n => `<option value="${esc(n)}">`).join('');
+};
+
+window.renderRecipeTables = function() {
+  const container = $('#recipe-tables-container');
+  if (!container || !CURRENT_RECIPE_PRODUCT) return;
+
+  const prod = CURRENT_RECIPE_PRODUCT;
+  const recipes = prod.recipes || [];
+
+  if (recipes.length === 0) {
+    container.innerHTML = `<p style="color:var(--mut);padding:14px;text-align:center">Nenhum tamanho cadastrado para este produto.</p>`;
+    return;
+  }
+
+  // Prepara as opções de itens cadastrados para o dropdown rápido
+  const acompsOptions = (ACCOMPANIMENTS || []).filter(a => a.active !== false).map(a => `<option value="acomp|${esc(a.name)}|1|porção|0.15">🥣 ${esc(a.name)} (1 porção · R$ 0,15)</option>`).join('');
+  const fruitsOptions = (FRUITS || []).filter(f => typeof f === 'string' || f.active !== false).map(f => {
+    const fn = typeof f === 'string' ? f : f.name;
+    const cost = typeof f === 'object' && f.costPrice ? f.costPrice : 0.40;
+    return `<option value="fruit|${esc(fn)}|1|porção|${cost}">🍓 ${esc(fn)} (1 porção · R$ ${cost.toFixed(2).replace('.', ',')})</option>`;
+  }).join('');
+  const extrasOptions = (EXTRAS || []).filter(e => e.active !== false).map(e => {
+    const cost = Number(e.costPrice || (e.price * 0.4) || 0.80).toFixed(2);
+    return `<option value="extra|${esc(e.name)}|1|porção|${cost}">🍫 ${esc(e.name)} (1 porção · R$ ${cost.replace('.', ',')})</option>`;
+  }).join('');
+
+  container.innerHTML = recipes.map((rc, sizeIdx) => {
+    const priceObj = (prod.prices || []).find(x => x.size === rc.size) || {};
+    const venda = priceObj.price || 0;
+    const custo = (rc.ingredients || []).reduce((acc, ig) => acc + (Number(ig.totalCost) || (Number(ig.quantity) * Number(ig.unitCost)) || 0), 0);
+    const lucro = venda - custo;
+    const margem = venda > 0 ? Math.round((lucro / venda) * 100) : 0;
+    const isPrejuizo = custo > venda;
+
+    return `
+      <div class="recipe-size-card" id="recipe-size-box-${sizeIdx}" style="background:var(--card);border:1.5px solid ${isPrejuizo ? 'var(--danger)' : 'var(--ln)'};border-radius:14px;padding:16px;margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--ln);padding-bottom:10px;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div>
+            <b style="font-size:16px;color:var(--y)">Copo ${rc.size} ml</b>
+            <span style="font-size:12px;color:var(--mut);margin-left:8px">(${priceObj.maxAccompaniments || 3} acomp. inclusos)</span>
+          </div>
+          <div id="recipe-metrics-${sizeIdx}" style="font-size:13px;text-align:right">
+            Venda: <b style="color:#fff">${R(venda)}</b> · 
+            Custo: <b style="color:${isPrejuizo ? 'var(--danger)' : '#fff'}">${R(custo)}</b> · 
+            Lucro: <b style="color:${lucro >= 0 ? 'var(--green)' : 'var(--danger)'}">${R(lucro)} (${margem}%)</b>
+            ${isPrejuizo ? '<span class="badge" style="background:var(--danger);color:#fff;margin-left:6px;font-size:10px;font-weight:700">⚠️ PREJUÍZO!</span>' : ''}
+          </div>
+        </div>
+
+        <div class="table-responsive" style="width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;box-sizing:border-box">
+          <table class="recipe-table" style="font-size:12px;width:100%;min-width:0;box-sizing:border-box;border-collapse:collapse">
+            <thead>
+              <tr style="color:var(--mut);border-bottom:1px solid rgba(255,255,255,0.08);text-align:left">
+                <th style="padding:6px 6px">Insumo / Ingrediente</th>
+                <th style="padding:6px 4px;width:85px;text-align:center">Qtd</th>
+                <th style="padding:6px 4px;width:80px;text-align:center">Unidade</th>
+                <th style="padding:6px 4px;width:95px;text-align:right">Unitário (R$)</th>
+                <th style="padding:6px 4px;width:90px;text-align:right">Total</th>
+                <th style="padding:6px 4px;width:40px;text-align:center"></th>
+              </tr>
+            </thead>
+            <tbody id="recipe-tbody-${sizeIdx}">
+              ${(rc.ingredients || []).length === 0 ? `
+                <tr><td colspan="6" style="padding:14px;text-align:center;color:var(--mut)">Nenhum insumo adicionado neste tamanho. Adicione abaixo!</td></tr>
+              ` : (rc.ingredients || []).map((ig, ingIdx) => `
+                <tr id="recipe-row-${sizeIdx}-${ingIdx}" style="border-bottom:1px solid rgba(255,255,255,0.04)">
+                  <td style="padding:6px 4px">
+                    <input type="text" 
+                      list="registered-insumos-datalist" 
+                      value="${esc(ig.name || '')}" 
+                      placeholder="Ex: Leite Ninho, Nutella..."
+                      oninput="updateRecipeItemField(${sizeIdx}, ${ingIdx}, 'name', this.value)"
+                      style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid var(--ln);border-radius:6px;padding:6px 8px;color:#fff;font-size:12px">
+                  </td>
+                  <td style="padding:6px 4px">
+                    <input type="number" step="any" min="0" 
+                      value="${ig.quantity !== undefined ? ig.quantity : 1}" 
+                      oninput="updateRecipeItemField(${sizeIdx}, ${ingIdx}, 'quantity', this.value)"
+                      style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid var(--ln);border-radius:6px;padding:6px 6px;color:#fff;font-size:12px;text-align:center">
+                  </td>
+                  <td style="padding:6px 4px">
+                    <input type="text" 
+                      value="${esc(ig.unit || 'g')}" 
+                      placeholder="g, un..."
+                      oninput="updateRecipeItemField(${sizeIdx}, ${ingIdx}, 'unit', this.value)"
+                      style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid var(--ln);border-radius:6px;padding:6px 6px;color:#fff;font-size:12px;text-align:center">
+                  </td>
+                  <td style="padding:6px 4px">
+                    <input type="number" step="0.001" min="0" 
+                      value="${ig.unitCost !== undefined ? ig.unitCost : 0}" 
+                      oninput="updateRecipeItemField(${sizeIdx}, ${ingIdx}, 'unitCost', this.value)"
+                      style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid var(--ln);border-radius:6px;padding:6px 6px;color:#fff;font-size:12px;text-align:right">
+                  </td>
+                  <td style="padding:6px 4px;text-align:right;font-weight:bold;color:var(--y);font-size:12px" id="recipe-item-total-${sizeIdx}-${ingIdx}">
+                    ${R(ig.totalCost || (ig.quantity * ig.unitCost) || 0)}
+                  </td>
+                  <td style="padding:6px 4px;text-align:center">
+                    <button type="button" class="btn-sm" 
+                      onclick="deleteRecipeItem(${sizeIdx}, ${ingIdx})" 
+                      title="Excluir este insumo" 
+                      style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px">
+                      🗑️
+                    </button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Barra inferior: Inserir Novo Insumo ou Puxar do Banco -->
+        <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;align-items:center;background:rgba(0,0,0,0.18);padding:10px 12px;border-radius:10px;border:1px dashed var(--ln)">
+          <button type="button" class="btn-sm btn-secondary" style="padding:7px 12px;font-size:12px;display:flex;align-items:center;gap:6px" onclick="addNewRecipeRow(${sizeIdx})">
+            <span>➕</span> Inserir Novo Insumo
+          </button>
+
+          <div style="flex:1;min-width:230px">
+            <select class="recipe-quick-select" style="width:100%;box-sizing:border-box;padding:7px 10px;border-radius:8px;background:var(--card);border:1px solid var(--ln);color:#fff;font-size:12px" onchange="pullRegisteredInsumo(${sizeIdx}, this)">
+              <option value="">⚡ Puxar de item já cadastrado no sistema...</option>
+              <optgroup label="🥣 Acompanhamentos Cadastrados">
+                ${acompsOptions}
+              </optgroup>
+              <optgroup label="🍓 Frutas Cadastradas">
+                ${fruitsOptions}
+              </optgroup>
+              <optgroup label="🍫 Adicionais Cadastrados (com custo)">
+                ${extrasOptions}
+              </optgroup>
+              <optgroup label="📦 Embalagens & Insumos Básicos">
+                <option value="basic|Polpa de açaí especial batida|${rc.size === 300 ? 200 : (rc.size === 500 ? 340 : 480)}|g|0.02">Polpa de Açaí batida (${rc.size === 300 ? 200 : (rc.size === 500 ? 340 : 480)}g · R$ 0,02/g)</option>
+                <option value="basic|Copo térmico ${rc.size}ml descartável com tampa bolha|1|un|${rc.size === 300 ? '0.80' : (rc.size === 500 ? '0.90' : '1.10')}">Copo térmico ${rc.size}ml com tampa (1 un)</option>
+                <option value="basic|Colher reforçada e guardanapo|1|kit|0.20">Colher reforçada e guardanapo (1 kit · R$ 0,20)</option>
+                <option value="basic|Sacola para entrega com alça|1|un|0.40">Sacola para transporte/entrega (1 un · R$ 0,40)</option>
+                <option value="basic|Lacre de segurança inviolável|1|un|0.10">Lacre de segurança inviolável (1 un · R$ 0,10)</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+};
+
+window.updateRecipeItemField = function(sizeIdx, ingIdx, field, rawValue) {
+  if (!CURRENT_RECIPE_PRODUCT || !CURRENT_RECIPE_PRODUCT.recipes) return;
+  const rc = CURRENT_RECIPE_PRODUCT.recipes[sizeIdx];
+  if (!rc || !rc.ingredients || !rc.ingredients[ingIdx]) return;
+
+  const ig = rc.ingredients[ingIdx];
+  if (field === 'quantity') {
+    ig.quantity = parseFloat(String(rawValue).replace(',', '.')) || 0;
+  } else if (field === 'unitCost') {
+    ig.unitCost = parseFloat(String(rawValue).replace(',', '.')) || 0;
+  } else {
+    ig[field] = rawValue;
+  }
+
+  // Recalcula o total desta linha
+  const q = Number(ig.quantity) || 0;
+  const u = Number(ig.unitCost) || 0;
+  ig.totalCost = Number((q * u).toFixed(2));
+
+  const totalEl = $(`#recipe-item-total-${sizeIdx}-${ingIdx}`);
+  if (totalEl) totalEl.textContent = R(ig.totalCost);
+
+  recalcRecipeSizeMetrics(sizeIdx);
+};
+
+window.addNewRecipeRow = function(sizeIdx) {
+  if (!CURRENT_RECIPE_PRODUCT || !CURRENT_RECIPE_PRODUCT.recipes) return;
+  const rc = CURRENT_RECIPE_PRODUCT.recipes[sizeIdx];
+  if (!rc) return;
+
+  if (!Array.isArray(rc.ingredients)) rc.ingredients = [];
+  rc.ingredients.push({
+    name: '',
+    quantity: 1,
+    unit: 'un',
+    unitCost: 0,
+    totalCost: 0
+  });
+
+  renderRecipeTables();
+
+  // Foca automaticamente no novo input de nome criado
+  const lastIdx = rc.ingredients.length - 1;
+  const rowInput = $(`#recipe-row-${sizeIdx}-${lastIdx} input`);
+  if (rowInput) rowInput.focus();
+};
+
+window.deleteRecipeItem = function(sizeIdx, ingIdx) {
+  if (!CURRENT_RECIPE_PRODUCT || !CURRENT_RECIPE_PRODUCT.recipes) return;
+  const rc = CURRENT_RECIPE_PRODUCT.recipes[sizeIdx];
+  if (!rc || !rc.ingredients) return;
+
+  rc.ingredients.splice(ingIdx, 1);
+  renderRecipeTables();
+};
+
+window.pullRegisteredInsumo = function(sizeIdx, selectEl) {
+  if (!selectEl || !selectEl.value) return;
+  if (!CURRENT_RECIPE_PRODUCT || !CURRENT_RECIPE_PRODUCT.recipes) return;
+  const rc = CURRENT_RECIPE_PRODUCT.recipes[sizeIdx];
+  if (!rc) return;
+
+  const parts = selectEl.value.split('|');
+  if (parts.length >= 5) {
+    const [, name, qtyStr, unit, costStr] = parts;
+    const qty = parseFloat(qtyStr) || 1;
+    const unitCost = parseFloat(costStr) || 0;
+    const totalCost = Number((qty * unitCost).toFixed(2));
+
+    if (!Array.isArray(rc.ingredients)) rc.ingredients = [];
+    rc.ingredients.push({
+      name,
+      quantity: qty,
+      unit,
+      unitCost,
+      totalCost
+    });
+
+    selectEl.value = '';
+    renderRecipeTables();
+  }
+};
+
+window.recalcRecipeSizeMetrics = function(sizeIdx) {
+  if (!CURRENT_RECIPE_PRODUCT || !CURRENT_RECIPE_PRODUCT.recipes) return;
+  const rc = CURRENT_RECIPE_PRODUCT.recipes[sizeIdx];
+  if (!rc) return;
+
+  const prod = CURRENT_RECIPE_PRODUCT;
+  const priceObj = (prod.prices || []).find(x => x.size === rc.size) || {};
+  const venda = priceObj.price || 0;
+  const custo = (rc.ingredients || []).reduce((acc, ig) => acc + (Number(ig.totalCost) || (Number(ig.quantity) * Number(ig.unitCost)) || 0), 0);
+  const lucro = venda - custo;
+  const margem = venda > 0 ? Math.round((lucro / venda) * 100) : 0;
+  const isPrejuizo = custo > venda;
+
+  const metricsEl = $(`#recipe-metrics-${sizeIdx}`);
+  if (metricsEl) {
+    metricsEl.innerHTML = `
+      Venda: <b style="color:#fff">${R(venda)}</b> · 
+      Custo: <b style="color:${isPrejuizo ? 'var(--danger)' : '#fff'}">${R(custo)}</b> · 
+      Lucro: <b style="color:${lucro >= 0 ? 'var(--green)' : 'var(--danger)'}">${R(lucro)} (${margem}%)</b>
+      ${isPrejuizo ? '<span class="badge" style="background:var(--danger);color:#fff;margin-left:6px;font-size:10px;font-weight:700">⚠️ PREJUÍZO!</span>' : ''}
+    `;
+  }
+
+  const boxEl = $(`#recipe-size-box-${sizeIdx}`);
+  if (boxEl) {
+    boxEl.style.borderColor = isPrejuizo ? 'var(--danger)' : 'var(--ln)';
+  }
+};
+
+window.saveRecipeChanges = async function() {
+  if (!CURRENT_RECIPE_PRODUCT || !CURRENT_RECIPE_PRODUCT.id) {
+    return adminToast('Nenhum produto selecionado.', 'danger');
+  }
+
+  const btn = $('#btn-save-recipe');
+  const originalText = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳</span> Salvando Receita...';
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/catalog/products/${CURRENT_RECIPE_PRODUCT.id}`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        recipes: CURRENT_RECIPE_PRODUCT.recipes
+      })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      const idx = PRODUCTS.findIndex(p => p.id === CURRENT_RECIPE_PRODUCT.id);
+      if (idx !== -1) {
+        PRODUCTS[idx] = data.product;
+        CURRENT_RECIPE_PRODUCT = JSON.parse(JSON.stringify(data.product));
+      }
+      renderProductsTable();
+      renderProductsVitrineGrid();
+      renderRecipeTables();
+      adminToast('Ficha Técnica e custos salvos com sucesso!', 'success');
+    } else {
+      adminToast(data.error || 'Erro ao salvar ficha técnica.', 'danger');
+    }
+  } catch (err) {
+    adminToast('Erro ao conectar ao servidor para salvar receita.', 'danger');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalText || '<span>💾</span> Salvar Ficha Técnica';
+    }
+  }
 };
 
 window.closeRecipeModal = function() {
