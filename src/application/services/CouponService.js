@@ -17,7 +17,7 @@ export class CouponService {
     return raw ? new Coupon(raw) : null;
   }
 
-  validateCoupon(code, subtotal) {
+  validateCoupon(code, subtotal, customerPhone = null) {
     const coupon = this.getCouponByCode(code);
     if (!coupon) {
       return { valid: false, error: 'Cupom não encontrado.' };
@@ -28,6 +28,38 @@ export class CouponService {
       return { valid: false, error: check.reason };
     }
 
+    // REGRA DE 1ª COMPRA (EXCLUSIVO PARA PRIMEIRO PEDIDO)
+    if (coupon.onlyFirstOrder) {
+      if (!customerPhone) {
+        return {
+          valid: false,
+          error: 'Para validar este cupom de 1º pedido, informe seu WhatsApp/telefone no checkout.'
+        };
+      }
+      const cleanPhone = String(customerPhone).replace(/\D/g, '');
+      if (cleanPhone.length < 10) {
+        return {
+          valid: false,
+          error: 'Telefone inválido para validação do cupom de 1ª compra.'
+        };
+      }
+      const dbData = this.db.get();
+      const priorOrders = (dbData.orders || []).filter(o => {
+        const raw = o.customer?.phone;
+        if (!raw) return false;
+        const oPhone = String(raw).replace(/\D/g, '');
+        if (oPhone.length < 8) return false;
+        return oPhone === cleanPhone && o.status !== 'cancelled' && o.status !== 'returned';
+      });
+
+      if (priorOrders.length > 0) {
+        return {
+          valid: false,
+          error: 'Este cupom é exclusivo para novos clientes (1º pedido).'
+        };
+      }
+    }
+
     const discount = coupon.calculateDiscount(subtotal);
     return {
       valid: true,
@@ -36,6 +68,7 @@ export class CouponService {
         code: coupon.code,
         type: coupon.type,
         value: coupon.value,
+        onlyFirstOrder: !!coupon.onlyFirstOrder,
         discount
       }
     };
@@ -58,6 +91,7 @@ export class CouponService {
       minOrder: Number(data.minOrder || 0),
       maxDiscount: data.maxDiscount ? Number(data.maxDiscount) : null,
       active: data.active !== undefined ? !!data.active : true,
+      onlyFirstOrder: !!data.onlyFirstOrder,
       uses: 0,
       maxUses: data.maxUses ? Number(data.maxUses) : null,
       expiresAt: data.expiresAt || null
@@ -74,6 +108,7 @@ export class CouponService {
     if (idx === -1) throw new Error('Cupom não encontrado.');
 
     if (updates.code) updates.code = updates.code.toUpperCase().trim();
+    if (updates.onlyFirstOrder !== undefined) updates.onlyFirstOrder = !!updates.onlyFirstOrder;
 
     dbData.coupons[idx] = { ...dbData.coupons[idx], ...updates, id };
     this.db.save();

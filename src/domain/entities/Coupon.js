@@ -7,6 +7,7 @@ export class Coupon {
     minOrder = 0,
     maxDiscount = null,
     active = true,
+    onlyFirstOrder = false,
     uses = 0,
     maxUses = 100,
     expiresAt = null
@@ -18,6 +19,7 @@ export class Coupon {
     this.minOrder = Number(minOrder || 0);
     this.maxDiscount = maxDiscount ? Number(maxDiscount) : null;
     this.active = !!active;
+    this.onlyFirstOrder = !!onlyFirstOrder;
     this.uses = Number(uses || 0);
     this.maxUses = maxUses ? Number(maxUses) : null;
     this.expiresAt = expiresAt;

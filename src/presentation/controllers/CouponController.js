@@ -3,8 +3,8 @@ import { couponService } from '../../application/services/CouponService.js';
 export class CouponController {
   async validate(req, res) {
     try {
-      const { code, subtotal } = req.body;
-      const result = couponService.validateCoupon(code, Number(subtotal || 0));
+      const { code, subtotal, customerPhone, phone } = req.body;
+      const result = couponService.validateCoupon(code, Number(subtotal || 0), customerPhone || phone);
       return res.json({ ok: result.valid, ...result });
     } catch (err) {
       return res.status(400).json({ ok: false, error: err.message });

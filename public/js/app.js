@@ -1463,17 +1463,37 @@ window.removeCartItem = function(cartItemId) {
 };
 
 window.applyCoupon = async function() {
-  const code = $('#coupon-input').value.trim();
+  const code = $('#coupon-input')?.value.trim();
   if (!code) return toast('Digite o código do cupom.');
 
   const subtotal = CART.reduce((acc, it) => acc + (it.unitPrice * it.quantity), 0);
+  const elTel = $('#f_tel');
+  let customerPhone = (elTel ? elTel.value.trim() : '') || (typeof CHECKOUT_DATA !== 'undefined' ? CHECKOUT_DATA?.tel : '') || localStorage.getItem('last_customer_phone') || '';
+
   try {
-    const res = await fetch(`${API_URL}/coupons/validate`, {
+    let res = await fetch(`${API_URL}/coupons/validate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, subtotal })
+      body: JSON.stringify({ code, subtotal, customerPhone })
     });
-    const data = await res.json();
+    let data = await res.json();
+
+    // Se o cupom exige 1º pedido mas o cliente ainda não informou o telefone no carrinho
+    if (!data.ok && data.error && data.error.includes('informe seu WhatsApp')) {
+      const askPhone = prompt('Este cupom é exclusivo para 1º pedido! Digite seu WhatsApp para validar:');
+      if (askPhone && askPhone.trim().length >= 8) {
+        customerPhone = askPhone.trim();
+        localStorage.setItem('last_customer_phone', customerPhone);
+        if (typeof CHECKOUT_DATA !== 'undefined') CHECKOUT_DATA.tel = customerPhone;
+        res = await fetch(`${API_URL}/coupons/validate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, subtotal, customerPhone })
+        });
+        data = await res.json();
+      }
+    }
+
     if (data.ok) {
       APPLIED_COUPON = data.coupon;
       toast(`Cupom ${data.coupon.code} aplicado com sucesso!`);

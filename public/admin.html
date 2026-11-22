@@ -1791,6 +1791,11 @@
             </span>
           </div>
 
+          <!-- Busca rápida de produtos para o combo -->
+          <div style="margin-bottom:8px">
+            <input type="text" id="combo-prod-search" placeholder="🔍 Buscar por nome do copo, sabor ou mousse..." oninput="filterComboComposerProducts(this.value)" style="width:100%;box-sizing:border-box;padding:8px 12px;border-radius:8px;border:1px solid var(--ln);background:var(--card);color:#fff;font-size:12px">
+          </div>
+
           <!-- Grade de produtos disponíveis com seletor de quantidade -->
           <div id="combo-products-list" class="combo-composer-grid" style="max-height:190px;overflow-y:auto;border:1px solid var(--ln);border-radius:10px;padding:8px;background:var(--card);display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px"></div>
 
@@ -1995,6 +2000,16 @@
             <input type="checkbox" id="cup-active" checked style="width:auto">
             <span>Cupom Ativo (Válido para aplicação no carrinho)</span>
           </label>
+        </div>
+
+        <div style="margin-top:10px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="cup-first-order" style="width:auto">
+            <span><b style="color:var(--green)">⭐ Exclusivo para Primeiro Pedido (1ª Compra)</b></span>
+          </label>
+          <div style="font-size:11px;color:var(--mut);margin-left:24px;margin-top:2px">
+            Se ativado, apenas clientes novos que nunca compraram na loja poderão utilizar este cupom.
+          </div>
         </div>
 
         <div style="display:flex;gap:10px;margin-top:20px">

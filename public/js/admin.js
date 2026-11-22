@@ -1533,9 +1533,14 @@ function createOrderCardHtml(order, isHistory = false) {
     return `
       <div class="order-card minimized" id="card-${order.id}">
         <div class="order-card-head" style="cursor:pointer" onclick="toggleOrderCardExpand('${order.id}')" title="Clique para expandir os detalhes deste pedido">
-          <div style="display:flex;align-items:center;gap:6px">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             <b style="font-size:15px;color:var(--y)">#${order.orderNo}</b>
             <span style="font-weight:700;font-size:13px;color:#fff">${esc(order.customer.name)}</span>
+            ${order.customer?.isFirstOrder ? `
+              <span class="badge" style="background:#10b981;color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700" title="Primeiro pedido deste cliente!">⭐ 1º Pedido</span>
+            ` : (order.customer?.orderCount > 1 ? `
+              <span class="badge" style="background:rgba(255,255,255,0.08);color:var(--mut);font-size:10px;padding:1px 6px;border-radius:10px" title="Total de compras deste cliente">${order.customer.orderCount}º pedido</span>
+            ` : '')}
           </div>
           <div style="display:flex;align-items:center;gap:6px">
             <span class="order-badge ${order.payment?.method === 'Pix' ? 'pix' : (isMoney ? 'money' : 'card')}">
@@ -1654,9 +1659,14 @@ function createOrderCardHtml(order, isHistory = false) {
         ${isHistory ? `Concluído em: <b style="color:#fff">${orderTimeStr}</b>` : `Registrado em: ${orderTimeStr}`}
       </div>
 
-      <div style="font-weight:600;font-size:14px;margin-top:6px;display:flex;justify-content:space-between;align-items:center">
-        <div>
-          Cliente: ${esc(order.customer.name)} 
+      <div style="font-weight:600;font-size:14px;margin-top:6px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span>Cliente: ${esc(order.customer.name)}</span>
+          ${order.customer?.isFirstOrder ? `
+            <span class="badge" style="background:#10b981;color:#fff;font-size:10px;padding:2px 8px;border-radius:12px;font-weight:700">⭐ 1º Pedido</span>
+          ` : (order.customer?.orderCount > 1 ? `
+            <span class="badge" style="background:rgba(255,255,255,0.08);color:var(--tx);font-size:10px;padding:2px 8px;border-radius:12px">👤 ${order.customer.orderCount}º Pedido</span>
+          ` : '')}
           ${!isHistory ? `<a href="https://wa.me/55${order.customer.phone}" target="_blank" style="color:var(--green);text-decoration:none;font-size:12px;margin-left:4px" title="Abrir conversa no WhatsApp">WhatsApp</a>` : ''}
         </div>
         ${showWppButton ? `
@@ -3935,11 +3945,40 @@ window.handleCategoryChange = function(catId, selectedComboIds = []) {
   }
 };
 
+let COMBO_PROD_FILTER = '';
+window.filterComboComposerProducts = function(text) {
+  COMBO_PROD_FILTER = (text || '').trim().toLowerCase();
+  renderComboProductsList();
+};
+
 window.renderComboProductsList = function() {
   const container = $('#combo-products-list');
   if (!container) return;
 
-  const individualProducts = PRODUCTS.filter(p => p.categorySlug !== 'combos');
+  let individualProducts = PRODUCTS.filter(p => p.categorySlug !== 'combos');
+  if (COMBO_PROD_FILTER) {
+    individualProducts = individualProducts.filter(p => {
+      const isSelected = (COMBO_COMPOSITION[p.id] || 0) > 0;
+      const matches = p.name.toLowerCase().includes(COMBO_PROD_FILTER) || (p.description || '').toLowerCase().includes(COMBO_PROD_FILTER);
+      return isSelected || matches;
+    });
+  }
+
+  // Ordena para que produtos com quantidade selecionada fiquem no topo
+  individualProducts.sort((a, b) => {
+    const qtyA = COMBO_COMPOSITION[a.id] || 0;
+    const qtyB = COMBO_COMPOSITION[b.id] || 0;
+    if (qtyA > 0 && qtyB === 0) return -1;
+    if (qtyB > 0 && qtyA === 0) return 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  if (individualProducts.length === 0) {
+    container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:16px;color:var(--mut);font-size:12px">Nenhum produto encontrado para "${esc(COMBO_PROD_FILTER)}".</div>`;
+    updateComboSummaryBadge();
+    return;
+  }
+
   container.innerHTML = individualProducts.map(p => {
     const qty = COMBO_COMPOSITION[p.id] || 0;
     const p500 = (p.prices || []).find(x => x.size === 500) || (p.prices || [])[0] || {};
@@ -5426,7 +5465,10 @@ function renderCouponsList() {
   if (tbody) {
     tbody.innerHTML = COUPONS.map(c => `
       <tr>
-        <td><b style="color:var(--y)">${esc(c.code)}</b></td>
+        <td>
+          <b style="color:var(--y)">${esc(c.code)}</b>
+          ${c.onlyFirstOrder ? '<span class="badge" style="background:#10b981;color:#fff;font-size:10px;padding:2px 6px;border-radius:6px;font-weight:700;margin-left:4px">⭐ 1ª Compra</span>' : ''}
+        </td>
         <td>${c.type === 'percent' ? `${c.value}%` : R(c.value)}</td>
         <td>${R(c.minOrder)}</td>
         <td>${c.uses} / ${c.maxUses || 'Ilimitado'}</td>
@@ -5447,7 +5489,10 @@ function renderCouponsList() {
       cardsList.innerHTML = COUPONS.map(c => `
         <div class="coupon-mobile-card" id="coupon-card-${c.id}">
           <div class="coupon-card-top">
-            <strong class="coupon-card-code">${esc(c.code)}</strong>
+            <div style="display:flex;align-items:center;gap:6px">
+              <strong class="coupon-card-code">${esc(c.code)}</strong>
+              ${c.onlyFirstOrder ? '<span class="badge" style="background:#10b981;color:#fff;font-size:10px;padding:2px 6px;border-radius:6px;font-weight:700">⭐ 1ª Compra</span>' : ''}
+            </div>
             <span class="coupon-card-badge ${c.active ? 'active' : 'inactive'}">
               ${c.active ? 'Ativo' : 'Inativo'}
             </span>
@@ -5491,6 +5536,7 @@ window.openNewCouponModal = function() {
   if ($('#cup-minorder')) $('#cup-minorder').value = '30';
   if ($('#cup-maxuses')) $('#cup-maxuses').value = '';
   if ($('#cup-active')) $('#cup-active').checked = true;
+  if ($('#cup-first-order')) $('#cup-first-order').checked = false;
   const modal = $('#coupon-edit-modal');
   if (modal) modal.style.display = 'flex';
 };
@@ -5509,6 +5555,7 @@ window.saveCouponForm = async function(e) {
   const maxUsesVal = $('#cup-maxuses')?.value.trim();
   const maxUses = maxUsesVal ? parseInt(maxUsesVal, 10) : null;
   const active = $('#cup-active')?.checked ?? true;
+  const onlyFirstOrder = $('#cup-first-order')?.checked ?? false;
 
   if (!code || isNaN(value)) {
     return adminToast('Informe o código e o valor do cupom.', 'danger');
@@ -5518,7 +5565,7 @@ window.saveCouponForm = async function(e) {
     const res = await fetch(`${API_URL}/coupons`, {
       method: 'POST',
       headers: authHeaders(),
-      body: JSON.stringify({ code, type, value, minOrder, maxUses, active })
+      body: JSON.stringify({ code, type, value, minOrder, maxUses, active, onlyFirstOrder })
     });
     const data = await res.json();
     if (data.ok) {

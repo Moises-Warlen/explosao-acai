@@ -65,7 +65,15 @@ export class ThermalPrinterService {
     lines.push(divider);
 
     // DADOS DO CLIENTE
-    lines.push(`CLIENTE: ${order.customer.name.toUpperCase()}`);
+    const isFirst = order.customer?.isFirstOrder;
+    const orderNum = order.customer?.orderCount;
+    let customerTag = '';
+    if (isFirst) {
+      customerTag = ' (1º PEDIDO - NOVO CLIENTE!)';
+    } else if (orderNum && orderNum > 1) {
+      customerTag = ` (${orderNum}º PEDIDO)`;
+    }
+    lines.push(`CLIENTE: ${order.customer.name.toUpperCase()}${customerTag}`);
     lines.push(`TELEFONE: ${order.customer.phone}`);
     if (order.delivery?.type === 'delivery') {
       lines.push(`TIPO: ENTREGA EM DOMICÍLIO`);

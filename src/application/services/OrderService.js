@@ -270,14 +270,26 @@ export class OrderService {
       });
     }
 
-    // 4. Aplica Cupom de Desconto se houver
+    // 4. Histórico do cliente e Cupom de Desconto
+    const priorOrders = (catalog.orders || []).filter(o => {
+      const raw = o.customer?.phone;
+      if (!raw) return false;
+      const oPhone = String(raw).replace(/\D/g, '');
+      if (oPhone.length < 8) return false;
+      return oPhone === cleanPhone && o.status !== OrderStatus.CANCELLED && o.status !== OrderStatus.RETURNED;
+    });
+    const isFirstOrder = priorOrders.length === 0;
+    const orderCount = priorOrders.length + 1;
+
     let discount = 0;
     let appliedCoupon = null;
     if (couponCode) {
-      const check = couponService.validateCoupon(couponCode, subtotal);
+      const check = couponService.validateCoupon(couponCode, subtotal, cleanPhone);
       if (check.valid) {
         discount = check.coupon.discount;
         appliedCoupon = { code: check.coupon.code, discountValue: discount };
+      } else {
+        throw new Error(check.error || 'Cupom inválido para este pedido.');
       }
     }
 
@@ -377,7 +389,9 @@ export class OrderService {
       orderNo,
       customer: {
         name: customer.name.trim(),
-        phone: cleanPhone
+        phone: cleanPhone,
+        isFirstOrder,
+        orderCount
       },
       delivery: delivery?.type === 'delivery' ? {
         type: 'delivery',
