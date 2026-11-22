@@ -1,1228 +1,3408 @@
 {
-  "catalogVersion": "2026-11-10-flyer-v1",
+  "catalogVersion": "2026-11-22-ficha-tecnica-v2",
   "categories": [
+    {
+      "id": "cat_lancamentos",
+      "name": "Lançamentos & Novidades",
+      "slug": "lancamentos",
+      "order": 1,
+      "active": true
+    },
+    {
+      "id": "cat_promocoes",
+      "name": "Produtos em Promoção",
+      "slug": "promocoes",
+      "order": 2,
+      "active": true
+    },
+    {
+      "id": "cat_combos",
+      "name": "Combos que valem a pena",
+      "slug": "combos",
+      "order": 3,
+      "active": true
+    },
     {
       "id": "cat_classica",
       "name": "Explosão Clássica",
       "slug": "classica",
-      "order": 1,
-      "active": true,
-      "subtitle": "Combinações deliciosas para todos os dias"
+      "order": 4,
+      "active": true
     },
     {
       "id": "cat_premium",
       "name": "Explosão Premium",
       "slug": "premium",
-      "order": 2,
-      "active": true,
-      "subtitle": "Para quem gosta de uma combinação especial"
-    },
-    {
-      "id": "cat_natural",
-      "name": "Explosão Natural",
-      "slug": "natural",
-      "order": 3,
-      "active": true,
-      "subtitle": "Pequenos copos, grandes momentos"
+      "order": 5,
+      "active": true
     },
     {
       "id": "cat_kids",
       "name": "Explosão Kids",
       "slug": "kids",
-      "order": 4,
-      "active": true,
-      "subtitle": "Pequenos copos, grandes momentos"
+      "order": 6,
+      "active": true
     },
     {
       "id": "cat_fitness",
       "name": "Explosão Fitness",
       "slug": "fitness",
-      "order": 5,
-      "active": true,
-      "subtitle": "Opções com ingredientes selecionados"
+      "order": 7,
+      "active": true
     },
     {
-      "id": "cat_monte",
-      "name": "Monte seu Açaí",
-      "slug": "monte",
-      "order": 6,
-      "active": true,
-      "subtitle": "Você escolhe, a gente prepara"
+      "id": "cat_natural",
+      "name": "Explosão Natural",
+      "slug": "natural",
+      "order": 8,
+      "active": true
     },
     {
       "id": "cat_garrafa",
       "name": "Açaí na Garrafa",
       "slug": "garrafa",
-      "order": 7,
-      "active": true,
-      "subtitle": "Leve o sabor do açaí para onde quiser"
-    },
-    {
-      "id": "cat_levar",
-      "name": "Explosão para Levar",
-      "slug": "levar",
-      "order": 8,
-      "active": true,
-      "subtitle": "Leve o sabor do açaí para onde quiser"
-    },
-    {
-      "id": "cat_combos",
-      "name": "Combos Especiais",
-      "slug": "combos",
       "order": 9,
-      "active": true,
-      "subtitle": "Perfeitos para dividir e aproveitar"
+      "active": true
+    },
+    {
+      "id": "cat_polpa",
+      "name": "Explosão Família (Potes)",
+      "slug": "polpa",
+      "order": 10,
+      "active": true
+    },
+    {
+      "id": "cat_mousses",
+      "name": "Mousses & Sobremesas",
+      "slug": "mousses",
+      "order": 11,
+      "active": true
+    },
+    {
+      "id": "cat_monte",
+      "name": "Monte seu Açaí",
+      "slug": "monte",
+      "order": 12,
+      "active": true
     }
   ],
   "products": [
+    {
+      "id": "prod_kids_fini",
+      "name": "Kids Fini",
+      "categoryId": "cat_kids",
+      "categorySlug": "kids",
+      "image": "imagens/mix fini.webp",
+      "description": "Açaí tradicional cremoso intercalado com chocobol crocante, mix Fini picado e cobertura sabor Fini.",
+      "details": "Fundo: 10g cob. Fini + 10g chocobol | Meio: 80g açaí + 20g mix Fini | Topo: 80g açaí + 10g chocobol + 10g cob. Fini",
+      "active": true,
+      "isPromo": false,
+      "isNewLaunch": false,
+      "prices": [
+        {
+          "size": 250,
+          "price": 15.9,
+          "costPrice": 7.38,
+          "maxAccompaniments": 4,
+          "promoPrice": null,
+          "allowExtras": false
+        }
+      ],
+      "recipes": [
+        {
+          "size": 250,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 160,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 2.67
+            },
+            {
+              "name": "Chocobol crocante",
+              "quantity": 20,
+              "unit": "g",
+              "unitCost": 0.042,
+              "totalCost": 0.84
+            },
+            {
+              "name": "Mini Fini picado",
+              "quantity": 20,
+              "unit": "g",
+              "unitCost": 0.06,
+              "totalCost": 1.2
+            },
+            {
+              "name": "Cobertura Fini",
+              "quantity": 20,
+              "unit": "ml",
+              "unitCost": 0.015,
+              "totalCost": 0.3
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.37,
+              "totalCost": 2.37
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prod_kids_moranguinho",
+      "name": "Kids Moranguinho",
+      "categoryId": "cat_kids",
+      "categorySlug": "kids",
+      "image": "imagens/do seu jeitinho.webp",
+      "description": "Açaí tradicional cremoso em camadas com creme de Ninho, morangos frescos fatiados e confetes coloridos.",
+      "details": "Fundo: 15g creme Ninho + 10g confetes | Meio: 80g açaí + 35g morango | Topo: 80g açaí + 15g creme Ninho + 15g confetes",
+      "active": true,
+      "isPromo": false,
+      "isNewLaunch": false,
+      "prices": [
+        {
+          "size": 250,
+          "price": 15.9,
+          "costPrice": 7.59,
+          "maxAccompaniments": 4,
+          "promoPrice": null,
+          "allowExtras": false
+        }
+      ],
+      "recipes": [
+        {
+          "size": 250,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 160,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 2.67
+            },
+            {
+              "name": "Creme de Ninho",
+              "quantity": 30,
+              "unit": "g",
+              "unitCost": 0.013,
+              "totalCost": 0.39
+            },
+            {
+              "name": "Morangos frescos fatiados",
+              "quantity": 35,
+              "unit": "g",
+              "unitCost": 0.0303,
+              "totalCost": 1.06
+            },
+            {
+              "name": "Confetes coloridos",
+              "quantity": 25,
+              "unit": "g",
+              "unitCost": 0.044,
+              "totalCost": 1.1
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.37,
+              "totalCost": 2.37
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prod_kids_choco",
+      "name": "Kids Choco",
+      "categoryId": "cat_kids",
+      "categorySlug": "kids",
+      "image": "imagens/do seu jeitinho.webp",
+      "description": "Açaí tradicional cremoso com brigadeiro, chocolate granulado e Bis picadinho.",
+      "details": "Fundo: 15g brigadeiro + 10g granulado | Meio: 80g açaí + 2 un. Bis picadinho | Topo: 80g açaí + 15g brigadeiro + 10g granulado",
+      "active": true,
+      "isPromo": false,
+      "isNewLaunch": false,
+      "prices": [
+        {
+          "size": 250,
+          "price": 15.9,
+          "costPrice": 8.25,
+          "maxAccompaniments": 4,
+          "promoPrice": null,
+          "allowExtras": false
+        }
+      ],
+      "recipes": [
+        {
+          "size": 250,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 160,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 2.67
+            },
+            {
+              "name": "Brigadeiro cremoso",
+              "quantity": 30,
+              "unit": "g",
+              "unitCost": 0.0417,
+              "totalCost": 1.25
+            },
+            {
+              "name": "Chocolate granulado",
+              "quantity": 20,
+              "unit": "g",
+              "unitCost": 0.048,
+              "totalCost": 0.96
+            },
+            {
+              "name": "Bis picado (2 un)",
+              "quantity": 2,
+              "unit": "un",
+              "unitCost": 0.5,
+              "totalCost": 1
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.37,
+              "totalCost": 2.37
+            }
+          ]
+        }
+      ]
+    },
     {
       "id": "prod_classico",
       "name": "Clássico",
       "categoryId": "cat_classica",
       "categorySlug": "classica",
-      "category": "classica",
-      "description": "Açaí cremoso, morango fresco, chantilly e leite condensado.",
-      "details": "Combinação clássica que nunca erra.",
       "image": "imagens/classico.webp",
+      "description": "Açaí cremoso, morangos frescos fatiados, chantilly aerado, leite condensado e Nutella na decoração.",
+      "details": "Camadas de açaí intercaladas com morango fresco, chantilly e finalizado com leite condensado e Nutella.",
       "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
       "isPromo": false,
-      "comboProductIds": [],
+      "isNewLaunch": false,
       "prices": [
         {
           "size": 300,
           "price": 19.9,
-          "costPrice": 7.5,
-          "promoPrice": null,
-          "maxAccompaniments": 0
+          "costPrice": 9.02,
+          "maxAccompaniments": 3,
+          "promoPrice": null
         },
         {
           "size": 500,
-          "price": 27.9,
-          "costPrice": 10.5,
-          "promoPrice": null,
-          "maxAccompaniments": 0
+          "price": 26.9,
+          "costPrice": 12.94,
+          "maxAccompaniments": 4,
+          "promoPrice": null
         },
         {
           "size": 700,
-          "price": 34.9,
-          "costPrice": 13.8,
-          "promoPrice": null,
-          "maxAccompaniments": 0
+          "price": 33.9,
+          "costPrice": 16.95,
+          "maxAccompaniments": 5,
+          "promoPrice": null
         }
       ],
-      "recipes": []
+      "recipes": [
+        {
+          "size": 300,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 190,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 3.17
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 45,
+              "unit": "g",
+              "unitCost": 0.0302,
+              "totalCost": 1.36
+            },
+            {
+              "name": "Chantilly aerado",
+              "quantity": 25,
+              "unit": "ml",
+              "unitCost": 0.0228,
+              "totalCost": 0.57
+            },
+            {
+              "name": "Leite condensado",
+              "quantity": 25,
+              "unit": "g",
+              "unitCost": 0.0176,
+              "totalCost": 0.44
+            },
+            {
+              "name": "Nutella original",
+              "quantity": 10,
+              "unit": "g",
+              "unitCost": 0.092,
+              "totalCost": 0.92
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.55,
+              "totalCost": 2.55
+            }
+          ]
+        },
+        {
+          "size": 500,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 315,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 5.25
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 70,
+              "unit": "g",
+              "unitCost": 0.0303,
+              "totalCost": 2.12
+            },
+            {
+              "name": "Chantilly aerado",
+              "quantity": 35,
+              "unit": "ml",
+              "unitCost": 0.0229,
+              "totalCost": 0.8
+            },
+            {
+              "name": "Leite condensado",
+              "quantity": 40,
+              "unit": "g",
+              "unitCost": 0.0178,
+              "totalCost": 0.71
+            },
+            {
+              "name": "Nutella original",
+              "quantity": 15,
+              "unit": "g",
+              "unitCost": 0.092,
+              "totalCost": 1.38
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.67,
+              "totalCost": 2.67
+            }
+          ]
+        },
+        {
+          "size": 700,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 440,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 7.33
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 90,
+              "unit": "g",
+              "unitCost": 0.0303,
+              "totalCost": 2.73
+            },
+            {
+              "name": "Chantilly aerado",
+              "quantity": 45,
+              "unit": "ml",
+              "unitCost": 0.0229,
+              "totalCost": 1.03
+            },
+            {
+              "name": "Leite condensado",
+              "quantity": 50,
+              "unit": "g",
+              "unitCost": 0.0178,
+              "totalCost": 0.89
+            },
+            {
+              "name": "Nutella original",
+              "quantity": 20,
+              "unit": "g",
+              "unitCost": 0.0925,
+              "totalCost": 1.85
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 3.13,
+              "totalCost": 3.13
+            }
+          ]
+        }
+      ]
     },
     {
-      "id": "prod_ninhomorango",
+      "id": "prod_ninho_morango",
       "name": "Ninho com Morango",
       "categoryId": "cat_classica",
       "categorySlug": "classica",
-      "category": "classica",
-      "description": "Açaí cremoso, creme de Ninho nobre e morangos frescos.",
-      "details": "Uma das combinações mais queridinhas da casa.",
       "image": "imagens/ninho com morango.webp",
+      "description": "Camadas generosas de açaí com creme de Ninho cremoso, morangos frescos e leite em pó.",
       "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
       "isPromo": false,
-      "comboProductIds": [],
+      "isNewLaunch": false,
       "prices": [
         {
           "size": 300,
           "price": 19.9,
-          "costPrice": 7.8,
-          "promoPrice": null,
-          "maxAccompaniments": 0
+          "costPrice": 8.46,
+          "maxAccompaniments": 3,
+          "promoPrice": null
         },
         {
           "size": 500,
-          "price": 27.9,
-          "costPrice": 11,
-          "promoPrice": null,
-          "maxAccompaniments": 0
+          "price": 25.9,
+          "costPrice": 12.22,
+          "maxAccompaniments": 4,
+          "promoPrice": null
         },
         {
           "size": 700,
-          "price": 34.9,
-          "costPrice": 14.2,
-          "promoPrice": null,
-          "maxAccompaniments": 0
+          "price": 32.9,
+          "costPrice": 16.16,
+          "maxAccompaniments": 5,
+          "promoPrice": null
         }
       ],
-      "recipes": []
+      "recipes": [
+        {
+          "size": 300,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 190,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 3.17
+            },
+            {
+              "name": "Creme de Ninho",
+              "quantity": 30,
+              "unit": "g",
+              "unitCost": 0.013,
+              "totalCost": 0.39
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 45,
+              "unit": "g",
+              "unitCost": 0.0302,
+              "totalCost": 1.36
+            },
+            {
+              "name": "Leite Ninho pó",
+              "quantity": 25,
+              "unit": "g",
+              "unitCost": 0.04,
+              "totalCost": 1
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.55,
+              "totalCost": 2.55
+            }
+          ]
+        },
+        {
+          "size": 500,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 315,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 5.25
+            },
+            {
+              "name": "Creme de Ninho",
+              "quantity": 45,
+              "unit": "g",
+              "unitCost": 0.0129,
+              "totalCost": 0.58
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 70,
+              "unit": "g",
+              "unitCost": 0.0303,
+              "totalCost": 2.12
+            },
+            {
+              "name": "Leite Ninho pó",
+              "quantity": 40,
+              "unit": "g",
+              "unitCost": 0.04,
+              "totalCost": 1.6
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.67,
+              "totalCost": 2.67
+            }
+          ]
+        },
+        {
+          "size": 700,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 440,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 7.33
+            },
+            {
+              "name": "Creme de Ninho",
+              "quantity": 60,
+              "unit": "g",
+              "unitCost": 0.0128,
+              "totalCost": 0.77
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 90,
+              "unit": "g",
+              "unitCost": 0.0303,
+              "totalCost": 2.73
+            },
+            {
+              "name": "Leite Ninho pó",
+              "quantity": 55,
+              "unit": "g",
+              "unitCost": 0.04,
+              "totalCost": 2.2
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 3.13,
+              "totalCost": 3.13
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "prod_granola",
       "name": "Granola",
       "categoryId": "cat_classica",
       "categorySlug": "classica",
-      "category": "classica",
-      "description": "Açaí, banana, morango fresco e granola crocante.",
-      "details": "O clássico com banana e morango.",
       "image": "imagens/granola.webp",
+      "description": "Açaí tradicional acompanhado de banana em rodelas, morangos frescos, granola crocante e mel puro.",
       "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
       "isPromo": false,
-      "comboProductIds": [],
+      "isNewLaunch": false,
       "prices": [
         {
           "size": 300,
           "price": 19.9,
-          "costPrice": 7.2,
-          "promoPrice": null,
-          "maxAccompaniments": 0
+          "costPrice": 10.71,
+          "maxAccompaniments": 3,
+          "promoPrice": null
         },
         {
           "size": 500,
-          "price": 27.9,
-          "costPrice": 10.2,
-          "promoPrice": null,
-          "maxAccompaniments": 0
+          "price": 26.9,
+          "costPrice": 15.52,
+          "maxAccompaniments": 4,
+          "promoPrice": null
         },
         {
           "size": 700,
-          "price": 34.9,
-          "costPrice": 13.5,
-          "promoPrice": null,
-          "maxAccompaniments": 0
+          "price": 33.9,
+          "costPrice": 20.46,
+          "maxAccompaniments": 5,
+          "promoPrice": null
         }
       ],
-      "recipes": []
+      "recipes": [
+        {
+          "size": 300,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 190,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 3.17
+            },
+            {
+              "name": "Banana em rodelas",
+              "quantity": 25,
+              "unit": "g",
+              "unitCost": 0.008,
+              "totalCost": 0.2
+            },
+            {
+              "name": "Morango fresco",
+              "quantity": 25,
+              "unit": "g",
+              "unitCost": 0.0304,
+              "totalCost": 0.76
+            },
+            {
+              "name": "Granola crocante",
+              "quantity": 30,
+              "unit": "g",
+              "unitCost": 0.068,
+              "totalCost": 2.04
+            },
+            {
+              "name": "Mel puro de abelha",
+              "quantity": 20,
+              "unit": "ml",
+              "unitCost": 0.1,
+              "totalCost": 2
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.55,
+              "totalCost": 2.55
+            }
+          ]
+        },
+        {
+          "size": 500,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 315,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 5.25
+            },
+            {
+              "name": "Banana em rodelas",
+              "quantity": 40,
+              "unit": "g",
+              "unitCost": 0.008,
+              "totalCost": 0.32
+            },
+            {
+              "name": "Morango fresco",
+              "quantity": 40,
+              "unit": "g",
+              "unitCost": 0.0303,
+              "totalCost": 1.21
+            },
+            {
+              "name": "Granola crocante",
+              "quantity": 45,
+              "unit": "g",
+              "unitCost": 0.068,
+              "totalCost": 3.06
+            },
+            {
+              "name": "Mel puro de abelha",
+              "quantity": 30,
+              "unit": "ml",
+              "unitCost": 0.1,
+              "totalCost": 3
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.67,
+              "totalCost": 2.67
+            }
+          ]
+        },
+        {
+          "size": 700,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 440,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 7.33
+            },
+            {
+              "name": "Banana em rodelas",
+              "quantity": 50,
+              "unit": "g",
+              "unitCost": 0.008,
+              "totalCost": 0.4
+            },
+            {
+              "name": "Morango fresco",
+              "quantity": 50,
+              "unit": "g",
+              "unitCost": 0.0304,
+              "totalCost": 1.52
+            },
+            {
+              "name": "Granola crocante",
+              "quantity": 60,
+              "unit": "g",
+              "unitCost": 0.068,
+              "totalCost": 4.08
+            },
+            {
+              "name": "Mel puro de abelha",
+              "quantity": 40,
+              "unit": "ml",
+              "unitCost": 0.1,
+              "totalCost": 4
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 3.13,
+              "totalCost": 3.13
+            }
+          ]
+        }
+      ]
     },
     {
-      "id": "prod_docetentacao",
-      "name": "Doce Tentação",
-      "categoryId": "cat_premium",
-      "categorySlug": "premium",
-      "category": "premium",
-      "description": "Açaí super cremoso, creme de chocolate e bombom Sonho de Valsa crocante.",
-      "details": "Perfeito para quem é apaixonado por chocolate.",
-      "image": "imagens/doce tentacao.webp",
+      "id": "prod_fitness_tropical",
+      "name": "Açaí Fitness Tropical",
+      "categoryId": "cat_fitness",
+      "categorySlug": "fitness",
+      "image": "imagens/do seu jeitinho.webp",
+      "description": "Açaí zero açúcar leve com banana fatiada, morangos frescos, sementes de chia e mel para decoração.",
       "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
       "isPromo": false,
-      "comboProductIds": [],
+      "isNewLaunch": false,
       "prices": [
         {
           "size": 300,
-          "price": 23.9,
-          "costPrice": 9.5,
-          "promoPrice": null,
-          "maxAccompaniments": 0
+          "price": 22.9,
+          "costPrice": 11.96,
+          "maxAccompaniments": 3,
+          "promoPrice": null
         },
         {
           "size": 500,
-          "price": 31.9,
-          "costPrice": 13,
-          "promoPrice": null,
-          "maxAccompaniments": 0
-        },
-        {
-          "size": 700,
-          "price": 38.9,
-          "costPrice": 16.5,
-          "promoPrice": null,
-          "maxAccompaniments": 0
+          "price": 30.9,
+          "costPrice": 17.9,
+          "maxAccompaniments": 4,
+          "promoPrice": null
         }
       ],
-      "recipes": []
+      "recipes": [
+        {
+          "size": 300,
+          "ingredients": [
+            {
+              "name": "Açaí zero açúcar",
+              "quantity": 190,
+              "unit": "g",
+              "unitCost": 0.0367,
+              "totalCost": 6.97
+            },
+            {
+              "name": "Banana em rodelas",
+              "quantity": 30,
+              "unit": "g",
+              "unitCost": 0.008,
+              "totalCost": 0.24
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 30,
+              "unit": "g",
+              "unitCost": 0.0303,
+              "totalCost": 0.91
+            },
+            {
+              "name": "Sementes de Chia",
+              "quantity": 10,
+              "unit": "g",
+              "unitCost": 0.03,
+              "totalCost": 0.3
+            },
+            {
+              "name": "Mel puro de abelha",
+              "quantity": 10,
+              "unit": "ml",
+              "unitCost": 0.1,
+              "totalCost": 1
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.55,
+              "totalCost": 2.55
+            }
+          ]
+        },
+        {
+          "size": 500,
+          "ingredients": [
+            {
+              "name": "Açaí zero açúcar",
+              "quantity": 315,
+              "unit": "g",
+              "unitCost": 0.0367,
+              "totalCost": 11.55
+            },
+            {
+              "name": "Banana em rodelas",
+              "quantity": 45,
+              "unit": "g",
+              "unitCost": 0.008,
+              "totalCost": 0.36
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 45,
+              "unit": "g",
+              "unitCost": 0.0302,
+              "totalCost": 1.36
+            },
+            {
+              "name": "Sementes de Chia",
+              "quantity": 15,
+              "unit": "g",
+              "unitCost": 0.03,
+              "totalCost": 0.45
+            },
+            {
+              "name": "Mel puro de abelha",
+              "quantity": 15,
+              "unit": "ml",
+              "unitCost": 0.1,
+              "totalCost": 1.5
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.67,
+              "totalCost": 2.67
+            }
+          ]
+        }
+      ]
     },
     {
-      "id": "prod_nutella",
-      "name": "Açaí Nutella",
-      "categoryId": "cat_premium",
-      "categorySlug": "premium",
-      "category": "premium",
-      "description": "Açaí, morangos frescos, Nutella original e Bis crocante.",
-      "details": "Sabor marcante com pura Nutella.",
-      "image": "imagens/nutella.webp",
+      "id": "prod_fitness_power",
+      "name": "Açaí Fitness Power",
+      "categoryId": "cat_fitness",
+      "categorySlug": "fitness",
+      "image": "imagens/do seu jeitinho.webp",
+      "description": "Açaí zero açúcar, dose de Whey Protein, rodelas de banana, morangos frescos, sementes de chia e pasta de amendoim sem açúcar.",
       "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
       "isPromo": false,
-      "comboProductIds": [],
+      "isNewLaunch": false,
       "prices": [
         {
           "size": 300,
-          "price": 23.9,
-          "costPrice": 10,
-          "promoPrice": null,
-          "maxAccompaniments": 0
+          "price": 26.9,
+          "costPrice": 14.68,
+          "maxAccompaniments": 3,
+          "promoPrice": null
         },
         {
           "size": 500,
-          "price": 31.9,
-          "costPrice": 13.5,
-          "promoPrice": null,
-          "maxAccompaniments": 0
-        },
-        {
-          "size": 700,
-          "price": 38.9,
-          "costPrice": 17,
-          "promoPrice": null,
-          "maxAccompaniments": 0
+          "price": 35.9,
+          "costPrice": 21.67,
+          "maxAccompaniments": 4,
+          "promoPrice": null
         }
       ],
-      "recipes": []
-    },
-    {
-      "id": "prod_parperfeito",
-      "name": "Par Perfeito",
-      "categoryId": "cat_premium",
-      "categorySlug": "premium",
-      "category": "premium",
-      "description": "Açaí, brigadeiro artesanal, creme de Ninho e morangos frescos selecionados.",
-      "details": "A união impecável de brigadeiro e Ninho.",
-      "image": "imagens/par perfeito.webp",
-      "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
-      "isPromo": false,
-      "comboProductIds": [],
-      "prices": [
+      "recipes": [
         {
           "size": 300,
-          "price": 23.9,
-          "costPrice": 9.5,
-          "promoPrice": null,
-          "maxAccompaniments": 0
+          "ingredients": [
+            {
+              "name": "Açaí zero açúcar",
+              "quantity": 190,
+              "unit": "g",
+              "unitCost": 0.0367,
+              "totalCost": 6.97
+            },
+            {
+              "name": "Whey Protein concentrado",
+              "quantity": 30,
+              "unit": "g",
+              "unitCost": 0.099,
+              "totalCost": 2.97
+            },
+            {
+              "name": "Banana em rodelas",
+              "quantity": 30,
+              "unit": "g",
+              "unitCost": 0.008,
+              "totalCost": 0.24
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 30,
+              "unit": "g",
+              "unitCost": 0.0303,
+              "totalCost": 0.91
+            },
+            {
+              "name": "Sementes de Chia",
+              "quantity": 10,
+              "unit": "g",
+              "unitCost": 0.03,
+              "totalCost": 0.3
+            },
+            {
+              "name": "Pasta de amendoim zero",
+              "quantity": 20,
+              "unit": "g",
+              "unitCost": 0.0375,
+              "totalCost": 0.75
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.55,
+              "totalCost": 2.55
+            }
+          ]
         },
         {
           "size": 500,
-          "price": 31.9,
-          "costPrice": 13,
-          "promoPrice": null,
-          "maxAccompaniments": 0
-        },
-        {
-          "size": 700,
-          "price": 38.9,
-          "costPrice": 16.5,
-          "promoPrice": null,
-          "maxAccompaniments": 0
+          "ingredients": [
+            {
+              "name": "Açaí zero açúcar",
+              "quantity": 315,
+              "unit": "g",
+              "unitCost": 0.0367,
+              "totalCost": 11.55
+            },
+            {
+              "name": "Whey Protein concentrado",
+              "quantity": 40,
+              "unit": "g",
+              "unitCost": 0.099,
+              "totalCost": 3.96
+            },
+            {
+              "name": "Banana em rodelas",
+              "quantity": 45,
+              "unit": "g",
+              "unitCost": 0.008,
+              "totalCost": 0.36
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 45,
+              "unit": "g",
+              "unitCost": 0.0302,
+              "totalCost": 1.36
+            },
+            {
+              "name": "Sementes de Chia",
+              "quantity": 15,
+              "unit": "g",
+              "unitCost": 0.03,
+              "totalCost": 0.45
+            },
+            {
+              "name": "Pasta de amendoim zero",
+              "quantity": 35,
+              "unit": "g",
+              "unitCost": 0.0374,
+              "totalCost": 1.31
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.67,
+              "totalCost": 2.67
+            }
+          ]
         }
-      ],
-      "recipes": []
+      ]
     },
     {
-      "id": "prod_oreosupreme",
-      "name": "Oreo Supreme",
-      "categoryId": "cat_premium",
-      "categorySlug": "premium",
-      "category": "premium",
-      "description": "Açaí, biscoito Oreo crocante, creme de chocolate e leite Ninho.",
-      "details": "Crocância e cremosidade em cada colherada.",
-      "image": "imagens/Logo.webp",
-      "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
-      "isPromo": false,
-      "comboProductIds": [],
-      "prices": [
-        {
-          "size": 300,
-          "price": 23.9,
-          "costPrice": 9.2,
-          "promoPrice": null,
-          "maxAccompaniments": 0
-        },
-        {
-          "size": 500,
-          "price": 31.9,
-          "costPrice": 12.8,
-          "promoPrice": null,
-          "maxAccompaniments": 0
-        },
-        {
-          "size": 700,
-          "price": 38.9,
-          "costPrice": 16.2,
-          "promoPrice": null,
-          "maxAccompaniments": 0
-        }
-      ],
-      "recipes": []
-    },
-    {
-      "id": "prod_100acai",
+      "id": "prod_100_acai",
       "name": "100% Açaí",
       "categoryId": "cat_natural",
       "categorySlug": "natural",
-      "category": "natural",
-      "description": "Açaí puro e super cremoso, sem acompanhamentos.",
-      "details": "Para quem aprecia a essência e o sabor puro do açaí.",
       "image": "imagens/Pura Polpa.webp",
+      "description": "Açaí pura polpa, cremoso e encorpado, sem acompanhamentos. Ideal para quem aprecia o sabor original.",
       "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
       "isPromo": false,
-      "comboProductIds": [],
+      "isNewLaunch": false,
       "prices": [
         {
           "size": 300,
-          "price": 17.9,
-          "costPrice": 5.8,
+          "price": 16.9,
+          "costPrice": 7.05,
+          "maxAccompaniments": 0,
           "promoPrice": null,
-          "maxAccompaniments": 0
+          "allowExtras": false
         },
         {
           "size": 500,
-          "price": 24.9,
-          "costPrice": 8.8,
+          "price": 22.9,
+          "costPrice": 10.17,
+          "maxAccompaniments": 0,
           "promoPrice": null,
-          "maxAccompaniments": 0
+          "allowExtras": false
         },
         {
           "size": 700,
-          "price": 31.9,
-          "costPrice": 12,
+          "price": 28.9,
+          "costPrice": 13.63,
+          "maxAccompaniments": 0,
           "promoPrice": null,
-          "maxAccompaniments": 0
+          "allowExtras": false
         }
       ],
-      "recipes": []
+      "recipes": [
+        {
+          "size": 300,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional puro",
+              "quantity": 270,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 4.5
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.55,
+              "totalCost": 2.55
+            }
+          ]
+        },
+        {
+          "size": 500,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional puro",
+              "quantity": 450,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 7.5
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.67,
+              "totalCost": 2.67
+            }
+          ]
+        },
+        {
+          "size": 700,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional puro",
+              "quantity": 630,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 10.5
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 3.13,
+              "totalCost": 3.13
+            }
+          ]
+        }
+      ]
     },
     {
-      "id": "prod_tropical",
-      "name": "Açaí Tropical",
+      "id": "prod_mix_fruta",
+      "name": "Açaí Mix-Fruta",
       "categoryId": "cat_natural",
       "categorySlug": "natural",
-      "category": "natural",
-      "description": "Açaí, banana, morango e mix de frutas frescas.",
-      "details": "Leve, refrescante e muito saboroso.",
-      "image": "imagens/granola.webp",
-      "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
-      "isPromo": false,
-      "comboProductIds": [],
-      "prices": [
-        {
-          "size": 300,
-          "price": 19.9,
-          "costPrice": 7,
-          "promoPrice": null,
-          "maxAccompaniments": 0
-        },
-        {
-          "size": 500,
-          "price": 27.9,
-          "costPrice": 10,
-          "promoPrice": null,
-          "maxAccompaniments": 0
-        },
-        {
-          "size": 700,
-          "price": 34.9,
-          "costPrice": 13.5,
-          "promoPrice": null,
-          "maxAccompaniments": 0
-        }
-      ],
-      "recipes": []
-    },
-    {
-      "id": "prod_crocante",
-      "name": "Açaí Crocante",
-      "categoryId": "cat_natural",
-      "categorySlug": "natural",
-      "category": "natural",
-      "description": "Açaí, granola crocante selecionada, banana e mel puro.",
-      "details": "Crocância com a doçura natural do mel.",
-      "image": "imagens/granola.webp",
-      "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
-      "isPromo": false,
-      "comboProductIds": [],
-      "prices": [
-        {
-          "size": 300,
-          "price": 19.9,
-          "costPrice": 7,
-          "promoPrice": null,
-          "maxAccompaniments": 0
-        },
-        {
-          "size": 500,
-          "price": 27.9,
-          "costPrice": 10,
-          "promoPrice": null,
-          "maxAccompaniments": 0
-        },
-        {
-          "size": 700,
-          "price": 34.9,
-          "costPrice": 13.5,
-          "promoPrice": null,
-          "maxAccompaniments": 0
-        }
-      ],
-      "recipes": []
-    },
-    {
-      "id": "prod_kids_mixfini",
-      "name": "Mini Mix Fini",
-      "categoryId": "cat_kids",
-      "categorySlug": "kids",
-      "category": "kids",
-      "description": "Açaí cremoso, confetes coloridos e cobertura deliciosa de Fini.",
-      "details": "Copo Infantil 180 ml — diversão e sabor garantidos para as crianças!",
-      "image": "imagens/mix fini.webp",
-      "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
-      "isPromo": false,
-      "comboProductIds": [],
-      "prices": [
-        {
-          "size": 180,
-          "price": 14.9,
-          "costPrice": 4.8,
-          "promoPrice": null,
-          "maxAccompaniments": 0
-        }
-      ],
-      "recipes": []
-    },
-    {
-      "id": "prod_kids_ninho",
-      "name": "Mini Ninho",
-      "categoryId": "cat_kids",
-      "categorySlug": "kids",
-      "category": "kids",
-      "description": "Açaí cremoso, creme de Ninho e bastante leite em pó.",
-      "details": "Copo Infantil 180 ml — a preferida dos pequenos.",
-      "image": "imagens/ninho com morango.webp",
-      "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
-      "isPromo": false,
-      "comboProductIds": [],
-      "prices": [
-        {
-          "size": 180,
-          "price": 14.9,
-          "costPrice": 4.8,
-          "promoPrice": null,
-          "maxAccompaniments": 0
-        }
-      ],
-      "recipes": []
-    },
-    {
-      "id": "prod_kids_chocobanana",
-      "name": "Mini Choco Banana",
-      "categoryId": "cat_kids",
-      "categorySlug": "kids",
-      "category": "kids",
-      "description": "Açaí, rodelas de banana e calda de chocolate.",
-      "details": "Copo Infantil 180 ml — clássica combinação de açaí, banana e chocolate.",
-      "image": "imagens/classico.webp",
-      "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
-      "isPromo": false,
-      "comboProductIds": [],
-      "prices": [
-        {
-          "size": 180,
-          "price": 14.9,
-          "costPrice": 4.5,
-          "promoPrice": null,
-          "maxAccompaniments": 0
-        }
-      ],
-      "recipes": []
-    },
-    {
-      "id": "prod_fit_classico",
-      "name": "Fitness Clássico",
-      "categoryId": "cat_fitness",
-      "categorySlug": "fitness",
-      "category": "fitness",
-      "description": "Açaí, banana, amêndoas laminadas e granola integral.",
-      "details": "Energia limpa e nutritiva para seu pré ou pós treino.",
-      "image": "imagens/granola.webp",
-      "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
-      "isPromo": false,
-      "comboProductIds": [],
-      "prices": [
-        {
-          "size": 300,
-          "price": 21.9,
-          "costPrice": 8.5,
-          "promoPrice": null,
-          "maxAccompaniments": 0
-        },
-        {
-          "size": 500,
-          "price": 29.9,
-          "costPrice": 11.5,
-          "promoPrice": null,
-          "maxAccompaniments": 0
-        }
-      ],
-      "recipes": []
-    },
-    {
-      "id": "prod_fit_tropical",
-      "name": "Fitness Tropical",
-      "categoryId": "cat_fitness",
-      "categorySlug": "fitness",
-      "category": "fitness",
-      "description": "Açaí, morangos frescos, banana e sementes de chia.",
-      "details": "Leve, rico em fibras e antioxidantes naturais.",
-      "image": "imagens/classico.webp",
-      "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
-      "isPromo": false,
-      "comboProductIds": [],
-      "prices": [
-        {
-          "size": 300,
-          "price": 21.9,
-          "costPrice": 8.5,
-          "promoPrice": null,
-          "maxAccompaniments": 0
-        },
-        {
-          "size": 500,
-          "price": 29.9,
-          "costPrice": 11.5,
-          "promoPrice": null,
-          "maxAccompaniments": 0
-        }
-      ],
-      "recipes": []
-    },
-    {
-      "id": "prod_fit_power",
-      "name": "Fitness Power",
-      "categoryId": "cat_fitness",
-      "categorySlug": "fitness",
-      "category": "fitness",
-      "description": "Açaí, banana, Whey protein e pasta de amendoim integral.",
-      "details": "Alta dose de proteínas e energia pura para o seu dia.",
-      "image": "imagens/Pura Polpa.webp",
-      "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
-      "isPromo": false,
-      "comboProductIds": [],
-      "prices": [
-        {
-          "size": 300,
-          "price": 21.9,
-          "costPrice": 9.2,
-          "promoPrice": null,
-          "maxAccompaniments": 0
-        },
-        {
-          "size": 500,
-          "price": 29.9,
-          "costPrice": 12.5,
-          "promoPrice": null,
-          "maxAccompaniments": 0
-        }
-      ],
-      "recipes": []
-    },
-    {
-      "id": "prod_monte",
-      "name": "Monte seu Açaí",
-      "categoryId": "cat_monte",
-      "categorySlug": "monte",
-      "category": "monte",
-      "description": "Você escolhe, a gente prepara! Escolha o tamanho e até 3 acompanhamentos inclusos no valor (Banana, Morango, Granola, Leite em Pó, Coco Ralado). Depois turbine com extras!",
-      "details": "O queridinho da Explosão Açaí: personalize com seus acompanhamentos prediletos.",
       "image": "imagens/do seu jeitinho.webp",
+      "description": "Mix completo de frutas frescas no açaí: manga, morango, banana, uva sem caroço, kiwi e leite condensado.",
       "active": true,
-      "isCustomizable": true,
-      "isNewLaunch": false,
       "isPromo": false,
-      "comboProductIds": [],
+      "isNewLaunch": false,
       "prices": [
         {
           "size": 300,
-          "price": 21.9,
-          "costPrice": 7.5,
-          "promoPrice": null,
-          "maxAccompaniments": 3
+          "price": 20.9,
+          "costPrice": 7.69,
+          "maxAccompaniments": 3,
+          "promoPrice": null
+        },
+        {
+          "size": 500,
+          "price": 26.9,
+          "costPrice": 11.19,
+          "maxAccompaniments": 4,
+          "promoPrice": null
+        },
+        {
+          "size": 700,
+          "price": 33.9,
+          "costPrice": 14.93,
+          "maxAccompaniments": 5,
+          "promoPrice": null
+        }
+      ],
+      "recipes": [
+        {
+          "size": 300,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 190,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 3.17
+            },
+            {
+              "name": "Manga fresca picada",
+              "quantity": 15,
+              "unit": "g",
+              "unitCost": 0.007,
+              "totalCost": 0.1
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 15,
+              "unit": "g",
+              "unitCost": 0.03,
+              "totalCost": 0.45
+            },
+            {
+              "name": "Banana em rodelas",
+              "quantity": 15,
+              "unit": "g",
+              "unitCost": 0.008,
+              "totalCost": 0.12
+            },
+            {
+              "name": "Uva sem caroço",
+              "quantity": 15,
+              "unit": "g",
+              "unitCost": 0.022,
+              "totalCost": 0.33
+            },
+            {
+              "name": "Kiwi fatiado",
+              "quantity": 15,
+              "unit": "g",
+              "unitCost": 0.0353,
+              "totalCost": 0.53
+            },
+            {
+              "name": "Leite condensado",
+              "quantity": 25,
+              "unit": "g",
+              "unitCost": 0.0176,
+              "totalCost": 0.44
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.55,
+              "totalCost": 2.55
+            }
+          ]
+        },
+        {
+          "size": 500,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 315,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 5.25
+            },
+            {
+              "name": "Manga fresca picada",
+              "quantity": 25,
+              "unit": "g",
+              "unitCost": 0.0072,
+              "totalCost": 0.18
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 25,
+              "unit": "g",
+              "unitCost": 0.0304,
+              "totalCost": 0.76
+            },
+            {
+              "name": "Banana em rodelas",
+              "quantity": 25,
+              "unit": "g",
+              "unitCost": 0.008,
+              "totalCost": 0.2
+            },
+            {
+              "name": "Uva sem caroço",
+              "quantity": 25,
+              "unit": "g",
+              "unitCost": 0.022,
+              "totalCost": 0.55
+            },
+            {
+              "name": "Kiwi fatiado",
+              "quantity": 25,
+              "unit": "g",
+              "unitCost": 0.0352,
+              "totalCost": 0.88
+            },
+            {
+              "name": "Leite condensado",
+              "quantity": 40,
+              "unit": "g",
+              "unitCost": 0.0178,
+              "totalCost": 0.71
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.67,
+              "totalCost": 2.67
+            }
+          ]
+        },
+        {
+          "size": 700,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 440,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 7.33
+            },
+            {
+              "name": "Manga fresca picada",
+              "quantity": 35,
+              "unit": "g",
+              "unitCost": 0.0069,
+              "totalCost": 0.24
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 35,
+              "unit": "g",
+              "unitCost": 0.0303,
+              "totalCost": 1.06
+            },
+            {
+              "name": "Banana em rodelas",
+              "quantity": 35,
+              "unit": "g",
+              "unitCost": 0.008,
+              "totalCost": 0.28
+            },
+            {
+              "name": "Uva sem caroço",
+              "quantity": 35,
+              "unit": "g",
+              "unitCost": 0.022,
+              "totalCost": 0.77
+            },
+            {
+              "name": "Kiwi fatiado",
+              "quantity": 35,
+              "unit": "g",
+              "unitCost": 0.0351,
+              "totalCost": 1.23
+            },
+            {
+              "name": "Leite condensado",
+              "quantity": 50,
+              "unit": "g",
+              "unitCost": 0.0178,
+              "totalCost": 0.89
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 3.13,
+              "totalCost": 3.13
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prod_doce_tentacao",
+      "name": "Doce Tentação",
+      "categoryId": "cat_premium",
+      "categorySlug": "premium",
+      "image": "imagens/doce tentacao.webp",
+      "description": "Açaí cremoso com creme de avelã, bombom Sonho de Valsa picado, morangos frescos e Leite Ninho em pó.",
+      "active": true,
+      "isPromo": false,
+      "isNewLaunch": false,
+      "prices": [
+        {
+          "size": 300,
+          "price": 22.9,
+          "costPrice": 11.07,
+          "maxAccompaniments": 3,
+          "promoPrice": null
         },
         {
           "size": 500,
           "price": 29.9,
-          "costPrice": 10.5,
-          "promoPrice": null,
-          "maxAccompaniments": 3
+          "costPrice": 15.1,
+          "maxAccompaniments": 4,
+          "promoPrice": null
+        },
+        {
+          "size": 700,
+          "price": 37.9,
+          "costPrice": 21.32,
+          "maxAccompaniments": 5,
+          "promoPrice": null
+        }
+      ],
+      "recipes": [
+        {
+          "size": 300,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 190,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 3.17
+            },
+            {
+              "name": "Creme de chocolate com avelã",
+              "quantity": 30,
+              "unit": "g",
+              "unitCost": 0.0447,
+              "totalCost": 1.34
+            },
+            {
+              "name": "Bombom Sonho de Valsa",
+              "quantity": 1,
+              "unit": "un",
+              "unitCost": 2,
+              "totalCost": 2
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 40,
+              "unit": "g",
+              "unitCost": 0.0303,
+              "totalCost": 1.21
+            },
+            {
+              "name": "Leite Ninho pó",
+              "quantity": 20,
+              "unit": "g",
+              "unitCost": 0.04,
+              "totalCost": 0.8
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.55,
+              "totalCost": 2.55
+            }
+          ]
+        },
+        {
+          "size": 500,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 315,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 5.25
+            },
+            {
+              "name": "Creme de chocolate com avelã",
+              "quantity": 45,
+              "unit": "g",
+              "unitCost": 0.0447,
+              "totalCost": 2.01
+            },
+            {
+              "name": "Bombom Sonho de Valsa",
+              "quantity": 1,
+              "unit": "un",
+              "unitCost": 2,
+              "totalCost": 2
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 65,
+              "unit": "g",
+              "unitCost": 0.0303,
+              "totalCost": 1.97
+            },
+            {
+              "name": "Leite Ninho pó",
+              "quantity": 30,
+              "unit": "g",
+              "unitCost": 0.04,
+              "totalCost": 1.2
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.67,
+              "totalCost": 2.67
+            }
+          ]
+        },
+        {
+          "size": 700,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 440,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 7.33
+            },
+            {
+              "name": "Creme de chocolate com avelã",
+              "quantity": 60,
+              "unit": "g",
+              "unitCost": 0.0447,
+              "totalCost": 2.68
+            },
+            {
+              "name": "Bombom Sonho de Valsa",
+              "quantity": 2,
+              "unit": "un",
+              "unitCost": 2,
+              "totalCost": 4
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 85,
+              "unit": "g",
+              "unitCost": 0.0304,
+              "totalCost": 2.58
+            },
+            {
+              "name": "Leite Ninho pó",
+              "quantity": 40,
+              "unit": "g",
+              "unitCost": 0.04,
+              "totalCost": 1.6
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 3.13,
+              "totalCost": 3.13
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prod_nutella",
+      "name": "Nutella",
+      "categoryId": "cat_premium",
+      "categorySlug": "premium",
+      "image": "imagens/nutella.webp",
+      "description": "Açaí cremoso com Nutella original na borda e topo, morangos frescos, pedaços de Bis e leite em pó.",
+      "active": true,
+      "isPromo": false,
+      "isNewLaunch": false,
+      "prices": [
+        {
+          "size": 300,
+          "price": 23.9,
+          "costPrice": 11.5,
+          "maxAccompaniments": 3,
+          "promoPrice": null
+        },
+        {
+          "size": 500,
+          "price": 30.9,
+          "costPrice": 16.75,
+          "maxAccompaniments": 4,
+          "promoPrice": null
+        },
+        {
+          "size": 700,
+          "price": 38.9,
+          "costPrice": 22.17,
+          "maxAccompaniments": 5,
+          "promoPrice": null
+        }
+      ],
+      "recipes": [
+        {
+          "size": 300,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 190,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 3.17
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 40,
+              "unit": "g",
+              "unitCost": 0.0303,
+              "totalCost": 1.21
+            },
+            {
+              "name": "Nutella original",
+              "quantity": 30,
+              "unit": "g",
+              "unitCost": 0.0923,
+              "totalCost": 2.77
+            },
+            {
+              "name": "Bis picado",
+              "quantity": 2,
+              "unit": "un",
+              "unitCost": 0.5,
+              "totalCost": 1
+            },
+            {
+              "name": "Leite Ninho pó",
+              "quantity": 20,
+              "unit": "g",
+              "unitCost": 0.04,
+              "totalCost": 0.8
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.55,
+              "totalCost": 2.55
+            }
+          ]
+        },
+        {
+          "size": 500,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 315,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 5.25
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 65,
+              "unit": "g",
+              "unitCost": 0.0303,
+              "totalCost": 1.97
+            },
+            {
+              "name": "Nutella original",
+              "quantity": 45,
+              "unit": "g",
+              "unitCost": 0.0922,
+              "totalCost": 4.15
+            },
+            {
+              "name": "Bis picado",
+              "quantity": 3,
+              "unit": "un",
+              "unitCost": 0.5,
+              "totalCost": 1.5
+            },
+            {
+              "name": "Leite Ninho pó",
+              "quantity": 30,
+              "unit": "g",
+              "unitCost": 0.04,
+              "totalCost": 1.2
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.67,
+              "totalCost": 2.67
+            }
+          ]
+        },
+        {
+          "size": 700,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 440,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 7.33
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 85,
+              "unit": "g",
+              "unitCost": 0.0304,
+              "totalCost": 2.58
+            },
+            {
+              "name": "Nutella original",
+              "quantity": 60,
+              "unit": "g",
+              "unitCost": 0.0923,
+              "totalCost": 5.54
+            },
+            {
+              "name": "Bis picado",
+              "quantity": 4,
+              "unit": "un",
+              "unitCost": 0.5,
+              "totalCost": 2
+            },
+            {
+              "name": "Leite Ninho pó",
+              "quantity": 40,
+              "unit": "g",
+              "unitCost": 0.04,
+              "totalCost": 1.6
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 3.13,
+              "totalCost": 3.13
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prod_par_perfeito",
+      "name": "Par Perfeito",
+      "categoryId": "cat_premium",
+      "categorySlug": "premium",
+      "image": "imagens/par perfeito.webp",
+      "description": "Açaí com morangos frescos, Bis branco e preto, creme de Ninho, creme de avelã, leite em pó e 2 corações de chocolate.",
+      "active": true,
+      "isPromo": false,
+      "isNewLaunch": false,
+      "prices": [
+        {
+          "size": 300,
+          "price": 24.9,
+          "costPrice": 12.16,
+          "maxAccompaniments": 3,
+          "promoPrice": null
+        },
+        {
+          "size": 500,
+          "price": 31.9,
+          "costPrice": 17.11,
+          "maxAccompaniments": 4,
+          "promoPrice": null
+        },
+        {
+          "size": 700,
+          "price": 38.9,
+          "costPrice": 21.22,
+          "maxAccompaniments": 5,
+          "promoPrice": null
+        }
+      ],
+      "recipes": [
+        {
+          "size": 300,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 190,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 3.17
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 40,
+              "unit": "g",
+              "unitCost": 0.0303,
+              "totalCost": 1.21
+            },
+            {
+              "name": "Bis (1B / 1P)",
+              "quantity": 2,
+              "unit": "un",
+              "unitCost": 0.5,
+              "totalCost": 1
+            },
+            {
+              "name": "Creme de Ninho",
+              "quantity": 25,
+              "unit": "g",
+              "unitCost": 0.0128,
+              "totalCost": 0.32
+            },
+            {
+              "name": "Creme de chocolate com avelã",
+              "quantity": 25,
+              "unit": "g",
+              "unitCost": 0.0448,
+              "totalCost": 1.12
+            },
+            {
+              "name": "Leite Ninho pó",
+              "quantity": 20,
+              "unit": "g",
+              "unitCost": 0.04,
+              "totalCost": 0.8
+            },
+            {
+              "name": "Corações de chocolate",
+              "quantity": 2,
+              "unit": "un",
+              "unitCost": 1,
+              "totalCost": 2
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.55,
+              "totalCost": 2.55
+            }
+          ]
+        },
+        {
+          "size": 500,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 315,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 5.25
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 65,
+              "unit": "g",
+              "unitCost": 0.0303,
+              "totalCost": 1.97
+            },
+            {
+              "name": "Bis (2B / 2P)",
+              "quantity": 4,
+              "unit": "un",
+              "unitCost": 0.5,
+              "totalCost": 2
+            },
+            {
+              "name": "Creme de Ninho",
+              "quantity": 35,
+              "unit": "g",
+              "unitCost": 0.0129,
+              "totalCost": 0.45
+            },
+            {
+              "name": "Creme de chocolate com avelã",
+              "quantity": 35,
+              "unit": "g",
+              "unitCost": 0.0446,
+              "totalCost": 1.56
+            },
+            {
+              "name": "Leite Ninho pó",
+              "quantity": 30,
+              "unit": "g",
+              "unitCost": 0.04,
+              "totalCost": 1.2
+            },
+            {
+              "name": "Corações de chocolate",
+              "quantity": 2,
+              "unit": "un",
+              "unitCost": 1,
+              "totalCost": 2
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.67,
+              "totalCost": 2.67
+            }
+          ]
+        },
+        {
+          "size": 700,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 440,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 7.33
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 85,
+              "unit": "g",
+              "unitCost": 0.0304,
+              "totalCost": 2.58
+            },
+            {
+              "name": "Bis (2B / 2P)",
+              "quantity": 4,
+              "unit": "un",
+              "unitCost": 0.5,
+              "totalCost": 2
+            },
+            {
+              "name": "Creme de Ninho",
+              "quantity": 45,
+              "unit": "g",
+              "unitCost": 0.0129,
+              "totalCost": 0.58
+            },
+            {
+              "name": "Creme de chocolate com avelã",
+              "quantity": 45,
+              "unit": "g",
+              "unitCost": 0.0447,
+              "totalCost": 2.01
+            },
+            {
+              "name": "Leite Ninho pó",
+              "quantity": 40,
+              "unit": "g",
+              "unitCost": 0.04,
+              "totalCost": 1.6
+            },
+            {
+              "name": "Corações de chocolate",
+              "quantity": 2,
+              "unit": "un",
+              "unitCost": 1,
+              "totalCost": 2
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 3.13,
+              "totalCost": 3.13
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prod_oreo_supreme",
+      "name": "Oreo Supreme",
+      "categoryId": "cat_premium",
+      "categorySlug": "premium",
+      "image": "imagens/do seu jeitinho.webp",
+      "description": "Açaí cremoso intercalado com creme especial de Oreo, bolacha Oreo triturada, leite em pó e brigadeiro.",
+      "active": true,
+      "isPromo": false,
+      "isNewLaunch": false,
+      "prices": [
+        {
+          "size": 300,
+          "price": 22.9,
+          "costPrice": 9.39,
+          "maxAccompaniments": 3,
+          "promoPrice": null
+        },
+        {
+          "size": 500,
+          "price": 28.9,
+          "costPrice": 13.34,
+          "maxAccompaniments": 4,
+          "promoPrice": null
+        },
+        {
+          "size": 700,
+          "price": 35.9,
+          "costPrice": 17.61,
+          "maxAccompaniments": 5,
+          "promoPrice": null
+        }
+      ],
+      "recipes": [
+        {
+          "size": 300,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 190,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 3.17
+            },
+            {
+              "name": "Creme especial de Oreo",
+              "quantity": 30,
+              "unit": "g",
+              "unitCost": 0.0247,
+              "totalCost": 0.74
+            },
+            {
+              "name": "Bolacha Oreo triturada",
+              "quantity": 18,
+              "unit": "g",
+              "unitCost": 0.0611,
+              "totalCost": 1.1
+            },
+            {
+              "name": "Leite Ninho pó",
+              "quantity": 20,
+              "unit": "g",
+              "unitCost": 0.04,
+              "totalCost": 0.8
+            },
+            {
+              "name": "Brigadeiro cremoso",
+              "quantity": 25,
+              "unit": "g",
+              "unitCost": 0.0416,
+              "totalCost": 1.04
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.55,
+              "totalCost": 2.55
+            }
+          ]
+        },
+        {
+          "size": 500,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 315,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 5.25
+            },
+            {
+              "name": "Creme especial de Oreo",
+              "quantity": 45,
+              "unit": "g",
+              "unitCost": 0.0247,
+              "totalCost": 1.11
+            },
+            {
+              "name": "Bolacha Oreo triturada",
+              "quantity": 27,
+              "unit": "g",
+              "unitCost": 0.0611,
+              "totalCost": 1.65
+            },
+            {
+              "name": "Leite Ninho pó",
+              "quantity": 30,
+              "unit": "g",
+              "unitCost": 0.04,
+              "totalCost": 1.2
+            },
+            {
+              "name": "Brigadeiro cremoso",
+              "quantity": 35,
+              "unit": "g",
+              "unitCost": 0.0414,
+              "totalCost": 1.45
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.67,
+              "totalCost": 2.67
+            }
+          ]
+        },
+        {
+          "size": 700,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 440,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 7.33
+            },
+            {
+              "name": "Creme especial de Oreo",
+              "quantity": 60,
+              "unit": "g",
+              "unitCost": 0.0247,
+              "totalCost": 1.48
+            },
+            {
+              "name": "Bolacha Oreo triturada",
+              "quantity": 36,
+              "unit": "g",
+              "unitCost": 0.0611,
+              "totalCost": 2.2
+            },
+            {
+              "name": "Leite Ninho pó",
+              "quantity": 40,
+              "unit": "g",
+              "unitCost": 0.04,
+              "totalCost": 1.6
+            },
+            {
+              "name": "Brigadeiro cremoso",
+              "quantity": 45,
+              "unit": "g",
+              "unitCost": 0.0416,
+              "totalCost": 1.87
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 3.13,
+              "totalCost": 3.13
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prod_pistache",
+      "name": "Pistache",
+      "categoryId": "cat_premium",
+      "categorySlug": "premium",
+      "image": "imagens/do seu jeitinho.webp",
+      "description": "Açaí cremoso com creme gourmet de pistache nas bordas e topo, morangos frescos e amendoim triturado crocante.",
+      "active": true,
+      "isPromo": false,
+      "isNewLaunch": false,
+      "prices": [
+        {
+          "size": 300,
+          "price": 23.9,
+          "costPrice": 9.25,
+          "maxAccompaniments": 3,
+          "promoPrice": null
+        },
+        {
+          "size": 500,
+          "price": 30.9,
+          "costPrice": 13.02,
+          "maxAccompaniments": 4,
+          "promoPrice": null
         },
         {
           "size": 700,
           "price": 36.9,
-          "costPrice": 14,
-          "promoPrice": null,
-          "maxAccompaniments": 3
+          "costPrice": 16.15,
+          "maxAccompaniments": 5,
+          "promoPrice": null
         }
       ],
-      "recipes": [],
-      "allowedAccompanimentIds": [
-        "acomp_2",
-        "acomp_1",
-        "acomp_6",
-        "acomp_8",
-        "acomp_17"
+      "recipes": [
+        {
+          "size": 300,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 190,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 3.17
+            },
+            {
+              "name": "Creme gourmet de pistache",
+              "quantity": 25,
+              "unit": "g",
+              "unitCost": 0.0752,
+              "totalCost": 1.88
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 35,
+              "unit": "g",
+              "unitCost": 0.0303,
+              "totalCost": 1.06
+            },
+            {
+              "name": "Amendoim triturado",
+              "quantity": 15,
+              "unit": "g",
+              "unitCost": 0.04,
+              "totalCost": 0.6
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.55,
+              "totalCost": 2.55
+            }
+          ]
+        },
+        {
+          "size": 500,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 315,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 5.25
+            },
+            {
+              "name": "Creme gourmet de pistache",
+              "quantity": 35,
+              "unit": "g",
+              "unitCost": 0.0749,
+              "totalCost": 2.62
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 55,
+              "unit": "g",
+              "unitCost": 0.0304,
+              "totalCost": 1.67
+            },
+            {
+              "name": "Amendoim triturado",
+              "quantity": 20,
+              "unit": "g",
+              "unitCost": 0.04,
+              "totalCost": 0.8
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.67,
+              "totalCost": 2.67
+            }
+          ]
+        },
+        {
+          "size": 700,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 455,
+              "unit": "g",
+              "unitCost": 0.0167,
+              "totalCost": 7.58
+            },
+            {
+              "name": "Creme gourmet de pistache",
+              "quantity": 35,
+              "unit": "g",
+              "unitCost": 0.0749,
+              "totalCost": 2.62
+            },
+            {
+              "name": "Morango fresco fatiado",
+              "quantity": 60,
+              "unit": "g",
+              "unitCost": 0.0303,
+              "totalCost": 1.82
+            },
+            {
+              "name": "Amendoim triturado",
+              "quantity": 25,
+              "unit": "g",
+              "unitCost": 0.04,
+              "totalCost": 1
+            },
+            {
+              "name": "Embalagem + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 3.13,
+              "totalCost": 3.13
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prod_pote_1l",
+      "name": "Açaí Puro com Açúcar (1 Litro)",
+      "categoryId": "cat_polpa",
+      "categorySlug": "polpa",
+      "image": "imagens/pote 1l e 2 l.webp",
+      "description": "Pote família de 1 litro (900 g) de açaí tradicional puro com açúcar, cremoso e pronto para servir em casa.",
+      "active": true,
+      "isPromo": false,
+      "isNewLaunch": false,
+      "prices": [
+        {
+          "size": 1000,
+          "price": 36.9,
+          "costPrice": 18.66,
+          "maxAccompaniments": 0,
+          "promoPrice": null,
+          "allowExtras": false
+        }
+      ],
+      "recipes": [
+        {
+          "size": 1000,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional puro",
+              "quantity": 900,
+              "unit": "g",
+              "unitCost": 0.01667,
+              "totalCost": 15
+            },
+            {
+              "name": "Embalagem pote 1L + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 3.66,
+              "totalCost": 3.66
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prod_pote_2l",
+      "name": "Açaí Puro com Açúcar (2 Litros)",
+      "categoryId": "cat_polpa",
+      "categorySlug": "polpa",
+      "image": "imagens/pote 1l e 2 l.webp",
+      "description": "Pote econômico família de 2 litros (1.800 g) de açaí tradicional puro com açúcar, ideal para compartilhar.",
+      "active": true,
+      "isPromo": false,
+      "isNewLaunch": false,
+      "prices": [
+        {
+          "size": 2000,
+          "price": 64.9,
+          "costPrice": 35.57,
+          "maxAccompaniments": 0,
+          "promoPrice": null,
+          "allowExtras": false
+        }
+      ],
+      "recipes": [
+        {
+          "size": 2000,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional puro",
+              "quantity": 1800,
+              "unit": "g",
+              "unitCost": 0.01667,
+              "totalCost": 30
+            },
+            {
+              "name": "Embalagem pote 2L + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 5.57,
+              "totalCost": 5.57
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prod_garrafa_maracuja",
+      "name": "Açaí na Garrafa – Maracujá",
+      "categoryId": "cat_garrafa",
+      "categorySlug": "garrafa",
+      "image": "imagens/do seu jeitinho.webp",
+      "description": "Uma combinação irresistível de cremosidade e sabor tropical! Açaí cremoso com delicioso sabor de maracujá, trazendo um toque frutado e refrescante em cada gole.",
+      "active": true,
+      "isPromo": false,
+      "isNewLaunch": false,
+      "prices": [
+        {
+          "size": 300,
+          "price": 17.9,
+          "costPrice": 7.67,
+          "maxAccompaniments": 0,
+          "promoPrice": null,
+          "allowExtras": false
+        }
+      ],
+      "recipes": [
+        {
+          "size": 300,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 210,
+              "unit": "g",
+              "unitCost": 0.01667,
+              "totalCost": 3.5
+            },
+            {
+              "name": "Creme de maracujá",
+              "quantity": 40,
+              "unit": "g",
+              "unitCost": 0.0258,
+              "totalCost": 1.03
+            },
+            {
+              "name": "Leite integral batido",
+              "quantity": 40,
+              "unit": "ml",
+              "unitCost": 0.006,
+              "totalCost": 0.24
+            },
+            {
+              "name": "Garrafa 300ml + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.9,
+              "totalCost": 2.9
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prod_garrafa_pacoca",
+      "name": "Açaí na Garrafa – Paçoca",
+      "categoryId": "cat_garrafa",
+      "categorySlug": "garrafa",
+      "image": "imagens/do seu jeitinho.webp",
+      "description": "O encontro perfeito entre a cremosidade do açaí e o sabor inconfundível da paçoca! Combinação deliciosa com gostinho de amendoim que conquista desde o primeiro gole.",
+      "active": true,
+      "isPromo": false,
+      "isNewLaunch": false,
+      "prices": [
+        {
+          "size": 300,
+          "price": 17.9,
+          "costPrice": 7.56,
+          "maxAccompaniments": 0,
+          "promoPrice": null,
+          "allowExtras": false
+        }
+      ],
+      "recipes": [
+        {
+          "size": 300,
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 210,
+              "unit": "g",
+              "unitCost": 0.01667,
+              "totalCost": 3.5
+            },
+            {
+              "name": "Creme de paçoca",
+              "quantity": 40,
+              "unit": "ml",
+              "unitCost": 0.023,
+              "totalCost": 0.92
+            },
+            {
+              "name": "Leite integral batido",
+              "quantity": 40,
+              "unit": "ml",
+              "unitCost": 0.006,
+              "totalCost": 0.24
+            },
+            {
+              "name": "Garrafa 300ml + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.9,
+              "totalCost": 2.9
+            }
+          ]
+        }
       ]
     },
     {
       "id": "prod_garrafa_tradicional",
-      "name": "Açaí na Garrafa - Tradicional",
+      "name": "Açaí Tradicional na Garrafa",
       "categoryId": "cat_garrafa",
       "categorySlug": "garrafa",
-      "category": "garrafa",
-      "description": "Leve o sabor do açaí para onde quiser! Garrafa prática de 300 ml super cremosa sabor Tradicional.",
-      "details": "Prático para viagem, trabalho ou academia.",
       "image": "imagens/do seu jeitinho.webp",
+      "description": "O clássico que nunca decepciona! Açaí tradicional cremoso com leite condensado e cheio de sabor, pronto para abrir e aproveitar a qualquer hora do dia.",
       "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
       "isPromo": false,
-      "comboProductIds": [],
+      "isNewLaunch": false,
       "prices": [
         {
           "size": 300,
-          "price": 14.9,
-          "costPrice": 5.5,
+          "price": 16.9,
+          "costPrice": 7.4,
+          "maxAccompaniments": 0,
           "promoPrice": null,
-          "maxAccompaniments": 0
+          "allowExtras": false
         }
       ],
-      "recipes": []
-    },
-    {
-      "id": "prod_garrafa_ninho",
-      "name": "Açaí na Garrafa - Ninho",
-      "categoryId": "cat_garrafa",
-      "categorySlug": "garrafa",
-      "category": "garrafa",
-      "description": "Leve o sabor do açaí para onde quiser! Garrafa prática de 300 ml batida com Leite Ninho.",
-      "details": "Cremosidade extrema com sabor Ninho.",
-      "image": "imagens/do seu jeitinho.webp",
-      "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
-      "isPromo": false,
-      "comboProductIds": [],
-      "prices": [
+      "recipes": [
         {
           "size": 300,
-          "price": 14.9,
-          "costPrice": 5.8,
-          "promoPrice": null,
-          "maxAccompaniments": 0
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 220,
+              "unit": "g",
+              "unitCost": 0.01668,
+              "totalCost": 3.67
+            },
+            {
+              "name": "Leite condensado cremoso",
+              "quantity": 35,
+              "unit": "g",
+              "unitCost": 0.0177,
+              "totalCost": 0.62
+            },
+            {
+              "name": "Leite integral batido",
+              "quantity": 35,
+              "unit": "ml",
+              "unitCost": 0.006,
+              "totalCost": 0.21
+            },
+            {
+              "name": "Garrafa 300ml + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.9,
+              "totalCost": 2.9
+            }
+          ]
         }
-      ],
-      "recipes": []
+      ]
     },
     {
       "id": "prod_garrafa_morango",
-      "name": "Açaí na Garrafa - Morango",
+      "name": "Açaí na Garrafa – Morango",
       "categoryId": "cat_garrafa",
       "categorySlug": "garrafa",
-      "category": "garrafa",
-      "description": "Leve o sabor do açaí para onde quiser! Garrafa prática de 300 ml batida com Morangos selecionados.",
-      "details": "Refrescante e saborosa.",
       "image": "imagens/do seu jeitinho.webp",
+      "description": "Uma combinação apaixonante! Açaí cremoso com delicioso sabor de morango, unindo o gostinho irresistível do açaí com o toque doce e frutado do morango.",
       "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
       "isPromo": false,
-      "comboProductIds": [],
+      "isNewLaunch": false,
       "prices": [
         {
           "size": 300,
-          "price": 14.9,
-          "costPrice": 5.8,
+          "price": 18.9,
+          "costPrice": 8.19,
+          "maxAccompaniments": 0,
           "promoPrice": null,
-          "maxAccompaniments": 0
+          "allowExtras": false
         }
       ],
-      "recipes": []
-    },
-    {
-      "id": "prod_garrafa_pacoca",
-      "name": "Açaí na Garrafa - Paçoca",
-      "categoryId": "cat_garrafa",
-      "categorySlug": "garrafa",
-      "category": "garrafa",
-      "description": "Leve o sabor do açaí para onde quiser! Garrafa prática de 300 ml com paçoca cremosa.",
-      "details": "O toque brasileiro inconfundível de paçoca com açaí.",
-      "image": "imagens/do seu jeitinho.webp",
-      "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
-      "isPromo": false,
-      "comboProductIds": [],
-      "prices": [
+      "recipes": [
         {
           "size": 300,
-          "price": 14.9,
-          "costPrice": 5.5,
-          "promoPrice": null,
-          "maxAccompaniments": 0
+          "ingredients": [
+            {
+              "name": "Açaí tradicional",
+              "quantity": 210,
+              "unit": "g",
+              "unitCost": 0.01667,
+              "totalCost": 3.5
+            },
+            {
+              "name": "Creme de morango",
+              "quantity": 40,
+              "unit": "g",
+              "unitCost": 0.0388,
+              "totalCost": 1.55
+            },
+            {
+              "name": "Leite integral batido",
+              "quantity": 40,
+              "unit": "ml",
+              "unitCost": 0.006,
+              "totalCost": 0.24
+            },
+            {
+              "name": "Garrafa 300ml + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 2.9,
+              "totalCost": 2.9
+            }
+          ]
         }
-      ],
-      "recipes": []
+      ]
     },
     {
-      "id": "polpa_1l",
-      "name": "Pura Polpa de Açaí 1 Litro",
-      "categoryId": "cat_levar",
-      "categorySlug": "levar",
-      "category": "levar",
-      "description": "Pote de 1 Litro de açaí cremoso puro para você compartilhar com quem ama!",
-      "details": "Mais açaí para você compartilhar em casa!",
-      "image": "imagens/pote 1l e 2 l.webp",
+      "id": "prod_mousse_maracuja",
+      "name": "Mousse de Maracujá",
+      "categoryId": "cat_mousses",
+      "categorySlug": "mousses",
+      "image": "imagens/do seu jeitinho.webp",
+      "description": "Mousse cremoso de maracujá servido no pote individual de 110 ml. Ótimo como sobremesa ou acompanhamento.",
       "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
       "isPromo": false,
-      "comboProductIds": [],
+      "isNewLaunch": false,
       "prices": [
         {
-          "size": 1000,
-          "price": 29.9,
-          "costPrice": 14.5,
+          "size": 110,
+          "price": 7.9,
+          "costPrice": 4.34,
+          "maxAccompaniments": 0,
           "promoPrice": null,
-          "maxAccompaniments": 0
+          "allowExtras": false
         }
       ],
-      "recipes": []
+      "recipes": [
+        {
+          "size": 110,
+          "ingredients": [
+            {
+              "name": "Creme de maracujá concentrado",
+              "quantity": 100,
+              "unit": "g",
+              "unitCost": 0.0257,
+              "totalCost": 2.57
+            },
+            {
+              "name": "Pote 110ml + Etiqueta + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 1.77,
+              "totalCost": 1.77
+            }
+          ]
+        }
+      ]
     },
     {
-      "id": "polpa_2l",
-      "name": "Pura Polpa de Açaí 2 Litros",
-      "categoryId": "cat_levar",
-      "categorySlug": "levar",
-      "category": "levar",
-      "description": "Pote de 2 Litros de pura polpa cremosa com rendimento máximo para toda a família!",
-      "details": "Rendimento para toda a família e amigos.",
-      "image": "imagens/pote 1l e 2 l.webp",
+      "id": "prod_mousse_morango",
+      "name": "Mousse de Morango",
+      "categoryId": "cat_mousses",
+      "categorySlug": "mousses",
+      "image": "imagens/do seu jeitinho.webp",
+      "description": "Mousse cremoso de morango servido no pote individual de 110 ml. Ótimo como sobremesa ou acompanhamento.",
       "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
       "isPromo": false,
-      "comboProductIds": [],
+      "isNewLaunch": false,
       "prices": [
         {
-          "size": 2000,
-          "price": 49.9,
-          "costPrice": 23.5,
+          "size": 110,
+          "price": 8.9,
+          "costPrice": 5.64,
+          "maxAccompaniments": 0,
           "promoPrice": null,
-          "maxAccompaniments": 0
+          "allowExtras": false
         }
       ],
-      "recipes": []
+      "recipes": [
+        {
+          "size": 110,
+          "ingredients": [
+            {
+              "name": "Creme de morango especial",
+              "quantity": 100,
+              "unit": "g",
+              "unitCost": 0.0388,
+              "totalCost": 3.88
+            },
+            {
+              "name": "Pote 110ml + Etiqueta + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 1.77,
+              "totalCost": 1.77
+            }
+          ]
+        }
+      ]
     },
     {
-      "id": "combo_dupla",
-      "name": "Combo Dupla",
+      "id": "prod_mousse_oreo",
+      "name": "Mousse de Oreo",
+      "categoryId": "cat_mousses",
+      "categorySlug": "mousses",
+      "image": "imagens/do seu jeitinho.webp",
+      "description": "Mousse cremoso sabor Oreo servido no pote individual de 110 ml. Ótimo como sobremesa ou acompanhamento.",
+      "active": true,
+      "isPromo": false,
+      "isNewLaunch": false,
+      "prices": [
+        {
+          "size": 110,
+          "price": 7.9,
+          "costPrice": 4.23,
+          "maxAccompaniments": 0,
+          "promoPrice": null,
+          "allowExtras": false
+        }
+      ],
+      "recipes": [
+        {
+          "size": 110,
+          "ingredients": [
+            {
+              "name": "Creme de Oreo",
+              "quantity": 100,
+              "unit": "g",
+              "unitCost": 0.0247,
+              "totalCost": 2.47
+            },
+            {
+              "name": "Pote 110ml + Etiqueta + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 1.77,
+              "totalCost": 1.77
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prod_mousse_pacoca",
+      "name": "Mousse de Paçoca",
+      "categoryId": "cat_mousses",
+      "categorySlug": "mousses",
+      "image": "imagens/do seu jeitinho.webp",
+      "description": "Mousse cremoso de paçoca servido no pote individual de 110 ml. Ótimo como sobremesa ou acompanhamento.",
+      "active": true,
+      "isPromo": false,
+      "isNewLaunch": false,
+      "prices": [
+        {
+          "size": 110,
+          "price": 7.9,
+          "costPrice": 4.07,
+          "maxAccompaniments": 0,
+          "promoPrice": null,
+          "allowExtras": false
+        }
+      ],
+      "recipes": [
+        {
+          "size": 110,
+          "ingredients": [
+            {
+              "name": "Creme de paçoca",
+              "quantity": 100,
+              "unit": "ml",
+              "unitCost": 0.023,
+              "totalCost": 2.3
+            },
+            {
+              "name": "Pote 110ml + Etiqueta + Kit Delivery",
+              "quantity": 1,
+              "unit": "kit",
+              "unitCost": 1.77,
+              "totalCost": 1.77
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "combo_casal_explosao",
+      "name": "Combo Casal Apaixonado",
       "categoryId": "cat_combos",
       "categorySlug": "combos",
-      "category": "combos",
-      "description": "2 copos de 300 ml (Clássico: Açaí, morango, chantilly e leite condensado).",
-      "details": "Mais sabor, mais economia!",
-      "image": "imagens/combo economico.webp",
-      "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
-      "isPromo": false,
-      "comboProductIds": [
-        "prod_classico"
-      ],
-      "prices": [
-        {
-          "size": 300,
-          "price": 39.9,
-          "costPrice": 15,
-          "promoPrice": null,
-          "maxAccompaniments": 0
-        }
-      ],
-      "recipes": []
-    },
-    {
-      "id": "combo_casal",
-      "name": "Combo Casal",
-      "categoryId": "cat_combos",
-      "categorySlug": "combos",
-      "category": "combos",
-      "description": "2 copos de 500 ml (Clássico: Açaí, morango, chantilly e leite condensado).",
-      "details": "O momento especial a dois com copos generosos de 500ml.",
       "image": "imagens/combo casal.webp",
+      "description": "2 Copos de 500ml à sua escolha + 1 Mousse de 110ml para dividir a dois com super desconto!",
       "active": true,
-      "isCustomizable": false,
+      "isPromo": true,
       "isNewLaunch": false,
-      "isPromo": false,
       "comboProductIds": [
-        "prod_classico"
+        "prod_classico",
+        "prod_ninho_morango"
       ],
+      "isCustomizableCombo": true,
       "prices": [
         {
           "size": 500,
           "price": 54.9,
-          "costPrice": 21,
-          "promoPrice": null,
-          "maxAccompaniments": 0
+          "promoPrice": 49.9,
+          "costPrice": 25.16,
+          "maxAccompaniments": 4
         }
       ],
-      "recipes": []
-    },
-    {
-      "id": "combo_familia",
-      "name": "Combo Família",
-      "categoryId": "cat_combos",
-      "categorySlug": "combos",
-      "category": "combos",
-      "description": "4 copos de 500 ml (Clássico: Açaí, morango, chantilly e leite condensado).",
-      "details": "Festa em família com 4 copos grandes de 500ml cada!",
-      "image": "imagens/combo familia.webp",
-      "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
-      "isPromo": false,
-      "comboProductIds": [
-        "prod_classico"
-      ],
-      "prices": [
+      "recipes": [
         {
           "size": 500,
-          "price": 99.9,
-          "costPrice": 42,
-          "promoPrice": null,
-          "maxAccompaniments": 0
+          "ingredients": [
+            {
+              "name": "2x Copos de Açaí 500ml (Clássico / Ninho com Morango)",
+              "quantity": 2,
+              "unit": "copos",
+              "unitCost": 12.58,
+              "totalCost": 25.16
+            },
+            {
+              "name": "1x Mousse de 110ml",
+              "quantity": 1,
+              "unit": "un",
+              "unitCost": 4.34,
+              "totalCost": 4.34
+            },
+            {
+              "name": "Embalagem térmica para transporte e sacola",
+              "quantity": 1,
+              "unit": "un",
+              "unitCost": 1.5,
+              "totalCost": 1.5
+            }
+          ]
         }
-      ],
-      "recipes": []
+      ]
     },
     {
-      "id": "combo_kids",
-      "name": "Combo Kids",
+      "id": "combo_kids_duplo",
+      "name": "Combo Kids Alegria",
       "categoryId": "cat_combos",
       "categorySlug": "combos",
-      "category": "combos",
-      "description": "3 copos infantis de 180 ml com coberturas e guloseimas que a criançada ama!",
-      "details": "Alegria e sabor na medida para as crianças.",
       "image": "imagens/combo kids.webp",
+      "description": "2 Copos Kids de 250ml montados com confetes, chocobol e Fini para a criançada se divertir!",
       "active": true,
-      "isCustomizable": false,
+      "isPromo": true,
       "isNewLaunch": false,
-      "isPromo": false,
       "comboProductIds": [
-        "prod_kids_mixfini"
+        "prod_kids_fini",
+        "prod_kids_moranguinho"
       ],
+      "isCustomizableCombo": true,
       "prices": [
         {
-          "size": 180,
-          "price": 39.9,
-          "costPrice": 14.5,
-          "promoPrice": null,
-          "maxAccompaniments": 0
+          "size": 250,
+          "price": 28.9,
+          "promoPrice": 26.9,
+          "costPrice": 14.97,
+          "maxAccompaniments": 4
         }
       ],
-      "recipes": []
-    },
-    {
-      "id": "combo_fit_casal",
-      "name": "Combo Fit Casal",
-      "categoryId": "cat_combos",
-      "categorySlug": "combos",
-      "category": "combos",
-      "description": "2 copos de 300 ml (Fitness: Opções saudáveis e cheias de energia com banana, morango e chia/granola).",
-      "details": "Opção fitness e nutritiva para casal.",
-      "image": "imagens/combo casal.webp",
-      "active": true,
-      "isCustomizable": false,
-      "isNewLaunch": false,
-      "isPromo": false,
-      "comboProductIds": [
-        "prod_fit_classico"
-      ],
-      "prices": [
+      "recipes": [
         {
-          "size": 300,
-          "price": 39.9,
-          "costPrice": 17,
-          "promoPrice": null,
-          "maxAccompaniments": 0
+          "size": 250,
+          "ingredients": [
+            {
+              "name": "2x Copos Kids 250ml montados",
+              "quantity": 2,
+              "unit": "copos",
+              "unitCost": 7.48,
+              "totalCost": 14.97
+            },
+            {
+              "name": "Embalagem térmica e sacola",
+              "quantity": 1,
+              "unit": "un",
+              "unitCost": 1.5,
+              "totalCost": 1.5
+            }
+          ]
         }
-      ],
-      "recipes": []
+      ]
     }
   ],
   "accompaniments": [
     {
-      "id": "acomp_1",
-      "name": "Morango",
-      "costPrice": 0.8,
-      "active": true,
-      "allowedProductIds": []
+      "id": "ac_leite_ninho",
+      "name": "Leite Ninho em pó",
+      "active": true
     },
     {
-      "id": "acomp_2",
-      "name": "Banana",
-      "costPrice": 0.4,
-      "active": true,
-      "allowedProductIds": []
-    },
-    {
-      "id": "acomp_3",
-      "name": "Kiwi",
-      "costPrice": 0.7,
-      "active": true,
-      "allowedProductIds": []
-    },
-    {
-      "id": "acomp_4",
-      "name": "Uva",
-      "costPrice": 0.6,
-      "active": true,
-      "allowedProductIds": []
-    },
-    {
-      "id": "acomp_5",
-      "name": "Manga",
-      "costPrice": 0.5,
-      "active": true,
-      "allowedProductIds": []
-    },
-    {
-      "id": "acomp_6",
-      "name": "Granola",
-      "costPrice": 0.3,
-      "active": true,
-      "allowedProductIds": []
-    },
-    {
-      "id": "acomp_7",
+      "id": "ac_leite_cond",
       "name": "Leite condensado",
-      "costPrice": 0.5,
-      "active": true,
-      "allowedProductIds": []
+      "active": true
     },
     {
-      "id": "acomp_8",
-      "name": "Ninho",
-      "costPrice": 0.6,
-      "active": true,
-      "allowedProductIds": []
+      "id": "ac_granola",
+      "name": "Granola tradicional",
+      "active": true
     },
     {
-      "id": "acomp_9",
-      "name": "Chantilly",
-      "costPrice": 0.4,
-      "active": true,
-      "allowedProductIds": []
-    },
-    {
-      "id": "acomp_10",
-      "name": "Confete",
-      "costPrice": 0.4,
-      "active": true,
-      "allowedProductIds": []
-    },
-    {
-      "id": "acomp_11",
-      "name": "Bis",
-      "costPrice": 0.7,
-      "active": true,
-      "allowedProductIds": []
-    },
-    {
-      "id": "acomp_12",
-      "name": "Ovomaltine",
-      "costPrice": 0.6,
-      "active": true,
-      "allowedProductIds": []
-    },
-    {
-      "id": "acomp_13",
+      "id": "ac_pacoca",
       "name": "Paçoca",
-      "costPrice": 0.3,
-      "active": true,
-      "allowedProductIds": []
+      "active": true
     },
     {
-      "id": "acomp_14",
+      "id": "ac_amendoim",
+      "name": "Amendoim triturado",
+      "active": true
+    },
+    {
+      "id": "ac_chocobol",
+      "name": "Chocobol",
+      "active": true
+    },
+    {
+      "id": "ac_granulado",
+      "name": "Chocolate granulado",
+      "active": true
+    },
+    {
+      "id": "ac_confete",
+      "name": "Confete",
+      "active": true
+    },
+    {
+      "id": "ac_sucrilhos",
       "name": "Sucrilhos",
-      "costPrice": 0.3,
-      "active": true,
-      "allowedProductIds": []
+      "active": true
     },
     {
-      "id": "acomp_15",
-      "name": "Gotas de chocolate",
-      "costPrice": 0.5,
-      "active": true,
-      "allowedProductIds": []
+      "id": "ac_ovomaltine",
+      "name": "Ovomaltine",
+      "active": true
     },
     {
-      "id": "acomp_16",
-      "name": "Mel",
-      "costPrice": 0.5,
-      "active": true,
-      "allowedProductIds": []
+      "id": "ac_chia",
+      "name": "Chia",
+      "active": true
     },
     {
-      "id": "acomp_17",
-      "name": "Coco Ralado",
-      "costPrice": 0.4,
-      "active": true,
-      "allowedProductIds": []
+      "id": "ac_mel",
+      "name": "Mel puro",
+      "active": true
+    },
+    {
+      "id": "ac_gotas_branco",
+      "name": "Gotas de chocolate branco",
+      "active": true
+    },
+    {
+      "id": "ac_gotas_preto",
+      "name": "Gotas de chocolate preto",
+      "active": true
+    },
+    {
+      "id": "ac_bis",
+      "name": "Bis picado",
+      "active": true
+    },
+    {
+      "id": "ac_mini_fini",
+      "name": "Mini Fini confeitos",
+      "active": true
     }
   ],
   "extras": [
     {
-      "id": "ext_nutella",
-      "name": "Nutella",
-      "price": 5.9,
-      "costPrice": 2.2,
+      "id": "ext_acai_trad",
+      "name": "Açaí tradicional extra",
+      "portion": "100 g",
+      "costPrice": 1.67,
+      "price": 3.5,
       "active": true,
       "allowInAcai": true,
       "allowInCombos": true
     },
     {
-      "id": "ext_brigadeiro",
-      "name": "Brigadeiro",
-      "price": 4.9,
-      "costPrice": 1.5,
+      "id": "ext_acai_zero",
+      "name": "Açaí sem açúcar extra",
+      "portion": "100 g",
+      "costPrice": 3.67,
+      "price": 6,
       "active": true,
       "allowInAcai": true,
       "allowInCombos": true
     },
     {
-      "id": "ext_chocoavela",
-      "name": "Chocolate com avelã",
-      "price": 4.9,
-      "costPrice": 1.6,
+      "id": "ext_creme_polpa",
+      "name": "Creme de polpa de açaí",
+      "portion": "50 ml",
+      "costPrice": 0.7,
+      "price": 2.5,
       "active": true,
       "allowInAcai": true,
       "allowInCombos": true
     },
     {
-      "id": "ext_ovomaltine",
-      "name": "Ovomaltine",
-      "price": 3.9,
-      "costPrice": 1.2,
+      "id": "ext_banana",
+      "name": "Banana fatiada",
+      "portion": "40 g",
+      "costPrice": 0.32,
+      "price": 2.5,
       "active": true,
+      "isFruitExtra": true,
       "allowInAcai": true,
       "allowInCombos": true
     },
     {
-      "id": "ext_bis",
-      "name": "Bis",
-      "price": 4.9,
+      "id": "ext_morango",
+      "name": "Morango fresco",
+      "portion": "45 g",
+      "costPrice": 1.36,
+      "price": 4,
+      "active": true,
+      "isFruitExtra": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_kiwi",
+      "name": "Kiwi fatiado",
+      "portion": "40 g",
       "costPrice": 1.4,
+      "price": 4,
       "active": true,
+      "isFruitExtra": true,
       "allowInAcai": true,
       "allowInCombos": true
     },
     {
-      "id": "ext_sonhodevalsa",
-      "name": "Sonho de Valsa",
-      "price": 4.9,
-      "costPrice": 1.8,
+      "id": "ext_manga",
+      "name": "Manga picada",
+      "portion": "40 g",
+      "costPrice": 0.28,
+      "price": 2.5,
       "active": true,
+      "isFruitExtra": true,
       "allowInAcai": true,
       "allowInCombos": true
     },
     {
-      "id": "ext_kitkat",
-      "name": "Kit Kat (picado)",
-      "price": 5.9,
-      "costPrice": 2.1,
+      "id": "ext_uva",
+      "name": "Uva sem caroço",
+      "portion": "40 g",
+      "costPrice": 0.88,
+      "price": 3.5,
       "active": true,
+      "isFruitExtra": true,
       "allowInAcai": true,
       "allowInCombos": true
     },
     {
-      "id": "ext_ninho",
-      "name": "Ninho",
-      "price": 3.9,
-      "costPrice": 0.9,
+      "id": "ext_maracuja",
+      "name": "Maracujá polpa",
+      "portion": "40 g",
+      "costPrice": 0.34,
+      "price": 3,
       "active": true,
-      "allowInAcai": true,
-      "allowInCombos": true
-    },
-    {
-      "id": "ext_leitecond",
-      "name": "Leite condensado",
-      "price": 2.9,
-      "costPrice": 0.8,
-      "active": true,
-      "allowInAcai": true,
-      "allowInCombos": true
-    },
-    {
-      "id": "ext_chantilly",
-      "name": "Chantilly",
-      "price": 3.9,
-      "costPrice": 1.1,
-      "active": true,
+      "isFruitExtra": true,
       "allowInAcai": true,
       "allowInCombos": true
     },
     {
       "id": "ext_granola",
-      "name": "Granola extra",
-      "price": 2.9,
-      "costPrice": 0.7,
+      "name": "Granola tradicional",
+      "portion": "30 g",
+      "costPrice": 2.04,
+      "price": 4,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_sucrilhos",
+      "name": "Sucrilhos crocante",
+      "portion": "25 g",
+      "costPrice": 0.62,
+      "price": 3,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_chia",
+      "name": "Sementes de Chia",
+      "portion": "15 g",
+      "costPrice": 0.45,
+      "price": 2.5,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_amendoim",
+      "name": "Amendoim triturado",
+      "portion": "25 g",
+      "costPrice": 1,
+      "price": 3,
       "active": true,
       "allowInAcai": true,
       "allowInCombos": true
     },
     {
       "id": "ext_pacoca",
-      "name": "Paçoca",
-      "price": 2.9,
-      "costPrice": 0.6,
+      "name": "Paçoca rolha esfarelada",
+      "portion": "25 g",
+      "costPrice": 0.68,
+      "price": 3,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_mel",
+      "name": "Mel puro de abelha",
+      "portion": "20 ml",
+      "costPrice": 2,
+      "price": 4,
       "active": true,
       "allowInAcai": true,
       "allowInCombos": true
     },
     {
       "id": "ext_confete",
-      "name": "Confete",
-      "price": 2.9,
-      "costPrice": 0.7,
+      "name": "Confetes coloridos",
+      "portion": "25 g",
+      "costPrice": 1.1,
+      "price": 3.5,
       "active": true,
       "allowInAcai": true,
       "allowInCombos": true
     },
     {
-      "id": "ext_fruta",
-      "name": "Acrescentar fruta",
-      "price": 3.9,
-      "costPrice": 1.3,
-      "isFruitExtra": true,
+      "id": "ext_chocobol",
+      "name": "Chocobol crocante",
+      "portion": "25 g",
+      "costPrice": 1.05,
+      "price": 3.5,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_granulado",
+      "name": "Chocolate granulado",
+      "portion": "25 g",
+      "costPrice": 1.2,
+      "price": 3.5,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_ovomaltine",
+      "name": "Ovomaltine crocante",
+      "portion": "25 g",
+      "costPrice": 1.33,
+      "price": 4,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_mini_fini",
+      "name": "Mini Fini confeitos",
+      "portion": "20 g",
+      "costPrice": 1.2,
+      "price": 3.5,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_cob_fini",
+      "name": "Cobertura Fini",
+      "portion": "25 ml",
+      "costPrice": 0.38,
+      "price": 2.5,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_nutella",
+      "name": "Nutella original",
+      "portion": "30 g",
+      "costPrice": 2.77,
+      "price": 6.5,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_choco_avela",
+      "name": "Chocolate com avelã",
+      "portion": "30 g",
+      "costPrice": 1.34,
+      "price": 4,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_oreo_bolacha",
+      "name": "Bolacha Oreo triturada",
+      "portion": "18 g",
+      "costPrice": 1.1,
+      "price": 3.5,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_gotas_branco",
+      "name": "Gotas de chocolate branco",
+      "portion": "25 g",
+      "costPrice": 0.97,
+      "price": 3.5,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_gotas_preto",
+      "name": "Gotas de chocolate preto",
+      "portion": "25 g",
+      "costPrice": 0.97,
+      "price": 3.5,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_bis",
+      "name": "Bis crocante (2 un)",
+      "portion": "2 un",
+      "costPrice": 1,
+      "price": 3,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_kitkat",
+      "name": "Kit Kat (1 un)",
+      "portion": "1 un",
+      "costPrice": 3.8,
+      "price": 6.5,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_sonho_valsa",
+      "name": "Sonho de Valsa (1 un)",
+      "portion": "1 un",
+      "costPrice": 2,
+      "price": 4,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_coracao_choco",
+      "name": "Chocolate de coração (2 un)",
+      "portion": "2 un",
+      "costPrice": 2,
+      "price": 4,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_brigadeiro",
+      "name": "Brigadeiro cremoso",
+      "portion": "30 g",
+      "costPrice": 1.25,
+      "price": 4,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_ninho_po",
+      "name": "Leite Ninho em pó",
+      "portion": "25 g",
+      "costPrice": 1,
+      "price": 3.5,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_whey",
+      "name": "Whey Protein concentrado",
+      "portion": "30 g",
+      "costPrice": 2.97,
+      "price": 6.5,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_pasta_amendoim",
+      "name": "Pasta de amendoim zero",
+      "portion": "25 g",
+      "costPrice": 0.94,
+      "price": 3.5,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_chantilly",
+      "name": "Chantilly aerado",
+      "portion": "25 ml",
+      "costPrice": 0.57,
+      "price": 3,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_creme_amendoim",
+      "name": "Creme de amendoim zero",
+      "portion": "30 g",
+      "costPrice": 0.89,
+      "price": 3.5,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_creme_pistache",
+      "name": "Creme gourmet de pistache",
+      "portion": "30 g",
+      "costPrice": 2.25,
+      "price": 6,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_creme_ninho",
+      "name": "Creme especial de Ninho",
+      "portion": "30 g",
+      "costPrice": 0.39,
+      "price": 3.5,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_creme_oreo",
+      "name": "Creme de Oreo",
+      "portion": "30 g",
+      "costPrice": 0.74,
+      "price": 3.5,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_creme_maracuja",
+      "name": "Creme de maracujá",
+      "portion": "30 g",
+      "costPrice": 0.77,
+      "price": 3.5,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_creme_morango",
+      "name": "Creme de morango",
+      "portion": "30 g",
+      "costPrice": 1.16,
+      "price": 3.5,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_creme_pacoca",
+      "name": "Creme de paçoca",
+      "portion": "30 ml",
+      "costPrice": 0.69,
+      "price": 3.5,
+      "active": true,
+      "allowInAcai": true,
+      "allowInCombos": true
+    },
+    {
+      "id": "ext_leite_cond",
+      "name": "Leite condensado cremoso",
+      "portion": "25 g",
+      "costPrice": 0.44,
+      "price": 2.5,
       "active": true,
       "allowInAcai": true,
       "allowInCombos": true
     }
   ],
   "fruits": [
-    "Banana",
-    "Morango",
-    "Uva",
-    "Manga",
-    "Kiwi"
+    {
+      "id": "fr_morango",
+      "name": "Morango",
+      "costPrice": 1.36,
+      "active": true
+    },
+    {
+      "id": "fr_banana",
+      "name": "Banana",
+      "costPrice": 0.32,
+      "active": true
+    },
+    {
+      "id": "fr_kiwi",
+      "name": "Kiwi",
+      "costPrice": 1.4,
+      "active": true
+    },
+    {
+      "id": "fr_manga",
+      "name": "Manga",
+      "costPrice": 0.28,
+      "active": true
+    },
+    {
+      "id": "fr_uva",
+      "name": "Uva sem caroço",
+      "costPrice": 0.88,
+      "active": true
+    },
+    {
+      "id": "fr_maracuja",
+      "name": "Maracujá",
+      "costPrice": 0.34,
+      "active": true
+    }
   ]
 }
