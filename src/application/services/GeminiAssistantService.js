@@ -385,7 +385,7 @@ ${ctx.openingHoursFormatted}
 ${ctx.address}
 
 💳 *Formas de Pagamento:*
-• *Pix:* Chave *${ctx.pixKey}* — _Favorecido: ${ctx.pixFavored}_
+• *Pix:* Chave CNPJ: *${ctx.pixKey}* — _Favorecido: ${ctx.pixFavored}_
 • *Cartão de Crédito e Débito* (levamos a maquininha)
 • *Dinheiro* (informe se precisar de troco)
 
@@ -557,34 +557,34 @@ _(Digite *0* para voltar ao menu)_`;
     const nameStr = customerName ? customerName : (ctx?.clientMemory?.customerName || 'Cliente');
 
     if (ctx.isOpen) {
-      return `Atendimento automático Explosão Açaí! 🍧
-🟢 *Status:* Loja Aberta *(Pedidos saindo agora! 🚀)*
+      return `Atendimento automático Explosão Açaí!
+😃 *Status:* Loja Aberta (Pedidos saindo agora! 🚀)
 
 Olá *${nameStr}*! Bateu vontade de um açaí geladinho? Escolha uma opção:
 
 1️⃣ - *Fazer Pedido / Cardápio Digital* 🍧
-2️⃣ - *Combos & Promoções da Semana* 🔥
+2️⃣ - *Combos & Promoções da Semana*
 3️⃣ - *Rastrear meu Pedido* 🛵
-4️⃣ - *Horário, Endereço e Pagamentos (PIX)* 📍
+4️⃣ - *Horário, Endereço e Pagamentos (PIX)*
 5️⃣ - *Falar com Atendente / Ouvidoria* 💬
 6️⃣ - *Encerrar atendimento*
 
-_Digite *0* a qualquer momento para voltar ao menu._`;
+_Digite 0 a qualquer momento para voltar ao menu._`;
     } else {
       const nextTime = ctx.nextOpeningTime || '13:00';
-      return `Atendimento automático Explosão Açaí! 🍧
-🔴 *Status:* Loja Fechada *(Abrimos às ${nextTime})*
+      return `Atendimento automático Explosão Açaí!
+😴 *Status:* Loja Fechada (Abrimos às ${nextTime})
 
 Olá *${nameStr}*! Quer já deixar seu açaí garantido para quando abrirmos? Escolha uma opção:
 
 1️⃣ - *Agendar Pedido para Hoje* ⏰
-2️⃣ - *Ver Cardápio Digital (Preços e Sabores)* 🍧
-3️⃣ - *Combos & Promoções da Semana* 🔥
-4️⃣ - *Horário, Endereço e Pagamentos (PIX)* 📍
+2️⃣ - *Ver Cardápio Digital (Preços e Sabores)*
+3️⃣ - *Combos & Promoções da Semana*
+4️⃣ - *Horário, Endereço e Pagamentos (PIX)*
 5️⃣ - *Falar com Atendente / Ouvidoria* 💬
 6️⃣ - *Encerrar atendimento*
 
-_Digite *0* a qualquer momento para voltar ao menu._`;
+_Digite 0 a qualquer momento para voltar ao menu._`;
     }
   }
 
@@ -1217,7 +1217,7 @@ INFORMAÇÕES OFICIAIS DA LOJA:
 ${ctx.openingHoursFormatted}
 - Endereço: ${ctx.address}
 - Cardápio Digital: ${ctx.publicUrl}
-- Formas de Pagamento: Pix (Chave CNPJ ${ctx.pixKey} - Favorecido: ${ctx.pixFavored}), Cartão de Crédito/Débito e Dinheiro (com troco).
+- Formas de Pagamento: Pix (Chave CNPJ ${ctx.pixKey} - Favorecido: ${ctx.pixFavored}), Cartão de Crédito/Débito e Dinheiro (com troco). Sempre informe que a chave Pix é do tipo CNPJ.
 - Cupom ativo: Use EXPLOSAO10 para 10% OFF na primeira compra.
 
 ATALHOS DO MENU:
