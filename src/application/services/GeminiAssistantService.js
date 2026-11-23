@@ -234,6 +234,54 @@ class GeminiAssistantService {
   }
 
   /**
+   * Cliente perguntando se fazemos delivery / quanto é a taxa de entrega?
+   * (Não captura rastreio de pedido nem reclamação de atraso)
+   */
+  isDeliveryQuestion(text) {
+    if (!text || typeof text !== 'string') return false;
+    const t = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    if (!t || t.length > 200) return false;
+    // Rastreio / atraso / problemas -> outros fluxos
+    if (/(onde esta|cade|status|rastre|atras|demor|minha entrega|meu pedido|ja saiu|motoboy)/.test(t)) return false;
+    if (/\bdelivery\b/.test(t)) return true;
+    if (/\b(frete|taxa de entrega|taxa de delivery|valor da entrega|valor do frete|preco da entrega)\b/.test(t)) return true;
+    if (/\b(faz|fazem|tem|tm|voces|vcs|vc|ai tem)\b.{0,25}\bentreg/.test(t)) return true;
+    if (/\bentreg(a|am|ar)\b.{0,20}\b(em|no|na|pra|para|ate|aqui|bairro)\b/.test(t)) return true;
+    return false;
+  }
+
+  /**
+   * Resposta padrão sobre delivery (valores vêm das configurações de frete da loja)
+   */
+  buildDeliveryReply(ctx = {}) {
+    const st = db.get()?.settings || {};
+    const num = (v, d) => (v !== undefined && v !== null && v !== '' && !Number.isNaN(Number(v)) ? Number(v) : d);
+    const freeKm = num(st.freeKmThreshold, 2);
+    const minFreight = num(st.minFreight, 4.5);
+    const perKm = num(st.perKmRate, 1);
+    const fmtKm = (n) => String(Number(n.toFixed(1))).replace('.', ',');
+    const fmtMoney = (n) => 'R$ ' + n.toFixed(2).replace('.', ',');
+    // Acima deste km a taxa passa do valor mínimo e cobra por km rodado (arredondado para km inteiro na comunicação)
+    const tierKm = Math.ceil(minFreight / (perKm || 1));
+    const rawUrl = ctx.publicUrl || process.env.BASE_URL || 'https://cardapioexplosaoacai.com.br';
+    const url = rawUrl.replace(/\/+$/, '') + '/';
+
+    return `Oi! 😍 Sim, fazemos delivery! 🛵
+
+A taxa de entrega varia de acordo com a distância do seu endereço:
+
+📍 Até ${fmtKm(freeKm)} km: entrega grátis!
+📍 Acima de ${fmtKm(freeKm)} km até ${fmtKm(tierKm)} km: taxa mínima de ${fmtMoney(minFreight)}.
+📍 Acima de ${fmtKm(tierKm)} km: cobramos ${fmtMoney(perKm)} por km rodado.
+
+Mas pode ficar tranquilo(a)! Nosso cardápio digital informa o valor da taxa de entrega antes de você finalizar o pagamento. 😉
+
+Acesse agora, confira nossas delícias e aproveite para fazer seu pedido! 
+
+🛒 ${url}`;
+  }
+
+  /**
    * Consulta a base de aprendizado de perguntas e respostas (FAQ Dinâmica / IA)
    */
   findLearnedKnowledge(text) {
@@ -1194,6 +1242,14 @@ Obrigado por entrar em contato com a *Explosão Açaí* 🍧. Quando bater aquel
       return { reply, needsHumanTakeover: false, feedbackId: entry?.id };
     }
 
+    // 10.5 PERGUNTA SOBRE DELIVERY / TAXA DE ENTREGA -> resposta padrão da loja
+    if (this.isDeliveryQuestion(cleanText)) {
+      const reply = this.buildDeliveryReply(ctx);
+      this.saveHistory(phone, 'user', cleanText);
+      this.saveHistory(phone, 'assistant', reply);
+      return { reply, needsHumanTakeover: false };
+    }
+
     // 11. FAQ APRENDIDA (BASE DE CONHECIMENTO)
     const learned = this.findLearnedKnowledge(cleanText);
     if (learned) {
@@ -1218,6 +1274,7 @@ ${ctx.openingHoursFormatted}
 - Endereço: ${ctx.address}
 - Cardápio Digital: ${ctx.publicUrl}
 - Formas de Pagamento: Pix (Chave CNPJ ${ctx.pixKey} - Favorecido: ${ctx.pixFavored}), Cartão de Crédito/Débito e Dinheiro (com troco). Sempre informe que a chave Pix é do tipo CNPJ.
+- Taxa de Entrega: Até 2 km entrega grátis! De 2 km a 5 km taxa mínima de R$ 4,50. Acima de 5 km cobramos R$ 1,00 por km rodado. A taxa exata é calculada no cardápio digital antes de finalizar o pedido.
 - Cupom ativo: Use EXPLOSAO10 para 10% OFF na primeira compra.
 
 ATALHOS DO MENU:
