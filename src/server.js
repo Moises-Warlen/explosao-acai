@@ -185,10 +185,12 @@ const publicDir = path.resolve(__dirname, '../public');
 // Cache-Control: o painel precisa sempre receber a versão mais recente dos arquivos (evita JS antigo preso no navegador/CDN)
 app.use(express.static(publicDir, {
   extensions: ['html'],
-  etag: true,
+  etag: false,
   setHeaders: (res, filePath) => {
     if (/\.(html|js|css)$/i.test(filePath)) {
-      res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
     }
   }
 }));
