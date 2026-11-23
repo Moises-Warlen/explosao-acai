@@ -743,272 +743,105 @@ function formatSizeLabel(size) {
 
 /* ==========================================================================
    CONSTRUTOR VISUAL DINÂMICO DO COPO DE AÇAÍ (MONTE DO SEU JEITO)
-   Gera camadas visuais e pins flutuantes em tempo real sobre o copo de açaí
+   Utiliza as fotos reais profissionais do banco de imagens da loja
+   e reflete a montagem do copo naturalmente em tempo real
    ========================================================================== */
-function renderDynamicCupSvgToppings(selectedAcomps = [], selectedFruits = [], selectedExtras = []) {
+function getBestMatchingCupImage(selectedAcomps = [], selectedFruits = [], selectedExtras = []) {
   const all = [...selectedAcomps, ...selectedFruits, ...selectedExtras].map(s => String(s).toLowerCase());
+  
+  if (all.length === 0) {
+    return {
+      src: 'imagens/do seu jeitinho.webp',
+      label: 'Copo Base de Açaí Puro'
+    };
+  }
+
   const has = (key) => all.some(item => item.includes(key));
 
-  let layers = [];
-
-  // Ninho em pó / Leite em pó (camada aveludada sobre a superfície)
-  if (has('ninho') || has('leite em pó') || has('leite ninho')) {
-    layers.push(`
-      <ellipse cx="200" cy="62" rx="63" ry="32" fill="url(#gradNinho)" opacity="0.88" />
-      <g opacity="0.75">
-        <circle cx="170" cy="55" r="2.5" fill="#fff9e6" />
-        <circle cx="185" cy="68" r="3" fill="#fffdfa" />
-        <circle cx="215" cy="58" r="2.8" fill="#fff9e6" />
-        <circle cx="230" cy="67" r="2.2" fill="#fffdfa" />
-        <circle cx="198" cy="74" r="3.2" fill="#fff9e6" />
-        <circle cx="155" cy="65" r="2" fill="#fffdfa" />
-        <circle cx="240" cy="60" r="2" fill="#fff9e6" />
-      </g>
-    `);
+  // Prioridade 1: Nutella
+  if (has('nutella')) {
+    return {
+      src: 'imagens/nutella.webp',
+      label: 'Preparo Real com Nutella Turbinada'
+    };
   }
 
-  // Paçoca / Amendoim
-  if (has('paçoca') || has('amendoim')) {
-    layers.push(`
-      <g opacity="0.9">
-        <ellipse cx="180" cy="68" rx="16" ry="8" fill="#c69255" opacity="0.7" />
-        <circle cx="175" cy="66" r="2.5" fill="#8c5828" />
-        <circle cx="182" cy="70" r="3" fill="#dfad74" />
-        <circle cx="188" cy="65" r="2.2" fill="#8c5828" />
-        <circle cx="220" cy="68" r="2.5" fill="#dfad74" />
-        <circle cx="226" cy="72" r="3.2" fill="#c69255" />
-      </g>
-    `);
+  // Prioridade 2: Morango + Ninho
+  if ((has('morango') && (has('ninho') || has('leite em pó'))) || has('ninho com morango')) {
+    return {
+      src: 'imagens/ninho com morango.webp',
+      label: 'Preparo Real com Ninho e Morango Fresco'
+    };
   }
 
-  // Granola
-  if (has('granola')) {
-    layers.push(`
-      <g opacity="0.95">
-        <ellipse cx="160" cy="60" rx="4.5" ry="2.5" fill="#d49b52" transform="rotate(-15 160 60)" />
-        <ellipse cx="172" cy="54" rx="5" ry="3" fill="#b07328" transform="rotate(25 172 54)" />
-        <ellipse cx="228" cy="58" rx="4.5" ry="2.5" fill="#d49b52" transform="rotate(-30 228 58)" />
-        <ellipse cx="240" cy="64" rx="5" ry="2.8" fill="#b07328" transform="rotate(15 240 64)" />
-        <circle cx="166" cy="65" r="1.8" fill="#8c541b" />
-        <circle cx="234" cy="62" r="2" fill="#8c541b" />
-        <circle cx="200" cy="75" r="2.2" fill="#d49b52" />
-      </g>
-    `);
-  }
-
-  // Fruta: Banana fatiada
-  if (has('banana')) {
-    layers.push(`
-      <g filter="url(#dropShadow)">
-        <g transform="translate(152, 54)">
-          <ellipse cx="0" cy="0" rx="13" ry="8.5" fill="#fff8db" stroke="#ecd588" stroke-width="1.2" transform="rotate(-12)" />
-          <ellipse cx="0" cy="0" rx="10" ry="6.5" fill="#fffdf2" transform="rotate(-12)" />
-          <circle cx="0" cy="0" r="1.5" fill="#cca855" opacity="0.8" />
-        </g>
-        <g transform="translate(178, 59)">
-          <ellipse cx="0" cy="0" rx="14" ry="9" fill="#fff8db" stroke="#ecd588" stroke-width="1.2" transform="rotate(8)" />
-          <ellipse cx="0" cy="0" rx="11" ry="7" fill="#fffdf2" transform="rotate(8)" />
-          <circle cx="0" cy="0" r="1.5" fill="#cca855" opacity="0.8" />
-        </g>
-        <g transform="translate(206, 61)">
-          <ellipse cx="0" cy="0" rx="13.5" ry="8.5" fill="#fff8db" stroke="#ecd588" stroke-width="1.2" transform="rotate(-5)" />
-          <ellipse cx="0" cy="0" rx="10.5" ry="6.5" fill="#fffdf2" transform="rotate(-5)" />
-          <circle cx="0" cy="0" r="1.5" fill="#cca855" opacity="0.8" />
-        </g>
-      </g>
-    `);
-  }
-
-  // Fruta: Morango fresco
+  // Prioridade 3: Morango (qualquer combinação com morango)
   if (has('morango')) {
-    layers.push(`
-      <g filter="url(#dropShadow)">
-        <g transform="translate(198, 50)">
-          <path d="M-14,-3 C-14,-10 0,-14 12,-4 C16,4 4,14 -1,16 C-7,14 -16,4 -14,-3 Z" fill="url(#gradMorango)" />
-          <path d="M-8,-1 C-8,-5 0,-8 6,-2 C9,3 2,9 -1,10 C-4,9 -9,3 -8,-1 Z" fill="#ff4d6d" opacity="0.9" />
-          <circle cx="-5" cy="2" r="0.9" fill="#fff3a8" />
-          <circle cx="0" cy="6" r="0.9" fill="#fff3a8" />
-          <circle cx="5" cy="3" r="0.9" fill="#fff3a8" />
-          <circle cx="-2" cy="-1" r="0.8" fill="#fff3a8" />
-          <path d="M-8,-12 Q-1,-8 -3,-3 Q1,-7 8,-10 Q2,-4 0,-1 Q-4,-6 -8,-12 Z" fill="#2d6a4f" />
-        </g>
-        <g transform="translate(225, 57)">
-          <path d="M-11,-2 C-11,-8 0,-11 10,-3 C13,4 3,12 -1,13 C-6,12 -13,4 -11,-2 Z" fill="url(#gradMorango)" transform="rotate(18)" />
-          <circle cx="0" cy="2" r="0.8" fill="#fff3a8" />
-          <circle cx="4" cy="5" r="0.8" fill="#fff3a8" />
-          <path d="M-6,-9 Q0,-6 -1,-2 Q2,-5 6,-7 Q2,-3 0,-1 Z" fill="#2d6a4f" />
-        </g>
-      </g>
-    `);
+    return {
+      src: 'imagens/ninho com morango.webp',
+      label: 'Preparo Real com Morangos Frescos'
+    };
   }
 
-  // Fruta: Kiwi fatiado
-  if (has('kiwi')) {
-    layers.push(`
-      <g filter="url(#dropShadow)" transform="translate(168, 65)">
-        <ellipse cx="0" cy="0" rx="14" ry="9" fill="#70e000" stroke="#38b000" stroke-width="1" transform="rotate(-10)" />
-        <ellipse cx="0" cy="0" rx="6" ry="4" fill="#d8f3dc" transform="rotate(-10)" />
-        <circle cx="-7" cy="-2" r="0.7" fill="#1b4332" />
-        <circle cx="-5" cy="-4" r="0.7" fill="#1b4332" />
-        <circle cx="0" cy="-5" r="0.7" fill="#1b4332" />
-        <circle cx="5" cy="-4" r="0.7" fill="#1b4332" />
-        <circle cx="7" cy="-1" r="0.7" fill="#1b4332" />
-        <circle cx="5" cy="3" r="0.7" fill="#1b4332" />
-        <circle cx="0" cy="4" r="0.7" fill="#1b4332" />
-        <circle cx="-5" cy="3" r="0.7" fill="#1b4332" />
-      </g>
-    `);
+  // Prioridade 4: Ninho / Leite em pó
+  if (has('ninho') || has('leite em pó') || has('leite ninho')) {
+    return {
+      src: 'imagens/ninho com morango.webp',
+      label: 'Preparo Real com Leite Ninho'
+    };
   }
 
-  // Fruta: Manga picada
-  if (has('manga')) {
-    layers.push(`
-      <g filter="url(#dropShadow)">
-        <rect x="210" y="62" width="11" height="8" rx="2" fill="#ffb703" stroke="#fb8500" stroke-width="0.8" transform="rotate(12 215 66)" />
-        <rect x="180" y="68" width="10" height="7.5" rx="2" fill="#ffb703" stroke="#fb8500" stroke-width="0.8" transform="rotate(-8 185 71)" />
-      </g>
-    `);
+  // Prioridade 5: Fini / Confetes
+  if (has('fini') || has('confete')) {
+    return {
+      src: 'imagens/mix fini.webp',
+      label: 'Preparo Real com Confeitos e Fini'
+    };
   }
 
-  // Fruta: Uva sem caroço
-  if (has('uva')) {
-    layers.push(`
-      <g filter="url(#dropShadow)">
-        <ellipse cx="158" cy="62" rx="9" ry="6.5" fill="#7209b7" stroke="#480ca8" stroke-width="1" />
-        <ellipse cx="156" cy="60" rx="3" ry="1.5" fill="#b5179e" opacity="0.8" />
-        <ellipse cx="236" cy="63" rx="9" ry="6.5" fill="#7209b7" stroke="#480ca8" stroke-width="1" />
-        <ellipse cx="234" cy="61" rx="3" ry="1.5" fill="#b5179e" opacity="0.8" />
-      </g>
-    `);
+  // Prioridade 6: Granola / Banana
+  if (has('granola') || has('banana')) {
+    return {
+      src: 'imagens/granola.webp',
+      label: 'Preparo Real com Granola Crocante e Frutas'
+    };
   }
 
-  // Fruta: Maracujá polpa
-  if (has('maracujá') || has('maracuja')) {
-    layers.push(`
-      <g opacity="0.95">
-        <path d="M165,58 Q195,50 225,58 Q200,68 165,58 Z" fill="#ffd166" opacity="0.8" />
-        <ellipse cx="180" cy="56" rx="2" ry="3.5" fill="#2b2d42" transform="rotate(25 180 56)" />
-        <ellipse cx="202" cy="55" rx="2" ry="3.2" fill="#2b2d42" transform="rotate(-15 202 55)" />
-        <ellipse cx="218" cy="59" rx="1.8" ry="3.5" fill="#2b2d42" transform="rotate(30 218 59)" />
-      </g>
-    `);
+  // Prioridade 7: Bis picado / Doces / Chocolates / Ovomaltine
+  if (has('bis') || has('doce') || has('ovomaltine') || has('chocobol') || has('chocolate') || has('calda')) {
+    return {
+      src: 'imagens/doce tentacao.webp',
+      label: 'Preparo Real Especial com Chocolates'
+    };
   }
 
-  // Leite Condensado Drizzle
-  if (has('leite condensado') || has('condensado')) {
-    layers.push(`
-      <path d="M148,58 Q165,72 185,55 T220,70 T252,56" fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" filter="url(#dropShadow)" opacity="0.95" />
-      <path d="M148,58 Q165,72 185,55 T220,70 T252,56" fill="none" stroke="#fff8e7" stroke-width="2.5" stroke-linecap="round" />
-    `);
+  // Prioridade 8: Leite condensado / Paçoca / Mel
+  if (has('condensado') || has('paçoca') || has('amendoim') || has('mel')) {
+    return {
+      src: 'imagens/classico.webp',
+      label: 'Preparo Real Clássico com Acompanhamentos'
+    };
   }
 
-  // Nutella / Calda de Chocolate
-  if (has('nutella') || has('chocolate') || has('calda')) {
-    layers.push(`
-      <path d="M145,52 Q168,45 190,68 T232,54 T255,62" fill="none" stroke="#2b1408" stroke-width="5" stroke-linecap="round" filter="url(#dropShadow)" />
-      <path d="M145,52 Q168,45 190,68 T232,54 T255,62" fill="none" stroke="#5a2d13" stroke-width="2.8" stroke-linecap="round" />
-    `);
-  }
-
-  // Confetes
-  if (has('confete')) {
-    layers.push(`
-      <g filter="url(#dropShadow)">
-        <circle cx="162" cy="52" r="3.8" fill="#e63946" />
-        <circle cx="178" cy="65" r="3.8" fill="#457b9d" />
-        <circle cx="195" cy="56" r="3.8" fill="#ffb703" />
-        <circle cx="212" cy="67" r="3.8" fill="#2a9d8f" />
-        <circle cx="230" cy="53" r="3.8" fill="#9d4edd" />
-        <circle cx="242" cy="63" r="3.5" fill="#f72585" />
-      </g>
-    `);
-  }
-
-  // Chocobol / Granulado
-  if (has('chocobol') || has('granulado')) {
-    layers.push(`
-      <g filter="url(#dropShadow)">
-        <circle cx="168" cy="68" r="3.5" fill="#3d1e11" />
-        <circle cx="167" cy="67" r="1.2" fill="#75432b" />
-        <circle cx="188" cy="72" r="3.5" fill="#3d1e11" />
-        <circle cx="187" cy="71" r="1.2" fill="#75432b" />
-        <circle cx="215" cy="73" r="3.5" fill="#3d1e11" />
-        <circle cx="214" cy="72" r="1.2" fill="#75432b" />
-        <circle cx="235" cy="69" r="3.2" fill="#3d1e11" />
-      </g>
-    `);
-  }
-
-  // Chantilly
-  if (has('chantilly')) {
-    layers.push(`
-      <g filter="url(#dropShadow)" transform="translate(200, 48)">
-        <ellipse cx="0" cy="6" rx="20" ry="10" fill="#f8f9fa" />
-        <ellipse cx="0" cy="0" rx="14" ry="7" fill="#ffffff" />
-        <path d="M-6,0 Q0,-12 4,-14 Q2,-6 0,0 Z" fill="#ffffff" />
-      </g>
-    `);
-  }
-
-  // Mel
-  if (has('mel')) {
-    layers.push(`
-      <path d="M152,60 Q175,68 200,56 T248,64" fill="none" stroke="#f4a261" stroke-width="3" stroke-linecap="round" opacity="0.85" />
-      <circle cx="200" cy="72" r="2.5" fill="#e76f51" opacity="0.8" />
-    `);
-  }
-
-  // Mini Fini
-  if (has('fini')) {
-    layers.push(`
-      <g filter="url(#dropShadow)">
-        <circle cx="170" cy="58" r="3.5" fill="#f72585" />
-        <circle cx="190" cy="64" r="3.5" fill="#4cc9f0" />
-        <circle cx="224" cy="56" r="3.5" fill="#7209b7" />
-      </g>
-    `);
-  }
-
-  return `
-    <svg class="dynamic-cup-svg-stage" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet">
-      <defs>
-        <radialGradient id="gradNinho" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#fff5db" stop-opacity="0.95" />
-          <stop offset="60%" stop-color="#faecc5" stop-opacity="0.9" />
-          <stop offset="100%" stop-color="#e8cca0" stop-opacity="0.7" />
-        </radialGradient>
-        <linearGradient id="gradMorango" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#ff3366" />
-          <stop offset="50%" stop-color="#d90429" />
-          <stop offset="100%" stop-color="#90071e" />
-        </linearGradient>
-        <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.35" />
-        </filter>
-      </defs>
-      ${layers.join('')}
-    </svg>
-  `;
+  return {
+    src: 'imagens/classico.webp',
+    label: `Copo Personalizado (${all.length} itens no preparo)`
+  };
 }
 
-function renderDynamicCupBadges(selectedAcomps = [], selectedFruits = [], selectedExtras = []) {
-  const badges = [];
+function renderDynamicCupStage(prod, selectedAcomps = [], selectedFruits = [], selectedExtras = []) {
+  const allSelected = [];
 
-  selectedFruits.forEach(fName => {
-    badges.push({ name: fName, icon: '🍓', type: 'fruit' });
-  });
-
-  selectedAcomps.forEach(aName => {
+  selectedFruits.forEach(f => allSelected.push({ name: f, icon: '🍓' }));
+  selectedAcomps.forEach(a => {
     let icon = '🥜';
-    const low = aName.toLowerCase();
+    const low = a.toLowerCase();
     if (low.includes('ninho') || low.includes('leite')) icon = '🥛';
     else if (low.includes('granola')) icon = '🌾';
     else if (low.includes('chocolate') || low.includes('chocobol')) icon = '🍫';
     else if (low.includes('confete')) icon = '🎉';
-    else if (low.includes('paçoca') || low.includes('amendoim')) icon = '🥜';
     else if (low.includes('mel')) icon = '🍯';
     else if (low.includes('fini')) icon = '🍬';
-    badges.push({ name: aName, icon, type: 'acomp' });
+    allSelected.push({ name: a, icon });
   });
 
   selectedExtras.forEach(extId => {
@@ -1020,65 +853,32 @@ function renderDynamicCupBadges(selectedAcomps = [], selectedFruits = [], select
       else if (low.includes('chantilly')) icon = '☁️';
       else if (low.includes('ninho')) icon = '🥛';
       else if (low.includes('mel')) icon = '🍯';
-      badges.push({ name: ext.name, icon, type: 'extra' });
+      allSelected.push({ name: ext.name, icon });
     }
   });
 
-  if (badges.length === 0) return '';
-
-  const leftBadges = badges.slice(0, 3);
-  const rightBadges = badges.slice(3, 6);
-
-  let html = '';
-  const yStart = 68;
-  const yGap = 42;
-
-  leftBadges.forEach((b, idx) => {
-    const top = yStart + (idx * yGap);
-    html += `
-      <div class="cup-pin-badge cup-pin-left" style="top: ${top}px" title="${esc(b.name)}">
-        <span>${b.icon}</span>
-        <span>${esc(b.name)}</span>
-      </div>
-    `;
-  });
-
-  rightBadges.forEach((b, idx) => {
-    const top = yStart + (idx * yGap);
-    html += `
-      <div class="cup-pin-badge cup-pin-right" style="top: ${top}px" title="${esc(b.name)}">
-        <span>${b.icon}</span>
-        <span>${esc(b.name)}</span>
-      </div>
-    `;
-  });
-
-  return html;
-}
-
-function renderDynamicCupStage(prod, selectedAcomps = [], selectedFruits = [], selectedExtras = []) {
-  const baseImg = 'imagens/do seu jeitinho.webp';
-  const allSelected = [...selectedAcomps, ...selectedFruits, ...selectedExtras];
+  const imgInfo = getBestMatchingCupImage(selectedAcomps, selectedFruits, selectedExtras);
   const totalCount = allSelected.length;
 
-  const svgToppings = renderDynamicCupSvgToppings(selectedAcomps, selectedFruits, selectedExtras);
-  const badgesHtml = renderDynamicCupBadges(selectedAcomps, selectedFruits, selectedExtras);
-
-  const statusText = totalCount === 0
-    ? '✨ Toque nos ingredientes abaixo para montar seu copo em tempo real!'
-    : `🍧 Copo com ${totalCount} ingrediente${totalCount > 1 ? 's' : ''}`;
+  const trayHtml = allSelected.length > 0 ? `
+    <div class="cup-ingredients-tray">
+      ${allSelected.map(item => `
+        <span class="cup-tray-pill">
+          <span>${item.icon}</span>
+          <span>${esc(item.name)}</span>
+        </span>
+      `).join('')}
+    </div>
+  ` : '';
 
   return `
     <div class="dynamic-cup-stage" id="dynamic-cup-stage">
-      <img src="${baseImg}" class="dynamic-cup-base-img" alt="${esc(prod.name)}">
-      ${svgToppings}
+      <img src="${imgInfo.src}" class="dynamic-cup-photo-layer" alt="${esc(prod.name)}" onerror="this.src='imagens/do seu jeitinho.webp'">
       <div class="cup-live-header-pill ${totalCount === 0 ? 'pulse' : 'active'}">
         <span class="cup-live-dot"></span>
-        <span>${statusText}</span>
+        <span>${totalCount === 0 ? '🍧 Monte seu Açaí: Escolha os itens abaixo' : `✨ ${imgInfo.label}`}</span>
       </div>
-      <div class="cup-badges-overlay">
-        ${badgesHtml}
-      </div>
+      ${trayHtml}
     </div>
   `;
 }
