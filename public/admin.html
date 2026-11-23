@@ -1784,57 +1784,122 @@
           <input type="hidden" id="p-img">
         </label>
 
-        <!-- Se for Combo: Seleção e Composição Inteligente dos Produtos que somam o custo e sugerem preço -->
-        <div id="combo-selection-section" style="display:none;margin-top:14px;background:rgba(255,255,255,0.03);border:1.5px solid var(--primary);border-radius:14px;padding:14px">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <!-- Se for Combo: Construtor Inteligente de Combos -->
+        <div id="combo-selection-section" style="display:none;margin-top:14px;background:rgba(255,255,255,0.03);border:1.5px solid var(--primary);border-radius:14px;padding:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
             <div>
-              <b style="font-size:14px;color:var(--y);display:flex;align-items:center;gap:6px">
-                <span>🎁</span> Composição Inteligente do Combo
+              <b style="font-size:15px;color:var(--y);display:flex;align-items:center;gap:6px">
+                <span>🎁</span> Construtor Inteligente de Combos
               </b>
-              <div style="font-size:11.5px;color:var(--mut);margin-top:2px">
-                Escolha os produtos/copos cadastrados e a quantidade de cada um que compõem este combo:
+              <div style="font-size:12px;color:var(--mut);margin-top:2px">
+                Configure os copos, tamanhos, garrafas inclusas, sabores/mousses e acompanhamentos liberados para este combo.
               </div>
             </div>
-            <span id="combo-total-items-badge" class="badge" style="background:var(--primary);color:#fff;font-size:11.5px;padding:4px 10px;border-radius:20px;font-weight:700">
-              0 copo(s) no combo
+            <span id="combo-total-items-badge" class="badge" style="background:var(--primary);color:#fff;font-size:12px;padding:5px 12px;border-radius:20px;font-weight:700">
+              0 item(ns) no combo
             </span>
           </div>
 
-          <!-- Busca rápida de produtos para o combo -->
-          <div style="margin-bottom:8px">
-            <input type="text" id="combo-prod-search" placeholder="🔍 Buscar por nome do copo, sabor ou mousse..." oninput="filterComboComposerProducts(this.value)" style="width:100%;box-sizing:border-box;padding:8px 12px;border-radius:8px;border:1px solid var(--ln);background:var(--card);color:#fff;font-size:12px">
-          </div>
-
-          <!-- Grade de produtos disponíveis com seletor de quantidade -->
-          <div id="combo-products-list" class="combo-composer-grid" style="max-height:190px;overflow-y:auto;border:1px solid var(--ln);border-radius:10px;padding:8px;background:var(--card);display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px"></div>
-
-          <!-- Card de Inteligência de Precificação e Preço Sugerido -->
-          <div id="combo-pricing-card" style="margin-top:12px;background:linear-gradient(135deg,rgba(255,215,0,0.08),rgba(124,58,237,0.12));border:1.5px dashed var(--y);border-radius:12px;padding:12px;display:none">
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
-              <b style="color:var(--y);font-size:13px;display:flex;align-items:center;gap:6px">
-                <span>💡</span> Sugestão de Preço Promocional (Sem Prejuízo)
+          <!-- 1. SEÇÃO DE COPOS DO COMBO (QUANTIDADE E TAMANHOS) -->
+          <div style="background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:12px;margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <b style="font-size:13px;color:var(--tx);display:flex;align-items:center;gap:6px">
+                <span>🍧</span> 1. Copos de Açaí do Combo (Quantidades e Tamanhos):
               </b>
-              <button type="button" class="btn-sm" style="background:var(--y);color:#1a0526;font-weight:700;font-size:11.5px;padding:5px 12px;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;gap:5px" onclick="aplicarPrecoSugeridoCombo()">
-                <span>⚡</span> Aplicar Preço Sugerido
+              <button type="button" class="btn-sm" style="background:rgba(124,58,237,0.25);border:1px solid var(--primary);color:#fff;font-size:11.5px;padding:4px 10px;border-radius:8px;cursor:pointer" onclick="addComboCupRow()">
+                + Adicionar Outro Copo
               </button>
             </div>
-            <div id="combo-pricing-metrics" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;font-size:11.5px">
+            <div id="combo-cups-list" style="display:flex;flex-direction:column;gap:8px">
+              <!-- Renderizado via renderComboCupsList() -->
+            </div>
+          </div>
+
+          <!-- 2. SEÇÃO DE GARRAFAS E ITENS INCLUSOS (BEBIDAS, POTES, ETC. PUXADOS DINAMICAMENTE) -->
+          <div style="background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:12px;margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div>
+                <b style="font-size:13px;color:var(--tx);display:flex;align-items:center;gap:6px">
+                  <span>🍾</span> 2. Garrafas e Itens Inclusos no Combo:
+                </b>
+                <div style="font-size:11px;color:var(--mut)">Adicione garrafas de açaí, potes de 1L/2L ou futuros produtos novos cadastrados.</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <select id="combo-included-product-select" style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--ln);background:var(--bg);color:var(--tx);font-size:12px">
+                <!-- Preenchido dinamicamente com garrafas/produtos -->
+              </select>
+              <button type="button" class="btn-sm btn-primary" style="font-size:11.5px;padding:6px 12px;white-space:nowrap" onclick="addComboIncludedItem()">
+                + Incluir no Combo
+              </button>
+            </div>
+            <div id="combo-included-items-list" style="display:flex;flex-wrap:wrap;gap:8px">
+              <!-- Renderizado via renderComboIncludedItems() -->
+            </div>
+          </div>
+
+          <!-- 3. SEÇÃO DE SABORES E MOUSSES LIBERADOS (PUXADOS DINAMICAMENTE) -->
+          <div style="background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:12px;margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+              <div>
+                <b style="font-size:13px;color:var(--tx);display:flex;align-items:center;gap:6px">
+                  <span>🍨</span> 3. Sabores e Mousses que o Cliente pode Escolher:
+                </b>
+                <div style="font-size:11px;color:var(--mut)">Selecione quais opções serão liberadas no cardápio para os copos deste combo (novos produtos entram automaticamente):</div>
+              </div>
+              <div style="display:flex;gap:6px">
+                <button type="button" class="btn-sm btn-secondary" style="font-size:11px;padding:3px 8px" onclick="toggleAllComboFlavors(true)">Liberar Todos</button>
+                <button type="button" class="btn-sm btn-secondary" style="font-size:11px;padding:3px 8px" onclick="toggleAllComboFlavors(false)">Desmarcar Todos</button>
+              </div>
+            </div>
+            <div id="combo-flavors-checkboxes" style="max-height:160px;overflow-y:auto;border:1px solid var(--ln);border-radius:8px;padding:8px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px">
+              <!-- Checkboxes preenchidos dinamicamente -->
+            </div>
+          </div>
+
+          <!-- 4. SEÇÃO DE ACOMPANHAMENTOS DISPONÍVEIS PARA OS COPOS DO COMBO -->
+          <div style="background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:12px;margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+              <div>
+                <b style="font-size:13px;color:var(--tx);display:flex;align-items:center;gap:6px">
+                  <span>🥜</span> 4. Acompanhamentos Disponíveis para os Copos do Combo:
+                </b>
+                <div style="font-size:11px;color:var(--mut)">Acompanhamentos que o cliente poderá escolher para colocar nos copos:</div>
+              </div>
+              <div style="display:flex;gap:6px">
+                <button type="button" class="btn-sm btn-secondary" style="font-size:11px;padding:3px 8px" onclick="toggleAllComboAccompaniments(true)">Liberar Todos</button>
+                <button type="button" class="btn-sm btn-secondary" style="font-size:11px;padding:3px 8px" onclick="toggleAllComboAccompaniments(false)">Desmarcar Todos</button>
+              </div>
+            </div>
+            <div id="combo-accompaniments-checkboxes" style="max-height:150px;overflow-y:auto;border:1px solid var(--ln);border-radius:8px;padding:8px;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px">
+              <!-- Checkboxes de acompanhamentos -->
+            </div>
+          </div>
+
+          <!-- 5. CARD DE INTELIGÊNCIA DE PREÇO, SOMA EM TEMPO REAL E DESCONTO SEM PREJUÍZO -->
+          <div id="combo-pricing-card" style="background:linear-gradient(135deg,rgba(255,215,0,0.08),rgba(124,58,237,0.12));border:1.5px dashed var(--y);border-radius:12px;padding:12px;display:none">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+              <b style="color:var(--y);font-size:13.5px;display:flex;align-items:center;gap:6px">
+                <span>💡</span> Sugestão de Desconto sem Prejuízo (Baseada no que você montou)
+              </b>
+              <button type="button" class="btn-sm" style="background:var(--y);color:#1a0526;font-weight:700;font-size:11.5px;padding:5px 12px;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;gap:5px" onclick="aplicarPrecoSugeridoCombo()">
+                <span>⚡</span> Aplicar Preço Sugerido ao Combo
+              </button>
+            </div>
+            <div id="combo-pricing-metrics" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;font-size:12px">
               <!-- Preenchido via recalculateComboPricing() -->
             </div>
             <div style="font-size:11px;color:var(--mut);margin-top:8px">
-              * O preço sugerido oferece um desconto atraente ao cliente garantindo lucro saudável acima do custo total de insumos. Você pode alterar o preço de venda livremente no campo de tamanhos abaixo.
+              * A soma é recalculada em tempo real conforme você muda copos, tamanhos e garrafas. O preço sugerido oferece desconto convidativo ao cliente garantindo lucro líquido saudável sem prejuízo. Você pode alterar o preço de venda livremente no campo de tamanhos abaixo.
             </div>
           </div>
 
-          <!-- Checkbox para personalização de sabores/frutas/mousses pelo cliente no cardápio -->
-          <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--ln)">
+          <!-- Checkbox para personalização de cada copo pelo cliente no cardápio -->
+          <div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--ln)">
             <label style="display:flex;align-items:center;gap:8px;margin:0;font-size:12px;cursor:pointer;color:var(--tx)">
               <input type="checkbox" id="p-combo-customizable" checked style="width:auto">
-              <span><b>Permitir que o cliente escolha sabores, mousses, frutas e acompanhamentos de cada copo no cardápio</b></span>
+              <span><b>Exibir seletores de cada copo no cardápio para o cliente personalizar o pedido</b></span>
             </label>
-            <div style="font-size:11px;color:var(--mut);margin-left:24px;margin-top:2px">
-              No cardápio, serão exibidos seletores em dropdown para o cliente escolher o sabor/mousse, fruta e acompanhamento de cada copo do combo. Novos produtos cadastrados entram na lista automaticamente!
-            </div>
           </div>
         </div>
 
@@ -2758,7 +2823,7 @@
   <div id="recipe-pdf-area"></div>
 
   <!-- Scripts -->
-  <script src="js/global-modal.js?v=20261123.1"></script>
-  <script src="js/admin.js?v=20261123.1"></script>
+  <script src="js/global-modal.js?v=20261123.3"></script>
+  <script src="js/admin.js?v=20261123.3"></script>
 </body>
 </html>

@@ -4187,9 +4187,18 @@ window.openNewProductModal = function() {
   ]);
 
   $('#loss-alert-box').style.display = 'none';
-  COMBO_COMPOSITION = {};
+  COMBO_CONFIG = {
+    cups: [
+      { size: 500 },
+      { size: 500 }
+    ],
+    includedItems: [],
+    allowedFlavorIds: [],
+    allowedAccompanimentIds: [],
+    lastCalculated: null
+  };
   if ($('#p-combo-customizable')) $('#p-combo-customizable').checked = true;
-  handleCategoryChange($('#p-category')?.value, []);
+  handleCategoryChange($('#p-category')?.value);
   renderProductAccompanimentsCheckboxes(null);
   renderProductExtrasCheckboxes(null, true);
   $('#product-edit-modal').style.display = 'flex';
@@ -4215,7 +4224,54 @@ window.editProductModal = function(id) {
     $('#p-combo-customizable').checked = prod.isCustomizableCombo !== false;
   }
 
-  handleCategoryChange(prod.categoryId, prod.comboProductIds || []);
+  if (prod.comboConfig) {
+    COMBO_CONFIG = {
+      cups: Array.isArray(prod.comboConfig.cups) && prod.comboConfig.cups.length > 0
+        ? prod.comboConfig.cups.map(c => ({ size: Number(c.size) || 500 }))
+        : [{ size: 500 }, { size: 500 }],
+      includedItems: Array.isArray(prod.comboConfig.includedItems)
+        ? prod.comboConfig.includedItems.map(it => ({ productId: it.productId, qty: Number(it.qty) || 1 }))
+        : [],
+      allowedFlavorIds: Array.isArray(prod.comboConfig.allowedFlavorIds)
+        ? [...prod.comboConfig.allowedFlavorIds]
+        : (Array.isArray(prod.allowedFlavorIds) ? [...prod.allowedFlavorIds] : []),
+      allowedAccompanimentIds: Array.isArray(prod.comboConfig.allowedAccompanimentIds)
+        ? [...prod.comboConfig.allowedAccompanimentIds]
+        : (Array.isArray(prod.allowedAccompanimentIds) ? [...prod.allowedAccompanimentIds] : []),
+      lastCalculated: null
+    };
+  } else if (Array.isArray(prod.comboProductIds) && prod.comboProductIds.length > 0) {
+    const cups = [];
+    const includedItems = [];
+    prod.comboProductIds.forEach(pId => {
+      const found = PRODUCTS.find(p => p.id === pId);
+      if (found && (found.categorySlug === 'garrafa' || found.categorySlug === 'polpa')) {
+        const existing = includedItems.find(x => x.productId === pId);
+        if (existing) existing.qty = (existing.qty || 1) + 1;
+        else includedItems.push({ productId: pId, qty: 1 });
+      } else {
+        const sz = found && found.prices && found.prices[0] ? found.prices[0].size : 500;
+        cups.push({ size: sz });
+      }
+    });
+    COMBO_CONFIG = {
+      cups: cups.length > 0 ? cups : [{ size: 500 }, { size: 500 }],
+      includedItems,
+      allowedFlavorIds: Array.isArray(prod.comboProductIds) ? [...prod.comboProductIds] : [],
+      allowedAccompanimentIds: Array.isArray(prod.allowedAccompanimentIds) ? [...prod.allowedAccompanimentIds] : [],
+      lastCalculated: null
+    };
+  } else {
+    COMBO_CONFIG = {
+      cups: [{ size: 500 }, { size: 500 }],
+      includedItems: [],
+      allowedFlavorIds: [],
+      allowedAccompanimentIds: [],
+      lastCalculated: null
+    };
+  }
+
+  handleCategoryChange(prod.categoryId);
   // Produto que nunca teve lista salva só oferece acompanhamentos ao cliente se for o "Monte seu açaí";
   // por isso a tela mostra desmarcado (reflete exatamente o que o cliente vê) até você marcar e salvar.
   const isMonteProd = !!prod.isCustomizable || prod.categorySlug === 'monte' || prod.id === 'prod_monte';
@@ -4235,83 +4291,122 @@ window.closeProductModal = function() {
   $('#product-edit-modal').style.display = 'none';
 };
 
-// ==================== COMPOSITOR INTELIGENTE DE COMBOS ====================
-let COMBO_COMPOSITION = {}; // { [productId]: quantity }
+// ==================== CONSTRUTOR INTELIGENTE DE COMBOS ====================
+let COMBO_CONFIG = {
+  cups: [
+    { size: 500 },
+    { size: 500 }
+  ],
+  includedItems: [], // [{ productId, qty }]
+  allowedFlavorIds: [],
+  allowedAccompanimentIds: [],
+  lastCalculated: null
+};
 
-window.handleCategoryChange = function(catId, selectedComboIds = []) {
+window.handleCategoryChange = function(catId) {
   const cat = CATEGORIES.find(c => c.id === catId || c.slug === catId);
   const isCombo = cat && (cat.slug === 'combos' || cat.name.toLowerCase().includes('combo'));
   const comboSection = $('#combo-selection-section');
 
   if (isCombo && comboSection) {
     comboSection.style.display = 'block';
-
-    // Se passou uma lista de IDs selecionados (ex: ao editar combo), preenche o mapa de composição
-    COMBO_COMPOSITION = {};
-    if (Array.isArray(selectedComboIds) && selectedComboIds.length > 0) {
-      selectedComboIds.forEach(id => {
-        if (id) COMBO_COMPOSITION[id] = (COMBO_COMPOSITION[id] || 0) + 1;
-      });
-    }
-
-    renderComboProductsList();
+    renderComboCupsList();
+    populateComboIncludedProductSelect();
+    renderComboIncludedItems();
+    renderComboFlavorsCheckboxes(COMBO_CONFIG.allowedFlavorIds);
+    renderComboAccompanimentsCheckboxes(COMBO_CONFIG.allowedAccompanimentIds);
     recalculateComboPricing();
   } else if (comboSection) {
     comboSection.style.display = 'none';
   }
 };
 
-let COMBO_PROD_FILTER = '';
-window.filterComboComposerProducts = function(text) {
-  COMBO_PROD_FILTER = (text || '').trim().toLowerCase();
-  renderComboProductsList();
-};
+// 1. Preços e Custos Médios Reais por Tamanho (puxados dinamicamente dos produtos cadastrados)
+function getStandardSizePricing(sizeMl) {
+  const numSize = Number(sizeMl) || 500;
+  const matchingPrices = [];
+  const matchingCosts = [];
 
-window.renderComboProductsList = function() {
-  const container = $('#combo-products-list');
-  if (!container) return;
-
-  let individualProducts = PRODUCTS.filter(p => p.categorySlug !== 'combos');
-  if (COMBO_PROD_FILTER) {
-    individualProducts = individualProducts.filter(p => {
-      const isSelected = (COMBO_COMPOSITION[p.id] || 0) > 0;
-      const matches = p.name.toLowerCase().includes(COMBO_PROD_FILTER) || (p.description || '').toLowerCase().includes(COMBO_PROD_FILTER);
-      return isSelected || matches;
-    });
-  }
-
-  // Ordena para que produtos com quantidade selecionada fiquem no topo
-  individualProducts.sort((a, b) => {
-    const qtyA = COMBO_COMPOSITION[a.id] || 0;
-    const qtyB = COMBO_COMPOSITION[b.id] || 0;
-    if (qtyA > 0 && qtyB === 0) return -1;
-    if (qtyB > 0 && qtyA === 0) return 1;
-    return a.name.localeCompare(b.name);
+  PRODUCTS.forEach(p => {
+    if (p.categorySlug === 'combos' || p.categoryId === 'cat_combos') return;
+    const pr = (p.prices || []).find(x => x.size === numSize);
+    if (pr) {
+      const priceVal = pr.promoPrice != null ? pr.promoPrice : pr.price;
+      if (Number.isFinite(priceVal) && priceVal > 0) matchingPrices.push(priceVal);
+      if (Number.isFinite(pr.costPrice) && pr.costPrice > 0) matchingCosts.push(pr.costPrice);
+    }
   });
 
-  if (individualProducts.length === 0) {
-    container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:16px;color:var(--mut);font-size:12px">Nenhum produto encontrado para "${esc(COMBO_PROD_FILTER)}".</div>`;
-    updateComboSummaryBadge();
-    return;
+  const avgPrice = matchingPrices.length > 0
+    ? matchingPrices.reduce((a, b) => a + b, 0) / matchingPrices.length
+    : (numSize <= 250 ? 15.90 : numSize <= 300 ? 19.90 : numSize <= 500 ? 26.90 : numSize <= 700 ? 33.90 : 36.90);
+
+  const avgCost = matchingCosts.length > 0
+    ? matchingCosts.reduce((a, b) => a + b, 0) / matchingCosts.length
+    : (numSize <= 250 ? 7.50 : numSize <= 300 ? 8.80 : numSize <= 500 ? 11.80 : numSize <= 700 ? 15.20 : 17.00);
+
+  return { price: avgPrice, cost: avgCost };
+}
+
+// 2. Gestão de Copos do Combo
+window.addComboCupRow = function(size = 500) {
+  if (!Array.isArray(COMBO_CONFIG.cups)) COMBO_CONFIG.cups = [];
+  COMBO_CONFIG.cups.push({ size: parseInt(size, 10) || 500 });
+  renderComboCupsList();
+  recalculateComboPricing();
+  updateComboSummaryBadge();
+};
+
+window.removeComboCupRow = function(index) {
+  if (COMBO_CONFIG.cups.length <= 1) {
+    return adminToast('O combo precisa ter no mínimo 1 copo ou produto.', 'warning');
+  }
+  COMBO_CONFIG.cups.splice(index, 1);
+  renderComboCupsList();
+  recalculateComboPricing();
+  updateComboSummaryBadge();
+};
+
+window.updateComboCupSize = function(index, newSize) {
+  if (!COMBO_CONFIG.cups[index]) return;
+  COMBO_CONFIG.cups[index].size = parseInt(newSize, 10) || 500;
+  renderComboCupsList();
+  recalculateComboPricing();
+};
+
+window.renderComboCupsList = function() {
+  const container = $('#combo-cups-list');
+  if (!container) return;
+
+  if (!Array.isArray(COMBO_CONFIG.cups) || COMBO_CONFIG.cups.length === 0) {
+    COMBO_CONFIG.cups = [{ size: 500 }, { size: 500 }];
   }
 
-  container.innerHTML = individualProducts.map(p => {
-    const qty = COMBO_COMPOSITION[p.id] || 0;
-    const p500 = (p.prices || []).find(x => x.size === 500) || (p.prices || [])[0] || {};
-    const price = Number(p500.promoPrice != null ? p500.promoPrice : (p500.price || 0));
-    const cost = Number(p500.costPrice || 0);
-
+  container.innerHTML = COMBO_CONFIG.cups.map((cup, idx) => {
+    const std = getStandardSizePricing(cup.size);
     return `
-      <div class="combo-prod-card ${qty > 0 ? 'has-qty' : ''}" id="combo-card-${p.id}">
-        <div class="combo-prod-info" title="${esc(p.name)}">
-          <div class="combo-prod-name">${esc(p.name)}</div>
-          <div class="combo-prod-meta">Venda: ${R(price)} · Custo: ${R(cost)}</div>
+      <div class="combo-cup-config-row" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--bg);border:1px solid var(--ln);border-radius:10px;padding:8px 12px;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span class="badge" style="background:var(--primary);color:#fff;font-size:11.5px;padding:3px 10px;border-radius:14px;font-weight:700">
+            ${idx + 1}º Copo
+          </span>
+          <label style="font-size:12px;font-weight:600;margin:0;color:var(--tx)">Tamanho do Copo:</label>
+          <select style="padding:5px 10px;border-radius:8px;border:1px solid var(--ln);background:var(--card);color:var(--tx);font-size:12px;font-weight:600;cursor:pointer" onchange="updateComboCupSize(${idx}, this.value)">
+            <option value="250" ${cup.size === 250 ? 'selected' : ''}>250 ml (Kids)</option>
+            <option value="300" ${cup.size === 300 ? 'selected' : ''}>300 ml</option>
+            <option value="500" ${cup.size === 500 ? 'selected' : ''}>500 ml (Padrão)</option>
+            <option value="700" ${cup.size === 700 ? 'selected' : ''}>700 ml</option>
+            <option value="1000" ${cup.size === 1000 ? 'selected' : ''}>1 Litro (1000 ml)</option>
+          </select>
+          <span style="font-size:11px;color:var(--mut)">
+            Tabela individual: <b style="color:var(--tx)">${R(std.price)}</b> · Custo insumo: <b style="color:#ef4444">${R(std.cost)}</b>
+          </span>
         </div>
-        <div class="combo-qty-control">
-          <button type="button" class="combo-qty-btn" onclick="updateComboItemQty('${p.id}', -1)" title="Diminuir">−</button>
-          <span class="combo-qty-val" id="combo-qty-${p.id}">${qty}</span>
-          <button type="button" class="combo-qty-btn" onclick="updateComboItemQty('${p.id}', 1)" title="Aumentar">+</button>
-        </div>
+        ${COMBO_CONFIG.cups.length > 1 ? `
+          <button type="button" class="btn-sm btn-danger" style="font-size:11px;padding:2px 8px" onclick="removeComboCupRow(${idx})" title="Remover este copo do combo">
+            Remover
+          </button>
+        ` : ''}
       </div>
     `;
   }).join('');
@@ -4319,44 +4414,194 @@ window.renderComboProductsList = function() {
   updateComboSummaryBadge();
 };
 
-window.updateComboItemQty = function(prodId, delta) {
-  const current = COMBO_COMPOSITION[prodId] || 0;
-  const next = Math.max(0, current + delta);
-  if (next > 0) {
-    COMBO_COMPOSITION[prodId] = next;
+// 3. Garrafas e Itens Inclusos (Bebidas, Potes, etc. puxados dinamicamente)
+window.populateComboIncludedProductSelect = function() {
+  const select = $('#combo-included-product-select');
+  if (!select) return;
+
+  const validProducts = PRODUCTS.filter(p => p.active !== false && p.categorySlug !== 'combos' && p.categoryId !== 'cat_combos');
+
+  // Agrupa por categoria para facilitar a escolha
+  const garrafas = validProducts.filter(p => p.categorySlug === 'garrafa' || (p.name || '').toLowerCase().includes('garrafa'));
+  const potes = validProducts.filter(p => p.categorySlug === 'polpa' || (p.name || '').toLowerCase().includes('litro'));
+  const mousses = validProducts.filter(p => p.categorySlug === 'mousses' || (p.name || '').toLowerCase().includes('mousse'));
+  const outros = validProducts.filter(p => !garrafas.includes(p) && !potes.includes(p) && !mousses.includes(p));
+
+  const formatOpt = (p) => {
+    const pSize = (p.prices || [])[0] || {};
+    const priceVal = Number(pSize.promoPrice != null ? pSize.promoPrice : (pSize.price || 0));
+    return `<option value="${p.id}">${esc(p.name)} · ${R(priceVal)}</option>`;
+  };
+
+  select.innerHTML = `
+    <option value="">-- Selecione uma garrafa, pote ou produto cadastrado --</option>
+    ${garrafas.length > 0 ? `<optgroup label="🍾 Açaí na Garrafa">${garrafas.map(formatOpt).join('')}</optgroup>` : ''}
+    ${potes.length > 0 ? `<optgroup label="🍨 Potes (1L / 2L)">${potes.map(formatOpt).join('')}</optgroup>` : ''}
+    ${mousses.length > 0 ? `<optgroup label="🧁 Mousses & Sobremesas">${mousses.map(formatOpt).join('')}</optgroup>` : ''}
+    ${outros.length > 0 ? `<optgroup label="🍧 Outros Produtos do Cardápio">${outros.map(formatOpt).join('')}</optgroup>` : ''}
+  `;
+};
+
+window.addComboIncludedItem = function() {
+  const select = $('#combo-included-product-select');
+  if (!select || !select.value) {
+    return adminToast('Selecione uma garrafa ou produto na lista para incluir.', 'warning');
+  }
+
+  const pId = select.value;
+  if (!Array.isArray(COMBO_CONFIG.includedItems)) COMBO_CONFIG.includedItems = [];
+
+  const existing = COMBO_CONFIG.includedItems.find(x => x.productId === pId);
+  if (existing) {
+    existing.qty = (existing.qty || 1) + 1;
   } else {
-    delete COMBO_COMPOSITION[prodId];
+    COMBO_CONFIG.includedItems.push({ productId: pId, qty: 1 });
   }
 
-  const qtyEl = $(`#combo-qty-${prodId}`);
-  if (qtyEl) qtyEl.textContent = next;
-
-  const card = $(`#combo-card-${prodId}`);
-  if (card) {
-    if (next > 0) card.classList.add('has-qty');
-    else card.classList.remove('has-qty');
-  }
-
-  updateComboSummaryBadge();
+  renderComboIncludedItems();
   recalculateComboPricing();
+  updateComboSummaryBadge();
+  adminToast('Item adicionado ao combo!', 'success');
+};
+
+window.removeComboIncludedItem = function(productId) {
+  COMBO_CONFIG.includedItems = (COMBO_CONFIG.includedItems || []).filter(x => x.productId !== productId);
+  renderComboIncludedItems();
+  recalculateComboPricing();
+  updateComboSummaryBadge();
+};
+
+window.updateComboIncludedItemQty = function(productId, delta) {
+  const item = (COMBO_CONFIG.includedItems || []).find(x => x.productId === productId);
+  if (!item) return;
+
+  const next = Math.max(0, (item.qty || 1) + delta);
+  if (next === 0) {
+    removeComboIncludedItem(productId);
+  } else {
+    item.qty = next;
+    renderComboIncludedItems();
+    recalculateComboPricing();
+    updateComboSummaryBadge();
+  }
+};
+
+window.renderComboIncludedItems = function() {
+  const container = $('#combo-included-items-list');
+  if (!container) return;
+
+  const items = COMBO_CONFIG.includedItems || [];
+  if (items.length === 0) {
+    container.innerHTML = `<span style="font-size:11.5px;color:var(--mut)">Nenhuma garrafa ou item adicional incluso neste combo.</span>`;
+    return;
+  }
+
+  container.innerHTML = items.map(it => {
+    const prod = PRODUCTS.find(p => p.id === it.productId);
+    if (!prod) return '';
+    const pSize = (prod.prices || [])[0] || {};
+    const price = Number(pSize.promoPrice != null ? pSize.promoPrice : (pSize.price || 0));
+
+    return `
+      <div style="display:inline-flex;align-items:center;background:var(--bg);border:1px solid var(--ln);border-radius:20px;padding:4px 12px;gap:6px;font-size:12px">
+        <b style="color:var(--y)">${esc(prod.name)}</b>
+        <span style="color:var(--mut)">(${R(price)})</span>
+        <button type="button" onclick="updateComboIncludedItemQty('${prod.id}', -1)" style="border:none;background:rgba(255,255,255,0.12);color:#fff;border-radius:50%;width:18px;height:18px;cursor:pointer;line-height:1;display:inline-flex;align-items:center;justify-content:center">−</button>
+        <b style="color:var(--tx)">${it.qty}x</b>
+        <button type="button" onclick="updateComboIncludedItemQty('${prod.id}', 1)" style="border:none;background:rgba(255,255,255,0.12);color:#fff;border-radius:50%;width:18px;height:18px;cursor:pointer;line-height:1;display:inline-flex;align-items:center;justify-content:center">+</button>
+        <button type="button" onclick="removeComboIncludedItem('${prod.id}')" style="border:none;background:none;color:#ef4444;cursor:pointer;font-weight:bold;margin-left:4px" title="Excluir item">✕</button>
+      </div>
+    `;
+  }).join('');
+};
+
+// 4. Sabores e Mousses Liberados (Puxados Dinamicamente de PRODUCTS)
+window.renderComboFlavorsCheckboxes = function(allowedIds = []) {
+  const container = $('#combo-flavors-checkboxes');
+  if (!container) return;
+
+  const validFlavors = PRODUCTS.filter(p => p.active !== false && p.categorySlug !== 'combos' && p.categoryId !== 'cat_combos');
+  const allowedSet = Array.isArray(allowedIds) && allowedIds.length > 0 ? new Set(allowedIds) : null;
+
+  container.innerHTML = validFlavors.map(p => {
+    const isChecked = allowedSet ? allowedSet.has(p.id) : true;
+    const cat = CATEGORIES.find(c => c.id === p.categoryId || c.slug === p.categorySlug);
+    const catName = cat ? cat.name : '';
+
+    return `
+      <label style="display:flex;align-items:center;gap:6px;font-size:11.5px;cursor:pointer;margin:0;background:var(--bg);border:1px solid var(--ln);border-radius:8px;padding:6px 8px;color:var(--tx)">
+        <input type="checkbox" value="${p.id}" class="combo-flavor-cb" ${isChecked ? 'checked' : ''} style="width:auto;margin:0" onchange="onComboFlavorChange()">
+        <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(p.name)}">
+          <b>${esc(p.name)}</b> <small style="color:var(--mut)">[${esc(catName)}]</small>
+        </span>
+      </label>
+    `;
+  }).join('');
+};
+
+window.onComboFlavorChange = function() {
+  const cbs = $$('#combo-flavors-checkboxes input[type="checkbox"]:checked');
+  COMBO_CONFIG.allowedFlavorIds = Array.from(cbs).map(cb => cb.value);
+  recalculateComboPricing();
+};
+
+window.toggleAllComboFlavors = function(check) {
+  $$('#combo-flavors-checkboxes input[type="checkbox"]').forEach(cb => { cb.checked = check; });
+  onComboFlavorChange();
+};
+
+// 5. Acompanhamentos Liberados para os Copos do Combo (Puxados Dinamicamente de ACCOMPANIMENTS)
+window.renderComboAccompanimentsCheckboxes = function(allowedIds = []) {
+  const container = $('#combo-accompaniments-checkboxes');
+  if (!container) return;
+
+  const validAcomps = (ACCOMPANIMENTS || []).filter(a => typeof a === 'string' || a.active !== false);
+  const allowedSet = Array.isArray(allowedIds) && allowedIds.length > 0 ? new Set(allowedIds) : null;
+
+  container.innerHTML = validAcomps.map(ac => {
+    const aId = typeof ac === 'string' ? ac : (ac.id || ac.name);
+    const aName = typeof ac === 'string' ? ac : ac.name;
+    const isChecked = allowedSet ? (allowedSet.has(aId) || allowedSet.has(aName)) : true;
+
+    return `
+      <label style="display:flex;align-items:center;gap:6px;font-size:11.5px;cursor:pointer;margin:0;background:var(--bg);border:1px solid var(--ln);border-radius:8px;padding:6px 8px;color:var(--tx)">
+        <input type="checkbox" value="${esc(aId)}" class="combo-acomp-cb" ${isChecked ? 'checked' : ''} style="width:auto;margin:0" onchange="onComboAccompanimentChange()">
+        <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(aName)}">
+          ${esc(aName)}
+        </span>
+      </label>
+    `;
+  }).join('');
+};
+
+window.onComboAccompanimentChange = function() {
+  const cbs = $$('#combo-accompaniments-checkboxes input[type="checkbox"]:checked');
+  COMBO_CONFIG.allowedAccompanimentIds = Array.from(cbs).map(cb => cb.value);
+};
+
+window.toggleAllComboAccompaniments = function(check) {
+  $$('#combo-accompaniments-checkboxes input[type="checkbox"]').forEach(cb => { cb.checked = check; });
+  onComboAccompanimentChange();
 };
 
 window.updateComboSummaryBadge = function() {
   const badge = $('#combo-total-items-badge');
   if (!badge) return;
-  const total = Object.values(COMBO_COMPOSITION).reduce((sum, q) => sum + q, 0);
-  badge.textContent = `${total} copo${total === 1 ? '' : 's'} no combo`;
+  const numCups = (COMBO_CONFIG.cups || []).length;
+  const numItems = (COMBO_CONFIG.includedItems || []).reduce((sum, it) => sum + (it.qty || 1), 0);
+  badge.textContent = `${numCups} copo(s) + ${numItems} garrafa(s)/item(ns)`;
 };
 
+// 6. Recálculo em Tempo Real da Soma e Sugestão Inteligente de Desconto sem Prejuízo
 window.recalculateComboPricing = function() {
   const pricingCard = $('#combo-pricing-card');
   const metricsBox = $('#combo-pricing-metrics');
   if (!pricingCard || !metricsBox) return;
 
-  const selectedEntries = Object.entries(COMBO_COMPOSITION).filter(([_, qty]) => qty > 0);
-  const totalItems = selectedEntries.reduce((sum, [_, q]) => sum + q, 0);
+  const cups = COMBO_CONFIG.cups || [];
+  const included = COMBO_CONFIG.includedItems || [];
 
-  if (totalItems === 0) {
+  if (cups.length === 0 && included.length === 0) {
     pricingCard.style.display = 'none';
     return;
   }
@@ -4364,101 +4609,98 @@ window.recalculateComboPricing = function() {
   let totalRetail = 0;
   let totalCost = 0;
 
-  selectedEntries.forEach(([pId, qty]) => {
-    const prod = PRODUCTS.find(p => p.id === pId);
-    if (!prod) return;
-    const pSize = (prod.prices || []).find(x => x.size === 500) || (prod.prices || [])[0] || {};
-    const effectivePrice = Number(pSize.promoPrice != null ? pSize.promoPrice : (pSize.price || 0));
-    const effectiveCost = Number(pSize.costPrice || 0);
-
-    totalRetail += effectivePrice * qty;
-    totalCost += effectiveCost * qty;
+  // 1. Soma dos copos pelos seus respectivos tamanhos
+  cups.forEach(cup => {
+    const std = getStandardSizePricing(cup.size || 500);
+    totalRetail += std.price;
+    totalCost += std.cost;
   });
 
-  // Preço promocional sugerido:
-  // 1. Atrativo pro cliente: Desconto médio de 14% sobre a soma avulsa
-  // 2. Proteção contra prejuízo: Preço deve ser no mínimo custo + 45% de margem
-  const targetRetailPromo = totalRetail * 0.86;
-  const minimumSafePrice = totalCost * 1.45;
-  let suggested = Math.max(minimumSafePrice, targetRetailPromo);
+  // 2. Soma das garrafas e itens adicionais inclusos
+  included.forEach(item => {
+    const prod = PRODUCTS.find(p => p.id === item.productId);
+    if (!prod) return;
+    const pSize = (prod.prices || [])[0] || {};
+    const price = Number(pSize.promoPrice != null ? pSize.promoPrice : (pSize.price || 0));
+    const cost = Number(pSize.costPrice || (price * 0.45));
+    const q = item.qty || 1;
+    totalRetail += price * q;
+    totalCost += cost * q;
+  });
 
-  // Arredonda para final .90 atraente
+  // 3. Sugestão Inteligente de Desconto:
+  // - Atraente pro cliente: Desconto médio de 14% sobre o valor avulso somado
+  // - Trava Antirrisco: Preço sugerido garante no mínimo 45% de margem sobre o custo total de insumos (SEM PREJUÍZO!)
+  const targetPromo = totalRetail * 0.86;
+  const minSafe = totalCost * 1.45;
+  let suggested = Math.max(minSafe, targetPromo);
+
   suggested = Math.floor(suggested) + 0.90;
-  if (suggested < minimumSafePrice) {
-    suggested = Math.ceil(minimumSafePrice) + 0.90;
+  if (suggested < minSafe) {
+    suggested = Math.ceil(minSafe) + 0.90;
   }
 
   const clientSavings = Math.max(0, totalRetail - suggested);
+  const discountPercent = totalRetail > 0 ? Math.round((clientSavings / totalRetail) * 100) : 0;
   const storeProfit = Math.max(0, suggested - totalCost);
   const profitMarginPercent = suggested > 0 ? Math.round((storeProfit / suggested) * 100) : 0;
 
   metricsBox.innerHTML = `
-    <div style="background:var(--card);border:1px solid var(--ln);border-radius:8px;padding:8px">
-      <div style="color:var(--mut);font-size:11px">Soma dos Itens Avulsos:</div>
-      <b style="font-size:13.5px;color:var(--tx)">${R(totalRetail)}</b>
+    <div style="background:var(--card);border:1px solid var(--ln);border-radius:10px;padding:10px">
+      <div style="color:var(--mut);font-size:11px">🏷️ Soma Avulsa (Tabela):</div>
+      <b style="font-size:15px;color:var(--tx)">${R(totalRetail)}</b>
+      <div style="font-size:10px;color:var(--mut);margin-top:2px">${cups.length} copo(s) + ${included.length} item(ns)</div>
     </div>
-    <div style="background:var(--card);border:1px solid var(--ln);border-radius:8px;padding:8px">
-      <div style="color:var(--mut);font-size:11px">Custo Total dos Insumos:</div>
-      <b style="font-size:13.5px;color:#ef4444">${R(totalCost)}</b>
+    <div style="background:var(--card);border:1px solid var(--ln);border-radius:10px;padding:10px">
+      <div style="color:var(--mut);font-size:11px">📉 Custo Total dos Insumos:</div>
+      <b style="font-size:15px;color:#ef4444">${R(totalCost)}</b>
+      <div style="font-size:10px;color:var(--mut);margin-top:2px">Ficha Técnica dos Itens</div>
     </div>
-    <div style="background:var(--card);border:1.5px solid var(--y);border-radius:8px;padding:8px">
-      <div style="color:var(--y);font-weight:700;font-size:11px">Preço Sugerido (Promoção):</div>
-      <b style="font-size:15px;color:var(--y)">${R(suggested)}</b>
-      <div style="font-size:10.5px;color:#10b981">Economia de ${R(clientSavings)}</div>
+    <div style="background:var(--card);border:1.5px solid var(--y);border-radius:10px;padding:10px">
+      <div style="color:var(--y);font-weight:700;font-size:11px">💡 Preço Sugerido (Promoção):</div>
+      <b style="font-size:16px;color:var(--y)">${R(suggested)}</b>
+      <div style="font-size:11px;color:#10b981;font-weight:600;margin-top:2px">Desconto de ${R(clientSavings)} (${discountPercent}%)</div>
     </div>
-    <div style="background:var(--card);border:1px solid #10b981;border-radius:8px;padding:8px">
-      <div style="color:#10b981;font-weight:700;font-size:11px">Lucro Seguro da Loja:</div>
-      <b style="font-size:13.5px;color:#10b981">${R(storeProfit)}</b>
-      <div style="font-size:10.5px;color:#10b981">+${profitMarginPercent}% de margem</div>
+    <div style="background:var(--card);border:1.5px solid #10b981;border-radius:10px;padding:10px">
+      <div style="color:#10b981;font-weight:700;font-size:11px">🛡️ Lucro Seguro (Sem Prejuízo):</div>
+      <b style="font-size:16px;color:#10b981">${R(storeProfit)}</b>
+      <div style="font-size:11px;color:#10b981;font-weight:600;margin-top:2px">+${profitMarginPercent}% de margem líquida</div>
     </div>
   `;
 
   pricingCard.style.display = 'block';
+  COMBO_CONFIG.lastCalculated = {
+    totalRetail,
+    totalCost,
+    suggested,
+    clientSavings,
+    storeProfit
+  };
 };
 
 window.aplicarPrecoSugeridoCombo = function() {
-  const selectedEntries = Object.entries(COMBO_COMPOSITION).filter(([_, qty]) => qty > 0);
-  if (selectedEntries.length === 0) {
-    return adminToast('Selecione pelo menos um produto para compor o combo antes de aplicar o preço sugerido.', 'danger');
+  if (!COMBO_CONFIG.lastCalculated || !COMBO_CONFIG.lastCalculated.suggested) {
+    recalculateComboPricing();
+  }
+  const calc = COMBO_CONFIG.lastCalculated;
+  if (!calc || !calc.suggested) {
+    return adminToast('Adicione copos ou garrafas ao combo antes de aplicar o preço sugerido.', 'danger');
   }
 
   const rows = Array.from($$('#p-sizes-list .p-size-row'));
   if (rows.length === 0) {
-    return adminToast('Nenhum tamanho configurado no produto.', 'danger');
+    addProductSizeRow({ size: 500, price: calc.suggested, costPrice: calc.totalCost, promoPrice: calc.suggested });
+  } else {
+    rows.forEach(row => {
+      const priceInput = row.querySelector('.p-size-price');
+      const costInput = row.querySelector('.p-size-cost');
+      if (priceInput) priceInput.value = calc.suggested.toFixed(2);
+      if (costInput) costInput.value = calc.totalCost.toFixed(2);
+    });
   }
 
-  rows.forEach(row => {
-    const sizeMl = parseInt(row.querySelector('.p-size-ml')?.value, 10) || 500;
-    let rowCost = 0;
-    let rowRetail = 0;
-
-    selectedEntries.forEach(([pId, qty]) => {
-      const prod = PRODUCTS.find(p => p.id === pId);
-      if (!prod) return;
-      const pSize = (prod.prices || []).find(x => x.size === sizeMl) || (prod.prices || [])[0] || {};
-      const pPrice = Number(pSize.promoPrice != null ? pSize.promoPrice : (pSize.price || 0));
-      const pCost = Number(pSize.costPrice || 0);
-
-      rowRetail += pPrice * qty;
-      rowCost += pCost * qty;
-    });
-
-    const targetPromo = rowRetail * 0.86;
-    const minSafe = rowCost * 1.45;
-    let rowSuggested = Math.max(minSafe, targetPromo);
-    rowSuggested = Math.floor(rowSuggested) + 0.90;
-    if (rowSuggested < minSafe) {
-      rowSuggested = Math.ceil(minSafe) + 0.90;
-    }
-
-    const priceInput = row.querySelector('.p-size-price');
-    const costInput = row.querySelector('.p-size-cost');
-    if (priceInput) priceInput.value = rowSuggested.toFixed(2);
-    if (costInput) costInput.value = rowCost.toFixed(2);
-  });
-
   checkFormPrejuizo();
-  adminToast('Preço promocional sugerido e custos aplicados com sucesso! Você pode editar o preço quando desejar.', 'success');
+  adminToast(`Preço sugerido de ${R(calc.suggested)} (com economia de ${R(calc.clientSavings)} pro cliente e ${R(calc.storeProfit)} de lucro) aplicado com sucesso!`, 'success');
 };
 
 // ==================== TAMANHOS DO PRODUTO (LISTA DINÂMICA) ====================
@@ -4707,11 +4949,30 @@ window.saveProductForm = async function(e) {
   const cat = CATEGORIES.find(c => c.id === categoryId || c.slug === categoryId);
   const isCombo = cat && (cat.slug === 'combos' || cat.name.toLowerCase().includes('combo'));
   const comboProductIds = [];
+  let comboConfig = undefined;
+
   if (isCombo) {
-    Object.entries(COMBO_COMPOSITION).forEach(([pId, qty]) => {
-      for (let i = 0; i < qty; i++) {
-        comboProductIds.push(pId);
-      }
+    // 1. Sabores e mousses liberados
+    const flavorCbs = $$('#combo-flavors-checkboxes input[type="checkbox"]:checked');
+    const allowedFlavorIds = Array.from(flavorCbs).map(cb => cb.value);
+
+    // 2. Acompanhamentos liberados para o combo
+    const acompCbs = $$('#combo-accompaniments-checkboxes input[type="checkbox"]:checked');
+    const comboAllowedAcomps = Array.from(acompCbs).map(cb => cb.value);
+
+    comboConfig = {
+      cups: Array.isArray(COMBO_CONFIG.cups) && COMBO_CONFIG.cups.length > 0 ? COMBO_CONFIG.cups : [{ size: 500 }, { size: 500 }],
+      includedItems: Array.isArray(COMBO_CONFIG.includedItems) ? COMBO_CONFIG.includedItems : [],
+      allowedFlavorIds: allowedFlavorIds,
+      allowedAccompanimentIds: comboAllowedAcomps
+    };
+
+    // Preenche comboProductIds para compatibilidade legado (relatórios, IA, etc.)
+    (COMBO_CONFIG.includedItems || []).forEach(it => {
+      for (let i = 0; i < (it.qty || 1); i++) comboProductIds.push(it.productId);
+    });
+    allowedFlavorIds.forEach(fId => {
+      if (!comboProductIds.includes(fId)) comboProductIds.push(fId);
     });
   }
   const isCustomizableCombo = $('#p-combo-customizable') ? $('#p-combo-customizable').checked : true;
@@ -4755,8 +5016,10 @@ window.saveProductForm = async function(e) {
     isNewLaunch,
     isPromo,
     comboProductIds,
+    comboConfig,
+    allowedFlavorIds: comboConfig ? comboConfig.allowedFlavorIds : undefined,
     isCustomizableCombo,
-    allowedAccompanimentIds,
+    allowedAccompanimentIds: isCombo ? (comboConfig?.allowedAccompanimentIds || allowedAccompanimentIds) : allowedAccompanimentIds,
     allowExtras,
     allowedExtraIds,
     prices,

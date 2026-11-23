@@ -683,13 +683,22 @@ window.openItemModal = function(productId) {
   const prod = (CATALOG.products || []).find(p => p.id === productId);
   if (!prod) return;
 
-  const isCombo = prod.categorySlug === 'combos' || prod.category === 'combos' || (Array.isArray(prod.comboProductIds) && prod.comboProductIds.length > 0);
+  const isCombo = prod.categorySlug === 'combos' || prod.category === 'combos' || (Array.isArray(prod.comboProductIds) && prod.comboProductIds.length > 0) || !!prod.comboConfig;
   let comboCups = [];
   if (isCombo) {
-    if (Array.isArray(prod.comboProductIds) && prod.comboProductIds.length > 0) {
+    if (prod.comboConfig && Array.isArray(prod.comboConfig.cups) && prod.comboConfig.cups.length > 0) {
+      comboCups = prod.comboConfig.cups.map((c, idx) => ({
+        size: Number(c.size) || 500,
+        flavor: '',
+        fruit: '',
+        acomp: ''
+      }));
+    } else if (Array.isArray(prod.comboProductIds) && prod.comboProductIds.length > 0) {
       comboCups = prod.comboProductIds.map((pId, idx) => {
         const found = (CATALOG.products || []).find(p => p.id === pId);
+        const sz = found && found.prices && found.prices[0] ? found.prices[0].size : 500;
         return {
+          size: sz,
           flavor: found ? found.name : 'Açaí Tradicional',
           fruit: '',
           acomp: ''
@@ -701,6 +710,7 @@ window.openItemModal = function(productId) {
       if (match) count = parseInt(match[1], 10);
       const defaultFlavor = ((CATALOG.products || []).find(p => p.active && p.categorySlug !== 'combos')?.name) || 'Açaí Tradicional';
       comboCups = Array.from({ length: count }, () => ({
+        size: 500,
         flavor: defaultFlavor,
         fruit: '',
         acomp: ''
@@ -854,9 +864,44 @@ function renderItemModal() {
 
   // SE FOR COMBO: Seletores em Dropdown para personalizar cada copo (Sabores, Mousses, Frutas e Acompanhamentos)
   if (st.isCombo && Array.isArray(st.comboCups) && st.comboCups.length > 0) {
-    const availableFlavors = (CATALOG.products || []).filter(p => p.active && p.categorySlug !== 'combos' && p.category !== 'combos');
+    // 1. Sabores e mousses liberados pelo lojista para este combo
+    let availableFlavors = (CATALOG.products || []).filter(p => p.active && p.categorySlug !== 'combos' && p.category !== 'combos');
+    const allowedFlavors = prod.comboConfig?.allowedFlavorIds || prod.allowedFlavorIds;
+    if (Array.isArray(allowedFlavors) && allowedFlavors.length > 0) {
+      availableFlavors = availableFlavors.filter(p => allowedFlavors.includes(p.id));
+    }
+
+    // 2. Acompanhamentos liberados pelo lojista para este combo
+    let availableAcomps = (CATALOG.accompaniments || []).filter(a => typeof a === 'string' || a.active !== false);
+    const allowedAcomps = prod.comboConfig?.allowedAccompanimentIds || prod.allowedAccompanimentIds;
+    if (Array.isArray(allowedAcomps) && allowedAcomps.length > 0) {
+      availableAcomps = availableAcomps.filter(a => {
+        const aId = typeof a === 'string' ? a : (a.id || a.name);
+        const aName = typeof a === 'string' ? a : a.name;
+        return allowedAcomps.includes(aId) || allowedAcomps.includes(aName);
+      });
+    }
+
     const availableFruits = (CATALOG.fruits || []).filter(f => typeof f === 'string' || f.active !== false);
-    const availableAcomps = (CATALOG.accompaniments || []).filter(a => typeof a === 'string' || a.active !== false);
+
+    // 3. Garrafas e itens adicionais inclusos no combo (se houver)
+    const includedItems = prod.comboConfig?.includedItems || [];
+    let includedItemsHtml = '';
+    if (includedItems.length > 0) {
+      includedItemsHtml = `
+        <div style="background:rgba(124,58,237,0.12);border:1.5px solid rgba(124,58,237,0.35);border-radius:14px;padding:12px;margin-bottom:14px">
+          <b style="font-size:12.5px;color:var(--y);display:flex;align-items:center;gap:6px">
+            <span>🍾</span> Itens Já Inclusos neste Combo:
+          </b>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">
+            ${includedItems.map(it => {
+              const itemProd = (CATALOG.products || []).find(p => p.id === it.productId);
+              return `<span style="background:var(--card);border:1px solid var(--ln);color:var(--tx);padding:4px 10px;border-radius:14px;font-size:11.5px;font-weight:600">✓ ${it.qty || 1}x ${esc(itemProd ? itemProd.name : 'Item Incluso')}</span>`;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
 
     h += `
       <div class="combo-cups-builder">
@@ -866,16 +911,21 @@ function renderItemModal() {
           <p class="mut" style="font-size:12px;margin:0 0 10px 0">Escolha o sabor/mousse, fruta e acompanhamento para cada copo:</p>
         </div>
 
-        ${st.comboCups.map((cup, cupIdx) => `
+        ${includedItemsHtml}
+
+        ${st.comboCups.map((cup, cupIdx) => {
+          const cupSizeText = cup.size ? ` (${formatSizeLabel(cup.size)})` : '';
+          return `
           <div class="combo-cup-card" data-cup-index="${cupIdx}">
             <div class="combo-cup-card-title">
-              <span class="cup-num-pill">${cupIdx + 1}º Copo</span>
+              <span class="cup-num-pill">${cupIdx + 1}º Copo${cupSizeText}</span>
               <b class="combo-cup-title-text">${esc(cup.flavor || 'Copo ' + (cupIdx + 1))}</b>
             </div>
 
             <div class="combo-cup-field">
               <label class="combo-field-label">🍧 Sabor / Mousse do Copo:</label>
               <select class="combo-dropdown" onchange="updateComboCupSelection(${cupIdx}, 'flavor', this.value)">
+                <option value="">Selecione o sabor ou mousse...</option>
                 ${availableFlavors.map(fl => `
                   <option value="${esc(fl.name)}" ${fl.name === cup.flavor ? 'selected' : ''}>
                     ${esc(fl.name)}
@@ -906,7 +956,8 @@ function renderItemModal() {
               </select>
             </div>
           </div>
-        `).join('')}
+        `;
+        }).join('')}
       </div>
     `;
   }
@@ -1236,17 +1287,24 @@ window.addItemToCart = function() {
     ? prod.name
     : `${prod.name} ${sizeLabel}`;
 
-  // Formatação dos acompanhamentos (se for Combo, gera a lista detalhada de cada copo montado)
+  // Formatação dos acompanhamentos (se for Combo, gera a lista detalhada de cada copo montado e itens inclusos)
   let finalAccompaniments = [...st.accompaniments];
   if (st.isCombo && Array.isArray(st.comboCups) && st.comboCups.length > 0) {
     finalAccompaniments = st.comboCups.map((cup, i) => {
       const details = [];
       if (cup.fruit) details.push(`Fruta: ${cup.fruit}`);
       if (cup.acomp) details.push(`Acomp: ${cup.acomp}`);
-      if (details.length > 0) {
-        return `${i + 1}º Copo: ${cup.flavor || 'Açaí'} (${details.join(', ')})`;
+      const szLabel = formatSizeLabel(cup.size || 500);
+      const detStr = details.length > 0 ? ` (${details.join(', ')})` : '';
+      return `${i + 1}º Copo (${szLabel}): ${cup.flavor || 'Açaí'}${detStr}`;
+    });
+
+    const incItems = prod.comboConfig?.includedItems || [];
+    incItems.forEach(it => {
+      const itemProd = (CATALOG.products || []).find(p => p.id === it.productId);
+      if (itemProd) {
+        finalAccompaniments.push(`+ Incluso: ${it.qty || 1}x ${itemProd.name}`);
       }
-      return `${i + 1}º Copo: ${cup.flavor || 'Açaí'}`;
     });
   }
 

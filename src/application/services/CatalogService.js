@@ -343,6 +343,8 @@ export class CatalogService {
       isNewLaunch: !!productData.isNewLaunch,
       isPromo: !!productData.isPromo,
       comboProductIds: Array.isArray(productData.comboProductIds) ? productData.comboProductIds : [],
+      comboConfig: productData.comboConfig || undefined,
+      allowedFlavorIds: Array.isArray(productData.allowedFlavorIds) ? productData.allowedFlavorIds : undefined,
       isCustomizableCombo: productData.isCustomizableCombo !== undefined ? !!productData.isCustomizableCombo : true,
       allowedAccompanimentIds: Array.isArray(productData.allowedAccompanimentIds) ? productData.allowedAccompanimentIds : undefined,
       allowExtras: productData.allowExtras !== undefined ? !!productData.allowExtras : true,
