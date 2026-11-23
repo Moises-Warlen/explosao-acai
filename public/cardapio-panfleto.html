@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cardápio Oficial - Explosão Açaí</title>
+  <link rel="icon" type="image/webp" href="imagens/Logo.webp">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Poppins:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- html2canvas para permitir salvar como imagem de alta resolução -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    :root {
+      --bg-purple-deep: #160027;
+      --bg-purple-dark: #240046;
+      --bg-purple-mid: #3c096c;
+      --accent-gold: #ffb703;
+      --accent-yellow: #facc15;
+      --accent-yellow-light: #fef08a;
+      --gold-dark: #b45309;
+      --text-dark: #1e1b4b;
+      --card-bg: #ffffff;
+      --card-border: #e9d5ff;
+      --badge-price-bg: #1c1033;
+      --badge-price-text: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #0f001c;
+      color: #333333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px 10px 40px;
+    }
+
+    /* BARRA SUPERIOR DE CONTROLE (NÃO SAI NA IMPRESSÃO) */
+    .action-bar {
+      position: sticky;
+      top: 10px;
+      z-index: 1000;
+      background: rgba(36, 0, 70, 0.95);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 183, 3, 0.4);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+      border-radius: 50px;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      max-width: 95vw;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .action-bar .brand-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-right: 8px;
+    }
+
+    .action-bar .brand-badge img {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1.5px solid var(--accent-gold);
+    }
+
+    .btn-action {
+      background: #3c096c;
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 30px;
+      padding: 8px 16px;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-action:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      filter: brightness(1.1);
+    }
+
+    .btn-action.btn-gold {
+      background: linear-gradient(135deg, #ffb703 0%, #fb8500 100%);
+      color: #1a0826;
+      border: none;
+      font-weight: 700;
+    }
+
+    .btn-action.btn-green {
+      background: #10b981;
+      color: #ffffff;
+      border: none;
+    }
+
+    /* CONTAINER DO PANFLETO / CARTAZ */
+    .poster-container {
+      width: 100%;
+      max-width: 940px;
+      background: radial-gradient(circle at 50% 10%, #3c096c 0%, #240046 45%, #15002a 100%);
+      border-radius: 28px;
+      border: 4px solid var(--accent-gold);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 25px rgba(255, 183, 3, 0.35);
+      padding: 24px 22px 26px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* EFEITO DE LUZ DE FUNDO */
+    .poster-container::before {
+      content: "";
+      position: absolute;
+      top: -150px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 350px;
+      background: radial-gradient(circle, rgba(255, 183, 3, 0.15) 0%, rgba(60, 9, 108, 0) 70%);
+      pointer-events: none;
+    }
+
+    /* TOPO / CABEÇALHO DO CARDÁPIO */
+    .poster-header {
+      display: grid;
+      grid-template-columns: 280px 1fr 180px;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 22px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .header-logo-col {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .main-logo-img {
+      max-width: 250px;
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+    }
+
+    .slogan-text {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #ffffff;
+      margin-top: -4px;
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    }
+
+    .header-center-capsule {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .capsule-badge-top {
+      background: linear-gradient(135deg, #ffd166 0%, #ffb703 100%);
+      color: #1a0826;
+      font-family: 'Lilita One', cursive;
+      font-size: 1.35rem;
+      padding: 6px 24px;
+      border-radius: 30px;
+      box-shadow: 0 4px 15px rgba(255, 183, 3, 0.4);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .capsule-badge-sub {
+      color: #f8fafc;
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-top: 6px;
+      letter-spacing: 0.8px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+    }
+
+    .header-hero-col {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .hero-circle-avatar {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      border: 4px solid var(--accent-gold);
+      background: #ffffff;
+      overflow: hidden;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.5), 0 0 15px rgba(255, 183, 3, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero-circle-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scale(1.08);
+    }
+
+    /* GRID DE CATEGORIAS (2 COLUNAS IGUAIS AO DESIGN ORIGINAL) */
+    .categories-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* CARD DE CATEGORIA (Fundo branco, cantos arredondados, visual limpo) */
+    .cat-card {
+      background: #ffffff;
+      border-radius: 20px;
+      border: 2px solid #ecd9fc;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+      padding: 14px 12px 14px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .cat-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .cat-title-badge {
+      background: linear-gradient(135deg, #3c096c 0%, #240046 100%);
+      color: #ffffff;
+      font-family: 'Lilita One', cursive;
+      font-size: 1.15rem;
+      padding: 4px 22px;
+      border-radius: 20px;
+      border: 2px solid var(--accent-gold);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+      letter-spacing: 0.5px;
+    }
+
+    .cat-subtitle {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #4a044e;
+      margin-top: 4px;
+    }
+
+    /* GRID DE PRODUTOS DENTRO DO CARD */
+    .products-row {
+      display: grid;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    /* PRODUTO UNITÁRIO */
+    .prod-box {
+      background: #fbf8ff;
+      border: 1px solid #e9d5ff;
+      border-radius: 12px;
+      padding: 8px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      transition: transform 0.15s ease;
+    }
+
+    .prod-box:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    .prod-img-wrap {
+      width: 100%;
+      height: 75px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 6px;
+    }
+
+    .prod-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .prod-name-badge {
+      background: #ffb703;
+      color: #1a0826;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 0.76rem;
+      padding: 3px 8px;
+      border-radius: 10px;
+      width: 95%;
+      margin-bottom: 6px;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* PÍLULAS DE PREÇO POR TAMANHO */
+    .price-pills-col {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .price-pill {
+      background: #1c1033;
+      color: #ffffff;
+      border-radius: 6px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .price-pill .ml-tag {
+      color: #cbd5e1;
+      font-size: 0.65rem;
+      font-weight: 600;
+    }
+
+    .price-pill .val-tag {
+      color: #facc15;
+      font-weight: 800;
+    }
+
+    /* PREÇO DE DESTAQUE ÚNICO (ex: Kids, Garrafa, Mousse, Potes) */
+    .single-price-pill {
+      background: #1c1033;
+      color: #facc15;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800;
+      font-size: 0.88rem;
+      padding: 4px 10px;
+      width: 90%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    /* VARIAÇÃO DE GRIDS POR CATEGORIA */
+    .grid-3-cols {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .grid-2-cols {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .grid-5-cols {
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+    }
+
+    /* CARD DE PRODUTOS PREMIUM COM 5 ITENS */
+    .cat-premium .products-row {
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+    }
+
+    .cat-premium .prod-name-badge {
+      font-size: 0.68rem;
+      padding: 2px 4px;
+    }
+
+    .cat-premium .price-pill {
+      font-size: 0.62rem;
+      padding: 2px 4px;
+    }
+
+    /* SEÇÃO MONTE DO SEU JEITO (DESTAQUE NO CARDÁPIO) */
+    .cat-monte-jeito {
+      grid-column: span 2;
+      background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
+      border: 2px dashed #f59e0b;
+      padding: 12px 18px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .monte-info {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .monte-info img {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      object-fit: cover;
+      border: 2px solid #ffb703;
+    }
+
+    .monte-text h4 {
+      font-family: 'Lilita One', cursive;
+      font-size: 1.15rem;
+      color: #78350f;
+    }
+
+    .monte-text p {
+      font-size: 0.75rem;
+      color: #92400e;
+      font-weight: 500;
+    }
+
+    .monte-prices {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .monte-pill {
+      background: #78350f;
+      color: #fef3c7;
+      border-radius: 10px;
+      padding: 6px 12px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .monte-pill span {
+      color: #fde047;
+      font-size: 0.88rem;
+      font-weight: 800;
+    }
+
+    /* SEÇÃO DE ACOMPANHAMENTOS E ADICIONAIS */
+    .footer-addons-section {
+      margin-top: 18px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      border: 2px solid var(--accent-gold);
+      padding: 14px 16px;
+      position: relative;
+      z-index: 2;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+
+    .addons-block {
+      margin-bottom: 10px;
+    }
+
+    .addons-block:last-child {
+      margin-bottom: 0;
+    }
+
+    .addons-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .addons-title {
+      font-family: 'Lilita One', cursive;
+      font-size: 0.98rem;
+      color: #3c096c;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .addons-sub {
+      font-size: 0.7rem;
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    .badges-flex {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .addon-badge {
+      background: #f1f5f9;
+      color: #1e293b;
+      border: 1px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 3px 10px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    .addon-badge.gold {
+      background: #fef08a;
+      border-color: #facc15;
+      color: #713f12;
+      font-weight: 700;
+    }
+
+    .addon-badge.purple {
+      background: #f3e8ff;
+      border-color: #c084fc;
+      color: #581c87;
+      font-weight: 700;
+    }
+
+    .addon-badge.pistache {
+      background: #dcfce7;
+      border-color: #4ade80;
+      color: #14532d;
+      font-weight: 800;
+    }
+
+    /* RODAPÉ OFICIAL COM CONTATOS */
+    .poster-footer {
+      margin-top: 18px;
+      background: #0f001c;
+      border-radius: 16px;
+      border: 1.5px solid rgba(255, 183, 3, 0.5);
+      padding: 12px 16px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .footer-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .footer-label {
+      color: #facc15;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .footer-val {
+      color: #ffffff;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .footer-val:hover {
+      color: #ffb703;
+    }
+
+    /* ESTILOS DE IMPRESSÃO (PERFEITO PARA FOLHA A4 OU EXPORTAÇÃO PDF) */
+    @page {
+      size: A4 portrait;
+      margin: 8mm 6mm;
+    }
+
+    @media print {
+      html, body {
+        background: #240046 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .action-bar {
+        display: none !important;
+      }
+
+      .poster-container {
+        max-width: 100% !important;
+        width: 100% !important;
+        border: 2px solid var(--accent-gold) !important;
+        box-shadow: none !important;
+        border-radius: 12px !important;
+        padding: 12px 14px !important;
+        background: #240046 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .categories-grid {
+        gap: 8px !important;
+      }
+
+      .cat-card {
+        box-shadow: none !important;
+        border: 1px solid #d8b4fe !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .prod-box {
+        box-shadow: none !important;
+        border: 1px solid #e9d5ff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .single-price-pill, .price-pill, .cat-title-badge, .prod-name-badge, .monte-pill, .addon-badge {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+    }
+
+    /* RESPONSIVIDADE PARA CELULARES */
+    @media (max-width: 768px) {
+      .poster-header {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+
+      .header-logo-col, .header-hero-col {
+        align-items: center;
+        justify-content: center;
+      }
+
+      .categories-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .cat-premium .products-row {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .poster-footer {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- BARRA SUPERIOR DE AÇÕES E EXPORTAÇÃO -->
+  <div class="action-bar">
+    <div class="brand-badge">
+      <img src="imagens/Logo.webp" alt="Explosão Açaí" onerror="this.src='imagens/Logo.png'">
+      <span>Explosão Açaí • Panfleto Oficial</span>
+    </div>
+
+    <button type="button" class="btn-action btn-gold" onclick="window.print()">
+      🖨️ Imprimir / Salvar PDF
+    </button>
+
+    <button type="button" class="btn-action btn-green" onclick="downloadAsImage()">
+      🖼️ Baixar Arte em Imagem (PNG)
+    </button>
+
+    <a href="/" class="btn-action" target="_blank">
+      📲 Ver Cardápio Online
+    </a>
+
+    <a href="/admin.html" class="btn-action">
+      ⚙️ Voltar ao Painel
+    </a>
+  </div>
+
+  <!-- CONTAINER PRINCIPAL DO CARTAZ / PANFLETO -->
+  <main class="poster-container" id="posterArea">
+
+    <!-- CABEÇALHO -->
+    <header class="poster-header">
+      <div class="header-logo-col">
+        <img src="imagens/Logo.webp" alt="Explosão Açaí" class="main-logo-img" onerror="this.src='imagens/Logo.png'">
+        <p class="slogan-text">Seu momento merece mais sabor!</p>
+      </div>
+
+      <div class="header-center-capsule">
+        <div class="capsule-badge-top">Mais que açaí, é puro sabor!</div>
+        <div class="capsule-badge-sub">Cardápio digital & delivery próprio</div>
+      </div>
+
+      <div class="header-hero-col">
+        <div class="hero-circle-avatar">
+          <img src="imagens/hero-acai-copo-pro.webp" alt="Açaí Especial" onerror="this.src='imagens/classico.webp'">
+        </div>
+      </div>
+    </header>
+
+    <!-- GRID PRINCIPAL DE CATEGORIAS (2 COLUNAS) -->
+    <div class="categories-grid">
+
+      <!-- 1. EXPLOSÃO CLÁSSICA (3 PRODUTOS) -->
+      <section class="cat-card">
+        <div class="cat-header">
+          <div class="cat-title-badge">Explosão Clássica</div>
+          <p class="cat-subtitle">Combinações deliciosas para todos os dias.</p>
+        </div>
+        <div class="products-row grid-3-cols">
+          <!-- Clássico -->
+          <div class="prod-box">
+            <div class="prod-img-wrap">
+              <img src="imagens/classico.webp" alt="Clássico">
+            </div>
+            <div class="prod-name-badge">Clássico</div>
+            <div class="price-pills-col">
+              <div class="price-pill"><span class="ml-tag">300ml</span> <span class="val-tag">R$ 19,90</span></div>
+              <div class="price-pill"><span class="ml-tag">500ml</span> <span class="val-tag">R$ 26,90</span></div>
+              <div class="price-pill"><span class="ml-tag">700ml</span> <span class="val-tag">R$ 33,90</span></div>
+            </div>
+          </div>
+
+          <!-- Ninho com Morango -->
+          <div class="prod-box">
+            <div class="prod-img-wrap">
+              <img src="imagens/ninho com morango.webp" alt="Ninho com Morango">
+            </div>
+            <div class="prod-name-badge">Ninho Morango</div>
+            <div class="price-pills-col">
+              <div class="price-pill"><span class="ml-tag">300ml</span> <span class="val-tag">R$ 19,90</span></div>
+              <div class="price-pill"><span class="ml-tag">500ml</span> <span class="val-tag">R$ 25,90</span></div>
+              <div class="price-pill"><span class="ml-tag">700ml</span> <span class="val-tag">R$ 32,90</span></div>
+            </div>
+          </div>
+
+          <!-- Granola -->
+          <div class="prod-box">
+            <div class="prod-img-wrap">
+              <img src="imagens/granola.webp" alt="Granola">
+            </div>
+            <div class="prod-name-badge">Granola</div>
+            <div class="price-pills-col">
+              <div class="price-pill"><span class="ml-tag">300ml</span> <span class="val-tag">R$ 19,90</span></div>
+              <div class="price-pill"><span class="ml-tag">500ml</span> <span class="val-tag">R$ 26,90</span></div>
+              <div class="price-pill"><span class="ml-tag">700ml</span> <span class="val-tag">R$ 33,90</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. EXPLOSÃO PREMIUM (5 PRODUTOS) -->
+      <section class="cat-card cat-premium">
+        <div class="cat-header">
+          <div class="cat-title-badge">Explosão Premium</div>
+          <p class="cat-subtitle">Para quem gosta de uma combinação especial.</p>
+        </div>
+        <div class="products-row">
+          <!-- Doce Tentação -->
+          <div class="prod-box">
+            <div class="prod-img-wrap">
+              <img src="imagens/doce tentacao.webp" alt="Doce Tentação">
+            </div>
+            <div class="prod-name-badge">Doce Tentação</div>
+            <div class="price-pills-col">
+              <div class="price-pill"><span class="ml-tag">300ml</span> <span class="val-tag">R$ 22,90</span></div>
+              <div class="price-pill"><span class="ml-tag">500ml</span> <span class="val-tag">R$ 29,90</span></div>
+              <div class="price-pill"><span class="ml-tag">700ml</span> <span class="val-tag">R$ 37,90</span></div>
+            </div>
+          </div>
+
+          <!-- Nutella -->
+          <div class="prod-box">
+            <div class="prod-img-wrap">
+              <img src="imagens/nutella.webp" alt="Nutella">
+            </div>
+            <div class="prod-name-badge">Nutella</div>
+            <div class="price-pills-col">
+              <div class="price-pill"><span class="ml-tag">300ml</span> <span class="val-tag">R$ 23,90</span></div>
+              <div class="price-pill"><span class="ml-tag">500ml</span> <span class="val-tag">R$ 30,90</span></div>
+              <div class="price-pill"><span class="ml-tag">700ml</span> <span class="val-tag">R$ 38,90</span></div>
+            </div>
+          </div>
+
+          <!-- Par Perfeito -->
+          <div class="prod-box">
+            <div class="prod-img-wrap">
+              <img src="imagens/par perfeito.webp" alt="Par Perfeito">
+            </div>
+            <div class="prod-name-badge">Par Perfeito</div>
+            <div class="price-pills-col">
+              <div class="price-pill"><span class="ml-tag">300ml</span> <span class="val-tag">R$ 24,90</span></div>
+              <div class="price-pill"><span class="ml-tag">500ml</span> <span class="val-tag">R$ 31,90</span></div>
+              <div class="price-pill"><span class="ml-tag">700ml</span> <span class="val-tag">R$ 38,90</span></div>
+            </div>
+          </div>
+
+          <!-- Oreo Supreme -->
+          <div class="prod-box">
+            <div class="prod-img-wrap">
+              <img src="imagens/classico.webp" alt="Oreo Supreme">
+            </div>
+            <div class="prod-name-badge">Oreo Supreme</div>
+            <div class="price-pills-col">
+              <div class="price-pill"><span class="ml-tag">300ml</span> <span class="val-tag">R$ 22,90</span></div>
+              <div class="price-pill"><span class="ml-tag">500ml</span> <span class="val-tag">R$ 28,90</span></div>
+              <div class="price-pill"><span class="ml-tag">700ml</span> <span class="val-tag">R$ 35,90</span></div>
+            </div>
+          </div>
+
+          <!-- Pistache -->
+          <div class="prod-box">
+            <div class="prod-img-wrap">
+              <img src="imagens/classico.webp" alt="Pistache">
+            </div>
+            <div class="prod-name-badge">Pistache</div>
+            <div class="price-pills-col">
+              <div class="price-pill"><span class="ml-tag">300ml</span> <span class="val-tag">R$ 23,90</span></div>
+              <div class="price-pill"><span class="ml-tag">500ml</span> <span class="val-tag">R$ 30,90</span></div>
+              <div class="price-pill"><span class="ml-tag">700ml</span> <span class="val-tag">R$ 36,90</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. EXPLOSÃO NATURAL (2 PRODUTOS) -->
+      <section class="cat-card">
+        <div class="cat-header">
+          <div class="cat-title-badge">Explosão Natural</div>
+          <p class="cat-subtitle">Fruta e açaí puro, do jeito leve.</p>
+        </div>
+        <div class="products-row grid-2-cols">
+          <!-- 100% Açaí -->
+          <div class="prod-box">
+            <div class="prod-img-wrap">
+              <img src="imagens/Pura Polpa.webp" alt="100% Açaí">
+            </div>
+            <div class="prod-name-badge">100% Açaí Puro</div>
+            <div class="price-pills-col">
+              <div class="price-pill"><span class="ml-tag">300ml</span> <span class="val-tag">R$ 16,90</span></div>
+              <div class="price-pill"><span class="ml-tag">500ml</span> <span class="val-tag">R$ 22,90</span></div>
+              <div class="price-pill"><span class="ml-tag">700ml</span> <span class="val-tag">R$ 28,90</span></div>
+            </div>
+          </div>
+
+          <!-- Mix-Fruta -->
+          <div class="prod-box">
+            <div class="prod-img-wrap">
+              <img src="imagens/granola.webp" alt="Mix-Fruta">
+            </div>
+            <div class="prod-name-badge">Açaí Mix-Fruta</div>
+            <div class="price-pills-col">
+              <div class="price-pill"><span class="ml-tag">300ml</span> <span class="val-tag">R$ 20,90</span></div>
+              <div class="price-pill"><span class="ml-tag">500ml</span> <span class="val-tag">R$ 26,90</span></div>
+              <div class="price-pill"><span class="ml-tag">700ml</span> <span class="val-tag">R$ 33,90</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. EXPLOSÃO KIDS (3 PRODUTOS - 250ML) -->
+      <section class="cat-card">
+        <div class="cat-header">
+          <div class="cat-title-badge">Explosão Kids</div>
+          <p class="cat-subtitle">Copo único de 250ml – pequenos copos, grandes momentos!</p>
+        </div>
+        <div class="products-row grid-3-cols">
+          <!-- Kids Fini -->
+          <div class="prod-box">
+            <div class="prod-img-wrap">
+              <img src="imagens/mix fini.webp" alt="Kids Fini">
+            </div>
+            <div class="prod-name-badge">Kids Fini</div>
+            <div class="single-price-pill">R$ 15,90</div>
+          </div>
+
+          <!-- Kids Moranguinho -->
+          <div class="prod-box">
+            <div class="prod-img-wrap">
+              <img src="imagens/ninho com morango.webp" alt="Kids Moranguinho">
+            </div>
+            <div class="prod-name-badge">Moranguinho</div>
+            <div class="single-price-pill">R$ 15,90</div>
+          </div>
+
+          <!-- Kids Choco -->
+          <div class="prod-box">
+            <div class="prod-img-wrap">
+              <img src="imagens/doce tentacao.webp" alt="Kids Choco">
+            </div>
+            <div class="prod-name-badge">Kids Choco</div>
+            <div class="single-price-pill">R$ 15,90</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. EXPLOSÃO FITNESS (2 PRODUTOS - ZERO AÇÚCAR) -->
+      <section class="cat-card">
+        <div class="cat-header">
+          <div class="cat-title-badge">Explosão Fitness</div>
+          <p class="cat-subtitle">Zero açúcar • copos de 300ml e 500ml</p>
+        </div>
+        <div class="products-row grid-2-cols">
+          <!-- Fitness Tropical -->
+          <div class="prod-box">
+            <div class="prod-img-wrap">
+              <img src="imagens/granola.webp" alt="Fitness Tropical">
+            </div>
+            <div class="prod-name-badge">Fitness Tropical</div>
+            <div class="price-pills-col">
+              <div class="price-pill"><span class="ml-tag">300ml</span> <span class="val-tag">R$ 22,90</span></div>
+              <div class="price-pill"><span class="ml-tag">500ml</span> <span class="val-tag">R$ 30,90</span></div>
+            </div>
+          </div>
+
+          <!-- Fitness Power -->
+          <div class="prod-box">
+            <div class="prod-img-wrap">
+              <img src="imagens/do seu jeitinho.webp" alt="Fitness Power">
+            </div>
+            <div class="prod-name-badge">Fitness Power</div>
+            <div class="price-pills-col">
+              <div class="price-pill"><span class="ml-tag">300ml</span> <span class="val-tag">R$ 26,90</span></div>
+              <div class="price-pill"><span class="ml-tag">500ml</span> <span class="val-tag">R$ 35,90</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. AÇAÍ NA GARRAFA (300ML - SEM MARACUJÁ) -->
+      <section class="cat-card">
+        <div class="cat-header">
+          <div class="cat-title-badge">Açaí na Garrafa (300ml)</div>
+          <p class="cat-subtitle">Leve o sabor do açaí para onde quiser!</p>
+        </div>
+        <div class="products-row grid-3-cols">
+          <!-- Tradicional -->
+          <div class="prod-box">
+            <div class="prod-img-wrap">
+              <img src="imagens/do seu jeitinho.webp" alt="Açaí Tradicional Garrafa">
+            </div>
+            <div class="prod-name-badge">Tradicional</div>
+            <div class="single-price-pill">R$ 16,90</div>
+          </div>
+
+          <!-- Paçoca -->
+          <div class="prod-box">
+            <div class="prod-img-wrap">
+              <img src="imagens/do seu jeitinho.webp" alt="Açaí com Paçoca Garrafa">
+            </div>
+            <div class="prod-name-badge">Com Paçoca</div>
+            <div class="single-price-pill">R$ 17,90</div>
+          </div>
+
+          <!-- Morango -->
+          <div class="prod-box">
+            <div class="prod-img-wrap">
+              <img src="imagens/do seu jeitinho.webp" alt="Açaí com Morango Garrafa">
+            </div>
+            <div class="prod-name-badge">Com Morango</div>
+            <div class="single-price-pill">R$ 18,90</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. EXPLOSÃO FAMÍLIA (POTES 1L E 2L) -->
+      <section class="cat-card">
+        <div class="cat-header">
+          <div class="cat-title-badge">Explosão Família</div>
+          <p class="cat-subtitle">Pote de açaí puro, pronto para compartilhar.</p>
+        </div>
+        <div class="products-row grid-2-cols">
+          <!-- 1 Litro -->
+          <div class="prod-box">
+            <div class="prod-img-wrap">
+              <img src="imagens/pote 1l e 2 l.webp" alt="Açaí 1 Litro">
+            </div>
+            <div class="prod-name-badge">Pote 1 Litro</div>
+            <div class="single-price-pill">R$ 36,90</div>
+          </div>
+
+          <!-- 2 Litros -->
+          <div class="prod-box">
+            <div class="prod-img-wrap">
+              <img src="imagens/pote 1l e 2 l.webp" alt="Açaí 2 Litros">
+            </div>
+            <div class="prod-name-badge">Pote 2 Litros</div>
+            <div class="single-price-pill">R$ 64,90</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8. MOUSSES CREMOSOS (110ML - SEM MARACUJÁ) -->
+      <section class="cat-card">
+        <div class="cat-header">
+          <div class="cat-title-badge">Mousses Cremosos (110ml)</div>
+          <p class="cat-subtitle">Sobremesa cremosa em pote individual.</p>
+        </div>
+        <div class="products-row grid-3-cols">
+          <!-- Morango -->
+          <div class="prod-box">
+            <div class="prod-img-wrap">
+              <img src="imagens/do seu jeitinho.webp" alt="Mousse de Morango">
+            </div>
+            <div class="prod-name-badge">Morango</div>
+            <div class="single-price-pill">R$ 8,90</div>
+          </div>
+
+          <!-- Oreo -->
+          <div class="prod-box">
+            <div class="prod-img-wrap">
+              <img src="imagens/do seu jeitinho.webp" alt="Mousse de Oreo">
+            </div>
+            <div class="prod-name-badge">Oreo</div>
+            <div class="single-price-pill">R$ 7,90</div>
+          </div>
+
+          <!-- Paçoca -->
+          <div class="prod-box">
+            <div class="prod-img-wrap">
+              <img src="imagens/do seu jeitinho.webp" alt="Mousse de Paçoca">
+            </div>
+            <div class="prod-name-badge">Paçoca</div>
+            <div class="single-price-pill">R$ 7,90</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9. MONTE DO SEU JEITO (OPÇÃO DE MONTAGEM) -->
+      <div class="cat-monte-jeito">
+        <div class="monte-info">
+          <img src="imagens/do seu jeitinho.webp" alt="Monte do seu jeito">
+          <div class="monte-text">
+            <h4>Monte do seu jeito</h4>
+            <p>Escolha o tamanho e receba seus acompanhamentos inclusos na medida certa!</p>
+          </div>
+        </div>
+        <div class="monte-prices">
+          <div class="monte-pill">300ml: <span>R$ 15,90</span> (3 acomp.)</div>
+          <div class="monte-pill">500ml: <span>R$ 19,90</span> (4 acomp.)</div>
+          <div class="monte-pill">700ml: <span>R$ 26,90</span> (5 acomp.)</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SEÇÃO DE ACOMPANHAMENTOS E ADICIONAIS DO RODAPÉ -->
+    <section class="footer-addons-section">
+      <!-- 1. Acompanhamentos Grátis -->
+      <div class="addons-block">
+        <div class="addons-header">
+          <div class="addons-title">
+            <span>✨ Acompanhamentos Inclusos</span>
+          </div>
+          <span class="addons-sub">Conforme o tamanho do seu copo</span>
+        </div>
+        <div class="badges-flex">
+          <span class="addon-badge gold">Leite Ninho em pó</span>
+          <span class="addon-badge gold">Leite condensado</span>
+          <span class="addon-badge gold">Granola tradicional</span>
+          <span class="addon-badge gold">Paçoca rolha</span>
+          <span class="addon-badge gold">Amendoim triturado</span>
+          <span class="addon-badge gold">Chocobol crocante</span>
+          <span class="addon-badge gold">Chocolate granulado</span>
+          <span class="addon-badge gold">Confete colorido</span>
+          <span class="addon-badge gold">Sucrilhos</span>
+          <span class="addon-badge gold">Ovomaltine crocante</span>
+          <span class="addon-badge gold">Sementes de Chia</span>
+          <span class="addon-badge gold">Mel puro de abelha</span>
+          <span class="addon-badge gold">Bis picado</span>
+          <span class="addon-badge gold">Mini Fini confeitos</span>
+        </div>
+      </div>
+
+      <!-- 2. Frutas Frescas e Adicionais (SEM MARACUJÁ E CREMES APENAS PISTACHE) -->
+      <div class="addons-block" style="border-top: 1px dashed #cbd5e1; padding-top: 8px;">
+        <div class="addons-header">
+          <div class="addons-title">
+            <span>🍓 Frutas Frescas & Adicionais Especiais</span>
+          </div>
+          <span class="addons-sub">Para turbinar o seu pedido</span>
+        </div>
+        <div class="badges-flex">
+          <!-- Frutas reais do delivery (sem maracujá) -->
+          <span class="addon-badge purple">Morango fresco (R$ 4,00)</span>
+          <span class="addon-badge purple">Banana fatiada (R$ 2,50)</span>
+          <span class="addon-badge purple">Kiwi fatiado (R$ 4,00)</span>
+          <span class="addon-badge purple">Manga picada (R$ 2,50)</span>
+          <span class="addon-badge purple">Uva sem caroço (R$ 3,50)</span>
+          
+          <!-- Cremes: APENAS PISTACHE (conforme solicitado pelo usuário) -->
+          <span class="addon-badge pistache">⭐ Creme Gourmet de Pistache (R$ 6,00)</span>
+
+          <!-- Extras adicionais do cardápio -->
+          <span class="addon-badge">Nutella Original (R$ 6,50)</span>
+          <span class="addon-badge">Kit Kat (R$ 6,50)</span>
+          <span class="addon-badge">Sonho de Valsa (R$ 4,00)</span>
+          <span class="addon-badge">Brigadeiro Cremoso (R$ 4,00)</span>
+          <span class="addon-badge">Pasta de Amendoim Zero (R$ 3,50)</span>
+          <span class="addon-badge">Whey Protein Concentrado (R$ 6,50)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- RODAPÉ OFICIAL DE CONTATO -->
+    <footer class="poster-footer">
+      <div class="footer-col">
+        <span class="footer-label">📱 Pedidos pelo WhatsApp</span>
+        <a href="https://wa.me/5516991098863" target="_blank" class="footer-val">
+          (16) 99109-8863
+        </a>
+      </div>
+
+      <div class="footer-col">
+        <span class="footer-label">📸 Instagram Oficial</span>
+        <a href="https://instagram.com/expl.osaoacai" target="_blank" class="footer-val">
+          @expl.osaoacai
+        </a>
+      </div>
+
+      <div class="footer-col">
+        <span class="footer-label">🌐 Site & Cardápio Digital</span>
+        <a href="http://cardapioexplosaoacai.com.br" target="_blank" class="footer-val">
+          cardapioexplosaoacai.com.br
+        </a>
+      </div>
+    </footer>
+
+  </main>
+
+  <script>
+    // Função para salvar o cartaz como imagem de alta resolução (PNG)
+    function downloadAsImage() {
+      const poster = document.getElementById('posterArea');
+      const btn = event.currentTarget;
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '⏳ Gerando imagem...';
+      btn.style.opacity = '0.7';
+
+      html2canvas(poster, {
+        scale: 2, // Dobro de resolução para impressão ou Stories em alta qualidade
+        useCORS: true,
+        backgroundColor: '#160027',
+        logging: false
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'cardapio-panfleto-explosao-acai.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        btn.innerHTML = '✅ Imagem Baixada!';
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.style.opacity = '1';
+        }, 3000);
+      }).catch(err => {
+        console.error('Erro ao gerar imagem:', err);
+        alert('Não foi possível gerar a imagem automaticamente. Você pode usar o botão "Imprimir / Salvar PDF" ou tirar um print da tela.');
+        btn.innerHTML = originalText;
+        btn.style.opacity = '1';
+      });
+    }
+  </script>
+</body>
+</html>

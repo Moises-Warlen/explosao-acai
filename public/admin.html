@@ -789,6 +789,7 @@
               <button type="button" id="btn-prod-view-table" class="view-switch-btn active" style="padding:5px 12px;font-size:12px" onclick="setProductViewMode('table')" title="Visualização em Tabela">☰ Tabela</button>
               <button type="button" id="btn-prod-view-grid" class="view-switch-btn" style="padding:5px 12px;font-size:12px" onclick="setProductViewMode('grid')" title="Visualização em Cards Vitrine">⊞ Cards</button>
             </div>
+            <a href="/cardapio-panfleto.html" target="_blank" class="btn-sm" style="background:linear-gradient(135deg, #ffb703 0%, #fb8500 100%);color:#1a0826;font-weight:700;display:inline-flex;align-items:center;gap:6px;text-decoration:none;border-radius:8px;padding:6px 14px;box-shadow:0 2px 8px rgba(255,183,3,0.3)" title="Abrir Cardápio Panfleto Oficial para Impressão, Salvar PDF ou Imagem">📄 Cardápio Panfleto</a>
             <button class="btn-sm btn-next" onclick="openNewProductModal()">+ Novo Produto</button>
           </div>
         </div>
@@ -802,7 +803,10 @@
                 Gerencie seu cardápio, preços e estoque
               </p>
             </div>
-            <button type="button" class="btn-sm btn-new-prod-mobile" onclick="openNewProductModal()">+ Novo Produto</button>
+            <div style="display:flex;gap:6px;align-items:center">
+              <a href="/cardapio-panfleto.html" target="_blank" class="btn-sm" style="background:linear-gradient(135deg, #ffb703 0%, #fb8500 100%);color:#1a0826;font-weight:700;display:inline-flex;align-items:center;gap:4px;text-decoration:none;border-radius:6px;padding:6px 10px;font-size:12px" title="Ver Cardápio Panfleto">📄 Panfleto</a>
+              <button type="button" class="btn-sm btn-new-prod-mobile" onclick="openNewProductModal()">+ Novo Produto</button>
+            </div>
           </div>
         </div>
 
