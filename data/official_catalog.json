@@ -2845,6 +2845,42 @@
           ]
         }
       ]
+    },
+    {
+      "id": "prod_monte",
+      "name": "Monte do seu jeito",
+      "categoryId": "cat_monte",
+      "categorySlug": "monte",
+      "description": "do seu jeitinho",
+      "details": "Escolha o tamanho e os acompanhamentos inclusos no valor (300ml: 3 inclusos, 500ml: 4 inclusos, 700ml: 5 inclusos). Depois turbine com frutas e extras!",
+      "image": "imagens/do seu jeitinho.webp",
+      "active": true,
+      "isCustomizable": true,
+      "isNewLaunch": false,
+      "isPromo": false,
+      "prices": [
+        {
+          "size": 300,
+          "price": 15.9,
+          "promoPrice": null,
+          "costPrice": 6.8,
+          "maxAccompaniments": 3
+        },
+        {
+          "size": 500,
+          "price": 19.9,
+          "promoPrice": null,
+          "costPrice": 8.5,
+          "maxAccompaniments": 4
+        },
+        {
+          "size": 700,
+          "price": 26.9,
+          "promoPrice": null,
+          "costPrice": 11.2,
+          "maxAccompaniments": 5
+        }
+      ]
     }
   ],
   "accompaniments": [
@@ -3372,37 +3408,43 @@
       "id": "fr_morango",
       "name": "Morango",
       "costPrice": 1.36,
-      "active": true
+      "active": true,
+      "price": 4
     },
     {
       "id": "fr_banana",
       "name": "Banana",
       "costPrice": 0.32,
-      "active": true
+      "active": true,
+      "price": 2.5
     },
     {
       "id": "fr_kiwi",
       "name": "Kiwi",
       "costPrice": 1.4,
-      "active": true
+      "active": true,
+      "price": 4
     },
     {
       "id": "fr_manga",
       "name": "Manga",
       "costPrice": 0.28,
-      "active": true
+      "active": true,
+      "price": 2.5
     },
     {
       "id": "fr_uva",
       "name": "Uva sem caroço",
       "costPrice": 0.88,
-      "active": true
+      "active": true,
+      "price": 3.5
     },
     {
       "id": "fr_maracuja",
       "name": "Maracujá",
       "costPrice": 0.34,
-      "active": true
+      "active": true,
+      "price": 3
     }
   ]
 }

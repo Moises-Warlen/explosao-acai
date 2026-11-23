@@ -1668,19 +1668,281 @@ h2, .cat-title {
 
 .x {
   position: absolute;
-  right: 16px;
-  top: 16px;
-  border: 0;
-  background: var(--ln);
-  color: var(--tx);
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  font-size: 16px;
-  font-weight: bold;
+  right: 14px;
+  top: 14px;
+  z-index: 10000 !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.4) !important;
+  background: rgba(18, 10, 28, 0.8) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  color: #ffffff !important;
+  border-radius: 50% !important;
+  width: 38px !important;
+  height: 38px !important;
+  font-size: 22px !important;
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  transition: transform 0.15s ease, background-color 0.15s ease !important;
+  outline: none !important;
+  user-select: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.x:hover,
+.x:active {
+  background: rgba(0, 0, 0, 0.95) !important;
+  transform: scale(1.1) !important;
+  color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+
+/* Palco visual dinâmico do copo de açaí (Monte do seu jeito) */
+.dynamic-cup-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: 280px;
+  border-radius: 18px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  background: linear-gradient(135deg, rgba(123, 44, 191, 0.08), rgba(75, 15, 107, 0.12));
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.dynamic-cup-stage .dynamic-cup-base-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.dynamic-cup-svg-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.cup-live-header-pill {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 8;
+  background: rgba(20, 10, 30, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #fff;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.2);
+  pointer-events: none;
+  white-space: nowrap;
+  max-width: calc(100% - 120px);
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.cup-live-header-pill.pulse .cup-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #a855f7;
+  box-shadow: 0 0 8px #a855f7;
+  animation: pulseDot 1.5s infinite;
+}
+
+.cup-live-header-pill.active .cup-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+@keyframes pulseDot {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.6; }
+}
+
+.cup-pin-badge {
+  position: absolute;
+  z-index: 9;
+  padding: 4px 9px;
+  border-radius: 14px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(28, 14, 45, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.25);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: auto;
+  cursor: pointer;
+  animation: pinPop 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.cup-pin-badge:hover {
+  transform: scale(1.06);
+  background: rgba(45, 20, 75, 0.95);
+}
+
+.cup-pin-left {
+  left: 10px;
+}
+
+.cup-pin-right {
+  right: 10px;
+}
+
+@keyframes pinPop {
+  0% { opacity: 0; transform: scale(0.6) translateY(6px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Seção Dropdown e Seleção de Frutas Frescas */
+.fruit-dropdown-section {
+  margin: 16px 0;
+  background: var(--card);
+  border: 1.5px solid var(--ln);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.fruit-dropdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.fruit-dropdown-label {
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--tx);
+  cursor: pointer;
+}
+
+.fruit-optional-tag {
+  color: var(--mut);
+  font-weight: normal;
+  font-size: 12px;
+}
+
+.fruit-counter-badge {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+
+.fruit-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.fruit-dropdown-select {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  border-radius: 12px;
+  border: 1.5px solid var(--ln);
+  background: var(--bg);
+  color: var(--tx);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.fruit-dropdown-select:focus {
+  border-color: var(--p);
+  box-shadow: 0 0 0 3px rgba(123, 44, 191, 0.15);
+}
+
+.fruit-pills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.fruit-pill {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(220, 38, 38, 0.2));
+  border: 1.5px solid rgba(239, 68, 68, 0.35);
+  color: var(--tx);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.fruit-pill:hover {
+  transform: scale(1.03);
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+}
+
+.fruit-pill-price {
+  color: #ef4444;
+  font-weight: 800;
+}
+
+.fruit-pill-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.25);
+  color: #ef4444;
+  font-size: 13px;
+  line-height: 1;
+  font-weight: bold;
+  margin-left: 2px;
+}
+
+.fruit-helper-text {
+  font-size: 11.5px;
+  color: var(--mut);
+  margin: 6px 0 0 2px;
 }
 
 /* Chips & Rows */

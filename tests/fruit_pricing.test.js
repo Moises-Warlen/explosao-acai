@@ -92,9 +92,9 @@ describe('Controle de Preço Individual de Frutas Adicionais', () => {
     assert.strictEqual(order.items[0].unitPrice, expectedUnitPrice);
     assert.strictEqual(order.subtotal, expectedUnitPrice);
 
-    // Restaura preços
-    catalogService.updateFruit(banana.id, { price: 3.90 });
-    catalogService.updateFruit(morango.id, { price: 3.90 });
+    // Restaura preços oficiais da Ficha Técnica
+    catalogService.updateFruit(banana.id, { price: 2.50 });
+    catalogService.updateFruit(morango.id, { price: 4.00 });
   });
 
   test('4. Navegação do Menu: Aba Frutas (#nav-tab-fruits) deve abrir a subvisão de Frutas sem bloqueio', async () => {
