@@ -1701,129 +1701,6 @@ h2, .cat-title {
   border-color: #ffffff !important;
 }
 
-/* Palco visual dinâmico do copo de açaí (Monte do seu jeito) - 100% Fotos Reais do Banco */
-.dynamic-cup-stage {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  max-height: 280px;
-  border-radius: 18px;
-  overflow: hidden;
-  margin-bottom: 14px;
-  background: linear-gradient(135deg, rgba(123, 44, 191, 0.08), rgba(75, 15, 107, 0.12));
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.dynamic-cup-stage .dynamic-cup-photo-layer {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center;
-  display: block;
-  transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  animation: photoReveal 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes photoReveal {
-  0% { opacity: 0.6; transform: scale(0.97); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-.cup-live-header-pill {
-  position: absolute;
-  top: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-  background: rgba(20, 10, 30, 0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: #fff;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 11.5px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.3);
-  border: 1px solid rgba(255,255,255,0.22);
-  pointer-events: none;
-  white-space: nowrap;
-  max-width: calc(100% - 130px);
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-
-.cup-live-header-pill.pulse .cup-live-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #a855f7;
-  box-shadow: 0 0 8px #a855f7;
-  animation: pulseDot 1.5s infinite;
-}
-
-.cup-live-header-pill.active .cup-live-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 8px #10b981;
-}
-
-@keyframes pulseDot {
-  0% { transform: scale(0.9); opacity: 0.6; }
-  50% { transform: scale(1.3); opacity: 1; }
-  100% { transform: scale(0.9); opacity: 0.6; }
-}
-
-/* Régua natural de ingredientes adicionados ao copo */
-.cup-ingredients-tray {
-  position: absolute;
-  bottom: 10px;
-  left: 12px;
-  right: 12px;
-  z-index: 10;
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 6px;
-  overflow-x: auto;
-  padding: 4px 2px;
-  scrollbar-width: none;
-}
-
-.cup-ingredients-tray::-webkit-scrollbar {
-  display: none;
-}
-
-.cup-tray-pill {
-  background: rgba(24, 12, 38, 0.88);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 14px;
-  padding: 4px 10px;
-  font-size: 11px;
-  font-weight: 700;
-  white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  animation: trayPillIn 0.25s ease;
-}
-
-@keyframes trayPillIn {
-  0% { opacity: 0; transform: translateY(6px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-/* Seção Dropdown e Seleção de Frutas Frescas */
 .fruit-dropdown-section {
   margin: 16px 0;
   background: var(--card);
@@ -1897,8 +1774,8 @@ h2, .cat-title {
 }
 
 .fruit-pill {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(220, 38, 38, 0.2));
-  border: 1.5px solid rgba(239, 68, 68, 0.35);
+  background: rgba(123, 44, 191, 0.12);
+  border: 1.5px solid rgba(123, 44, 191, 0.35);
   color: var(--tx);
   border-radius: 20px;
   padding: 5px 12px;
@@ -1913,12 +1790,12 @@ h2, .cat-title {
 
 .fruit-pill:hover {
   transform: scale(1.03);
-  background: rgba(239, 68, 68, 0.25);
-  border-color: #ef4444;
+  background: rgba(123, 44, 191, 0.22);
+  border-color: var(--p);
 }
 
 .fruit-pill-price {
-  color: #ef4444;
+  color: var(--p);
   font-weight: 800;
 }
 
@@ -1929,8 +1806,8 @@ h2, .cat-title {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: rgba(239, 68, 68, 0.25);
-  color: #ef4444;
+  background: rgba(123, 44, 191, 0.2);
+  color: var(--p);
   font-size: 13px;
   line-height: 1;
   font-weight: bold;

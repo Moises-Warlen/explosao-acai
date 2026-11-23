@@ -741,148 +741,6 @@ function formatSizeLabel(size) {
   return `${num} ml`;
 }
 
-/* ==========================================================================
-   CONSTRUTOR VISUAL DINÂMICO DO COPO DE AÇAÍ (MONTE DO SEU JEITO)
-   Utiliza as fotos reais profissionais do banco de imagens da loja
-   e reflete a montagem do copo naturalmente em tempo real
-   ========================================================================== */
-function getBestMatchingCupImage(selectedAcomps = [], selectedFruits = [], selectedExtras = []) {
-  const all = [...selectedAcomps, ...selectedFruits, ...selectedExtras].map(s => String(s).toLowerCase());
-  
-  if (all.length === 0) {
-    return {
-      src: 'imagens/do seu jeitinho.webp',
-      label: 'Copo Base de Açaí Puro'
-    };
-  }
-
-  const has = (key) => all.some(item => item.includes(key));
-
-  // Prioridade 1: Nutella
-  if (has('nutella')) {
-    return {
-      src: 'imagens/nutella.webp',
-      label: 'Preparo Real com Nutella Turbinada'
-    };
-  }
-
-  // Prioridade 2: Morango + Ninho
-  if ((has('morango') && (has('ninho') || has('leite em pó'))) || has('ninho com morango')) {
-    return {
-      src: 'imagens/ninho com morango.webp',
-      label: 'Preparo Real com Ninho e Morango Fresco'
-    };
-  }
-
-  // Prioridade 3: Morango (qualquer combinação com morango)
-  if (has('morango')) {
-    return {
-      src: 'imagens/ninho com morango.webp',
-      label: 'Preparo Real com Morangos Frescos'
-    };
-  }
-
-  // Prioridade 4: Ninho / Leite em pó
-  if (has('ninho') || has('leite em pó') || has('leite ninho')) {
-    return {
-      src: 'imagens/ninho com morango.webp',
-      label: 'Preparo Real com Leite Ninho'
-    };
-  }
-
-  // Prioridade 5: Fini / Confetes
-  if (has('fini') || has('confete')) {
-    return {
-      src: 'imagens/mix fini.webp',
-      label: 'Preparo Real com Confeitos e Fini'
-    };
-  }
-
-  // Prioridade 6: Granola / Banana
-  if (has('granola') || has('banana')) {
-    return {
-      src: 'imagens/granola.webp',
-      label: 'Preparo Real com Granola Crocante e Frutas'
-    };
-  }
-
-  // Prioridade 7: Bis picado / Doces / Chocolates / Ovomaltine
-  if (has('bis') || has('doce') || has('ovomaltine') || has('chocobol') || has('chocolate') || has('calda')) {
-    return {
-      src: 'imagens/doce tentacao.webp',
-      label: 'Preparo Real Especial com Chocolates'
-    };
-  }
-
-  // Prioridade 8: Leite condensado / Paçoca / Mel
-  if (has('condensado') || has('paçoca') || has('amendoim') || has('mel')) {
-    return {
-      src: 'imagens/classico.webp',
-      label: 'Preparo Real Clássico com Acompanhamentos'
-    };
-  }
-
-  return {
-    src: 'imagens/classico.webp',
-    label: `Copo Personalizado (${all.length} itens no preparo)`
-  };
-}
-
-function renderDynamicCupStage(prod, selectedAcomps = [], selectedFruits = [], selectedExtras = []) {
-  const allSelected = [];
-
-  selectedFruits.forEach(f => allSelected.push({ name: f, icon: '🍓' }));
-  selectedAcomps.forEach(a => {
-    let icon = '🥜';
-    const low = a.toLowerCase();
-    if (low.includes('ninho') || low.includes('leite')) icon = '🥛';
-    else if (low.includes('granola')) icon = '🌾';
-    else if (low.includes('chocolate') || low.includes('chocobol')) icon = '🍫';
-    else if (low.includes('confete')) icon = '🎉';
-    else if (low.includes('mel')) icon = '🍯';
-    else if (low.includes('fini')) icon = '🍬';
-    allSelected.push({ name: a, icon });
-  });
-
-  selectedExtras.forEach(extId => {
-    const ext = (CATALOG.extras || []).find(e => e.id === extId);
-    if (ext) {
-      let icon = '✨';
-      const low = ext.name.toLowerCase();
-      if (low.includes('nutella') || low.includes('chocolate')) icon = '🍫';
-      else if (low.includes('chantilly')) icon = '☁️';
-      else if (low.includes('ninho')) icon = '🥛';
-      else if (low.includes('mel')) icon = '🍯';
-      allSelected.push({ name: ext.name, icon });
-    }
-  });
-
-  const imgInfo = getBestMatchingCupImage(selectedAcomps, selectedFruits, selectedExtras);
-  const totalCount = allSelected.length;
-
-  const trayHtml = allSelected.length > 0 ? `
-    <div class="cup-ingredients-tray">
-      ${allSelected.map(item => `
-        <span class="cup-tray-pill">
-          <span>${item.icon}</span>
-          <span>${esc(item.name)}</span>
-        </span>
-      `).join('')}
-    </div>
-  ` : '';
-
-  return `
-    <div class="dynamic-cup-stage" id="dynamic-cup-stage">
-      <img src="${imgInfo.src}" class="dynamic-cup-photo-layer" alt="${esc(prod.name)}" onerror="this.src='imagens/do seu jeitinho.webp'">
-      <div class="cup-live-header-pill ${totalCount === 0 ? 'pulse' : 'active'}">
-        <span class="cup-live-dot"></span>
-        <span>${totalCount === 0 ? '🍧 Monte seu Açaí: Escolha os itens abaixo' : `✨ ${imgInfo.label}`}</span>
-      </div>
-      ${trayHtml}
-    </div>
-  `;
-}
-
 function renderItemModal() {
   const st = CURRENT_ITEM_STATE;
   if (!st || !st.product) return;
@@ -970,22 +828,14 @@ function renderItemModal() {
   const unitTotal = basePrice + extrasTotal + fruitsCostTotal;
   const finalTotal = unitTotal * st.quantity;
 
-  // Decide entre o palco visual dinâmico em tempo real ou a foto padrão do produto
-  const isCustomizableCup = !st.isCombo && (isMonteSeuAcai || prod.isCustomizable || prod.id === 'prod_monte' || prod.categorySlug === 'monte');
-  const cupStageHtml = isCustomizableCup
-    ? renderDynamicCupStage(prod, st.accompaniments, st.fruits, st.extras)
-    : `
-      <div class="sheet-photo-wrap">
-        <img src="${prod.image || 'imagens/do seu jeitinho.webp'}" alt="${esc(prod.name)}" onerror="this.src='imagens/do seu jeitinho.webp'">
-      </div>
-    `;
-
   let h = `
     <button type="button" class="x" onclick="closeSheet()" aria-label="Fechar" style="z-index:10000;cursor:pointer;pointer-events:auto">×</button>
     <button type="button" class="btn o" onclick="closeSheet()" style="position:absolute;top:14px;left:14px;width:auto !important;max-width:calc(100% - 70px) !important;padding:5px 12px;font-size:12px;font-weight:700;display:flex;align-items:center;cursor:pointer;z-index:10;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.25);color:#fff;border-radius:20px">
       Voltar para o cardápio
     </button>
-    ${cupStageHtml}
+    <div class="sheet-photo-wrap">
+      <img src="${prod.image || 'imagens/do seu jeitinho.webp'}" alt="${esc(prod.name)}" onerror="this.src='imagens/do seu jeitinho.webp'">
+    </div>
     <h3>${esc(prod.name)}</h3>
     <p class="mut" style="margin-top:2px;font-size:13px">${esc(prod.description)}</p>
 
@@ -1035,7 +885,7 @@ function renderItemModal() {
             </div>
 
             <div class="combo-cup-field">
-              <label class="combo-field-label">🍓 Fruta do Copo:</label>
+              <label class="combo-field-label">Fruta do Copo:</label>
               <select class="combo-dropdown" onchange="updateComboCupSelection(${cupIdx}, 'fruit', this.value)">
                 <option value="" ${!cup.fruit ? 'selected' : ''}>Nenhuma fruta neste copo</option>
                 ${availableFruits.map(fr => {
@@ -1099,7 +949,7 @@ function renderItemModal() {
       <div class="fruit-dropdown-section">
         <div class="fruit-dropdown-header">
           <label class="fruit-dropdown-label" for="fruit-select-input">
-            <span>🍓</span> <b>Frutas Frescas</b> <span class="fruit-optional-tag">(opcional)</span>
+            <b>Frutas Frescas</b> <span class="fruit-optional-tag">(opcional)</span>
           </label>
           ${st.fruits && st.fruits.length > 0 ? `
             <span class="fruit-counter-badge">${st.fruits.length} fruta${st.fruits.length > 1 ? 's' : ''} · + ${R(fruitsCostTotal)}</span>
@@ -1128,7 +978,6 @@ function renderItemModal() {
               const frPrice = getFruitPrice(frName);
               return `
                 <div class="fruit-pill" onclick="removeFruit('${esc(frName)}')" title="Clique para remover ${esc(frName)}">
-                  <span>🍓</span>
                   <span>${esc(frName)}</span>
                   <span class="fruit-pill-price">+${R(frPrice)}</span>
                   <span class="fruit-pill-remove" aria-label="Remover">&times;</span>
