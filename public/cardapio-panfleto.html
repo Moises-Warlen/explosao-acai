@@ -310,7 +310,7 @@
 
     .prod-img-wrap {
       width: 100%;
-      height: 75px;
+      aspect-ratio: 4 / 3;
       border-radius: 8px;
       overflow: hidden;
       background: #ffffff;
@@ -323,7 +323,7 @@
     .prod-img-wrap img {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain; /* mostra a foto inteira, sem cortar */
     }
 
     .prod-name-badge {
@@ -401,6 +401,10 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .grid-4-cols {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
     .grid-5-cols {
       grid-template-columns: repeat(5, 1fr);
       gap: 6px;
@@ -451,10 +455,11 @@
     }
 
     .monte-info img {
-      width: 60px;
+      width: 72px;
       height: 60px;
       border-radius: 12px;
-      object-fit: cover;
+      object-fit: contain;
+      background: #ffffff;
       border: 2px solid #ffb703;
     }
 
@@ -892,7 +897,7 @@
     function categoryHTML(cat, products) {
       const n = products.length;
       const layout = (n >= 5 ? 'cat-premium' : '') + (cat._full ? ' cat-full' : '');
-      const gridCls = n >= 5 ? '' : (n >= 3 ? 'grid-3-cols' : 'grid-2-cols');
+      const gridCls = n >= 5 ? '' : (n === 4 ? (cat._full ? 'grid-4-cols' : 'grid-2-cols') : (n === 3 ? 'grid-3-cols' : 'grid-2-cols'));
       const subtitle = cat.subtitle || DEFAULT_SUBTITLES[cat.slug] || '';
       return `
         <section class="cat-card ${layout}">
