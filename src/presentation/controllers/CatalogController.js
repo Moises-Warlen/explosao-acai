@@ -3,6 +3,8 @@
    ========================================================================= */
 
 import { catalogService } from '../../application/services/CatalogService.js';
+import { imageStore, processImage } from '../../infrastructure/storage/ImageStore.js';
+import { buildUploadName, writeUploadToDisk } from '../../infrastructure/storage/UploadService.js';
 
 export class CatalogController {
   // ================= CATÁLOGO GERAL =================
@@ -228,13 +230,38 @@ export class CatalogController {
       if (!req.file) {
         return res.status(400).json({ ok: false, error: 'Nenhum arquivo enviado.' });
       }
+      // Otimiza a foto (WebP, máx. 1200px) e grava no banco (persistente) + disco (cache)
+      let processed;
+      try {
+        processed = await processImage(req.file.buffer);
+      } catch (e) {
+        return res.status(400).json({ ok: false, error: 'Arquivo de imagem inválido ou corrompido.' });
+      }
+      const fileName = buildUploadName(req.file.originalname, processed.ext);
+
+      let persistent = false;
+      try {
+        persistent = await imageStore.save(fileName, processed.mime, processed.buffer);
+      } catch (e) {
+        console.error('Erro ao salvar foto no PostgreSQL:', e.message);
+        return res.status(500).json({ ok: false, error: 'Não foi possível salvar a foto no banco de dados. Tente novamente.' });
+      }
+      const onDisk = writeUploadToDisk(fileName, processed.buffer);
+      if (!persistent && !onDisk) {
+        return res.status(500).json({ ok: false, error: 'Não foi possível armazenar a foto.' });
+      }
+      if (!persistent) {
+        console.warn('⚠️ Foto salva apenas em disco (PostgreSQL indisponível): ela pode sumir após um novo deploy.');
+      }
+
       // Caminho relativo para exibição direta no front
-      const filePath = `imagens/uploads/${req.file.filename}`;
+      const filePath = `imagens/uploads/${fileName}`;
       return res.json({
         ok: true,
         filePath,
-        fileName: req.file.filename,
-        originalName: req.file.originalname
+        fileName,
+        originalName: req.file.originalname,
+        persistent
       });
     } catch (err) {
       return res.status(500).json({ ok: false, error: err.message });

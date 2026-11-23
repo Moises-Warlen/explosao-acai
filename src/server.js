@@ -8,6 +8,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import apiRoutes from './presentation/routes/apiRoutes.js';
+import { imageStore } from './infrastructure/storage/ImageStore.js';
 import { wsHub } from './infrastructure/websockets/WebSocketHub.js';
 import { securityAuditService, SecurityEventType, SecuritySeverity } from './infrastructure/security/SecurityAuditService.js';
 
@@ -194,6 +195,19 @@ app.use(express.static(publicDir, {
     }
   }
 }));
+
+// Fotos enviadas pelo painel: se o arquivo não existir no disco (ex.: após deploy), serve a cópia guardada no PostgreSQL
+app.get('/imagens/uploads/:file', async (req, res) => {
+  try {
+    const img = await imageStore.get(req.params.file);
+    if (!img) return res.status(404).type('text/plain').send('Imagem não encontrada.');
+    res.setHeader('Content-Type', img.mime);
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // nome único por upload
+    return res.send(img.data);
+  } catch (e) {
+    return res.status(500).type('text/plain').send('Erro ao carregar imagem.');
+  }
+});
 
 // Respostas da API nunca devem ser armazenadas em cache (pedidos em tempo real)
 app.use('/api', (req, res, next) => {

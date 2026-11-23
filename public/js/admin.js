@@ -4924,7 +4924,11 @@ window.uploadProductPhoto = async function(event) {
     if (data.ok) {
       $('#p-img').value = data.filePath;
       $('#p-photo-preview').src = data.filePath;
-      adminToast('Foto enviada com sucesso do seu computador!', 'success');
+      if (data.persistent === false) {
+        adminToast('Foto enviada, mas o banco de dados está indisponível: ela pode sumir após uma atualização do sistema.', 'danger');
+      } else {
+        adminToast('Foto enviada com sucesso do seu computador!', 'success');
+      }
     } else {
       adminToast(data.error || 'Erro ao enviar foto.', 'danger');
     }
