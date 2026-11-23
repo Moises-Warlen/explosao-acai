@@ -863,8 +863,8 @@
     // Nome curto para caber no cartaz
     function shortName(name, slug) {
       let n = String(name || '').trim();
-      if (slug === 'garrafa') n = n.replace(/^A[çc]a[íi]\s+na\s+Garrafa\s*[–-]\s*/i, 'Com ').replace(/\s+na\s+Garrafa/i, '').replace(/^A[çc]a[íi]\s+/i, '');
-      if (slug === 'polpa') n = n.replace(/^A[çc]a[íi]\s+Puro\s+com\s+A[çc][úu]car\s*\((.*?)\)/i, 'Pote $1');
+      if (slug === 'garrafa' || /na\s+Garrafa/i.test(n)) n = n.replace(/^A[çc]a[íi]\s+na\s+Garrafa\s*[–-]\s*/i, 'Com ').replace(/\s+na\s+Garrafa/i, '').replace(/^A[çc]a[íi]\s+/i, '');
+      n = n.replace(/^A[çc]a[íi]\s+Puro\s+com\s+A[çc][úu]car\s*\((.*?)\)/i, 'Pote $1');
       if (slug === 'mousses') n = n.replace(/^Mousse\s+de\s+/i, '');
       return n;
     }
@@ -894,10 +894,23 @@
         </div>`;
     }
 
+    // Nº de colunas: categorias grandes ocupam a linha toda; as pequenas dividem a linha em 2
+    function colsFor(n, full) {
+      if (!full) return n === 3 ? 3 : (n === 4 ? 4 : 2);
+      if (n <= 2) return 2;
+      if (n === 3) return 3;
+      if (n === 4) return 4;
+      if (n === 5) return 5;
+      if (n === 6) return 3;
+      if (n <= 8) return 4;
+      return 5;
+    }
+
     function categoryHTML(cat, products) {
       const n = products.length;
-      const layout = (n >= 5 ? 'cat-premium' : '') + (cat._full ? ' cat-full' : '');
-      const gridCls = n >= 5 ? '' : (n === 4 ? (cat._full ? 'grid-4-cols' : 'grid-2-cols') : (n === 3 ? 'grid-3-cols' : 'grid-2-cols'));
+      const cols = colsFor(n, !!cat._full);
+      const layout = (cols === 5 ? 'cat-premium' : '') + (cat._full ? ' cat-full' : '');
+      const gridCls = cols === 5 ? '' : 'grid-' + cols + '-cols';
       const subtitle = cat.subtitle || DEFAULT_SUBTITLES[cat.slug] || '';
       return `
         <section class="cat-card ${layout}">
@@ -957,16 +970,27 @@
         if (!resp.ok || catalog.ok === false) throw new Error(catalog.error || 'Falha ao carregar catálogo');
 
         const products = (catalog.products || []).filter(p => p.active !== false && !isMaracuja(p.name));
-        const cats = (catalog.categories || [])
+        const allCats = catalog.categories || [];
+        const catById = new Map(allCats.map(c => [c.id, c]));
+        const catBySlug = new Map(allCats.map(c => [c.slug, c]));
+        // A categoria vale pelo ID (é o que o painel altera ao mover um produto); slug antigo só se não houver ID válido
+        const catOf = (p) => catById.get(p.categoryId) || catBySlug.get(p.categorySlug || p.category) || null;
+        const cats = allCats
           .filter(c => c.active !== false && !HIDE_CATEGORY_SLUGS.includes(c.slug) && c.slug !== MONTE_SLUG)
           .sort((a, b) => (a.order || 0) - (b.order || 0));
 
         // Monta os cards e evita "buracos": card órfão ocupa a linha inteira
         const cards = [];
         cats.forEach(cat => {
-          const list = products.filter(p => (p.categorySlug || p.category) === cat.slug);
+          const list = products.filter(p => { const c = catOf(p); return c && c.id === cat.id; });
           if (list.length) cards.push({ cat: { ...cat, _full: list.length >= 5 }, list });
         });
+        // Produtos sem categoria válida não podem sumir do panfleto em silêncio
+        const orphans = products.filter(p => !catOf(p));
+        if (orphans.length) {
+          console.warn('Produtos sem categoria válida (exibidos em "Outros"):', orphans.map(p => p.name));
+          cards.push({ cat: { id: '_outros', slug: '_outros', name: 'Outros Sabores', _full: orphans.length >= 5 }, list: orphans });
+        }
         let col = 0;
         cards.forEach((c, i) => {
           if (c.cat._full) { if (col === 1) cards[i - 1].cat._full = true; col = 0; }
@@ -974,7 +998,7 @@
         });
         if (col === 1) cards[cards.length - 1].cat._full = true;
         let html = cards.map(c => categoryHTML(c.cat, c.list)).join('');
-        html += monteHTML(products.find(p => (p.categorySlug || p.category) === MONTE_SLUG));
+        html += monteHTML(products.find(p => { const c = catOf(p); return c && c.slug === MONTE_SLUG; }));
         grid.innerHTML = html || '<p style="grid-column:1/-1;text-align:center;color:#fff">Nenhum produto ativo no cadastro.</p>';
 
         renderFooter(catalog);
